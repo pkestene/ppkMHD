@@ -23,6 +23,32 @@ endif()
 #
 include(kokkos)
 
+#
+# nvcc does like duplicate flags, so we try to filter them out
+# http://stackoverflow.com/questions/39758585/duplicate-compile-flag-in-cmake-cxx-flags
+#
+# USUSED for now.
+#
+# function(removeDuplicateSubstring stringIn stringOut)
+#     separate_arguments(stringIn)
+#     list(REMOVE_DUPLICATES stringIn)
+#     string(REPLACE ";" " " stringIn "${stringIn}")
+#     set(${stringOut} "${stringIn}" PARENT_SCOPE)
+# endfunction()
+
+
+#
+# common flags
+#
+if (KOKKOS_INTERNAL_USE_CUDA MATCHES "1")
+  set(CMAKE_CXX_FLAGS  "${KOKKOS_CPPFLAGS} ${KOKKOS_CXXFLAGS} ${CMAKE_CXX_FLAGS} -DUSE_DOUBLE -DCUDA")
+else()
+  set(CMAKE_CXX_FLAGS  "${KOKKOS_CPPFLAGS} ${KOKKOS_CXXFLAGS} ${CMAKE_CXX_FLAGS} -DUSE_DOUBLE")
+endif()
+  
+set(CMAKE_EXE_LINKER_FLAGS  "${KOKKOS_LDFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
+
+
 
 add_subdirectory(test)
 add_subdirectory(src)
