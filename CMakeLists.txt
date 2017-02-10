@@ -1,8 +1,25 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ppkMHD CXX)
 
+#
+# Prevent from build in source tree
+#
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt. ")
+endif()
+
+#
 # Create project version (using git info ?)
 # TODO
+#
+
+#
+# Init build type: Release, Debug, ...
+#
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  #set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 # #######################################################
 # Initialize CMAKE module path (for Kokkos and others)
@@ -17,6 +34,8 @@ else()
   endif()
   set(CMAKE_MODULE_PATH "$ENV{KOKKOS_PATH}" ${CMAKE_MODULE_PATH})
 endif()
+
+set(CMAKE_MODULE_PATH ${ppkMHD_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 #
 # include Kokkos configuration : kokkos.cmake
