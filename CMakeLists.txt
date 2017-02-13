@@ -46,6 +46,12 @@ message (STATUS "Just printing CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
 include(kokkos)
 
 #
+# External packages
+#
+find_package(MPI REQUIRED)
+#set(BOOST_MPI_DIR "boost-mpi")
+
+#
 # common flags
 #
 if (KOKKOS_INTERNAL_USE_CUDA MATCHES "1")
