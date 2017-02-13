@@ -9,3 +9,6 @@ add_executable(query_device_kokkos
 #set_target_properties(query_device_kokkos PROPERTIES
 #  LINK_FLAGS "${KOKKOS_LDFLAGS}")
 target_link_libraries(query_device_kokkos kokkos hwloc)
+
+
+add_subdirectory(boost-mpi)
