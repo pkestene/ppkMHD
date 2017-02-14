@@ -11,4 +11,3 @@ add_executable(query_device_kokkos
 target_link_libraries(query_device_kokkos kokkos hwloc)
 
 
-add_subdirectory(boost-mpi)

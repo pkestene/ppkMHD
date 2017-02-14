@@ -46,11 +46,9 @@ message (STATUS "Just printing CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
 include(kokkos)
 
 #
-# External packages: boost (only subpackage system and serialization), MPI, ...
+# External packages: MPI, ...
 #
 find_package(MPI REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system serialization mpi)
-
 
 #
 # common flags
