@@ -32,6 +32,11 @@ include(${PROJECT_SOURCE_DIR}/cmake/preventBuildInSource.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/initBuildType.cmake)
 
 #
+# Write a small header with build data, git version, etc...
+#
+include(${PROJECT_SOURCE_DIR}/cmake/write_version.cmake)
+
+#
 # Initialize CMAKE_MODULE_PATH for Kokkos (location of kokkos.cmake)
 #
 include(${PROJECT_SOURCE_DIR}/cmake/initKokkosModulePath.cmake)
