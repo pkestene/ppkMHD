@@ -15,11 +15,12 @@
 #include <stdbool.h>
 
 //! hydro field indexes
-enum ComponentIndex {
+enum VarIndex {
   ID=0,  /*!< ID Density field index */
   IP=1,  /*!< IP Pressure/Energy field index */
   IU=2,  /*!< X velocity / momentum index */
-  IV=3  /*!< Y velocity / momentum index */ 
+  IV=3,  /*!< Y velocity / momentum index */ 
+  IW=4   /*!< Z velocity / momentum index */ 
 };
 
 //! face index
@@ -27,7 +28,9 @@ enum FaceIdType {
   FACE_XMIN=0,
   FACE_XMAX=1,
   FACE_YMIN=2,
-  FACE_YMAX=3
+  FACE_YMAX=3,
+  FACE_ZMIN=4,
+  FACE_ZMAX=5
 };
 
 //! Riemann solver type for hydro fluxes
@@ -48,15 +51,17 @@ enum BoundaryConditionType {
 };
 
 //! enum component index
-enum ComponentIndex2D {
+enum ComponentIndex {
   IX = 0,
-  IY = 1
+  IY = 1,
+  IZ = 2
 };
 
 //! direction used in directional splitting scheme
 enum Direction {
   XDIR=1, 
-  YDIR=2
+  YDIR=2,
+  ZDIR=3
 };
 
 //! location of the outside boundary
@@ -64,13 +69,16 @@ enum BoundaryLocation {
   XMIN = 0, 
   XMAX = 1, 
   YMIN = 2, 
-  YMAX = 3
+  YMAX = 3,
+  ZMIN = 4, 
+  ZMAX = 5
 };
 
 //! implementation version
 enum ImplementationVersion {
   IMPL_VERSION_0,
-  IMPL_VERSION_1
+  IMPL_VERSION_1,
+  IMPL_VERSION_2
 };
 
 //! problem type
@@ -116,26 +124,35 @@ struct HydroParams {
   // geometry parameters
   int nx;     /*!< logical size along X (without ghost cells).*/
   int ny;     /*!< logical size along Y (without ghost cells).*/
+  int nz;     /*!< logical size along Z (without ghost cells).*/
   int ghostWidth;  
   int imin;   /*!< index minimum at X border*/
   int imax;   /*!< index maximum at X border*/
   int jmin;   /*!< index minimum at Y border*/
   int jmax;   /*!< index maximum at Y border*/
+  int kmin;   /*!< index minimum at Z border*/
+  int kmax;   /*!< index maximum at Z border*/
   
   int isize;  /*!< total size (in cell unit) along X direction with ghosts.*/
   int jsize;  /*!< total size (in cell unit) along Y direction with ghosts.*/
-  
+  int ksize;  /*!< total size (in cell unit) along Z direction with ghosts.*/
+
   real_t xmin;
   real_t xmax;
   real_t ymin;
   real_t ymax;
+  real_t zmin;
+  real_t zmax;
   real_t dx;       /*!< x resolution */
   real_t dy;       /*!< y resolution */
+  real_t dz;       /*!< z resolution */
   
   int boundary_type_xmin;
   int boundary_type_xmax;
   int boundary_type_ymin;
   int boundary_type_ymax;
+  int boundary_type_zmin;
+  int boundary_type_zmax;
   
   // IO parameters
   bool ioVTK;    /*!< enable VTK  output file format (using VTI).*/
@@ -153,6 +170,7 @@ struct HydroParams {
   real_t blast_radius;
   real_t blast_center_x;
   real_t blast_center_y;
+  real_t blast_center_z;
   real_t blast_density_in;
   real_t blast_density_out;
   real_t blast_pressure_in;
@@ -163,20 +181,22 @@ struct HydroParams {
 
   HydroParams() :
     nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true),
-    nx(0), ny(0), ghostWidth(2),
-    imin(0), imax(0), jmin(0), jmax(0),
-    isize(0), jsize(0),
-    xmin(0.0), xmax(1.0), ymin(0.0), ymax(1.0),
-    dx(0.0), dy(0.0),
+    nx(0), ny(0), nz(0), ghostWidth(2),
+    imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0),
+    isize(0), jsize(0), ksize(0),
+    xmin(0.0), xmax(1.0), ymin(0.0), ymax(1.0), zmin(0.0), zmax(1.0),
+    dx(0.0), dy(0.0), dz(0.0),
     boundary_type_xmin(1),
     boundary_type_xmax(1),
     boundary_type_ymin(1),
     boundary_type_ymax(1),
+    boundary_type_zmin(1),
+    boundary_type_zmax(1),
     ioVTK(true), ioHDF5(false),
     settings(),
     niter_riemann(10), riemannSolverType(), problemType(),
     blast_radius(10.0),
-    blast_center_x(0.0), blast_center_y(0.0),
+    blast_center_x(0.0), blast_center_y(0.0), blast_center_z(0.0),
     blast_density_in(1.0), blast_density_out(1.2),
     blast_pressure_in(10.0), blast_pressure_out(0.1),
     implementationVersion(0) {}
