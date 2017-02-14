@@ -14,8 +14,6 @@
 
 #include <stdbool.h>
 
-#include "hydro_common.h"
-
 //! hydro field indexes
 enum ComponentIndex {
   ID=0,  /*!< ID Density field index */

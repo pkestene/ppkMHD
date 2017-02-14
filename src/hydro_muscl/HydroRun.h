@@ -68,6 +68,7 @@ public:
   void saveVTK(DataArray Udata, int iStep, std::string name);
   
   int isize, jsize, ijsize;
+  static const int nbvar = 4;
   
 }; // class HydroRun
 

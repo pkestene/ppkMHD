@@ -1,7 +1,6 @@
 set (hydro_muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/hydro_common.h
   ${CMAKE_CURRENT_SOURCE_DIR}/kokkos_shared.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors.h

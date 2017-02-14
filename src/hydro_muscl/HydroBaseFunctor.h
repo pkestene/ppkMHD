@@ -27,6 +27,7 @@ public:
   virtual ~HydroBaseFunctor() {};
 
   HydroParams params;
+  static const int nbvar = 4;
   
   // utility routines used in various computational kernels
 

@@ -41,23 +41,23 @@ HydroRun::HydroRun(HydroParams& params, ConfigMap& configMap) :
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijsize);
+  U     = DataArray("U", ijsize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijsize);
-  Q     = DataArray("Q", ijsize);
+  U2    = DataArray("U2",ijsize, nbvar);
+  Q     = DataArray("Q", ijsize, nbvar);
 
   if (params.implementationVersion == 0) {
 
-    Fluxes_x = DataArray("Fluxes_x", ijsize);
-    Fluxes_y = DataArray("Fluxes_y", ijsize);
+    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", ijsize, nbvar);
     
   } else if (params.implementationVersion == 1) {
 
-    Slopes_x = DataArray("Slope_x", ijsize);
-    Slopes_y = DataArray("Slope_y", ijsize);
+    Slopes_x = DataArray("Slope_x", ijsize, nbvar);
+    Slopes_y = DataArray("Slope_y", ijsize, nbvar);
 
     // direction splitting (only need one flux array)
-    Fluxes_x = DataArray("Fluxes_x", ijsize);
+    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
     Fluxes_y = Fluxes_x;
     
   } 
@@ -391,7 +391,7 @@ void HydroRun::saveVTK(DataArray Udata,
   outFile << "    <CellData>\n";
 
   // write data array (ascii), remove ghost cells
-  for ( iVar=0; iVar<NBVAR; iVar++) {
+  for ( iVar=0; iVar<nbvar; iVar++) {
     outFile << "    <DataArray type=\"";
     if (useDouble)
       outFile << "Float64";

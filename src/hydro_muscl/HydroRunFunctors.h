@@ -1263,7 +1263,7 @@ public:
 	 i >= 0    && i <ghostWidth) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
@@ -1296,7 +1296,7 @@ public:
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
@@ -1328,7 +1328,7 @@ public:
 	
 	real_t sign=1.0;
 	
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
 	    if (iVar==IV) sign=-ONE_F;
@@ -1357,7 +1357,7 @@ public:
 	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
