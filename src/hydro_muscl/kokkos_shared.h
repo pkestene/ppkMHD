@@ -20,10 +20,13 @@
 # define DEVICE Kokkos::OpenMP
 #endif
 
-// first index is space localtion, second is hydro variable
-// number of hydro variables is 4 in 2D, 5 in 3D
-typedef Kokkos::View<real_t**, DEVICE> DataArray;
-typedef DataArray::HostMirror          DataArrayHost;
+// last index is hydro variable
+// n-1 first indexes are space (i,j,k,....)
+typedef Kokkos::View<real_t**, DEVICE>   DataArray2d;
+typedef DataArray2d::HostMirror          DataArray2dHost;
+
+typedef Kokkos::View<real_t***, DEVICE>  DataArray3d;
+typedef DataArray3d::HostMirror          DataArray3dHost;
 
 /**
  * Retrieve cartesian coordinate from index, using memory layout information.

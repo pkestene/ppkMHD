@@ -1,30 +1,26 @@
-#ifndef HYDRO_BASE_FUNCTOR_H_
-#define HYDRO_BASE_FUNCTOR_H_
+#ifndef HYDRO_BASE_FUNCTOR_2D_H_
+#define HYDRO_BASE_FUNCTOR_2D_H_
 
 #include "kokkos_shared.h"
 
 #include "HydroParams.h"
-
-//!< a POD data structure to store local conservative / primitive variables
-typedef struct HydroState {
-  real_t d;
-  real_t p;
-  real_t u;
-  real_t v;
-} HydroState;
+#include "HydroState.h"
 
 
 /**
- * Base class to derive actual kokkos functor.
+ * Base class to derive actual kokkos functor for hydro 2D.
  * params is passed by copy.
  */
-class HydroBaseFunctor
+class HydroBaseFunctor2D
 {
 
 public:
 
-  HydroBaseFunctor(HydroParams params) : params(params) {};
-  virtual ~HydroBaseFunctor() {};
+  using HydroState = HydroState2d;
+  using DataArray  = DataArray2d;
+  
+  HydroBaseFunctor2D(HydroParams params) : params(params) {};
+  virtual ~HydroBaseFunctor2D() {};
 
   HydroParams params;
   static const int nbvar = 4;
@@ -780,6 +776,6 @@ public:
   
   } // riemann_hllc
 
-}; // class HydroBaseFunctor
+}; // class HydroBaseFunctor2D
 
-#endif // HYDRO_BASE_FUNCTOR_H_
+#endif // HYDRO_BASE_FUNCTOR_2D_H_

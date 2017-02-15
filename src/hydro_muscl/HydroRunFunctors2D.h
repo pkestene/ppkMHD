@@ -7,18 +7,18 @@
 #endif // __CUDA_ARCH__
 
 
-#include "HydroBaseFunctor.h"
+#include "HydroBaseFunctor2D.h"
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeDtFunctor : public HydroBaseFunctor {
+class ComputeDtFunctor : public HydroBaseFunctor2D {
 
 public:
   
   ComputeDtFunctor(HydroParams params,
 		   DataArray Udata) :
-    HydroBaseFunctor(params),
+    HydroBaseFunctor2D(params),
     Udata(Udata)  {};
 
   // Tell each thread how to initialize its reduction result.
@@ -96,14 +96,14 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ConvertToPrimitivesFunctor : public HydroBaseFunctor {
+class ConvertToPrimitivesFunctor : public HydroBaseFunctor2D {
 
 public:
 
   ConvertToPrimitivesFunctor(HydroParams params,
 			     DataArray Udata,
 			     DataArray Qdata) :
-    HydroBaseFunctor(params), Udata(Udata), Qdata(Qdata)  {};
+    HydroBaseFunctor2D(params), Udata(Udata), Qdata(Qdata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -149,7 +149,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeFluxesAndUpdateFunctor : public HydroBaseFunctor {
+class ComputeFluxesAndUpdateFunctor : public HydroBaseFunctor2D {
 
 public:
 
@@ -161,7 +161,7 @@ public:
 				DataArray Qp_y,
 				real_t dtdx,
 				real_t dtdy) :
-    HydroBaseFunctor(params), Udata(Udata),
+    HydroBaseFunctor2D(params), Udata(Udata),
     Qm_x(Qm_x), Qm_y(Qm_y), Qp_x(Qp_x), Qp_y(Qp_y),
     dtdx(dtdx), dtdy(dtdy) {};
   
@@ -260,7 +260,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeTraceFunctor : public HydroBaseFunctor {
+class ComputeTraceFunctor : public HydroBaseFunctor2D {
 
 public:
 
@@ -273,7 +273,7 @@ public:
 		      DataArray Qp_y,
 		      real_t dtdx,
 		      real_t dtdy) :
-    HydroBaseFunctor(params),
+    HydroBaseFunctor2D(params),
     Udata(Udata), Qdata(Qdata),
     Qm_x(Qm_x), Qm_y(Qm_y), Qp_x(Qp_x), Qp_y(Qp_y),
     dtdx(dtdx), dtdy(dtdy) {};
@@ -298,8 +298,8 @@ public:
       HydroState qPlusY ;
       HydroState qMinusY;
 
-      HydroState dqX = {.d = 0.0, .p = 0.0, .u = 0.0, .v = 0.0};
-      HydroState dqY = {.d = 0.0, .p = 0.0, .u = 0.0, .v = 0.0};
+      HydroState dqX;
+      HydroState dqY;
 
       HydroState qmX;
       HydroState qmY;
@@ -386,7 +386,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeAndStoreFluxesFunctor : public HydroBaseFunctor {
+class ComputeAndStoreFluxesFunctor : public HydroBaseFunctor2D {
 
 public:
 
@@ -396,7 +396,7 @@ public:
 			       DataArray FluxData_y,		       
 			       real_t dtdx,
 			       real_t dtdy) :
-    HydroBaseFunctor(params),
+    HydroBaseFunctor2D(params),
     Qdata(Qdata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y), 
@@ -625,7 +625,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class UpdateFunctor : public HydroBaseFunctor {
+class UpdateFunctor : public HydroBaseFunctor2D {
 
 public:
 
@@ -633,7 +633,7 @@ public:
 		DataArray Udata,
 		DataArray FluxData_x,
 		DataArray FluxData_y) :
-    HydroBaseFunctor(params),
+    HydroBaseFunctor2D(params),
     Udata(Udata), 
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y) {};
@@ -690,14 +690,14 @@ public:
 /*************************************************/
 /*************************************************/
 template <Direction dir>
-class UpdateDirFunctor : public HydroBaseFunctor {
+class UpdateDirFunctor : public HydroBaseFunctor2D {
 
 public:
 
   UpdateDirFunctor(HydroParams params,
 		   DataArray Udata,
 		   DataArray FluxData) :
-    HydroBaseFunctor(params),
+    HydroBaseFunctor2D(params),
     Udata(Udata), 
     FluxData(FluxData) {};
   
@@ -755,7 +755,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeSlopesFunctor : public HydroBaseFunctor {
+class ComputeSlopesFunctor : public HydroBaseFunctor2D {
   
 public:
   
@@ -763,7 +763,7 @@ public:
 		       DataArray Qdata,
 		       DataArray Slopes_x,
 		       DataArray Slopes_y) :
-    HydroBaseFunctor(params), Qdata(Qdata),
+    HydroBaseFunctor2D(params), Qdata(Qdata),
     Slopes_x(Slopes_x), Slopes_y(Slopes_y) {};
   
   KOKKOS_INLINE_FUNCTION
@@ -855,7 +855,7 @@ public:
 /*************************************************/
 /*************************************************/
 template <Direction dir>
-class ComputeTraceAndFluxes_Functor : public HydroBaseFunctor {
+class ComputeTraceAndFluxes_Functor : public HydroBaseFunctor2D {
   
 public:
   
@@ -866,7 +866,7 @@ public:
 				DataArray Fluxes,
 				real_t    dtdx,
 				real_t    dtdy) :
-    HydroBaseFunctor(params), Qdata(Qdata),
+    HydroBaseFunctor2D(params), Qdata(Qdata),
     Slopes_x(Slopes_x), Slopes_y(Slopes_y),
     Fluxes(Fluxes),
     dtdx(dtdx), dtdy(dtdy) {};
@@ -1022,7 +1022,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-// class ComputeTraceAndUpdate_Y_Functor : public HydroBaseFunctor {
+// class ComputeTraceAndUpdate_Y_Functor : public HydroBaseFunctor2D {
   
 // public:
   
@@ -1033,7 +1033,7 @@ public:
 // 				  DataArray Slopes_y,
 // 				  real_t    dtdx,
 // 				  real_t    dtdy) :
-//     HydroBaseFunctor(params), Udata(Udata), Qdata(Qdata),
+//     HydroBaseFunctor2D(params), Udata(Udata), Qdata(Qdata),
 //     Slopes_x(Slopes_x), Slopes_y(Slopes_y),
 //     dtdx(dtdx), dtdy(dtdy) {};
   
@@ -1103,12 +1103,12 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitImplodeFunctor : public HydroBaseFunctor {
+class InitImplodeFunctor : public HydroBaseFunctor2D {
 
 public:
   InitImplodeFunctor(HydroParams params,
 		     DataArray Udata) :
-    HydroBaseFunctor(params), Udata(Udata)  {};
+    HydroBaseFunctor2D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1153,12 +1153,12 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitBlastFunctor : public HydroBaseFunctor {
+class InitBlastFunctor : public HydroBaseFunctor2D {
 
 public:
   InitBlastFunctor(HydroParams params,
 		   DataArray Udata) :
-    HydroBaseFunctor(params), Udata(Udata)  {};
+    HydroBaseFunctor2D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1219,13 +1219,13 @@ public:
 /*************************************************/
 /*************************************************/
  template <FaceIdType faceId>
- class MakeBoundariesFunctor : public HydroBaseFunctor {
+ class MakeBoundariesFunctor : public HydroBaseFunctor2D {
 
 public:
 
   MakeBoundariesFunctor(HydroParams params,
 			DataArray Udata) :
-    HydroBaseFunctor(params), Udata(Udata)  {};
+    HydroBaseFunctor2D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const

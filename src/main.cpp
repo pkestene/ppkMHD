@@ -12,8 +12,8 @@
 
 #include "real_type.h"   // choose between single and double precision
 #include "HydroParams.h" // read parameter file
-#include "HydroBaseFunctor.h"
-#include "HydroRun.h"    // memory allocation for hydro arrays
+#include "HydroBaseFunctor2D.h"
+#include "HydroRun2D.h"    // memory allocation for hydro arrays
 #include "Timer.h"  // for timer
 
 #ifdef CUDA
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
   params.print();
 
   // initialize workspace memory (U, U2, ...)
-  HydroRun *hydro = new HydroRun(params, configMap);
+  HydroRun2D *hydro = new HydroRun2D(params, configMap);
   dt = hydro->compute_dt( nStep%2 );
 
   // initialize boundaries

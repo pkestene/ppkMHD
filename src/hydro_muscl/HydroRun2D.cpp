@@ -5,12 +5,12 @@
 #include <fstream>
 #include <algorithm>
 
-#include "HydroRun.h"
+#include "HydroRun2D.h"
 #include "HydroParams.h"
 #include "Timer.h"
 
 // the actual computational functors called in HydroRun
-#include "HydroRunFunctors.h"
+#include "HydroRunFunctors2D.h"
 
 // Kokkos
 #include "kokkos_shared.h"
@@ -27,7 +27,7 @@ static bool isBigEndian()
 /**
  *
  */
-HydroRun::HydroRun(HydroParams& params, ConfigMap& configMap) :
+HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
   params(params),
   configMap(configMap),
   U(), U2(), Q(),
@@ -63,9 +63,9 @@ HydroRun::HydroRun(HydroParams& params, ConfigMap& configMap) :
   } 
   
   // default riemann solver
-  // riemann_solver_fn = &HydroRun::riemann_approx;
+  // riemann_solver_fn = &HydroRun2D::riemann_approx;
   // if (!riemannSolverStr.compare("hllc"))
-  //   riemann_solver_fn = &HydroRun::riemann_hllc;
+  //   riemann_solver_fn = &HydroRun2D::riemann_hllc;
   
   /*
    * initialize hydro array at t=0
@@ -91,7 +91,7 @@ HydroRun::HydroRun(HydroParams& params, ConfigMap& configMap) :
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
-} // HydroRun::HydroRun
+} // HydroRun2D::HydroRun2D
 
 
 // =======================================================
@@ -99,10 +99,10 @@ HydroRun::HydroRun(HydroParams& params, ConfigMap& configMap) :
 /**
  *
  */
-HydroRun::~HydroRun()
+HydroRun2D::~HydroRun2D()
 {
 
-} // HydroRun::~HydroRun
+} // HydroRun2D::~HydroRun2D
 
 // =======================================================
 // =======================================================
@@ -113,7 +113,7 @@ HydroRun::~HydroRun()
  *
  * \return dt time step
  */
-real_t HydroRun::compute_dt(int useU)
+real_t HydroRun2D::compute_dt(int useU)
 {
 
   real_t dt;
@@ -134,14 +134,14 @@ real_t HydroRun::compute_dt(int useU)
 
   return dt;
 
-} // HydroRun::compute_dt
+} // HydroRun2D::compute_dt
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Wrapper to the actual computation routine
 // ///////////////////////////////////////////
-void HydroRun::godunov_unsplit(int nStep, real_t dt)
+void HydroRun2D::godunov_unsplit(int nStep, real_t dt)
 {
   
   if ( nStep % 2 == 0 ) {
@@ -150,14 +150,14 @@ void HydroRun::godunov_unsplit(int nStep, real_t dt)
     godunov_unsplit_cpu(U2, U , dt, nStep);
   }
   
-} // HydroRun::godunov_unsplit
+} // HydroRun2D::godunov_unsplit
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void HydroRun::godunov_unsplit_cpu(DataArray data_in, 
+void HydroRun2D::godunov_unsplit_cpu(DataArray data_in, 
 				   DataArray data_out, 
 				   real_t dt, 
 				   int nStep)
@@ -241,21 +241,21 @@ void HydroRun::godunov_unsplit_cpu(DataArray data_in,
   
   godunov_timer.stop();
   
-} // HydroRun::godunov_unsplit_cpu
+} // HydroRun2D::godunov_unsplit_cpu
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////////////////////////////
 // Convert conservative variables array U into primitive var array Q
 // ///////////////////////////////////////////////////////////////////
-void HydroRun::convertToPrimitives(DataArray Udata)
+void HydroRun2D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
   ConvertToPrimitivesFunctor convertToPrimitivesFunctor(params, Udata, Q);
   Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
   
-} // HydroRun::convertToPrimitives
+} // HydroRun2D::convertToPrimitives
 
 // =======================================================
 // =======================================================
@@ -263,7 +263,7 @@ void HydroRun::convertToPrimitives(DataArray Udata)
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
-void HydroRun::make_boundaries(DataArray Udata)
+void HydroRun2D::make_boundaries(DataArray Udata)
 {
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
@@ -287,7 +287,7 @@ void HydroRun::make_boundaries(DataArray Udata)
     Kokkos::parallel_for(nbIter, functor);
   }
   
-} // HydroRun::make_boundaries
+} // HydroRun2D::make_boundaries
 
 // =======================================================
 // =======================================================
@@ -295,7 +295,7 @@ void HydroRun::make_boundaries(DataArray Udata)
  * Hydrodynamical Implosion Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/implode/Implode.html
  */
-void HydroRun::init_implode(DataArray Udata)
+void HydroRun2D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor functor(params, Udata);
@@ -309,13 +309,13 @@ void HydroRun::init_implode(DataArray Udata)
  * Hydrodynamical blast Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/blast/blast.html
  */
-void HydroRun::init_blast(DataArray Udata)
+void HydroRun2D::init_blast(DataArray Udata)
 {
 
   InitBlastFunctor functor(params, Udata);
   Kokkos::parallel_for(ijsize, functor);
 
-} // HydroRun::init_blast
+} // HydroRun2D::init_blast
 
 // =======================================================
 // =======================================================
@@ -325,7 +325,7 @@ void HydroRun::init_blast(DataArray Udata)
 // To make sure OpenMP and CUDA version give the same
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
-void HydroRun::saveVTK(DataArray Udata,
+void HydroRun2D::saveVTK(DataArray Udata,
 		       int iStep,
 		       std::string name)
 {
@@ -429,5 +429,5 @@ void HydroRun::saveVTK(DataArray Udata,
   
   outFile.close();
 
-} // HydroRun::saveVTK
+} // HydroRun2D::saveVTK
 
