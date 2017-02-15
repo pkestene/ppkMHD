@@ -41,23 +41,23 @@ HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijsize, nbvar);
+  U     = DataArray("U", isize, jsize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijsize, nbvar);
-  Q     = DataArray("Q", ijsize, nbvar);
+  U2    = DataArray("U2",isize, jsize, nbvar);
+  Q     = DataArray("Q", isize, jsize, nbvar);
 
   if (params.implementationVersion == 0) {
 
-    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
-    Fluxes_y = DataArray("Fluxes_y", ijsize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
     
   } else if (params.implementationVersion == 1) {
 
-    Slopes_x = DataArray("Slope_x", ijsize, nbvar);
-    Slopes_y = DataArray("Slope_y", ijsize, nbvar);
+    Slopes_x = DataArray("Slope_x", isize, jsize, nbvar);
+    Slopes_y = DataArray("Slope_y", isize, jsize, nbvar);
 
     // direction splitting (only need one flux array)
-    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = Fluxes_x;
     
   } 
@@ -191,21 +191,24 @@ void HydroRun2D::godunov_unsplit_cpu(DataArray data_in,
       ComputeAndStoreFluxesFunctor functor(params, Q,
 					   Fluxes_x, Fluxes_y,
 					   dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      range2d_t range( {0,0}, {isize,jsize} );
+      Kokkos::Experimental::md_parallel_for(range, functor);
     }
 
     // actual update
     {
       UpdateFunctor functor(params, data_out,
 			    Fluxes_x, Fluxes_y);
-      Kokkos::parallel_for(ijsize, functor);
+      range2d_t range( {0,0}, {isize,jsize} );
+      Kokkos::Experimental::md_parallel_for(range, functor);
     }
     
   } else if (params.implementationVersion == 1) {
 
     // call device functor to compute slopes
     ComputeSlopesFunctor computeSlopesFunctor(params, Q, Slopes_x, Slopes_y);
-    Kokkos::parallel_for(ijsize, computeSlopesFunctor);
+    range2d_t range( {0,0}, {isize,jsize} );
+    Kokkos::Experimental::md_parallel_for(range, computeSlopesFunctor);
 
     // now trace along X axis
     {
@@ -213,13 +216,15 @@ void HydroRun2D::godunov_unsplit_cpu(DataArray data_in,
 						  Slopes_x, Slopes_y,
 						  Fluxes_x,
 						  dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      range2d_t range( {0,0}, {isize,jsize} );
+      Kokkos::Experimental::md_parallel_for(range, functor);
     }
     
     // and update along X axis
     {
       UpdateDirFunctor<XDIR> functor(params, data_out, Fluxes_x);
-      Kokkos::parallel_for(ijsize, functor);
+      range2d_t range( {0,0}, {isize,jsize} );
+      Kokkos::Experimental::md_parallel_for(range, functor);
     }
 
     // now trace along Y axis
@@ -228,13 +233,15 @@ void HydroRun2D::godunov_unsplit_cpu(DataArray data_in,
 						  Slopes_x, Slopes_y,
 						  Fluxes_y,
 						  dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      range2d_t range( {0,0}, {isize,jsize} );
+      Kokkos::Experimental::md_parallel_for(range, functor);
     }
     
     // and update along Y axis
     {
       UpdateDirFunctor<YDIR> functor(params, data_out, Fluxes_y);
-      Kokkos::parallel_for(ijsize, functor);
+      range2d_t range( {0,0}, {isize,jsize} );
+      Kokkos::Experimental::md_parallel_for(range, functor);
     }
 
   } // end params.implementationVersion == 1
@@ -253,7 +260,8 @@ void HydroRun2D::convertToPrimitives(DataArray Udata)
 
   // call device functor
   ConvertToPrimitivesFunctor convertToPrimitivesFunctor(params, Udata, Q);
-  Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
+  range2d_t range( {0,0}, {isize,jsize} );
+  Kokkos::Experimental::md_parallel_for(range, convertToPrimitivesFunctor);
   
 } // HydroRun2D::convertToPrimitives
 
@@ -299,7 +307,8 @@ void HydroRun2D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor functor(params, Udata);
-  Kokkos::parallel_for(ijsize, functor);
+  range2d_t range( {0,0}, {isize,jsize} );
+  Kokkos::Experimental::md_parallel_for(range, functor);
   
 } // init_implode
 
@@ -313,7 +322,8 @@ void HydroRun2D::init_blast(DataArray Udata)
 {
 
   InitBlastFunctor functor(params, Udata);
-  Kokkos::parallel_for(ijsize, functor);
+  range2d_t range( {0,0}, {isize,jsize} );
+  Kokkos::Experimental::md_parallel_for(range, functor);
 
 } // HydroRun2D::init_blast
 
@@ -326,8 +336,8 @@ void HydroRun2D::init_blast(DataArray Udata)
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
 void HydroRun2D::saveVTK(DataArray Udata,
-		       int iStep,
-		       std::string name)
+			 int iStep,
+			 std::string name)
 {
 
   const int nx = params.nx;
@@ -400,7 +410,6 @@ void HydroRun2D::saveVTK(DataArray Udata,
     outFile << "\" Name=\"" << varNames[iVar] << "\" format=\"ascii\" >\n";
 
     for (int index=0; index<ijsize; ++index) {
-      //index2coord(index,i,j,isize,jsize);
 
       // enforce the use of left layout (Ok for CUDA)
       // but for OpenMP, we will need to transpose
@@ -409,12 +418,7 @@ void HydroRun2D::saveVTK(DataArray Udata,
 
       if (j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	  i>=imin+ghostWidth and i<=imax-ghostWidth) {
-#ifdef CUDA
-    	outFile << Uhost(index , iVar) << " ";
-#else
-	int index2 = j+jsize*i;
-    	outFile << Uhost(index2 , iVar) << " ";
-#endif
+    	outFile << Uhost(i,j , iVar) << " ";
       }
     }
     outFile << "\n    </DataArray>\n";

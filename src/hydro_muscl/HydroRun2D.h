@@ -18,6 +18,11 @@ public:
 
   using DataArray     = DataArray2d;
   using DataArrayHost = DataArray2dHost;
+
+  // for 2D Range execution policy
+  using range2d_t =
+    Kokkos::Experimental::MDRangePolicy< Kokkos::Experimental::Rank<2> ,
+					 Kokkos::IndexType<int> >;
   
   HydroRun2D(HydroParams& params, ConfigMap& configMap);
   virtual ~HydroRun2D();
