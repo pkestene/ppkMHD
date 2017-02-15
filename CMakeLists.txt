@@ -32,6 +32,11 @@ include(${PROJECT_SOURCE_DIR}/cmake/preventBuildInSource.cmake)
 include(${PROJECT_SOURCE_DIR}/cmake/initBuildType.cmake)
 
 #
+# Write a small header with build data, git version, etc...
+#
+include(${PROJECT_SOURCE_DIR}/cmake/write_version.cmake)
+
+#
 # Initialize CMAKE_MODULE_PATH for Kokkos (location of kokkos.cmake)
 #
 include(${PROJECT_SOURCE_DIR}/cmake/initKokkosModulePath.cmake)
@@ -44,6 +49,11 @@ include(${PROJECT_SOURCE_DIR}/cmake/initKokkosModulePath.cmake)
 #
 message (STATUS "Just printing CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
 include(kokkos)
+
+#
+# External packages: MPI, ...
+#
+find_package(MPI REQUIRED)
 
 #
 # common flags

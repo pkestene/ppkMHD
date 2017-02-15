@@ -1,8 +1,8 @@
 /**
  *
  */
-#ifndef HYDRO_RUN_H_
-#define HYDRO_RUN_H_
+#ifndef HYDRO_RUN_2D_H_
+#define HYDRO_RUN_2D_H_
 
 #include "Timer.h"
 #include "HydroParams.h"
@@ -11,13 +11,16 @@
 /**
  * Main hydrodynamics data structure.
  */
-class HydroRun
+class HydroRun2D
 {
 
 public:
 
-  HydroRun(HydroParams& params, ConfigMap& configMap);
-  virtual ~HydroRun();
+  using DataArray     = DataArray2d;
+  using DataArrayHost = DataArray2dHost;
+  
+  HydroRun2D(HydroParams& params, ConfigMap& configMap);
+  virtual ~HydroRun2D();
   
   // hydroParams
   HydroParams& params;
@@ -68,7 +71,8 @@ public:
   void saveVTK(DataArray Udata, int iStep, std::string name);
   
   int isize, jsize, ijsize;
+  static const int nbvar = 4;
   
-}; // class HydroRun
+}; // class HydroRun2D
 
-#endif // HYDRO_RUN_H_
+#endif // HYDRO_RUN_2D_H_

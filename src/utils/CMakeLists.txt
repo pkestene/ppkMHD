@@ -1,2 +1,5 @@
 add_subdirectory(config)
 add_subdirectory(time)
+if (MPI_CXX_FOUND)
+  add_subdirectory(mpi)
+endif()
