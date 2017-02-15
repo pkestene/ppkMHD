@@ -2,7 +2,7 @@ find_package(Git QUIET)
 if (NOT GIT_FOUND)
   set(GIT_BUILD_STRING "N/A")
 else()
-  execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags
+  execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
     OUTPUT_VARIABLE GIT_BUILD_STRING
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
