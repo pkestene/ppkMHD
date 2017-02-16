@@ -1,5 +1,5 @@
-#ifndef HYDRO_BASE_FUNCTOR_2D_H_
-#define HYDRO_BASE_FUNCTOR_2D_H_
+#ifndef HYDRO_BASE_FUNCTOR_3D_H_
+#define HYDRO_BASE_FUNCTOR_3D_H_
 
 #include "kokkos_shared.h"
 
@@ -8,22 +8,22 @@
 
 
 /**
- * Base class to derive actual kokkos functor for hydro 2D.
+ * Base class to derive actual kokkos functor for hydro 3D.
  * params is passed by copy.
  */
-class HydroBaseFunctor2D
+class HydroBaseFunctor3D
 {
 
 public:
 
-  using HydroState = HydroState2d;
-  using DataArray  = DataArray2d;
+  using HydroState = HydroState3d;
+  using DataArray  = DataArray3d;
   
-  HydroBaseFunctor2D(HydroParams params) : params(params) {};
-  virtual ~HydroBaseFunctor2D() {};
+HydroBaseFunctor3D(HydroParams params) : params(params) {};
+  virtual ~HydroBaseFunctor3D() {};
 
   HydroParams params;
-  static const int nbvar = 4;
+  static const int nbvar = 5;
   
   // utility routines used in various computational kernels
 
@@ -81,13 +81,14 @@ public:
     real_t smallr = params.settings.smallr;
     real_t smallp = params.settings.smallp;
     
-    real_t d, p, ux, uy;
+    real_t d, p, ux, uy, uz;
     
     d = fmax(u->d, smallr);
     ux = u->u / d;
     uy = u->v / d;
+    uz = u->w / d;
     
-    real_t eken = HALF_F * (ux*ux + uy*uy);
+    real_t eken = HALF_F * (ux*ux + uy*uy + uz*uz);
     real_t e = u->p / d - eken;
     
     // compute pressure and speed of sound
@@ -98,10 +99,10 @@ public:
     q->p = p;
     q->u = ux;
     q->v = uy;
+    q->w = uz;
     
   } // computePrimitive
 
-  
   /**
    * Trace computations for unsplit Godunov scheme.
    *
@@ -114,111 +115,161 @@ public:
    * \param[out] qp        : qp state (one per dimension)
    */
   KOKKOS_INLINE_FUNCTION
-  void trace_unsplit_2d(const HydroState *q, 
+  void trace_unsplit_3d(const HydroState *q, 
 			const HydroState *qNeighbors_0,
 			const HydroState *qNeighbors_1,
 			const HydroState *qNeighbors_2,
 			const HydroState *qNeighbors_3,
+			const HydroState *qNeighbors_4,
+			const HydroState *qNeighbors_5,
 			real_t c, 
 			real_t dtdx, 
-			real_t dtdy, 
+			real_t dtdy,
+			real_t dtdz,
 			HydroState *qm_x,
 			HydroState *qm_y,
+			HydroState *qm_z,
 			HydroState *qp_x,
-			HydroState *qp_y) const
+			HydroState *qp_y,
+			HydroState *qp_z) const
   {
     
     real_t gamma0 = params.settings.gamma0;
     real_t smallr = params.settings.smallr;
     
     // first compute slopes
-    HydroState dqX, dqY;
+    HydroState dqX, dqY, dqZ;
     dqX.d = 0.0;
     dqX.p = 0.0;
     dqX.u = 0.0;
     dqX.v = 0.0;
+    dqX.w = 0.0;
+    
     dqY.d = 0.0;
     dqY.p = 0.0;
     dqY.u = 0.0;
     dqY.v = 0.0;
-      
-    slope_unsplit_hydro_2d(q, 
+    dqY.w = 0.0;
+
+    dqZ.d = 0.0;
+    dqZ.p = 0.0;
+    dqZ.u = 0.0;
+    dqZ.v = 0.0;
+    dqZ.w = 0.0;
+
+    slope_unsplit_hydro_3d(q, 
 			   qNeighbors_0, qNeighbors_1, 
 			   qNeighbors_2, qNeighbors_3,
-			   &dqX, &dqY);
+			   qNeighbors_4, qNeighbors_5,
+			   &dqX, &dqY, &dqZ);
       
     // Cell centered values
     real_t r =  q->d;
     real_t p =  q->p;
     real_t u =  q->u;
     real_t v =  q->v;
+    real_t w =  q->w;
       
     // TVD slopes in all directions
     real_t drx = dqX.d;
     real_t dpx = dqX.p;
     real_t dux = dqX.u;
     real_t dvx = dqX.v;
+    real_t dwx = dqX.w;
       
     real_t dry = dqY.d;
     real_t dpy = dqY.p;
     real_t duy = dqY.u;
     real_t dvy = dqY.v;
+    real_t dwy = dqY.w;
+
+    real_t drz = dqZ.d;
+    real_t dpz = dqZ.p;
+    real_t duz = dqZ.u;
+    real_t dvz = dqZ.v;
+    real_t dwz = dqZ.w;
       
     // source terms (with transverse derivatives)
-    real_t sr0 = -u*drx-v*dry - (dux+dvy)*r;
-    real_t sp0 = -u*dpx-v*dpy - (dux+dvy)*gamma0*p;
-    real_t su0 = -u*dux-v*duy - (dpx    )/r;
-    real_t sv0 = -u*dvx-v*dvy - (dpy    )/r;
-      
+    real_t sr0 = (-u*drx-dux*r)*dtdx + (-v*dry-dvy*r)*dtdy + (-w*drz-dwz*r)*dtdz;
+    real_t su0 = (-u*dux-dpx/r)*dtdx + (-v*duy      )*dtdy + (-w*duz      )*dtdz; 
+    real_t sv0 = (-u*dvx      )*dtdx + (-v*dvy-dpy/r)*dtdy + (-w*dvz      )*dtdz;
+    real_t sw0 = (-u*dwx      )*dtdx + (-v*dwy      )*dtdy + (-w*dwz-dpz/r)*dtdz; 
+    real_t sp0 = (-u*dpx-dux*gamma0*p)*dtdx + (-v*dpy-dvy*gamma0*p)*dtdy + (-w*dpz-dwz*gamma0*p)*dtdz;
+       
     // Right state at left interface
-    qp_x->d = r - HALF_F*drx + sr0*dtdx*HALF_F;
-    qp_x->p = p - HALF_F*dpx + sp0*dtdx*HALF_F;
-    qp_x->u = u - HALF_F*dux + su0*dtdx*HALF_F;
-    qp_x->v = v - HALF_F*dvx + sv0*dtdx*HALF_F;
+    qp_x->d = r - HALF_F*drx + sr0*HALF_F;
+    qp_x->p = p - HALF_F*dpx + sp0*HALF_F;
+    qp_x->u = u - HALF_F*dux + su0*HALF_F;
+    qp_x->v = v - HALF_F*dvx + sv0*HALF_F;
+    qp_x->w = w - HALF_F*dwx + sw0*HALF_F;
     qp_x->d = fmax(smallr, qp_x->d);
       
     // Left state at right interface
-    qm_x->d = r + HALF_F*drx + sr0*dtdx*HALF_F;
-    qm_x->p = p + HALF_F*dpx + sp0*dtdx*HALF_F;
-    qm_x->u = u + HALF_F*dux + su0*dtdx*HALF_F;
-    qm_x->v = v + HALF_F*dvx + sv0*dtdx*HALF_F;
+    qm_x->d = r + HALF_F*drx + sr0*HALF_F;
+    qm_x->p = p + HALF_F*dpx + sp0*HALF_F;
+    qm_x->u = u + HALF_F*dux + su0*HALF_F;
+    qm_x->v = v + HALF_F*dvx + sv0*HALF_F;
+    qm_x->w = w + HALF_F*dwx + sw0*HALF_F;
     qm_x->d = fmax(smallr, qm_x->d);
       
     // Top state at bottom interface
-    qp_y->d = r - HALF_F*dry + sr0*dtdy*HALF_F;
-    qp_y->p = p - HALF_F*dpy + sp0*dtdy*HALF_F;
-    qp_y->u = u - HALF_F*duy + su0*dtdy*HALF_F;
-    qp_y->v = v - HALF_F*dvy + sv0*dtdy*HALF_F;
+    qp_y->d = r - HALF_F*dry + sr0*HALF_F;
+    qp_y->p = p - HALF_F*dpy + sp0*HALF_F;
+    qp_y->u = u - HALF_F*duy + su0*HALF_F;
+    qp_y->v = v - HALF_F*dvy + sv0*HALF_F;
+    qp_y->w = w - HALF_F*dwy + sw0*HALF_F;
     qp_y->d = fmax(smallr, qp_y->d);
       
     // Bottom state at top interface
-    qm_y->d = r + HALF_F*dry + sr0*dtdy*HALF_F;
-    qm_y->p = p + HALF_F*dpy + sp0*dtdy*HALF_F;
-    qm_y->u = u + HALF_F*duy + su0*dtdy*HALF_F;
-    qm_y->v = v + HALF_F*dvy + sv0*dtdy*HALF_F;
+    qm_y->d = r + HALF_F*dry + sr0*HALF_F;
+    qm_y->p = p + HALF_F*dpy + sp0*HALF_F;
+    qm_y->u = u + HALF_F*duy + su0*HALF_F;
+    qm_y->v = v + HALF_F*dvy + sv0*HALF_F;
+    qm_y->w = w + HALF_F*dwy + sw0*HALF_F;
     qm_y->d = fmax(smallr, qm_y->d);
+
+    // Back state at bottom interface
+    qp_z->d = r - HALF_F*drz + sr0*HALF_F;
+    qp_z->p = p - HALF_F*dpz + sp0*HALF_F;
+    qp_z->u = u - HALF_F*duz + su0*HALF_F;
+    qp_z->v = v - HALF_F*dvz + sv0*HALF_F;
+    qp_z->w = w - HALF_F*dwz + sw0*HALF_F;
+    qp_z->d = fmax(smallr, qp_z->d);
       
-  } // trace_unsplit_2d
+    // Front state at top interface
+    qm_z->d = r + HALF_F*drz + sr0*HALF_F;
+    qm_z->p = p + HALF_F*dpz + sp0*HALF_F;
+    qm_z->u = u + HALF_F*duz + su0*HALF_F;
+    qm_z->v = v + HALF_F*dvz + sv0*HALF_F;
+    qm_z->w = w + HALF_F*dwz + sw0*HALF_F;
+    qm_z->d = fmax(smallr, qm_z->d);
+
+  } // trace_unsplit_3d
+
 
 
   /**
-   * Trace computations for unsplit Godunov scheme.
+   * Trace computations for unsplit Godunov scheme (3d).
    *
    * \param[in] q          : Primitive variables state.
    * \param[in] dqX        : slope along X
    * \param[in] dqY        : slope along Y
+   * \param[in] dqZ        : slope along Z
    * \param[in] c          : local sound speed.
    * \param[in] dtdx       : dt over dx
    * \param[in] dtdy       : dt over dy
+   * \param[in] dtdz       : dt over dz
    * \param[in] faceId     : which face will be reconstructed
    * \param[out] qface     : q reconstructed state at cell interface
    */
   KOKKOS_INLINE_FUNCTION
-  void trace_unsplit_2d_along_dir(const HydroState *q, 
+  void trace_unsplit_3d_along_dir(const HydroState *q, 
 				  const HydroState *dqX,
 				  const HydroState *dqY,
+				  const HydroState *dqZ,
 				  real_t dtdx, 
 				  real_t dtdy, 
+				  real_t dtdz, 
 				  int    faceId,
 				  HydroState *qface) const
   {
@@ -231,30 +282,41 @@ public:
     real_t p =  q->p;
     real_t u =  q->u;
     real_t v =  q->v;
+    real_t w =  q->w;
   
     // TVD slopes in all directions
     real_t drx = dqX->d;
     real_t dpx = dqX->p;
     real_t dux = dqX->u;
     real_t dvx = dqX->v;
+    real_t dwx = dqX->w;
   
     real_t dry = dqY->d;
     real_t dpy = dqY->p;
     real_t duy = dqY->u;
     real_t dvy = dqY->v;
+    real_t dwy = dqY->w;
+  
+    real_t drz = dqZ->d;
+    real_t dpz = dqZ->p;
+    real_t duz = dqZ->u;
+    real_t dvz = dqZ->v;
+    real_t dwz = dqZ->w;
   
     // source terms (with transverse derivatives)
-    real_t sr0 = -u*drx-v*dry - (dux+dvy)*r;
-    real_t sp0 = -u*dpx-v*dpy - (dux+dvy)*gamma0*p;
-    real_t su0 = -u*dux-v*duy - (dpx    )/r;
-    real_t sv0 = -u*dvx-v*dvy - (dpy    )/r;
-  
+    real_t sr0 = -u*drx-v*dry-w*drz - (dux+dvy+dwz)*r;
+    real_t sp0 = -u*dpx-v*dpy-w*dpz - (dux+dvy+dwz)*gamma0*p;
+    real_t su0 = -u*dux-v*duy-w*duz - (dpx        )/r;
+    real_t sv0 = -u*dvx-v*dvy-w*dvz - (dpy        )/r;
+    real_t sw0 = -u*dwx-v*dwy-w*dwz - (dpz        )/r;
+
     if (faceId == FACE_XMIN) {
       // Right state at left interface
       qface->d = r - HALF_F*drx + sr0*dtdx*HALF_F;
       qface->p = p - HALF_F*dpx + sp0*dtdx*HALF_F;
       qface->u = u - HALF_F*dux + su0*dtdx*HALF_F;
       qface->v = v - HALF_F*dvx + sv0*dtdx*HALF_F;
+      qface->w = w - HALF_F*dwx + sw0*dtdx*HALF_F;
       qface->d = fmax(smallr, qface->d);
     }
 
@@ -264,6 +326,7 @@ public:
       qface->p = p + HALF_F*dpx + sp0*dtdx*HALF_F;
       qface->u = u + HALF_F*dux + su0*dtdx*HALF_F;
       qface->v = v + HALF_F*dvx + sv0*dtdx*HALF_F;
+      qface->w = w + HALF_F*dwx + sw0*dtdx*HALF_F;
       qface->d = fmax(smallr, qface->d);
     }
   
@@ -273,6 +336,7 @@ public:
       qface->p = p - HALF_F*dpy + sp0*dtdy*HALF_F;
       qface->u = u - HALF_F*duy + su0*dtdy*HALF_F;
       qface->v = v - HALF_F*dvy + sv0*dtdy*HALF_F;
+      qface->w = w - HALF_F*dwy + sw0*dtdy*HALF_F;
       qface->d = fmax(smallr, qface->d);
     }
 
@@ -282,116 +346,37 @@ public:
       qface->p = p + HALF_F*dpy + sp0*dtdy*HALF_F;
       qface->u = u + HALF_F*duy + su0*dtdy*HALF_F;
       qface->v = v + HALF_F*dvy + sv0*dtdy*HALF_F;
+      qface->w = w + HALF_F*dwy + sw0*dtdy*HALF_F;
       qface->d = fmax(smallr, qface->d);
     }
 
-  } // trace_unsplit_2d_along_dir
+    if (faceId == FACE_ZMIN) {
+      // Top state at bottom interface
+      qface->d = r - HALF_F*drz + sr0*dtdz*HALF_F;
+      qface->p = p - HALF_F*dpz + sp0*dtdz*HALF_F;
+      qface->u = u - HALF_F*duz + su0*dtdz*HALF_F;
+      qface->v = v - HALF_F*dvz + sv0*dtdz*HALF_F;
+      qface->w = w - HALF_F*dwz + sw0*dtdz*HALF_F;
+      qface->d = fmax(smallr, qface->d);
+    }
 
+    if (faceId == FACE_ZMAX) {
+      // Top state at bottom interface
+      qface->d = r + HALF_F*drz + sr0*dtdz*HALF_F;
+      qface->p = p + HALF_F*dpz + sp0*dtdz*HALF_F;
+      qface->u = u + HALF_F*duz + su0*dtdz*HALF_F;
+      qface->v = v + HALF_F*dvz + sv0*dtdz*HALF_F;
+      qface->w = w + HALF_F*dwz + sw0*dtdz*HALF_F;
+      qface->d = fmax(smallr, qface->d);
+    }
 
-  /**
-   * This another implementation of trace computations for 2D data; it
-   * is used when unsplitVersion = 1
-   *
-   * Note that :
-   * - hydro slopes computations are done outside this routine
-   *
-   * \param[in]  q  primitive variable state vector
-   * \param[in]  dq primitive variable slopes
-   * \param[in]  dtdx dt divided by dx
-   * \param[in]  dtdy dt divided by dy
-   * \param[out] qm
-   * \param[out] qp
-   *
-   */
-  KOKKOS_INLINE_FUNCTION
-  void trace_unsplit_hydro_2d(const HydroState *q,
-			      const HydroState *dqX,
-			      const HydroState *dqY,
-			      real_t dtdx,
-			      real_t dtdy,
-			      HydroState *qm_x,
-			      HydroState *qm_y,
-			      HydroState *qp_x,
-			      HydroState *qp_y) const
-  {
-  
-    real_t gamma0 = params.settings.gamma0;
-    real_t smallr = params.settings.smallr;
-    real_t smallp = params.settings.smallp;
-
-    // Cell centered values
-    real_t r = q->d;
-    real_t p = q->p;
-    real_t u = q->u;
-    real_t v = q->v;
-
-    // Cell centered TVD slopes in X direction
-    real_t drx = dqX->d;  drx *= HALF_F;
-    real_t dpx = dqX->p;  dpx *= HALF_F;
-    real_t dux = dqX->u;  dux *= HALF_F;
-    real_t dvx = dqX->v;  dvx *= HALF_F;
-  
-    // Cell centered TVD slopes in Y direction
-    real_t dry = dqY->d;  dry *= HALF_F;
-    real_t dpy = dqY->p;  dpy *= HALF_F;
-    real_t duy = dqY->u;  duy *= HALF_F;
-    real_t dvy = dqY->v;  dvy *= HALF_F;
-
-    // Source terms (including transverse derivatives)
-    real_t sr0, su0, sv0, sp0;
-
-    /*only true for cartesian grid */
-    {
-      sr0 = (-u*drx-dux*r)       *dtdx + (-v*dry-dvy*r)       *dtdy;
-      su0 = (-u*dux-dpx/r)       *dtdx + (-v*duy      )       *dtdy;
-      sv0 = (-u*dvx      )       *dtdx + (-v*dvy-dpy/r)       *dtdy;
-      sp0 = (-u*dpx-dux*gamma0*p)*dtdx + (-v*dpy-dvy*gamma0*p)*dtdy;    
-    } // end cartesian
-
-    // Update in time the  primitive variables
-    r = r + sr0;
-    u = u + su0;
-    v = v + sv0;
-    p = p + sp0;
-
-    // Face averaged right state at left interface
-    qp_x->d = r - drx;
-    qp_x->u = u - dux;
-    qp_x->v = v - dvx;
-    qp_x->p = p - dpx;
-    qp_x->d = fmax(smallr,  qp_x->d);
-    qp_x->p = fmax(smallp * qp_x->d, qp_x->p);
-  
-    // Face averaged left state at right interface
-    qm_x->d = r + drx;
-    qm_x->u = u + dux;
-    qm_x->v = v + dvx;
-    qm_x->p = p + dpx;
-    qm_x->d = fmax(smallr,  qm_x->d);
-    qm_x->p = fmax(smallp * qm_x->d, qm_x->p);
-
-    // Face averaged top state at bottom interface
-    qp_y->d = r - dry;
-    qp_y->u = u - duy;
-    qp_y->v = v - dvy;
-    qp_y->p = p - dpy;
-    qp_y->d = fmax(smallr,  qp_y->d);
-    qp_y->p = fmax(smallp * qp_y->d, qp_y->p);
-  
-    // Face averaged bottom state at top interface
-    qm_y->d = r + dry;
-    qm_y->u = u + duy;
-    qm_y->v = v + dvy;
-    qm_y->p = p + dpy;
-    qm_y->d = fmax(smallr,  qm_y->d);
-    qm_y->p = fmax(smallp * qm_y->d, qm_y->p);
-  
-  } // trace_unsplit_hydro_2d
-
+  } // trace_unsplit_3d_along_dir
 
   /**
-   * Compute primitive variables slopes (dqX,dqY) for one component from q and its neighbors.
-   * This routine is only used in the 2D UNSPLIT integration and slope_type = 0,1 and 2.
+   * Compute primitive variables slopes (dqX,dqY,dqZ) for one component
+   * from q and its neighbors.
+   * This routine is only used in the 3D UNSPLIT integration and 
+   * slope_type = 0,1 and 2.
    * 
    * Only slope_type 1 and 2 are supported.
    *
@@ -400,18 +385,24 @@ public:
    * \param[in]  qMinusX : value in the previous neighbor cell along XDIR
    * \param[in]  qPlusY  : value in the next neighbor cell along YDIR
    * \param[in]  qMinusY : value in the previous neighbor cell along YDIR
+   * \param[in]  qPlusZ  : value in the next neighbor cell along ZDIR
+   * \param[in]  qMinusZ : value in the previous neighbor cell along ZDIR
    * \param[out] dqX     : reference to an array returning the X slopes
    * \param[out] dqY     : reference to an array returning the Y slopes
+   * \param[out] dqZ     : reference to an array returning the Z slopes
    *
    */
   KOKKOS_INLINE_FUNCTION
-  void slope_unsplit_hydro_2d_scalar(real_t q, 
+  void slope_unsplit_hydro_3d_scalar(real_t q, 
 				     real_t qPlusX,
 				     real_t qMinusX,
 				     real_t qPlusY,
 				     real_t qMinusY,
+				     real_t qPlusZ,
+				     real_t qMinusZ,
 				     real_t *dqX,
-				     real_t *dqY) const
+				     real_t *dqY,
+				     real_t *dqZ) const
   {
     real_t slope_type = params.settings.slope_type;
 
@@ -439,12 +430,24 @@ public:
       dlim = ZERO_F;
     *dqY = dsgn * fmin( dlim, FABS(dcen) );
 
-  } // slope_unsplit_hydro_2d_scalar
+    // slopes in third coordinate direction
+    dlft = slope_type*(q      - qMinusZ);
+    drgt = slope_type*(qPlusZ - q      );
+    dcen = HALF_F * (qPlusZ - qMinusZ);
+    dsgn = (dcen >= ZERO_F) ? ONE_F : -ONE_F;
+    slop = fmin( FABS(dlft), FABS(drgt) );
+    dlim = slop;
+    if ( (dlft*drgt) <= ZERO_F )
+      dlim = ZERO_F;
+    *dqZ = dsgn * fmin( dlim, FABS(dcen) );
+
+  } // slope_unsplit_hydro_3d_scalar
+
 
 
   /**
    * Compute primitive variables slope (vector dq) from q and its neighbors.
-   * This routine is only used in the 2D UNSPLIT integration and slope_type = 0,1 and 2.
+   * This routine is only used in the 3D UNSPLIT integration and slope_type = 0,1 and 2.
    * 
    * Only slope_type 1 and 2 are supported.
    *
@@ -453,18 +456,24 @@ public:
    * \param[in]  qMinusX : state in the previous neighbor cell along XDIR
    * \param[in]  qPlusY  : state in the next neighbor cell along YDIR
    * \param[in]  qMinusY : state in the previous neighbor cell along YDIR
+   * \param[in]  qPlusZ  : state in the next neighbor cell along ZDIR
+   * \param[in]  qMinusZ : state in the previous neighbor cell along ZDIR
    * \param[out] dqX     : reference to an array returning the X slopes
    * \param[out] dqY     : reference to an array returning the Y slopes
+   * \param[out] dqZ     : reference to an array returning the Z slopes
    *
    */
   KOKKOS_INLINE_FUNCTION
-  void slope_unsplit_hydro_2d(const HydroState *q, 
+  void slope_unsplit_hydro_3d(const HydroState *q, 
 			      const HydroState *qPlusX, 
 			      const HydroState *qMinusX,
 			      const HydroState *qPlusY,
 			      const HydroState *qMinusY,
+			      const HydroState *qPlusZ,
+			      const HydroState *qMinusZ,
 			      HydroState *dqX,
-			      HydroState *dqY) const
+			      HydroState *dqY,
+			      HydroState *dqZ) const
   {
   
     real_t slope_type = params.settings.slope_type;
@@ -475,25 +484,39 @@ public:
       dqX->p = ZERO_F;
       dqX->u = ZERO_F;
       dqX->v = ZERO_F;
+      dqX->w = ZERO_F;
 
       dqY->d = ZERO_F;
       dqY->p = ZERO_F;
       dqY->u = ZERO_F;
       dqY->v = ZERO_F;
+      dqY->w = ZERO_F;
+
+      dqZ->d = ZERO_F;
+      dqZ->p = ZERO_F;
+      dqZ->u = ZERO_F;
+      dqZ->v = ZERO_F;
+      dqZ->w = ZERO_F;
 
       return;
     }
 
     if (slope_type==1 || slope_type==2) {  // minmod or average
 
-      slope_unsplit_hydro_2d_scalar( q->d, qPlusX->d, qMinusX->d, qPlusY->d, qMinusY->d, &(dqX->d), &(dqY->d));
-      slope_unsplit_hydro_2d_scalar( q->p, qPlusX->p, qMinusX->p, qPlusY->p, qMinusY->p, &(dqX->p), &(dqY->p));
-      slope_unsplit_hydro_2d_scalar( q->u, qPlusX->u, qMinusX->u, qPlusY->u, qMinusY->u, &(dqX->u), &(dqY->u));
-      slope_unsplit_hydro_2d_scalar( q->v, qPlusX->v, qMinusX->v, qPlusY->v, qMinusY->v, &(dqX->v), &(dqY->v));
+      slope_unsplit_hydro_3d_scalar( q->d, qPlusX->d, qMinusX->d, qPlusY->d, qMinusY->d, qPlusZ->d, qMinusZ->d,
+				     &(dqX->d), &(dqY->d), &(dqZ->d));
+      slope_unsplit_hydro_3d_scalar( q->p, qPlusX->p, qMinusX->p, qPlusY->p, qMinusY->p, qPlusZ->p, qMinusZ->p,
+				     &(dqX->p), &(dqY->p), &(dqZ->p));
+      slope_unsplit_hydro_3d_scalar( q->u, qPlusX->u, qMinusX->u, qPlusY->u, qMinusY->u, qPlusZ->u, qMinusZ->u,
+				     &(dqX->u), &(dqY->u), &(dqZ->v));
+      slope_unsplit_hydro_3d_scalar( q->v, qPlusX->v, qMinusX->v, qPlusY->v, qMinusY->v, qPlusZ->v, qMinusZ->v,
+				     &(dqX->v), &(dqY->v), &(dqZ->v));
+      slope_unsplit_hydro_3d_scalar( q->w, qPlusX->w, qMinusX->w, qPlusY->w, qMinusY->w, qPlusZ->w, qMinusZ->w,
+				     &(dqX->w), &(dqY->w), &(dqZ->w));
 
     } // end slope_type == 1 or 2
   
-  } // slope_unsplit_hydro_2d
+  } // slope_unsplit_hydro_3d
 
   /**
    * Compute cell fluxes from the Godunov state
@@ -515,11 +538,12 @@ public:
   
     // Transverse momentum
     flux->v = flux->d * qgdnv->v;
+    flux->w = flux->d * qgdnv->w;
 
     // Total energy
     real_t entho = ONE_F / (gamma0 - ONE_F);
     real_t ekin;
-    ekin = HALF_F * qgdnv->d * (qgdnv->u*qgdnv->u + qgdnv->v*qgdnv->v);
+    ekin = HALF_F * qgdnv->d * (qgdnv->u*qgdnv->u + qgdnv->v*qgdnv->v + qgdnv->w*qgdnv->w);
   
     real_t etot = qgdnv->p * entho + ekin;
     flux->p = qgdnv->u * (etot + qgdnv->p);
@@ -661,10 +685,12 @@ public:
     if(sgnm > ZERO_F)
       {
 	qgdnv->v = qleft->v;
+	qgdnv->w = qleft->w;
       }
     else
       {
 	qgdnv->v = qright->v;
+	qgdnv->w = qright->w;
       }
   
     cmpflx(qgdnv, flux);
@@ -701,6 +727,7 @@ public:
     
     real_t ecinl = HALF_F*rl*ul*ul;
     ecinl += HALF_F*rl*qleft->v*qleft->v;
+    ecinl += HALF_F*rl*qleft->w*qleft->w;
 
     real_t etotl = pl*entho+ecinl;
     real_t ptotl = pl;
@@ -712,6 +739,7 @@ public:
 
     real_t ecinr = HALF_F*rr*ur*ur;
     ecinr += HALF_F*rr*qright->v*qright->v;
+    ecinr += HALF_F*rr*qright->w*qright->w;
   
     real_t etotr = pr*entho+ecinr;
     real_t ptotr = pr;
@@ -770,12 +798,14 @@ public:
     flux->p = (etoto+ptoto)*uo;
     if (flux->d > ZERO_F) {
       flux->v = flux->d*qleft->v;
+      flux->w = flux->d*qleft->w;
     } else {
       flux->v = flux->d*qright->v;
+      flux->w = flux->d*qright->w;
     }
   
   } // riemann_hllc
 
-}; // class HydroBaseFunctor2D
+}; // class HydroBaseFunctor3D
 
-#endif // HYDRO_BASE_FUNCTOR_2D_H_
+#endif // HYDRO_BASE_FUNCTOR_3D_H_

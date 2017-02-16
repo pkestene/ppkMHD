@@ -25,8 +25,10 @@
 typedef Kokkos::View<real_t**, DEVICE>   DataArray2d;
 typedef DataArray2d::HostMirror          DataArray2dHost;
 
-typedef Kokkos::View<real_t***, DEVICE>  DataArray3d;
-typedef DataArray3d::HostMirror          DataArray3dHost;
+//typedef Kokkos::View<real_t***, DEVICE>  DataArray3d;
+//typedef DataArray3d::HostMirror          DataArray3dHost;
+typedef DataArray2d     DataArray3d;
+typedef DataArray2dHost DataArray3dHost;
 
 /**
  * Retrieve cartesian coordinate from index, using memory layout information.
