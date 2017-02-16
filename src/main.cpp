@@ -1,5 +1,5 @@
 /**
- * Hydro2d solver for teaching purpose.
+ * Hydro/MHD solver (Muscl-Hancock).
  *
  * \date April, 16 2016
  * \author P. Kestener
@@ -12,9 +12,13 @@
 
 #include "real_type.h"   // choose between single and double precision
 #include "HydroParams.h" // read parameter file
-#include "HydroBaseFunctor2D.h"
-#include "HydroRun2D.h"    // memory allocation for hydro arrays
-#include "Timer.h"  // for timer
+
+// solver
+#include "HydroRun2D.h"
+#include "HydroRun3D.h"
+
+// for timer
+#include "Timer.h"
 
 #ifdef CUDA
 #include "CudaTimer.h"
@@ -132,6 +136,7 @@ int main(int argc, char *argv[])
   {
     int isize = params.isize;
     int jsize = params.jsize;
+    int ksize = params.ksize;
     
     real_t t_tot   = total_timer.elapsed();
     real_t t_comp  = hydro->godunov_timer.elapsed();
