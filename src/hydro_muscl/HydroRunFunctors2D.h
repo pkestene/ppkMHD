@@ -1280,7 +1280,7 @@ public:
 	  
 	}
 	
-      }
+      } // end xmin
     }
 
     if (faceId == FACE_XMAX) {
@@ -1312,7 +1312,7 @@ public:
 	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
 	  
 	}
-      }
+      } // end xmax
     }
     
     if (faceId == FACE_YMIN) {
@@ -1342,7 +1342,7 @@ public:
 	  index_in  = coord2index(i,j0,isize,jsize);
 	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
 	}
-      }
+      } // end ymin
     }
 
     if (faceId == FACE_YMAX) {
@@ -1375,7 +1375,7 @@ public:
 	}
 
       }
-    }
+    } // end ymax
     
   } // end operator ()
 
@@ -1383,5 +1383,5 @@ public:
   
 }; // MakeBoundariesFunctor
   
-#endif // HYDRO_RUN_FUNCTORS_H_
+#endif // HYDRO_RUN_FUNCTORS_2D_H_
 
