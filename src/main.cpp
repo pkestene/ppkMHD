@@ -81,7 +81,8 @@ int main(int argc, char *argv[])
 
   // initialize workspace memory (U, U2, ...)
   HydroRun2D *hydro = new HydroRun2D(params, configMap);
-
+  hydro->save_solution();
+  
   // start computation
   std::cout << "Start computation....\n";
   hydro->timers[TIMER_TOTAL]->start();

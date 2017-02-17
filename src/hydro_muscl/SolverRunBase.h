@@ -95,9 +95,6 @@ public:
   
   /* IO related */
 
-  //! maximun number of output files
-  int m_max_num_output;
-
   //! counter incremented each time an output is written
   int m_times_saved;
 

@@ -58,8 +58,6 @@ SolverRunBase::read_config()
   m_restart_run_enabled = configMap.getInteger("run", "restart_enabled", 0);
   m_restart_run_filename = configMap.getString ("run", "restart_filename", "");
 
-  m_max_num_output = configMap.getInteger ("run", "save_count", 100);
-
 } // SolverRunBase::read_config
 
 // =======================================================
@@ -167,15 +165,14 @@ SolverRunBase::read_restart_file()
 
 // =======================================================
 // =======================================================
-// TODO: let the user choose how many times to write?
 int
 SolverRunBase::should_save_solution()
 {
   
-  double interval = m_tEnd / m_max_num_output;
+  double interval = m_tEnd / params.nOutput;
 
   // negative value means : no output will ever be done
-  if (m_max_num_output < 0) {
+  if (params.nOutput < 0) {
     return 1;
   }
 

@@ -67,6 +67,8 @@ public:
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
 
+  void save_solution_impl();
+
   // host routines (save data to file, device data are copied into host
   // inside this routine)
   void saveVTK(DataArray Udata, int iStep, std::string name);

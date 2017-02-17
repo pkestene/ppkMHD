@@ -156,22 +156,17 @@ void HydroRun3D::next_iteration_impl()
   
   // output
   if (params.enableOutput) {
-    if (m_iteration % params.nOutput == 0) {
-	std::cout << "Output results at time t=" << m_t
-		  << " step " << m_iteration
-		  << " dt=" << m_dt << std::endl;
-   
-	timers[TIMER_IO]->start();
-	if (m_iteration % 2 == 0)
-	  saveVTK(U, m_iteration, "U");
-	else
-	  saveVTK(U2, m_iteration, "U");
-
-	timers[TIMER_IO]->stop();
-	
+    if ( should_save_solution() ) {
+      
+      std::cout << "Output results at time t=" << m_t
+		<< " step " << m_iteration
+		<< " dt=" << m_dt << std::endl;
+      
+      save_solution();
+      
     } // end output
   } // end enable output
-    
+  
   // compute new dt
   timers[TIMER_DT]->start();
   compute_dt();
@@ -391,6 +386,21 @@ void HydroRun3D::init_blast(DataArray Udata)
   Kokkos::parallel_for(ijksize, functor);
 
 } // HydroRun3D::init_blast
+
+// =======================================================
+// =======================================================
+void HydroRun3D::save_solution_impl()
+{
+
+  timers[TIMER_IO]->start();
+  if (m_iteration % 2 == 0)
+    saveVTK(U, m_times_saved, "U");
+  else
+    saveVTK(U2, m_times_saved, "U");
+  
+  timers[TIMER_IO]->stop();
+    
+} // HydroRun3D::save_solution_impl()
 
 // =======================================================
 // =======================================================
