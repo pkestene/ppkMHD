@@ -5,6 +5,10 @@ else()
   execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
     OUTPUT_VARIABLE GIT_BUILD_STRING
     OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 execute_process(COMMAND date "+%d/%m/%y"
   OUTPUT_VARIABLE DATE_STRING
