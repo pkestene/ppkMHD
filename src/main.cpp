@@ -15,13 +15,14 @@
 
 // solver
 #include "HydroRun2D.h"
-#include "HydroRun3D.h"
+//#include "HydroRun3D.h"
 
 // for timer
-#include "Timer.h"
 
 #ifdef CUDA
 #include "CudaTimer.h"
+#else
+#include "Timer.h"
 #endif
 
 int main(int argc, char *argv[])
@@ -60,11 +61,7 @@ int main(int argc, char *argv[])
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
-  real_t t=0, dt=0;
-  int    nStep=0;
 
-  Timer total_timer, io_timer, dt_timer;
-  
   if (argc != 2) {
     fprintf(stderr, "Error: wrong number of argument; input filename must be the only parameter on the command line\n");
     exit(EXIT_FAILURE);
@@ -84,71 +81,34 @@ int main(int argc, char *argv[])
 
   // initialize workspace memory (U, U2, ...)
   HydroRun2D *hydro = new HydroRun2D(params, configMap);
-  dt = hydro->compute_dt( nStep%2 );
-
-  // initialize boundaries
-  hydro->make_boundaries(hydro->U);
-  hydro->make_boundaries(hydro->U2);
 
   // start computation
   std::cout << "Start computation....\n";
-  total_timer.start();
+  hydro->timers[TIMER_TOTAL]->start();
 
   // Hydrodynamics solver loop
-  while (t < params.tEnd && nStep < params.nStepmax) {
+  while ( ! hydro->finished() ) {
 
-    if (nStep % 10 == 0) {
-      std::cout << "time step=" << nStep << std::endl;
-    }
-
-    // output
-    if (params.enableOutput) {
-      if (nStep % params.nOutput == 0) {
-	std::cout << "Output results at time t=" << t << " step " << nStep
-		  << " dt=" << dt << std::endl;
-	io_timer.start();
-	if (nStep % 2 == 0)
-	  hydro->saveVTK(hydro->U, nStep, "U");
-	else
-	  hydro->saveVTK(hydro->U2, nStep, "U");
-	io_timer.stop();
-      } // end output
-    } // end enable output
-    
-    // compute new dt
-    dt_timer.start();
-    dt = hydro->compute_dt( nStep%2 );
-    dt_timer.stop();
-    
-    // perform one step integration
-    hydro->godunov_unsplit(nStep, dt);
-
-    // increase time
-    nStep++;
-    t+=dt;
+    hydro->next_iteration();
 
   } // end solver loop
 
   // end of computation
-  total_timer.stop();
+  hydro->timers[TIMER_TOTAL]->stop();
 
   // print monitoring information
-  {
-    int isize = params.isize;
-    int jsize = params.jsize;
-    int ksize = params.ksize;
-    
-    real_t t_tot   = total_timer.elapsed();
-    real_t t_comp  = hydro->godunov_timer.elapsed();
-    real_t t_dt    = dt_timer.elapsed();
-    real_t t_bound = hydro->boundaries_timer.elapsed();
-    real_t t_io    = io_timer.elapsed();
+  {    
+    real_t t_tot   = hydro->timers[TIMER_TOTAL]->elapsed();
+    real_t t_comp  = hydro->timers[TIMER_NUM_SCHEME]->elapsed();
+    real_t t_dt    = hydro->timers[TIMER_DT]->elapsed();
+    real_t t_bound = hydro->timers[TIMER_BOUNDARIES]->elapsed();
+    real_t t_io    = hydro->timers[TIMER_IO]->elapsed();
     printf("total       time : %5.3f secondes\n",t_tot);
     printf("godunov     time : %5.3f secondes %5.2f%%\n",t_comp,100*t_comp/t_tot);
     printf("compute dt  time : %5.3f secondes %5.2f%%\n",t_dt,100*t_dt/t_tot);
     printf("boundaries  time : %5.3f secondes %5.2f%%\n",t_bound,100*t_bound/t_tot);
     printf("io          time : %5.3f secondes %5.2f%%\n",t_io,100*t_io/t_tot);
-    printf("Perf             : %10.2f number of Mcell-updates/s\n",nStep*isize*jsize/t_tot*1e-6);
+    printf("Perf             : %10.2f number of Mcell-updates/s\n",hydro->m_iteration*hydro->m_nCells/t_tot*1e-6);
   }
 
   delete hydro;

@@ -4,7 +4,6 @@
 #ifndef HYDRO_RUN_3D_H_
 #define HYDRO_RUN_3D_H_
 
-#include "Timer.h"
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 

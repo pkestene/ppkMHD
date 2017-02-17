@@ -2,16 +2,20 @@ set (hydro_muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/kokkos_shared.h
   ${CMAKE_CURRENT_SOURCE_DIR}/real_type.h
   ${CMAKE_CURRENT_SOURCE_DIR}/hydro_shared.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/utils.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SolverRunBase.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/SolverRunBase.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun2D.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors3D.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.h
+#  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.cpp
+#  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.h
   )
 
 add_library(hydro_muscl OBJECT

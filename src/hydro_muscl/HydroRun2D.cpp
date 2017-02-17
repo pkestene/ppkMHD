@@ -7,7 +7,6 @@
 
 #include "HydroRun2D.h"
 #include "HydroParams.h"
-#include "Timer.h"
 
 // the actual computational functors called in HydroRun
 #include "HydroRunFunctors2D.h"
@@ -28,8 +27,7 @@ static bool isBigEndian()
  *
  */
 HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
-  params(params),
-  configMap(configMap),
+  SolverRunBase(params, configMap),
   U(), U2(), Q(),
   Fluxes_x(), Fluxes_y(),
   Slopes_x(), Slopes_y(),
@@ -37,6 +35,8 @@ HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
   jsize(params.jsize),
   ijsize(params.isize*params.jsize)
 {
+
+  m_nCells = ijsize;
 
   /*
    * memory allocation (use sizes with ghosts included)
@@ -88,6 +88,12 @@ HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
 
   }
 
+  // initialize time step
+  compute_dt();
+
+  // initialize boundaries
+  make_boundaries(U);
+
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
@@ -109,11 +115,9 @@ HydroRun2D::~HydroRun2D()
 /**
  * Compute time step satisfying CFL condition.
  *
- * \param[in] useU integer, if 0 use data in U else use U2
- *
  * \return dt time step
  */
-real_t HydroRun2D::compute_dt(int useU)
+double HydroRun2D::compute_dt_local()
 {
 
   real_t dt;
@@ -121,7 +125,7 @@ real_t HydroRun2D::compute_dt(int useU)
   DataArray Udata;
   
   // which array is the current one ?
-  if (useU == 0)
+  if (m_iteration % 2 == 0)
     Udata = U;
   else
     Udata = U2;
@@ -134,20 +138,57 @@ real_t HydroRun2D::compute_dt(int useU)
 
   return dt;
 
-} // HydroRun2D::compute_dt
+} // HydroRun2D::compute_dt_local
+
+// =======================================================
+// =======================================================
+void HydroRun2D::next_iteration_impl()
+{
+
+  if (m_iteration % 10 == 0) {
+    std::cout << "time step=" << m_iteration << std::endl;
+  }
+  
+  // output
+  if (params.enableOutput) {
+    if (m_iteration % params.nOutput == 0) {
+	std::cout << "Output results at time t=" << m_t
+		  << " step " << m_iteration
+		  << " dt=" << m_dt << std::endl;
+   
+	timers[TIMER_IO]->start();
+	if (m_iteration % 2 == 0)
+	  saveVTK(U, m_iteration, "U");
+	else
+	  saveVTK(U2, m_iteration, "U");
+
+	timers[TIMER_IO]->stop();
+	
+    } // end output
+  } // end enable output
+    
+  // compute new dt
+  timers[TIMER_DT]->start();
+  compute_dt();
+  timers[TIMER_DT]->stop();
+  
+  // perform one step integration
+  godunov_unsplit(m_dt);
+  
+} // HydroRun2D::next_iteration_impl
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Wrapper to the actual computation routine
 // ///////////////////////////////////////////
-void HydroRun2D::godunov_unsplit(int nStep, real_t dt)
+void HydroRun2D::godunov_unsplit(real_t dt)
 {
   
-  if ( nStep % 2 == 0 ) {
-    godunov_unsplit_cpu(U , U2, dt, nStep);
+  if ( m_iteration % 2 == 0 ) {
+    godunov_unsplit_cpu(U , U2, dt);
   } else {
-    godunov_unsplit_cpu(U2, U , dt, nStep);
+    godunov_unsplit_cpu(U2, U , dt);
   }
   
 } // HydroRun2D::godunov_unsplit
@@ -158,9 +199,8 @@ void HydroRun2D::godunov_unsplit(int nStep, real_t dt)
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
 void HydroRun2D::godunov_unsplit_cpu(DataArray data_in, 
-				   DataArray data_out, 
-				   real_t dt, 
-				   int nStep)
+				     DataArray data_out, 
+				     real_t dt)
 {
 
   real_t dtdx;
@@ -170,16 +210,16 @@ void HydroRun2D::godunov_unsplit_cpu(DataArray data_in,
   dtdy = dt / params.dy;
 
   // fill ghost cell in data_in
-  boundaries_timer.start();
+  timers[TIMER_BOUNDARIES]->start();
   make_boundaries(data_in);
-  boundaries_timer.stop();
+  timers[TIMER_BOUNDARIES]->stop();
     
   // copy data_in into data_out (not necessary)
   // data_out = data_in;
   Kokkos::deep_copy(data_out, data_in);
   
   // start main computation
-  godunov_timer.start();
+  timers[TIMER_NUM_SCHEME]->start();
 
   // convert conservative variable into primitives ones for the entire domain
   convertToPrimitives(data_in);
@@ -239,7 +279,7 @@ void HydroRun2D::godunov_unsplit_cpu(DataArray data_in,
 
   } // end params.implementationVersion == 1
   
-  godunov_timer.stop();
+  timers[TIMER_NUM_SCHEME]->stop();
   
 } // HydroRun2D::godunov_unsplit_cpu
 
@@ -326,8 +366,8 @@ void HydroRun2D::init_blast(DataArray Udata)
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
 void HydroRun2D::saveVTK(DataArray Udata,
-		       int iStep,
-		       std::string name)
+			 int iStep,
+			 std::string name)
 {
 
   const int nx = params.nx;

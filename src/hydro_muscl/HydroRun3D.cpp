@@ -7,7 +7,6 @@
 
 #include "HydroRun3D.h"
 #include "HydroParams.h"
-#include "Timer.h"
 
 // the actual computational functors called in HydroRun
 #include "HydroRunFunctors3D.h"

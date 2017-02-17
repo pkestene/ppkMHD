@@ -4,14 +4,14 @@
 #ifndef HYDRO_RUN_2D_H_
 #define HYDRO_RUN_2D_H_
 
-#include "Timer.h"
+#include "SolverRunBase.h"
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 
 /**
  * Main hydrodynamics data structure.
  */
-class HydroRun2D
+class HydroRun2D : public SolverRunBase
 {
 
 public:
@@ -21,10 +21,6 @@ public:
   
   HydroRun2D(HydroParams& params, ConfigMap& configMap);
   virtual ~HydroRun2D();
-  
-  // hydroParams
-  HydroParams& params;
-  ConfigMap&   configMap;
   
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
@@ -41,17 +37,22 @@ public:
 
   //riemann_solver_t riemann_solver_fn; /*!< riemann solver function pointer */
 
-  Timer boundaries_timer, godunov_timer;
-  
-  // methods
-  real_t compute_dt(int useU);
-  
-  void godunov_unsplit(int nStep, real_t dt);
+  /*
+   * methods
+   */
+
+  //! compute time step inside an MPI process, at shared memory level.
+  double compute_dt_local();
+
+  //! perform 1 time step (time integration).
+  void next_iteration_impl();
+
+  //! numerical scheme
+  void godunov_unsplit(real_t dt);
   
   void godunov_unsplit_cpu(DataArray data_in, 
 			   DataArray data_out, 
-			   real_t dt, 
-			   int nStep);
+			   real_t dt);
   
   void convertToPrimitives(DataArray Udata);
   

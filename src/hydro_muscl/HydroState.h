@@ -3,6 +3,12 @@
 
 #include "real_type.h"
 
+constexpr int HYDRO_2D_NBVAR=4;
+constexpr int HYDRO_3D_NBVAR=5;
+constexpr int MHD_2D_NBVAR=8;
+constexpr int MHD_3D_NBVAR=5;
+
+
 //!< a POD data structure to store local conservative / primitive variables (hydro 2d)
 struct HydroState2d {
   real_t d;
