@@ -14,8 +14,8 @@ set (hydro_muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors3D.h
-#  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/HydroRun3D.h
   )
 
 add_library(hydro_muscl OBJECT
