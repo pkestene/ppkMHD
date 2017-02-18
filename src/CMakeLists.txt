@@ -6,10 +6,10 @@
 add_subdirectory(utils)
 
 # Hydro solver using 2nd order Muscl-Hancock solver
-add_subdirectory(hydro_muscl)
+add_subdirectory(muscl)
 
 # include header for main application
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hydro)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/muscl)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
 
@@ -19,7 +19,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
 set(EXE_NAME "${PROJECT_NAME}")
 add_executable(${EXE_NAME}
   main.cpp
-  $<TARGET_OBJECTS:hydro_muscl>
+  $<TARGET_OBJECTS:muscl>
   $<TARGET_OBJECTS:config>
   $<TARGET_OBJECTS:time>
   )
@@ -28,7 +28,7 @@ add_executable(${EXE_NAME}
 #   COMPILE_FLAGS "${KOKKOS_CPPFLAGS} ${KOKKOS_CXXFLAGS}")
 target_include_directories(${EXE_NAME}
   PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/hydro_muscl
+  ${CMAKE_CURRENT_SOURCE_DIR}/muscl
   ${CMAKE_CURRENT_SOURCE_DIR}/utils/time
   ${CMAKE_CURRENT_SOURCE_DIR}/utils/config
   )

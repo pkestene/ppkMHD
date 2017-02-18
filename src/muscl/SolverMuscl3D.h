@@ -1,17 +1,17 @@
 /**
  *
  */
-#ifndef HYDRO_RUN_3D_H_
-#define HYDRO_RUN_3D_H_
+#ifndef SOLVER_MUSCL_3D_H_
+#define SOLVER_MUSCL_3D_H_
 
-#include "SolverRunBase.h"
+#include "SolverBase.h"
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 
 /**
- * Main hydrodynamics data structure.
+ * Main hydrodynamics data structure for 3D MUSCL-Hancock scheme.
  */
-class HydroRun3D : public SolverRunBase
+class SolverMuscl3D : public SolverBase
 {
 
 public:
@@ -19,8 +19,8 @@ public:
   using DataArray     = DataArray3d;
   using DataArrayHost = DataArray3dHost;
   
-  HydroRun3D(HydroParams& params, ConfigMap& configMap);
-  virtual ~HydroRun3D();
+  SolverMuscl3D(HydroParams& params, ConfigMap& configMap);
+  virtual ~SolverMuscl3D();
   
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
@@ -80,6 +80,6 @@ public:
   int ijsize, ijksize;
   static const int nbvar = 5;
   
-}; // class HydroRun3D
+}; // class SolverMuscl3D
 
-#endif // HYDRO_RUN_3D_H_
+#endif // SOLVER_MUSCL_3D_H_

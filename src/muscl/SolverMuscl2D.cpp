@@ -5,7 +5,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include "HydroRun2D.h"
+#include "SolverMuscl2D.h"
 #include "HydroParams.h"
 
 // the actual computational functors called in HydroRun
@@ -20,14 +20,17 @@ static bool isBigEndian()
   return ( (*(char*)&i) == 0 );
 }
 
+// =======================================================
+// ==== CLASS SolverMuscl2D IMPL =========================
+// =======================================================
 
 // =======================================================
 // =======================================================
 /**
  *
  */
-HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
-  SolverRunBase(params, configMap),
+SolverMuscl2D::SolverMuscl2D(HydroParams& params, ConfigMap& configMap) :
+  SolverBase(params, configMap),
   U(), U2(), Q(),
   Fluxes_x(), Fluxes_y(),
   Slopes_x(), Slopes_y(),
@@ -63,9 +66,9 @@ HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
   } 
   
   // default riemann solver
-  // riemann_solver_fn = &HydroRun2D::riemann_approx;
+  // riemann_solver_fn = &SolverMuscl2D::riemann_approx;
   // if (!riemannSolverStr.compare("hllc"))
-  //   riemann_solver_fn = &HydroRun2D::riemann_hllc;
+  //   riemann_solver_fn = &SolverMuscl2D::riemann_hllc;
   
   /*
    * initialize hydro array at t=0
@@ -97,7 +100,7 @@ HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
-} // HydroRun2D::HydroRun2D
+} // SolverMuscl2D::SolverMuscl2D
 
 
 // =======================================================
@@ -105,10 +108,10 @@ HydroRun2D::HydroRun2D(HydroParams& params, ConfigMap& configMap) :
 /**
  *
  */
-HydroRun2D::~HydroRun2D()
+SolverMuscl2D::~SolverMuscl2D()
 {
 
-} // HydroRun2D::~HydroRun2D
+} // SolverMuscl2D::~SolverMuscl2D
 
 // =======================================================
 // =======================================================
@@ -117,7 +120,7 @@ HydroRun2D::~HydroRun2D()
  *
  * \return dt time step
  */
-double HydroRun2D::compute_dt_local()
+double SolverMuscl2D::compute_dt_local()
 {
 
   real_t dt;
@@ -138,11 +141,11 @@ double HydroRun2D::compute_dt_local()
 
   return dt;
 
-} // HydroRun2D::compute_dt_local
+} // SolverMuscl2D::compute_dt_local
 
 // =======================================================
 // =======================================================
-void HydroRun2D::next_iteration_impl()
+void SolverMuscl2D::next_iteration_impl()
 {
 
   if (m_iteration % 10 == 0) {
@@ -170,14 +173,14 @@ void HydroRun2D::next_iteration_impl()
   // perform one step integration
   godunov_unsplit(m_dt);
   
-} // HydroRun2D::next_iteration_impl
+} // SolverMuscl2D::next_iteration_impl
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Wrapper to the actual computation routine
 // ///////////////////////////////////////////
-void HydroRun2D::godunov_unsplit(real_t dt)
+void SolverMuscl2D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
@@ -186,14 +189,14 @@ void HydroRun2D::godunov_unsplit(real_t dt)
     godunov_unsplit_cpu(U2, U , dt);
   }
   
-} // HydroRun2D::godunov_unsplit
+} // SolverMuscl2D::godunov_unsplit
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void HydroRun2D::godunov_unsplit_cpu(DataArray data_in, 
+void SolverMuscl2D::godunov_unsplit_cpu(DataArray data_in, 
 				     DataArray data_out, 
 				     real_t dt)
 {
@@ -276,21 +279,21 @@ void HydroRun2D::godunov_unsplit_cpu(DataArray data_in,
   
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // HydroRun2D::godunov_unsplit_cpu
+} // SolverMuscl2D::godunov_unsplit_cpu
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////////////////////////////
 // Convert conservative variables array U into primitive var array Q
 // ///////////////////////////////////////////////////////////////////
-void HydroRun2D::convertToPrimitives(DataArray Udata)
+void SolverMuscl2D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
   ConvertToPrimitivesFunctor convertToPrimitivesFunctor(params, Udata, Q);
   Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
   
-} // HydroRun2D::convertToPrimitives
+} // SolverMuscl2D::convertToPrimitives
 
 // =======================================================
 // =======================================================
@@ -298,7 +301,7 @@ void HydroRun2D::convertToPrimitives(DataArray Udata)
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
-void HydroRun2D::make_boundaries(DataArray Udata)
+void SolverMuscl2D::make_boundaries(DataArray Udata)
 {
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
@@ -322,7 +325,7 @@ void HydroRun2D::make_boundaries(DataArray Udata)
     Kokkos::parallel_for(nbIter, functor);
   }
   
-} // HydroRun2D::make_boundaries
+} // SolverMuscl2D::make_boundaries
 
 // =======================================================
 // =======================================================
@@ -330,7 +333,7 @@ void HydroRun2D::make_boundaries(DataArray Udata)
  * Hydrodynamical Implosion Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/implode/Implode.html
  */
-void HydroRun2D::init_implode(DataArray Udata)
+void SolverMuscl2D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor functor(params, Udata);
@@ -344,17 +347,17 @@ void HydroRun2D::init_implode(DataArray Udata)
  * Hydrodynamical blast Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/blast/blast.html
  */
-void HydroRun2D::init_blast(DataArray Udata)
+void SolverMuscl2D::init_blast(DataArray Udata)
 {
 
   InitBlastFunctor functor(params, Udata);
   Kokkos::parallel_for(ijsize, functor);
 
-} // HydroRun2D::init_blast
+} // SolverMuscl2D::init_blast
 
 // =======================================================
 // =======================================================
-void HydroRun2D::save_solution_impl()
+void SolverMuscl2D::save_solution_impl()
 {
 
   timers[TIMER_IO]->start();
@@ -365,7 +368,7 @@ void HydroRun2D::save_solution_impl()
   
   timers[TIMER_IO]->stop();
     
-} // HydroRun2D::save_solution_impl()
+} // SolverMuscl2D::save_solution_impl()
 
 // =======================================================
 // =======================================================
@@ -375,9 +378,9 @@ void HydroRun2D::save_solution_impl()
 // To make sure OpenMP and CUDA version give the same
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
-void HydroRun2D::saveVTK(DataArray Udata,
-			 int iStep,
-			 std::string name)
+void SolverMuscl2D::saveVTK(DataArray Udata,
+			    int iStep,
+			    std::string name)
 {
 
   const int nx = params.nx;
@@ -479,5 +482,5 @@ void HydroRun2D::saveVTK(DataArray Udata,
   
   outFile.close();
 
-} // HydroRun2D::saveVTK
+} // SolverMuscl2D::saveVTK
 

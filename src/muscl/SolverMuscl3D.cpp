@@ -5,7 +5,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include "HydroRun3D.h"
+#include "SolverMuscl3D.h"
 #include "HydroParams.h"
 
 // the actual computational functors called in HydroRun
@@ -26,8 +26,8 @@ static bool isBigEndian()
 /**
  *
  */
-HydroRun3D::HydroRun3D(HydroParams& params, ConfigMap& configMap) :
-  SolverRunBase(params, configMap),
+SolverMuscl3D::SolverMuscl3D(HydroParams& params, ConfigMap& configMap) :
+  SolverBase(params, configMap),
   U(), U2(), Q(),
   Fluxes_x(), Fluxes_y(), Fluxes_z(),
   Slopes_x(), Slopes_y(), Slopes_z(),
@@ -68,9 +68,9 @@ HydroRun3D::HydroRun3D(HydroParams& params, ConfigMap& configMap) :
   }
   
   // default riemann solver
-  // riemann_solver_fn = &HydroRun3D::riemann_approx;
+  // riemann_solver_fn = &SolverMuscl3D::riemann_approx;
   // if (!riemannSolverStr.compare("hllc"))
-  //   riemann_solver_fn = &HydroRun3D::riemann_hllc;
+  //   riemann_solver_fn = &SolverMuscl3D::riemann_hllc;
   
   /*
    * initialize hydro array at t=0
@@ -102,7 +102,7 @@ HydroRun3D::HydroRun3D(HydroParams& params, ConfigMap& configMap) :
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
-} // HydroRun3D::HydroRun3D
+} // SolverMuscl3D::SolverMuscl3D
 
 
 // =======================================================
@@ -110,10 +110,10 @@ HydroRun3D::HydroRun3D(HydroParams& params, ConfigMap& configMap) :
 /**
  *
  */
-HydroRun3D::~HydroRun3D()
+SolverMuscl3D::~SolverMuscl3D()
 {
 
-} // HydroRun3D::~HydroRun3D
+} // SolverMuscl3D::~SolverMuscl3D
 
 // =======================================================
 // =======================================================
@@ -122,7 +122,7 @@ HydroRun3D::~HydroRun3D()
  *
  * \return dt time step
  */
-double HydroRun3D::compute_dt_local()
+double SolverMuscl3D::compute_dt_local()
 {
 
   real_t dt;
@@ -143,11 +143,11 @@ double HydroRun3D::compute_dt_local()
 
   return dt;
 
-} // HydroRun3D::compute_dt
+} // SolverMuscl3D::compute_dt
 
 // =======================================================
 // =======================================================
-void HydroRun3D::next_iteration_impl()
+void SolverMuscl3D::next_iteration_impl()
 {
 
   if (m_iteration % 10 == 0) {
@@ -175,14 +175,14 @@ void HydroRun3D::next_iteration_impl()
   // perform one step integration
   godunov_unsplit(m_dt);
   
-} // HydroRun3D::next_iteration_impl
+} // SolverMuscl3D::next_iteration_impl
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Wrapper to the actual computation routine
 // ///////////////////////////////////////////
-void HydroRun3D::godunov_unsplit(real_t dt)
+void SolverMuscl3D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
@@ -191,14 +191,14 @@ void HydroRun3D::godunov_unsplit(real_t dt)
     godunov_unsplit_cpu(U2, U , dt);
   }
   
-} // HydroRun3D::godunov_unsplit
+} // SolverMuscl3D::godunov_unsplit
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void HydroRun3D::godunov_unsplit_cpu(DataArray data_in, 
+void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in, 
 				     DataArray data_out, 
 				     real_t dt)
 {
@@ -299,21 +299,21 @@ void HydroRun3D::godunov_unsplit_cpu(DataArray data_in,
   
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // HydroRun3D::godunov_unsplit_cpu
+} // SolverMuscl3D::godunov_unsplit_cpu
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////////////////////////////
 // Convert conservative variables array U into primitive var array Q
 // ///////////////////////////////////////////////////////////////////
-void HydroRun3D::convertToPrimitives(DataArray Udata)
+void SolverMuscl3D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
   ConvertToPrimitivesFunctor3D convertToPrimitivesFunctor(params, Udata, Q);
   Kokkos::parallel_for(ijksize, convertToPrimitivesFunctor);
   
-} // HydroRun3D::convertToPrimitives
+} // SolverMuscl3D::convertToPrimitives
 
 // =======================================================
 // =======================================================
@@ -321,7 +321,7 @@ void HydroRun3D::convertToPrimitives(DataArray Udata)
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
-void HydroRun3D::make_boundaries(DataArray Udata)
+void SolverMuscl3D::make_boundaries(DataArray Udata)
 {
   const int ghostWidth=params.ghostWidth;
 
@@ -357,7 +357,7 @@ void HydroRun3D::make_boundaries(DataArray Udata)
     Kokkos::parallel_for(nbIter, functor);
   }
   
-} // HydroRun3D::make_boundaries
+} // SolverMuscl3D::make_boundaries
 
 // =======================================================
 // =======================================================
@@ -365,7 +365,7 @@ void HydroRun3D::make_boundaries(DataArray Udata)
  * Hydrodynamical Implosion Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/implode/Implode.html
  */
-void HydroRun3D::init_implode(DataArray Udata)
+void SolverMuscl3D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor3D functor(params, Udata);
@@ -379,17 +379,17 @@ void HydroRun3D::init_implode(DataArray Udata)
  * Hydrodynamical blast Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/blast/blast.html
  */
-void HydroRun3D::init_blast(DataArray Udata)
+void SolverMuscl3D::init_blast(DataArray Udata)
 {
 
   InitBlastFunctor3D functor(params, Udata);
   Kokkos::parallel_for(ijksize, functor);
 
-} // HydroRun3D::init_blast
+} // SolverMuscl3D::init_blast
 
 // =======================================================
 // =======================================================
-void HydroRun3D::save_solution_impl()
+void SolverMuscl3D::save_solution_impl()
 {
 
   timers[TIMER_IO]->start();
@@ -400,7 +400,7 @@ void HydroRun3D::save_solution_impl()
   
   timers[TIMER_IO]->stop();
     
-} // HydroRun3D::save_solution_impl()
+} // SolverMuscl3D::save_solution_impl()
 
 // =======================================================
 // =======================================================
@@ -410,7 +410,7 @@ void HydroRun3D::save_solution_impl()
 // To make sure OpenMP and CUDA version give the same
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
-void HydroRun3D::saveVTK(DataArray Udata,
+void SolverMuscl3D::saveVTK(DataArray Udata,
 			 int iStep,
 			 std::string name)
 {
@@ -519,5 +519,5 @@ void HydroRun3D::saveVTK(DataArray Udata,
   
   outFile.close();
 
-} // HydroRun3D::saveVTK
+} // SolverMuscl3D::saveVTK
 

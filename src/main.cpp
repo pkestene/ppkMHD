@@ -14,8 +14,8 @@
 #include "HydroParams.h" // read parameter file
 
 // solver
-#include "HydroRun2D.h"
-//#include "HydroRun3D.h"
+#include "SolverMuscl2D.h"
+//#include "SolverMuscl3D.h"
 
 // for timer
 
@@ -80,39 +80,39 @@ int main(int argc, char *argv[])
   params.print();
 
   // initialize workspace memory (U, U2, ...)
-  HydroRun2D *hydro = new HydroRun2D(params, configMap);
-  hydro->save_solution();
+  SolverMuscl2D *solver = new SolverMuscl2D(params, configMap);
+  solver->save_solution();
   
   // start computation
   std::cout << "Start computation....\n";
-  hydro->timers[TIMER_TOTAL]->start();
+  solver->timers[TIMER_TOTAL]->start();
 
   // Hydrodynamics solver loop
-  while ( ! hydro->finished() ) {
+  while ( ! solver->finished() ) {
 
-    hydro->next_iteration();
+    solver->next_iteration();
 
   } // end solver loop
 
   // end of computation
-  hydro->timers[TIMER_TOTAL]->stop();
+  solver->timers[TIMER_TOTAL]->stop();
 
   // print monitoring information
   {    
-    real_t t_tot   = hydro->timers[TIMER_TOTAL]->elapsed();
-    real_t t_comp  = hydro->timers[TIMER_NUM_SCHEME]->elapsed();
-    real_t t_dt    = hydro->timers[TIMER_DT]->elapsed();
-    real_t t_bound = hydro->timers[TIMER_BOUNDARIES]->elapsed();
-    real_t t_io    = hydro->timers[TIMER_IO]->elapsed();
+    real_t t_tot   = solver->timers[TIMER_TOTAL]->elapsed();
+    real_t t_comp  = solver->timers[TIMER_NUM_SCHEME]->elapsed();
+    real_t t_dt    = solver->timers[TIMER_DT]->elapsed();
+    real_t t_bound = solver->timers[TIMER_BOUNDARIES]->elapsed();
+    real_t t_io    = solver->timers[TIMER_IO]->elapsed();
     printf("total       time : %5.3f secondes\n",t_tot);
     printf("godunov     time : %5.3f secondes %5.2f%%\n",t_comp,100*t_comp/t_tot);
     printf("compute dt  time : %5.3f secondes %5.2f%%\n",t_dt,100*t_dt/t_tot);
     printf("boundaries  time : %5.3f secondes %5.2f%%\n",t_bound,100*t_bound/t_tot);
     printf("io          time : %5.3f secondes %5.2f%%\n",t_io,100*t_io/t_tot);
-    printf("Perf             : %10.2f number of Mcell-updates/s\n",hydro->m_iteration*hydro->m_nCells/t_tot*1e-6);
+    printf("Perf             : %10.2f number of Mcell-updates/s\n",solver->m_iteration*solver->m_nCells/t_tot*1e-6);
   }
 
-  delete hydro;
+  delete solver;
 
 #ifdef CUDA
   Kokkos::Cuda::finalize();

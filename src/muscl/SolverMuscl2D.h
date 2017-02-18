@@ -1,17 +1,17 @@
 /**
  *
  */
-#ifndef HYDRO_RUN_2D_H_
-#define HYDRO_RUN_2D_H_
+#ifndef SOLVER_MUSCL_2D_H_
+#define SOLVER_MUSCL_2D_H_
 
-#include "SolverRunBase.h"
+#include "SolverBase.h"
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 
 /**
  * Main hydrodynamics data structure.
  */
-class HydroRun2D : public SolverRunBase
+class SolverMuscl2D : public SolverBase
 {
 
 public:
@@ -19,8 +19,8 @@ public:
   using DataArray     = DataArray2d;
   using DataArrayHost = DataArray2dHost;
   
-  HydroRun2D(HydroParams& params, ConfigMap& configMap);
-  virtual ~HydroRun2D();
+  SolverMuscl2D(HydroParams& params, ConfigMap& configMap);
+  virtual ~SolverMuscl2D();
   
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
@@ -76,6 +76,6 @@ public:
   int isize, jsize, ijsize;
   static const int nbvar = 4;
   
-}; // class HydroRun2D
+}; // class SolverMuscl2D
 
-#endif // HYDRO_RUN_2D_H_
+#endif // SOLVER_MUSCL_2D_H_

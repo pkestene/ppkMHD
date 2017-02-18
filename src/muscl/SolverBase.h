@@ -1,5 +1,5 @@
-#ifndef SOLVER_RUN_BASE_H_
-#define SOLVER_RUN_BASE_H_
+#ifndef SOLVER_BASE_H_
+#define SOLVER_BASE_H_
 
 #include "HydroParams.h"
 #include "config/ConfigMap.h"
@@ -25,12 +25,12 @@ enum TimerIds {
 /**
  * Abstract base class for all our actual solvers.
  */
-class SolverRunBase {
+class SolverBase {
   
 public:
   
-  SolverRunBase(HydroParams& params, ConfigMap& configMap);
-  virtual ~SolverRunBase();
+  SolverBase(HydroParams& params, ConfigMap& configMap);
+  virtual ~SolverBase();
 
   // hydroParams
   HydroParams& params;
@@ -113,6 +113,6 @@ public:
   using TimerMap = std::map<int, std::shared_ptr<Timer> >;
   TimerMap timers;
 
-}; // class SolverRunBase
+}; // class SolverBase
 
-#endif // SOLVER_RUN_BASE_H_
+#endif // SOLVER_BASE_H_

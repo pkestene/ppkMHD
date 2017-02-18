@@ -1,14 +1,14 @@
-#include "SolverRunBase.h"
+#include "SolverBase.h"
 
 #include "utils.h"
 
 // =======================================================
-// ==== CLASS SolverRunBase IMPL =========================
+// ==== CLASS SolverBase IMPL ============================
 // =======================================================
 
 // =======================================================
 // =======================================================
-SolverRunBase::SolverRunBase (HydroParams& params, ConfigMap& configMap) :
+SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   params(params),
   configMap(configMap)
 {
@@ -35,7 +35,7 @@ SolverRunBase::SolverRunBase (HydroParams& params, ConfigMap& configMap) :
 
 // =======================================================
 // =======================================================
-SolverRunBase::~SolverRunBase()
+SolverBase::~SolverBase()
 {
 
 } // SolverRunbase::~SolverRunbase
@@ -43,7 +43,7 @@ SolverRunBase::~SolverRunBase()
 // =======================================================
 // =======================================================
 void
-SolverRunBase::read_config()
+SolverBase::read_config()
 {
 
   m_t     = configMap.getFloat("run", "tCurrent", 0.0);
@@ -58,12 +58,12 @@ SolverRunBase::read_config()
   m_restart_run_enabled = configMap.getInteger("run", "restart_enabled", 0);
   m_restart_run_filename = configMap.getString ("run", "restart_filename", "");
 
-} // SolverRunBase::read_config
+} // SolverBase::read_config
 
 // =======================================================
 // =======================================================
 void
-SolverRunBase::compute_dt()
+SolverBase::compute_dt()
 {
 
 #ifdef HAVE_MPI
@@ -79,24 +79,24 @@ SolverRunBase::compute_dt()
   
 #endif
   
-} // SolverRunBase::compute_dt
+} // SolverBase::compute_dt
 
 // =======================================================
 // =======================================================
 double
-SolverRunBase::compute_dt_local()
+SolverBase::compute_dt_local()
 {
 
   // the actual numerical scheme must provide it a genuine implementation
 
   return m_tEnd;
   
-} // SolverRunBase::compute_dt_local
+} // SolverBase::compute_dt_local
 
 // =======================================================
 // =======================================================
 int
-SolverRunBase::finished()
+SolverBase::finished()
 {
 
   return m_t >= (m_tEnd - 1e-14) || m_iteration >= params.nStepmax;
@@ -106,7 +106,7 @@ SolverRunBase::finished()
 // =======================================================
 // =======================================================
 void
-SolverRunBase::next_iteration()
+SolverBase::next_iteration()
 {
 
   // setup a timer here (?)
@@ -125,17 +125,17 @@ SolverRunBase::next_iteration()
 // =======================================================
 // =======================================================
 void
-SolverRunBase::next_iteration_impl()
+SolverBase::next_iteration_impl()
 {
 
   // This is application dependent
   
-} // SolverRunBase::next_iteration_impl
+} // SolverBase::next_iteration_impl
 
 // =======================================================
 // =======================================================
 void
-SolverRunBase::save_solution()
+SolverBase::save_solution()
 {
 
   // save solution to output file
@@ -144,29 +144,29 @@ SolverRunBase::save_solution()
   // increment output file number
   ++m_times_saved;
   
-} // SolverRunBase::save_solution
+} // SolverBase::save_solution
 
 // =======================================================
 // =======================================================
 void
-SolverRunBase::save_solution_impl()
+SolverBase::save_solution_impl()
 {
-} // SolverRunBase::save_solution_impl
+} // SolverBase::save_solution_impl
 
 // =======================================================
 // =======================================================
 void
-SolverRunBase::read_restart_file()
+SolverBase::read_restart_file()
 {
 
   // TODO
   
-} // SolverRunBase::read_restart_file
+} // SolverBase::read_restart_file
 
 // =======================================================
 // =======================================================
 int
-SolverRunBase::should_save_solution()
+SolverBase::should_save_solution()
 {
   
   double interval = m_tEnd / params.nOutput;
@@ -187,4 +187,4 @@ SolverRunBase::should_save_solution()
 
   return 0;
   
-} // SolverRunBase::should_save_solution
+} // SolverBase::should_save_solution
