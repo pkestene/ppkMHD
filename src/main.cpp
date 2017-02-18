@@ -14,8 +14,7 @@
 #include "HydroParams.h" // read parameter file
 
 // solver
-#include "SolverMuscl2D.h"
-//#include "SolverMuscl3D.h"
+#include "SolverFactory.h"
 
 // for timer
 
@@ -79,8 +78,14 @@ int main(int argc, char *argv[])
   // print parameters on screen
   params.print();
 
+  // retrieve solver name from settings
+  const std::string solver_name = configMap.getString("run", "solver_name", "Unknown");
+
   // initialize workspace memory (U, U2, ...)
-  SolverMuscl2D *solver = new SolverMuscl2D(params, configMap);
+  SolverBase *solver = SolverFactory::Instance().create(solver_name,
+							params,
+							configMap);
+
   solver->save_solution();
   
   // start computation

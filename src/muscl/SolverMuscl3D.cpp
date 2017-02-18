@@ -20,6 +20,9 @@ static bool isBigEndian()
   return ( (*(char*)&i) == 0 );
 }
 
+// =======================================================
+// ==== CLASS SolverMuscl3D IMPL =========================
+// =======================================================
 
 // =======================================================
 // =======================================================
@@ -411,8 +414,8 @@ void SolverMuscl3D::save_solution_impl()
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
 void SolverMuscl3D::saveVTK(DataArray Udata,
-			 int iStep,
-			 std::string name)
+			    int iStep,
+			    std::string name)
 {
 
   const int nx = params.nx;
@@ -502,7 +505,7 @@ void SolverMuscl3D::saveVTK(DataArray Udata,
 #ifdef CUDA
     	outFile << Uhost(index , iVar) << " ";
 #else
-	int index2 = j+jsize*i;
+	int index2 = k+ksize*j+ksize*jsize*i;
     	outFile << Uhost(index2 , iVar) << " ";
 #endif
       }

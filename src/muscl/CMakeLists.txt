@@ -16,6 +16,8 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverMuscl3D.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverMuscl3D.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SolverFactory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/SolverFactory.h
   )
 
 add_library(muscl OBJECT

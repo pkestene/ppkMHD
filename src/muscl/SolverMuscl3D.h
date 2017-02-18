@@ -22,6 +22,16 @@ public:
   SolverMuscl3D(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverMuscl3D();
   
+  /**
+   * Static creation method called by the solver factory.
+   */
+  static SolverBase* create(HydroParams& params, ConfigMap& configMap)
+  {
+    SolverMuscl3D* solver = new SolverMuscl3D(params, configMap);
+
+    return solver;
+  }
+
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
   DataArray     U2;    /*!< hydrodynamics conservative variables arrays */
