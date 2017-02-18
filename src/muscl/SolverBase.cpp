@@ -31,6 +31,16 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   timers[TIMER_BOUNDARIES] = std::make_shared<Timer>();
   timers[TIMER_NUM_SCHEME] = std::make_shared<Timer>();
 
+  // init variables names
+  m_variables_names[ID] = "rho";
+  m_variables_names[IP] = "energy";
+  m_variables_names[IU] = "mx"; // momentum component X
+  m_variables_names[IV] = "my"; // momentum component Y
+  m_variables_names[IW] = "mz"; // momentum component Z
+  m_variables_names[IA] = "bx"; // mag field X
+  m_variables_names[IB] = "by"; // mag field Y
+  m_variables_names[IC] = "bz"; // mag field Z
+  
 } // SolverRunbase::SolverRunbase
 
 // =======================================================
@@ -51,7 +61,9 @@ SolverBase::read_config()
   m_dt    = m_tEnd;
   m_cfl   = configMap.getFloat("hydro", "cfl", 1.0);
   m_iteration = 0;
-  
+
+  m_problem_name = configMap.getString("hydro", "problem", "unknown");
+
   m_solver_name = configMap.getString("run", "solver_name", "muscl_2d");
 
   /* restart run : default is no */

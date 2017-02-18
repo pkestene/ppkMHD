@@ -13,14 +13,21 @@
 #include "config/ConfigMap.h"
 
 #include <stdbool.h>
+#include <string>
 
 //! hydro field indexes
 enum VarIndex {
-  ID=0,  /*!< ID Density field index */
-  IP=1,  /*!< IP Pressure/Energy field index */
-  IU=2,  /*!< X velocity / momentum index */
-  IV=3,  /*!< Y velocity / momentum index */ 
-  IW=4   /*!< Z velocity / momentum index */ 
+  ID=0,   /*!< ID Density field index */
+  IP=1,   /*!< IP Pressure/Energy field index */
+  IU=2,   /*!< X velocity / momentum index */
+  IV=3,   /*!< Y velocity / momentum index */ 
+  IW=4,   /*!< Z velocity / momentum index */ 
+  IA=5,   /*!< X magnetic field index */ 
+  IB=6,   /*!< Y magnetic field index */ 
+  IC=7,   /*!< Z magnetic field index */ 
+  IBX=5,  /*!< X magnetic field index */ 
+  IBY=6,  /*!< Y magnetic field index */ 
+  IBZ=7,  /*!< Z magnetic field index */ 
 };
 
 //! face index
@@ -86,9 +93,6 @@ enum ProblemType {
   PROBLEM_IMPLODE,
   PROBLEM_BLAST
 };
-
-// variable names in the order as in component index
-extern const char * varNames[4];
 
 struct HydroSettings {
 
@@ -163,19 +167,7 @@ struct HydroParams {
   
   int niter_riemann;  /*!< number of iteration usd in quasi-exact riemann solver*/
   int riemannSolverType;
-  
-  int problemType;
-  
-  // blast problem parameters
-  real_t blast_radius;
-  real_t blast_center_x;
-  real_t blast_center_y;
-  real_t blast_center_z;
-  real_t blast_density_in;
-  real_t blast_density_out;
-  real_t blast_pressure_in;
-  real_t blast_pressure_out;
-  
+    
   // other parameters
   int implementationVersion=0; /*!< triggers which implementation to use (currently 3 versions)*/
 
@@ -194,11 +186,7 @@ struct HydroParams {
     boundary_type_zmax(1),
     ioVTK(true), ioHDF5(false),
     settings(),
-    niter_riemann(10), riemannSolverType(), problemType(),
-    blast_radius(10.0),
-    blast_center_x(0.0), blast_center_y(0.0), blast_center_z(0.0),
-    blast_density_in(1.0), blast_density_out(1.2),
-    blast_pressure_in(10.0), blast_pressure_out(0.1),
+    niter_riemann(10), riemannSolverType(),
     implementationVersion(0) {}
 
   void setup(ConfigMap& map);

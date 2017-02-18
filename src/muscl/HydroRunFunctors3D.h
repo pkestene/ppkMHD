@@ -6,8 +6,9 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
-
 #include "HydroBaseFunctor3D.h"
+
+#include "BlastParams.h"
 
 /*************************************************/
 /*************************************************/
@@ -1188,8 +1189,9 @@ class InitBlastFunctor3D : public HydroBaseFunctor3D {
 
 public:
   InitBlastFunctor3D(HydroParams params,
+		     BlastParams bParams,
 		     DataArray Udata) :
-    HydroBaseFunctor3D(params), Udata(Udata)  {};
+    HydroBaseFunctor3D(params), bParams(bParams), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1210,15 +1212,15 @@ public:
     const real_t gamma0 = params.settings.gamma0;
 
     // blast problem parameters
-    const real_t blast_radius      = params.blast_radius;
+    const real_t blast_radius      = bParams.blast_radius;
     const real_t radius2           = blast_radius*blast_radius;
-    const real_t blast_center_x    = params.blast_center_x;
-    const real_t blast_center_y    = params.blast_center_y;
-    const real_t blast_center_z    = params.blast_center_z;
-    const real_t blast_density_in  = params.blast_density_in;
-    const real_t blast_density_out = params.blast_density_out;
-    const real_t blast_pressure_in = params.blast_pressure_in;
-    const real_t blast_pressure_out= params.blast_pressure_out;
+    const real_t blast_center_x    = bParams.blast_center_x;
+    const real_t blast_center_y    = bParams.blast_center_y;
+    const real_t blast_center_z    = bParams.blast_center_z;
+    const real_t blast_density_in  = bParams.blast_density_in;
+    const real_t blast_density_out = bParams.blast_density_out;
+    const real_t blast_pressure_in = bParams.blast_pressure_in;
+    const real_t blast_pressure_out= bParams.blast_pressure_out;
   
 
     int i,j,k;
@@ -1250,6 +1252,7 @@ public:
   } // end operator ()
   
   DataArray Udata;
+  BlastParams bParams;
   
 }; // InitBlastFunctor3D
 

@@ -75,9 +75,6 @@ int main(int argc, char *argv[])
   HydroParams params = HydroParams();
   params.setup(configMap);
   
-  // print parameters on screen
-  params.print();
-
   // retrieve solver name from settings
   const std::string solver_name = configMap.getString("run", "solver_name", "Unknown");
 

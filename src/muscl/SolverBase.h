@@ -52,6 +52,9 @@ public:
   double               m_cfl;       //!< Courant number
 
   long long int        m_nCells;    //!< number of cells
+
+  //! init condition name (or problem)
+  std::string          m_problem_name;
   
   //! solver name (use in output file).
   std::string          m_solver_name;

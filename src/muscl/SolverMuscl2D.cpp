@@ -14,6 +14,9 @@
 // Kokkos
 #include "kokkos_shared.h"
 
+// for init condition
+#include "BlastParams.h"
+
 static bool isBigEndian()
 {
   const int i = 1;
@@ -73,23 +76,31 @@ SolverMuscl2D::SolverMuscl2D(HydroParams& params, ConfigMap& configMap) :
   /*
    * initialize hydro array at t=0
    */
-  if ( params.problemType == PROBLEM_IMPLODE) {
+  if ( !m_problem_name.compare("implode") ) {
 
     init_implode(U);
 
-  } else if (params.problemType == PROBLEM_BLAST) {
+  } else if ( !m_problem_name.compare("blast") ) {
 
     init_blast(U);
 
   } else {
 
-    std::cout << "Problem : " << params.problemType
-	      << " is not recognized / implemented in initHydroRun."
+    std::cout << "Problem : " << m_problem_name
+	      << " is not recognized / implemented."
 	      << std::endl;
     std::cout <<  "Use default - implode" << std::endl;
     init_implode(U);
 
   }
+  std::cout << "##########################" << "\n";
+  std::cout << "Solver is " << m_solver_name << "\n";
+  std::cout << "Problem (init condition) is " << m_problem_name << "\n";
+  std::cout << "##########################" << "\n";
+
+  // print parameters on screen
+  params.print();
+  std::cout << "##########################" << "\n";
 
   // initialize time step
   compute_dt();
@@ -350,7 +361,9 @@ void SolverMuscl2D::init_implode(DataArray Udata)
 void SolverMuscl2D::init_blast(DataArray Udata)
 {
 
-  InitBlastFunctor functor(params, Udata);
+  BlastParams blastParams = BlastParams(configMap);
+  
+  InitBlastFunctor functor(params, blastParams, Udata);
   Kokkos::parallel_for(ijsize, functor);
 
 } // SolverMuscl2D::init_blast
@@ -450,7 +463,7 @@ void SolverMuscl2D::saveVTK(DataArray Udata,
       outFile << "Float64";
     else
       outFile << "Float32";
-    outFile << "\" Name=\"" << varNames[iVar] << "\" format=\"ascii\" >\n";
+    outFile << "\" Name=\"" << m_variables_names[iVar] << "\" format=\"ascii\" >\n";
 
     for (int index=0; index<ijsize; ++index) {
       //index2coord(index,i,j,isize,jsize);
