@@ -208,8 +208,8 @@ void SolverMuscl2D::godunov_unsplit(real_t dt)
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
 void SolverMuscl2D::godunov_unsplit_cpu(DataArray data_in, 
-				     DataArray data_out, 
-				     real_t dt)
+					DataArray data_out, 
+					real_t dt)
 {
 
   real_t dtdx;

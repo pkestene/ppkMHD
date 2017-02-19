@@ -15,6 +15,12 @@
 #include <stdbool.h>
 #include <string>
 
+//! dimension of the problem
+enum DimensionType {
+  TWO_D = 2, 
+  THREE_D = 3
+};
+
 //! hydro field indexes
 enum VarIndex {
   ID=0,   /*!< ID Density field index */

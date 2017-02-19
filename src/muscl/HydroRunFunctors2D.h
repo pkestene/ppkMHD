@@ -1,5 +1,5 @@
-#ifndef HYDRO_RUN_FUNCTORS_H_
-#define HYDRO_RUN_FUNCTORS_H_
+#ifndef HYDRO_RUN_FUNCTORS_2D_H_
+#define HYDRO_RUN_FUNCTORS_2D_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
