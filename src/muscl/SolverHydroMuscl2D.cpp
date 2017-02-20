@@ -5,7 +5,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include "SolverMuscl2D.h"
+#include "SolverHydroMuscl2D.h"
 #include "HydroParams.h"
 
 // the actual computational functors called in HydroRun
@@ -28,7 +28,7 @@ namespace ppkMHD {
 using namespace muscl::hydro2d;
 
 // =======================================================
-// ==== CLASS SolverMuscl2D IMPL =========================
+// ==== CLASS SolverHydroMuscl2D IMPL ====================
 // =======================================================
 
 // =======================================================
@@ -36,7 +36,7 @@ using namespace muscl::hydro2d;
 /**
  *
  */
-SolverMuscl2D::SolverMuscl2D(HydroParams& params, ConfigMap& configMap) :
+SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params, ConfigMap& configMap) :
   SolverBase(params, configMap),
   U(), U2(), Q(),
   Fluxes_x(), Fluxes_y(),
@@ -73,9 +73,9 @@ SolverMuscl2D::SolverMuscl2D(HydroParams& params, ConfigMap& configMap) :
   } 
   
   // default riemann solver
-  // riemann_solver_fn = &SolverMuscl2D::riemann_approx;
+  // riemann_solver_fn = &SolverHydroMuscl2D::riemann_approx;
   // if (!riemannSolverStr.compare("hllc"))
-  //   riemann_solver_fn = &SolverMuscl2D::riemann_hllc;
+  //   riemann_solver_fn = &SolverHydroMuscl2D::riemann_hllc;
   
   /*
    * initialize hydro array at t=0
@@ -115,7 +115,7 @@ SolverMuscl2D::SolverMuscl2D(HydroParams& params, ConfigMap& configMap) :
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
-} // SolverMuscl2D::SolverMuscl2D
+} // SolverHydroMuscl2D::SolverHydroMuscl2D
 
 
 // =======================================================
@@ -123,10 +123,10 @@ SolverMuscl2D::SolverMuscl2D(HydroParams& params, ConfigMap& configMap) :
 /**
  *
  */
-SolverMuscl2D::~SolverMuscl2D()
+SolverHydroMuscl2D::~SolverHydroMuscl2D()
 {
 
-} // SolverMuscl2D::~SolverMuscl2D
+} // SolverHydroMuscl2D::~SolverHydroMuscl2D
 
 // =======================================================
 // =======================================================
@@ -135,7 +135,7 @@ SolverMuscl2D::~SolverMuscl2D()
  *
  * \return dt time step
  */
-double SolverMuscl2D::compute_dt_local()
+double SolverHydroMuscl2D::compute_dt_local()
 {
 
   real_t dt;
@@ -156,11 +156,11 @@ double SolverMuscl2D::compute_dt_local()
 
   return dt;
 
-} // SolverMuscl2D::compute_dt_local
+} // SolverHydroMuscl2D::compute_dt_local
 
 // =======================================================
 // =======================================================
-void SolverMuscl2D::next_iteration_impl()
+void SolverHydroMuscl2D::next_iteration_impl()
 {
 
   if (m_iteration % 10 == 0) {
@@ -188,14 +188,14 @@ void SolverMuscl2D::next_iteration_impl()
   // perform one step integration
   godunov_unsplit(m_dt);
   
-} // SolverMuscl2D::next_iteration_impl
+} // SolverHydroMuscl2D::next_iteration_impl
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Wrapper to the actual computation routine
 // ///////////////////////////////////////////
-void SolverMuscl2D::godunov_unsplit(real_t dt)
+void SolverHydroMuscl2D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
@@ -204,16 +204,16 @@ void SolverMuscl2D::godunov_unsplit(real_t dt)
     godunov_unsplit_cpu(U2, U , dt);
   }
   
-} // SolverMuscl2D::godunov_unsplit
+} // SolverHydroMuscl2D::godunov_unsplit
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void SolverMuscl2D::godunov_unsplit_cpu(DataArray data_in, 
-					DataArray data_out, 
-					real_t dt)
+void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in, 
+					     DataArray data_out, 
+					     real_t dt)
 {
 
   real_t dtdx;
@@ -294,21 +294,21 @@ void SolverMuscl2D::godunov_unsplit_cpu(DataArray data_in,
   
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // SolverMuscl2D::godunov_unsplit_cpu
+} // SolverHydroMuscl2D::godunov_unsplit_cpu
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////////////////////////////
 // Convert conservative variables array U into primitive var array Q
 // ///////////////////////////////////////////////////////////////////
-void SolverMuscl2D::convertToPrimitives(DataArray Udata)
+void SolverHydroMuscl2D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
   ConvertToPrimitivesFunctor convertToPrimitivesFunctor(params, Udata, Q);
   Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
   
-} // SolverMuscl2D::convertToPrimitives
+} // SolverHydroMuscl2D::convertToPrimitives
 
 // =======================================================
 // =======================================================
@@ -316,7 +316,7 @@ void SolverMuscl2D::convertToPrimitives(DataArray Udata)
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
-void SolverMuscl2D::make_boundaries(DataArray Udata)
+void SolverHydroMuscl2D::make_boundaries(DataArray Udata)
 {
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
@@ -340,7 +340,7 @@ void SolverMuscl2D::make_boundaries(DataArray Udata)
     Kokkos::parallel_for(nbIter, functor);
   }
   
-} // SolverMuscl2D::make_boundaries
+} // SolverHydroMuscl2D::make_boundaries
 
 // =======================================================
 // =======================================================
@@ -348,7 +348,7 @@ void SolverMuscl2D::make_boundaries(DataArray Udata)
  * Hydrodynamical Implosion Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/implode/Implode.html
  */
-void SolverMuscl2D::init_implode(DataArray Udata)
+void SolverHydroMuscl2D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor functor(params, Udata);
@@ -362,7 +362,7 @@ void SolverMuscl2D::init_implode(DataArray Udata)
  * Hydrodynamical blast Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/blast/blast.html
  */
-void SolverMuscl2D::init_blast(DataArray Udata)
+void SolverHydroMuscl2D::init_blast(DataArray Udata)
 {
 
   BlastParams blastParams = BlastParams(configMap);
@@ -370,11 +370,11 @@ void SolverMuscl2D::init_blast(DataArray Udata)
   InitBlastFunctor functor(params, blastParams, Udata);
   Kokkos::parallel_for(ijsize, functor);
 
-} // SolverMuscl2D::init_blast
+} // SolverHydroMuscl2D::init_blast
 
 // =======================================================
 // =======================================================
-void SolverMuscl2D::save_solution_impl()
+void SolverHydroMuscl2D::save_solution_impl()
 {
 
   timers[TIMER_IO]->start();
@@ -385,7 +385,7 @@ void SolverMuscl2D::save_solution_impl()
   
   timers[TIMER_IO]->stop();
     
-} // SolverMuscl2D::save_solution_impl()
+} // SolverHydroMuscl2D::save_solution_impl()
 
 // =======================================================
 // =======================================================
@@ -395,9 +395,9 @@ void SolverMuscl2D::save_solution_impl()
 // To make sure OpenMP and CUDA version give the same
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
-void SolverMuscl2D::saveVTK(DataArray Udata,
-			    int iStep,
-			    std::string name)
+void SolverHydroMuscl2D::saveVTK(DataArray Udata,
+				 int iStep,
+				 std::string name)
 {
 
   const int nx = params.nx;
@@ -499,6 +499,6 @@ void SolverMuscl2D::saveVTK(DataArray Udata,
   
   outFile.close();
 
-} // SolverMuscl2D::saveVTK
+} // SolverHydroMuscl2D::saveVTK
 
 } // namespace ppkMHD

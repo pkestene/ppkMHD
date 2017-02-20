@@ -5,7 +5,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include "SolverMuscl3D.h"
+#include "SolverHydroMuscl3D.h"
 #include "HydroParams.h"
 
 // the actual computational functors called in HydroRun
@@ -28,7 +28,7 @@ namespace ppkMHD {
 using namespace muscl::hydro3d;
 
 // =======================================================
-// ==== CLASS SolverMuscl3D IMPL =========================
+// ==== CLASS SolverHydroMuscl3D IMPL ====================
 // =======================================================
 
 // =======================================================
@@ -36,7 +36,7 @@ using namespace muscl::hydro3d;
 /**
  *
  */
-SolverMuscl3D::SolverMuscl3D(HydroParams& params, ConfigMap& configMap) :
+SolverHydroMuscl3D::SolverHydroMuscl3D(HydroParams& params, ConfigMap& configMap) :
   SolverBase(params, configMap),
   U(), U2(), Q(),
   Fluxes_x(), Fluxes_y(), Fluxes_z(),
@@ -78,9 +78,9 @@ SolverMuscl3D::SolverMuscl3D(HydroParams& params, ConfigMap& configMap) :
   }
   
   // default riemann solver
-  // riemann_solver_fn = &SolverMuscl3D::riemann_approx;
+  // riemann_solver_fn = &SolverHydroMuscl3D::riemann_approx;
   // if (!riemannSolverStr.compare("hllc"))
-  //   riemann_solver_fn = &SolverMuscl3D::riemann_hllc;
+  //   riemann_solver_fn = &SolverHydroMuscl3D::riemann_hllc;
   
   /*
    * initialize hydro array at t=0
@@ -120,7 +120,7 @@ SolverMuscl3D::SolverMuscl3D(HydroParams& params, ConfigMap& configMap) :
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
-} // SolverMuscl3D::SolverMuscl3D
+} // SolverHydroMuscl3D::SolverHydroMuscl3D
 
 
 // =======================================================
@@ -128,10 +128,10 @@ SolverMuscl3D::SolverMuscl3D(HydroParams& params, ConfigMap& configMap) :
 /**
  *
  */
-SolverMuscl3D::~SolverMuscl3D()
+SolverHydroMuscl3D::~SolverHydroMuscl3D()
 {
 
-} // SolverMuscl3D::~SolverMuscl3D
+} // SolverHydroMuscl3D::~SolverHydroMuscl3D
 
 // =======================================================
 // =======================================================
@@ -140,7 +140,7 @@ SolverMuscl3D::~SolverMuscl3D()
  *
  * \return dt time step
  */
-double SolverMuscl3D::compute_dt_local()
+double SolverHydroMuscl3D::compute_dt_local()
 {
 
   real_t dt;
@@ -161,11 +161,11 @@ double SolverMuscl3D::compute_dt_local()
 
   return dt;
 
-} // SolverMuscl3D::compute_dt
+} // SolverHydroMuscl3D::compute_dt
 
 // =======================================================
 // =======================================================
-void SolverMuscl3D::next_iteration_impl()
+void SolverHydroMuscl3D::next_iteration_impl()
 {
 
   if (m_iteration % 10 == 0) {
@@ -193,14 +193,14 @@ void SolverMuscl3D::next_iteration_impl()
   // perform one step integration
   godunov_unsplit(m_dt);
   
-} // SolverMuscl3D::next_iteration_impl
+} // SolverHydroMuscl3D::next_iteration_impl
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Wrapper to the actual computation routine
 // ///////////////////////////////////////////
-void SolverMuscl3D::godunov_unsplit(real_t dt)
+void SolverHydroMuscl3D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
@@ -209,16 +209,16 @@ void SolverMuscl3D::godunov_unsplit(real_t dt)
     godunov_unsplit_cpu(U2, U , dt);
   }
   
-} // SolverMuscl3D::godunov_unsplit
+} // SolverHydroMuscl3D::godunov_unsplit
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in, 
-				     DataArray data_out, 
-				     real_t dt)
+void SolverHydroMuscl3D::godunov_unsplit_cpu(DataArray data_in, 
+					     DataArray data_out, 
+					     real_t dt)
 {
 
   real_t dtdx;
@@ -249,15 +249,15 @@ void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in,
     // compute fluxes
     {
       ComputeAndStoreFluxesFunctor3D functor(params, Q,
-					   Fluxes_x, Fluxes_y, Fluxes_z,
-					   dtdx, dtdy, dtdz);
+					     Fluxes_x, Fluxes_y, Fluxes_z,
+					     dtdx, dtdy, dtdz);
       Kokkos::parallel_for(ijksize, functor);
     }
 
     // actual update
     {
       UpdateFunctor3D functor(params, data_out,
-			    Fluxes_x, Fluxes_y, Fluxes_z);
+			      Fluxes_x, Fluxes_y, Fluxes_z);
       Kokkos::parallel_for(ijksize, functor);
     }
     
@@ -265,15 +265,15 @@ void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in,
 
     // call device functor to compute slopes
     ComputeSlopesFunctor3D computeSlopesFunctor(params, Q,
-					      Slopes_x, Slopes_y, Slopes_z);
+						Slopes_x, Slopes_y, Slopes_z);
     Kokkos::parallel_for(ijksize, computeSlopesFunctor);
 
     // now trace along X axis
     {
       ComputeTraceAndFluxes_Functor3D<XDIR> functor(params, Q,
-						  Slopes_x, Slopes_y, Slopes_z,
-						  Fluxes_x,
-						  dtdx, dtdy, dtdz);
+						    Slopes_x, Slopes_y, Slopes_z,
+						    Fluxes_x,
+						    dtdx, dtdy, dtdz);
       Kokkos::parallel_for(ijksize, functor);
     }
     
@@ -286,9 +286,9 @@ void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in,
     // now trace along Y axis
     {
       ComputeTraceAndFluxes_Functor3D<YDIR> functor(params, Q,
-						  Slopes_x, Slopes_y, Slopes_z,
-						  Fluxes_y,
-						  dtdx, dtdy, dtdz);
+						    Slopes_x, Slopes_y, Slopes_z,
+						    Fluxes_y,
+						    dtdx, dtdy, dtdz);
       Kokkos::parallel_for(ijksize, functor);
     }
     
@@ -301,9 +301,9 @@ void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in,
     // now trace along Z axis
     {
       ComputeTraceAndFluxes_Functor3D<ZDIR> functor(params, Q,
-						  Slopes_x, Slopes_y, Slopes_z,
-						  Fluxes_z,
-						  dtdx, dtdy, dtdz);
+						    Slopes_x, Slopes_y, Slopes_z,
+						    Fluxes_z,
+						    dtdx, dtdy, dtdz);
       Kokkos::parallel_for(ijksize, functor);
     }
     
@@ -317,21 +317,21 @@ void SolverMuscl3D::godunov_unsplit_cpu(DataArray data_in,
   
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // SolverMuscl3D::godunov_unsplit_cpu
+} // SolverHydroMuscl3D::godunov_unsplit_cpu
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////////////////////////////
 // Convert conservative variables array U into primitive var array Q
 // ///////////////////////////////////////////////////////////////////
-void SolverMuscl3D::convertToPrimitives(DataArray Udata)
+void SolverHydroMuscl3D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
   ConvertToPrimitivesFunctor3D convertToPrimitivesFunctor(params, Udata, Q);
   Kokkos::parallel_for(ijksize, convertToPrimitivesFunctor);
   
-} // SolverMuscl3D::convertToPrimitives
+} // SolverHydroMuscl3D::convertToPrimitives
 
 // =======================================================
 // =======================================================
@@ -339,7 +339,7 @@ void SolverMuscl3D::convertToPrimitives(DataArray Udata)
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
-void SolverMuscl3D::make_boundaries(DataArray Udata)
+void SolverHydroMuscl3D::make_boundaries(DataArray Udata)
 {
   const int ghostWidth=params.ghostWidth;
 
@@ -375,7 +375,7 @@ void SolverMuscl3D::make_boundaries(DataArray Udata)
     Kokkos::parallel_for(nbIter, functor);
   }
   
-} // SolverMuscl3D::make_boundaries
+} // SolverHydroMuscl3D::make_boundaries
 
 // =======================================================
 // =======================================================
@@ -383,7 +383,7 @@ void SolverMuscl3D::make_boundaries(DataArray Udata)
  * Hydrodynamical Implosion Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/implode/Implode.html
  */
-void SolverMuscl3D::init_implode(DataArray Udata)
+void SolverHydroMuscl3D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor3D functor(params, Udata);
@@ -397,7 +397,7 @@ void SolverMuscl3D::init_implode(DataArray Udata)
  * Hydrodynamical blast Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/blast/blast.html
  */
-void SolverMuscl3D::init_blast(DataArray Udata)
+void SolverHydroMuscl3D::init_blast(DataArray Udata)
 {
 
   BlastParams blastParams = BlastParams(configMap);
@@ -405,11 +405,11 @@ void SolverMuscl3D::init_blast(DataArray Udata)
   InitBlastFunctor3D functor(params, blastParams, Udata);
   Kokkos::parallel_for(ijksize, functor);
 
-} // SolverMuscl3D::init_blast
+} // SolverHydroMuscl3D::init_blast
 
 // =======================================================
 // =======================================================
-void SolverMuscl3D::save_solution_impl()
+void SolverHydroMuscl3D::save_solution_impl()
 {
 
   timers[TIMER_IO]->start();
@@ -420,7 +420,7 @@ void SolverMuscl3D::save_solution_impl()
   
   timers[TIMER_IO]->stop();
     
-} // SolverMuscl3D::save_solution_impl()
+} // SolverHydroMuscl3D::save_solution_impl()
 
 // =======================================================
 // =======================================================
@@ -430,9 +430,9 @@ void SolverMuscl3D::save_solution_impl()
 // To make sure OpenMP and CUDA version give the same
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
-void SolverMuscl3D::saveVTK(DataArray Udata,
-			    int iStep,
-			    std::string name)
+void SolverHydroMuscl3D::saveVTK(DataArray Udata,
+				 int iStep,
+				 std::string name)
 {
 
   const int nx = params.nx;
@@ -539,6 +539,6 @@ void SolverMuscl3D::saveVTK(DataArray Udata,
   
   outFile.close();
 
-} // SolverMuscl3D::saveVTK
+} // SolverHydroMuscl3D::saveVTK
 
 } // namespace ppkMHD
