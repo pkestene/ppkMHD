@@ -98,7 +98,6 @@ public:
     }
   } // join
 
-  
   DataArray Qdata;
   
 }; // ComputeDtFunctorMHD

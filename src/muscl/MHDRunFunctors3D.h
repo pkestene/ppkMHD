@@ -1,28 +1,31 @@
-#ifndef MHD_RUN_FUNCTORS_H_
-#define MHD_RUN_FUNCTORS_H_
+#ifndef MHD_RUN_FUNCTORS_3D_H_
+#define MHD_RUN_FUNCTORS_3D_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
+#include "MHDBaseFunctor3D.h"
 
-#include "MHDBaseFunctor.h"
+#include "BlastParams.h"
 
 #ifndef SQR
 #define SQR(x) ((x)*(x))
 #endif
 
+namespace ppkMHD { namespace muscl { namespace mhd3d {
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeDtFunctor : public MHDBaseFunctor {
+class ComputeDtFunctor : public MHDBaseFunctor3D {
 
 public:
   
   ComputeDtFunctor(HydroParams params,
 		   DataArray Qdata) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     Qdata(Qdata)  {};
 
   // Tell each thread how to initialize its reduction result.
@@ -106,14 +109,14 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ConvertToPrimitivesFunctor : public MHDBaseFunctor {
+class ConvertToPrimitivesFunctor : public MHDBaseFunctor3D {
 
 public:
 
   ConvertToPrimitivesFunctor(HydroParams params,
 			     DataArray Udata,
 			     DataArray Qdata) :
-    MHDBaseFunctor(params), Udata(Udata), Qdata(Qdata)  {};
+    MHDBaseFunctor3D(params), Udata(Udata), Qdata(Qdata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -183,7 +186,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeElecFieldFunctor : public MHDBaseFunctor {
+class ComputeElecFieldFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -191,7 +194,7 @@ public:
 			  DataArray Udata,
 			  DataArray Qdata,
 			  DataArrayVector3 ElecField) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     Udata(Udata), Qdata(Qdata), ElecField(ElecField) {};
 
   KOKKOS_INLINE_FUNCTION
@@ -280,7 +283,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeMagSlopesFunctor : public MHDBaseFunctor {
+class ComputeMagSlopesFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -289,7 +292,7 @@ public:
 			  DataArrayVector3 DeltaA,
 			  DataArrayVector3 DeltaB,
 			  DataArrayVector3 DeltaC) :
-    MHDBaseFunctor(params), Udata(Udata),
+    MHDBaseFunctor3D(params), Udata(Udata),
     DeltaA(DeltaA), DeltaB(DeltaB), DeltaC(DeltaC) {};
 
   KOKKOS_INLINE_FUNCTION
@@ -362,7 +365,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeTraceFunctor : public MHDBaseFunctor {
+class ComputeTraceFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -394,7 +397,7 @@ public:
 		      real_t dtdx,
 		      real_t dtdy,
 		      real_t dtdz) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     Udata(Udata), Qdata(Qdata),
     DeltaA(DeltaA), DeltaB(DeltaB), DeltaC(DeltaC), ElecField(ElecField),
     Qm_x(Qm_x), Qm_y(Qm_y), Qm_z(Qm_z),
@@ -597,7 +600,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeFluxesAndStoreFunctor : public MHDBaseFunctor {
+class ComputeFluxesAndStoreFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -614,7 +617,7 @@ public:
 			       real_t dtdx,
 			       real_t dtdy,
 			       real_t dtdz) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     Qm_x(Qm_x), Qm_y(Qm_y), Qm_z(Qm_z),
     Qp_x(Qp_x), Qp_y(Qp_y), Qp_z(Qp_z),
     Fluxes_x(Fluxes_x), Fluxes_y(Fluxes_y), Fluxes_z(Fluxes_z),
@@ -704,7 +707,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeEmfAndStoreFunctor : public MHDBaseFunctor {
+class ComputeEmfAndStoreFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -725,7 +728,7 @@ public:
 			    real_t dtdx,
 			    real_t dtdy,
 			    real_t dtdz) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     QEdge_RT(QEdge_RT),   QEdge_RB(QEdge_RB),   QEdge_LT(QEdge_LT),   QEdge_LB(QEdge_LB),
     QEdge_RT2(QEdge_RT2), QEdge_RB2(QEdge_RB2), QEdge_LT2(QEdge_LT2), QEdge_LB2(QEdge_LB2),
     QEdge_RT3(QEdge_RT3), QEdge_RB3(QEdge_RB3), QEdge_LT3(QEdge_LT3), QEdge_LB3(QEdge_LB3),
@@ -794,7 +797,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class UpdateFunctor : public MHDBaseFunctor {
+class UpdateFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -806,7 +809,7 @@ public:
 		real_t dtdx,
 		real_t dtdy,
 		real_t dtdz) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     Udata(Udata), 
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
@@ -899,7 +902,7 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class UpdateEmfFunctor : public MHDBaseFunctor {
+class UpdateEmfFunctor : public MHDBaseFunctor3D {
 
 public:
 
@@ -909,7 +912,7 @@ public:
 		   real_t dtdx,
 		   real_t dtdy,
 		   real_t dtdz) :
-    MHDBaseFunctor(params),
+    MHDBaseFunctor3D(params),
     Udata(Udata), 
     Emf(Emf),
     dtdx(dtdx),
@@ -975,12 +978,12 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitImplodeFunctor : public MHDBaseFunctor {
+class InitImplodeFunctor : public MHDBaseFunctor3D {
 
 public:
   InitImplodeFunctor(HydroParams params,
 		     DataArray Udata) :
-    MHDBaseFunctor(params), Udata(Udata)  {};
+    MHDBaseFunctor3D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1043,12 +1046,13 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitBlastFunctor : public MHDBaseFunctor {
+class InitBlastFunctor : public MHDBaseFunctor3D {
 
 public:
   InitBlastFunctor(HydroParams params,
+		   BlastParams bParams,
 		   DataArray Udata) :
-    MHDBaseFunctor(params), Udata(Udata)  {};
+    MHDBaseFunctor3D(params), bParams(bParams), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1069,17 +1073,17 @@ public:
     const real_t gamma0 = params.settings.gamma0;
 
     // blast problem parameters
-    const real_t blast_radius      = params.blast_radius;
+    const real_t blast_radius      = bParams.blast_radius;
     const real_t radius2           = blast_radius*blast_radius;
 
-    const real_t blast_center_x    = params.blast_center_x;
-    const real_t blast_center_y    = params.blast_center_y;
-    const real_t blast_center_z    = params.blast_center_z;
+    const real_t blast_center_x    = bParams.blast_center_x;
+    const real_t blast_center_y    = bParams.blast_center_y;
+    const real_t blast_center_z    = bParams.blast_center_z;
 
-    const real_t blast_density_in  = params.blast_density_in;
-    const real_t blast_density_out = params.blast_density_out;
-    const real_t blast_pressure_in = params.blast_pressure_in;
-    const real_t blast_pressure_out= params.blast_pressure_out;
+    const real_t blast_density_in  = bParams.blast_density_in;
+    const real_t blast_density_out = bParams.blast_density_out;
+    const real_t blast_pressure_in = bParams.blast_pressure_in;
+    const real_t blast_pressure_out= bParams.blast_pressure_out;
   
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
@@ -1122,6 +1126,7 @@ public:
   } // end operator ()
   
   DataArray Udata;
+  BlastParams bParams;
   
 }; // InitBlastFunctor
 
@@ -1133,12 +1138,12 @@ enum OrszagTang_init_type {
   INIT_ENERGY = 1
 };
 template<OrszagTang_init_type ot_type>
-class InitOrszagTangFunctor : public MHDBaseFunctor {
+class InitOrszagTangFunctor : public MHDBaseFunctor3D {
 
 public:
   InitOrszagTangFunctor(HydroParams params,
 			DataArray Udata) :
-    MHDBaseFunctor(params), Udata(Udata)  {};
+    MHDBaseFunctor3D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1286,13 +1291,13 @@ public:
 /*************************************************/
 /*************************************************/
 template <FaceIdType faceId>
-class MakeBoundariesFunctor : public MHDBaseFunctor {
+class MakeBoundariesFunctor : public MHDBaseFunctor3D {
 
 public:
 
   MakeBoundariesFunctor(HydroParams params,
 			DataArray Udata) :
-    MHDBaseFunctor(params), Udata(Udata)  {};
+    MHDBaseFunctor3D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -1336,7 +1341,7 @@ public:
 	 i >= 0    && i <ghostWidth) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
@@ -1354,9 +1359,9 @@ public:
 
 	}
 
-      } // end xmin
-    }
-    
+      }
+    } // end FACE_XMIN
+
     if (faceId == FACE_XMAX) {
       
       // boundary xmax (index = i + j *ghostWidth + k * ghostWidth*jsize)
@@ -1374,7 +1379,7 @@ public:
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
@@ -1391,8 +1396,8 @@ public:
 	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
 
 	}
-      } // end xmax
-    }
+      }
+    } // end FACE_XMAX
     
     if (faceId == FACE_YMIN) {
 
@@ -1409,7 +1414,7 @@ public:
 	
 	real_t sign=1.0;
 
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
 	    if (iVar==IV) sign=-ONE_F;
@@ -1425,9 +1430,9 @@ public:
 	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
 	
 	}
-      } // end ymin
-    }
-    
+      }
+    } // end FACE_YMIN
+
     if (faceId == FACE_YMAX) {
       
       // boundary ymax (index = i + j*isize + k*isize*ghostWidth)
@@ -1445,7 +1450,7 @@ public:
 	 i >= imin           && i <= imax) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
@@ -1463,8 +1468,8 @@ public:
 
 	}
 
-      } // end ymax
-    }
+      }
+    } // end FACE_YMAX
     
     if (faceId == FACE_ZMIN) {
       
@@ -1481,7 +1486,7 @@ public:
 	
 	real_t sign=1.0;
 
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*ghostWidth-1-k;
 	    if (iVar==IW) sign=-ONE_F;
@@ -1497,8 +1502,8 @@ public:
 	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
 	
 	}
-      } // end zmin
-    }
+      }
+    } // end FACE_ZMIN
     
     if (faceId == FACE_ZMAX) {
       
@@ -1518,7 +1523,7 @@ public:
 	
 	real_t sign=1.0;
 	
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*nz+2*ghostWidth-1-k;
 	    if (iVar==IW) sign=-ONE_F;
@@ -1534,14 +1539,18 @@ public:
 	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
 	
 	}
-      } // end zmax
-    }
+      }
+    } // end FACE_ZMAX
     
   } // end operator ()
 
   DataArray Udata;
   
 }; // MakeBoundariesFunctor
-  
-#endif // MHD_RUN_FUNCTORS_H_
+
+} // namespace mhd3d
+} // namespace muscl
+} // namespace ppkMHD
+
+#endif // MHD_RUN_FUNCTORS_3D_H_
 

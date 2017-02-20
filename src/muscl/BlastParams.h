@@ -38,4 +38,5 @@ struct BlastParams {
   }
 
 }; // struct BlastParams
+
 #endif // BLAST_PARAMS_H_

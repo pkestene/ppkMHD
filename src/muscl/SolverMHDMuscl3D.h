@@ -1,8 +1,8 @@
 /**
  *
  */
-#ifndef SOLVER_MHD_MUSCL_2D_H_
-#define SOLVER_MHD_MUSCL_2D_H_
+#ifndef SOLVER_MHD_MUSCL_3D_H_
+#define SOLVER_MHD_MUSCL_3D_H_
 
 #include "SolverBase.h"
 #include "HydroParams.h"
@@ -11,25 +11,25 @@
 namespace ppkMHD {
 
 /**
- * Main magnehydrodynamics data structure 2D.
+ * Main magnehydrodynamics data structure 3D.
  */
-class SolverMHDMuscl2D : public SolverBase
+class SolverMHDMuscl3D : public SolverBase
 {
 
 public:
 
-  using DataArray     = DataArray2d;
-  using DataArrayHost = DataArray2dHost;
+  using DataArray     = DataArray3d;
+  using DataArrayHost = DataArray3dHost;
 
-  SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap);
-  virtual ~SolverMHDMuscl2D();
+  SolverMHDMuscl3D(HydroParams& params, ConfigMap& configMap);
+  virtual ~SolverMHDMuscl3D();
   
   /**
    * Static creation method called by the solver factory.
    */
   static SolverBase* create(HydroParams& params, ConfigMap& configMap)
   {
-    SolverMHDMuscl2D* solver = new SolverMHDMuscl2D(params, configMap);
+    SolverMHDMuscl3D* solver = new SolverMHDMuscl3D(params, configMap);
 
     return solver;
   }
@@ -39,21 +39,40 @@ public:
   DataArray     U2;    /*!< hydrodynamics conservative variables arrays */
   DataArray     Q;     /*!< hydrodynamics primitive    variables array  */
   
-  /* implementation 2 only */
   DataArray Qm_x; /*!< hydrodynamics Riemann states array implementation 2 */
   DataArray Qm_y; /*!< hydrodynamics Riemann states array */
+  DataArray Qm_z; /*!< hydrodynamics Riemann states array */
+
   DataArray Qp_x; /*!< hydrodynamics Riemann states array */
   DataArray Qp_y; /*!< hydrodynamics Riemann states array */
-
+  DataArray Qp_z; /*!< hydrodynamics Riemann states array */
+  
   DataArray QEdge_RT;
   DataArray QEdge_RB;
   DataArray QEdge_LT;
   DataArray QEdge_LB;
 
+  DataArray QEdge_RT2;
+  DataArray QEdge_RB2;
+  DataArray QEdge_LT2;
+  DataArray QEdge_LB2;
+
+  DataArray QEdge_RT3;
+  DataArray QEdge_RB3;
+  DataArray QEdge_LT3;
+  DataArray QEdge_LB3;
+
   DataArray Fluxes_x;
   DataArray Fluxes_y;
+  DataArray Fluxes_z;
 
-  DataArrayScalar Emf; /*!< electromotive force */
+  DataArrayVector3 Emf; /*!< electromotive forces */
+
+  DataArrayVector3 ElecField;
+
+  DataArrayVector3 DeltaA;
+  DataArrayVector3 DeltaB;
+  DataArrayVector3 DeltaC;
   
   //riemann_solver_t riemann_solver_fn; /*!< riemann solver function pointer */
   
@@ -75,6 +94,9 @@ public:
 			   real_t dt);
   
   void convertToPrimitives(DataArray Udata);
+
+  void computeElectricField(DataArray Udata);
+  void computeMagSlopes(DataArray Udata);
   
   void computeTrace(DataArray Udata, real_t dt);
   
@@ -94,11 +116,11 @@ public:
   // inside this routine)
   void saveVTK(DataArray Udata, int iStep, std::string name);
   
-  int isize, jsize, ijsize;
+  int isize, jsize, ksize, ijsize, ijksize;
   static const int nbvar = 8;
   
-}; // class SolverMHDMuscl2D
+}; // class SolverMHDMuscl3D
 
 } // namespace ppkMHD
 
-#endif // SOLVER_MHD_MUSCL_2D_H_
+#endif // SOLVER_MHD_MUSCL_3D_H_

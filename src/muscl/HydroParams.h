@@ -84,7 +84,7 @@ enum BoundaryLocation {
   XMAX = 1, 
   YMIN = 2, 
   YMAX = 3,
-  ZMIN = 4, 
+  ZMIN = 4,
   ZMAX = 5
 };
 
@@ -144,12 +144,13 @@ struct HydroSettings {
   real_t smallp;      /*!< small pressure cut-off*/
   real_t smallpp;     /*!< smallp times smallr*/
   real_t cIso;        /*!< if non zero, isothermal */
-
+  real_t Omega0;      /*!< angular velocity */
+  
   KOKKOS_INLINE_FUNCTION
   HydroSettings() : gamma0(1.4), gamma6(1.0), cfl(1.0), slope_type(2.0),
 		    iorder(1),
 		    smallr(1e-8), smallc(1e-8), smallp(1e-6), smallpp(1e-6),
-		    cIso(0) {}
+		    cIso(0), Omega0(0.0) {}
   
 }; // struct HydroSettings
 
