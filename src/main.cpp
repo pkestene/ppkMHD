@@ -16,17 +16,12 @@
 // solver
 #include "SolverFactory.h"
 
-// for timer
-
-#ifdef CUDA
-#include "CudaTimer.h"
-#else
-#include "Timer.h"
-#endif
 
 int main(int argc, char *argv[])
 {
 
+  using namespace ppkMHD;
+  
 #ifdef CUDA
   // Initialize Host mirror device
   Kokkos::HostSpace::execution_space::initialize(1);

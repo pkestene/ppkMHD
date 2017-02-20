@@ -8,6 +8,8 @@
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 
+namespace ppkMHD {
+
 /**
  * Main hydrodynamics data structure.
  */
@@ -87,5 +89,7 @@ public:
   static const int nbvar = 4;
   
 }; // class SolverMuscl2D
+
+} // namespace ppkMHD
 
 #endif // SOLVER_MUSCL_2D_H_

@@ -2,6 +2,8 @@
 
 #include "utils.h"
 
+namespace ppkMHD {
+
 // =======================================================
 // ==== CLASS SolverBase IMPL ============================
 // =======================================================
@@ -200,3 +202,5 @@ SolverBase::should_save_solution()
   return 0;
   
 } // SolverBase::should_save_solution
+
+} // namespace ppkMHD

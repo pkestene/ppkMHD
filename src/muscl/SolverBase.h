@@ -22,6 +22,8 @@ enum TimerIds {
   TIMER_NUM_SCHEME = 4
 }; // enum TimerIds
 
+namespace ppkMHD {
+
 /**
  * Abstract base class for all our actual solvers.
  */
@@ -117,5 +119,7 @@ public:
   TimerMap timers;
 
 }; // class SolverBase
+
+} // namespace ppkMHD
 
 #endif // SOLVER_BASE_H_

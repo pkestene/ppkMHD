@@ -50,7 +50,8 @@ enum FaceIdType {
 enum RiemannSolverType {
   RIEMANN_APPROX, /*!< quasi-exact Riemann solver (hydro-only) */ 
   RIEMANN_HLL,    /*!< HLL hydro and MHD Riemann solver */
-  RIEMANN_HLLC    /*!< HLLC hydro-only Riemann solver */ 
+  RIEMANN_HLLC,   /*!< HLLC hydro-only Riemann solver */
+  RIEMANN_HLLD    /*!< HLLD MHD-only Riemann solver */
 };
 
 //! type of boundary condition (note that BC_COPY is only used in the
@@ -64,7 +65,7 @@ enum BoundaryConditionType {
 };
 
 //! enum component index
-enum ComponentIndex {
+enum ComponentIndex3D {
   IX = 0,
   IY = 1,
   IZ = 2
@@ -87,6 +88,35 @@ enum BoundaryLocation {
   ZMAX = 5
 };
 
+//! enum edge index (use in MHD - EMF computations)
+enum EdgeIndex {
+  IRT = 0, /*!< RT (Right - Top   ) */
+  IRB = 1, /*!< RB (Right - Bottom) */
+  ILT = 2, /*!< LT (Left  - Top   ) */
+  ILB = 3  /*!< LB (Left  - Bottom) */
+};
+
+enum EdgeIndex2 {
+  ILL = 0,
+  IRL = 1,
+  ILR = 2,
+  IRR = 3
+};
+
+//! enum used in MHD - EMF computations
+enum EmfDir {
+  EMFX = 0,
+  EMFY = 1,
+  EMFZ = 2
+};
+
+//! EMF indexes (EMFZ is first because in 2D, we only need EMFZ)
+enum EmfIndex {
+  I_EMFZ=0,
+  I_EMFY=1,
+  I_EMFX=2
+};
+
 //! implementation version
 enum ImplementationVersion {
   IMPL_VERSION_0,
@@ -97,7 +127,8 @@ enum ImplementationVersion {
 //! problem type
 enum ProblemType {
   PROBLEM_IMPLODE,
-  PROBLEM_BLAST
+  PROBLEM_BLAST,
+  PROBLEM_ORSZAG_TANG
 };
 
 struct HydroSettings {
@@ -112,11 +143,13 @@ struct HydroSettings {
   real_t smallc;      /*!< small speed of sound cut-off*/
   real_t smallp;      /*!< small pressure cut-off*/
   real_t smallpp;     /*!< smallp times smallr*/
+  real_t cIso;        /*!< if non zero, isothermal */
 
   KOKKOS_INLINE_FUNCTION
   HydroSettings() : gamma0(1.4), gamma6(1.0), cfl(1.0), slope_type(2.0),
 		    iorder(1),
-		    smallr(1e-8), smallc(1e-8), smallp(1e-6), smallpp(1e-6) {}
+		    smallr(1e-8), smallc(1e-8), smallp(1e-6), smallpp(1e-6),
+		    cIso(0) {}
   
 }; // struct HydroSettings
 

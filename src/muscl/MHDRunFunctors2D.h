@@ -8,19 +8,23 @@
 
 #include "MHDBaseFunctor2D.h"
 
+#include "BlastParams.h"
+
 #ifndef SQR
 #define SQR(x) ((x)*(x))
 #endif
 
+namespace ppkMHD { namespace muscl { namespace mhd2d {
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeDtFunctor : public MHDBaseFunctor2D {
+class ComputeDtFunctorMHD : public MHDBaseFunctor2D {
 
 public:
   
-  ComputeDtFunctor(HydroParams params,
-		   DataArray Qdata) :
+  ComputeDtFunctorMHD(HydroParams params,
+		      DataArray Qdata) :
     MHDBaseFunctor2D(params),
     Qdata(Qdata)  {};
 
@@ -97,7 +101,7 @@ public:
   
   DataArray Qdata;
   
-}; // ComputeDtFunctor
+}; // ComputeDtFunctorMHD
 
 /*************************************************/
 /*************************************************/
@@ -808,8 +812,9 @@ class InitBlastFunctor : public MHDBaseFunctor2D {
 
 public:
   InitBlastFunctor(HydroParams params,
+		   BlastParams bParams,
 		   DataArray Udata) :
-    MHDBaseFunctor2D(params), Udata(Udata)  {};
+    MHDBaseFunctor2D(params), bParams(bParams), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -827,14 +832,14 @@ public:
     const real_t gamma0 = params.settings.gamma0;
 
     // blast problem parameters
-    const real_t blast_radius      = params.blast_radius;
+    const real_t blast_radius      = bParams.blast_radius;
     const real_t radius2           = blast_radius*blast_radius;
-    const real_t blast_center_x    = params.blast_center_x;
-    const real_t blast_center_y    = params.blast_center_y;
-    const real_t blast_density_in  = params.blast_density_in;
-    const real_t blast_density_out = params.blast_density_out;
-    const real_t blast_pressure_in = params.blast_pressure_in;
-    const real_t blast_pressure_out= params.blast_pressure_out;
+    const real_t blast_center_x    = bParams.blast_center_x;
+    const real_t blast_center_y    = bParams.blast_center_y;
+    const real_t blast_density_in  = bParams.blast_density_in;
+    const real_t blast_density_out = bParams.blast_density_out;
+    const real_t blast_pressure_in = bParams.blast_pressure_in;
+    const real_t blast_pressure_out= bParams.blast_pressure_out;
   
 
     int i,j;
@@ -876,6 +881,7 @@ public:
   } // end operator ()
   
   DataArray Udata;
+  BlastParams bParams;
   
 }; // InitBlastFunctor
 
@@ -933,23 +939,28 @@ public:
     double xPos = xmin + dx/2 + (i-ghostWidth)*dx;
     double yPos = ymin + dy/2 + (j-ghostWidth)*dy;
     
-    // density
-    Udata(index,ID) = d0;
-    
-    // rho*vx
-    Udata(index,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
-    
-    // rho*vy
-    Udata(index,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
-    
-    // rho*vz
-    Udata(index,IW) =  ZERO_F;
+    if(j < jsize  &&
+       i < isize ) {
 
-    // bx, by, bz
-    Udata(index, IBX) = -B0*sin(    yPos*TwoPi);
-    Udata(index, IBY) =  B0*sin(2.0*xPos*TwoPi);
-    Udata(index, IBZ) =  0.0;
+      // density
+      Udata(index,ID) = d0;
+      
+      // rho*vx
+      Udata(index,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
+      
+      // rho*vy
+      Udata(index,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
+      
+      // rho*vz
+      Udata(index,IW) =  ZERO_F;
+      
+      // bx, by, bz
+      Udata(index, IBX) = -B0*sin(    yPos*TwoPi);
+      Udata(index, IBY) =  B0*sin(2.0*xPos*TwoPi);
+      Udata(index, IBZ) =  0.0;
 
+    }
+    
   } // init_all_var_but_energy
 
   KOKKOS_INLINE_FUNCTION
@@ -1054,7 +1065,6 @@ public:
     const int jmax = params.jmax;
     
     int i,j;
-    //index2coord(index,i,j,isize,jsize);
 
     int boundary_type;
     
@@ -1074,7 +1084,7 @@ public:
 	 i >= 0    && i <ghostWidth) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
@@ -1093,7 +1103,7 @@ public:
 	}
 	
       }
-    }
+    } // end FACE_XMIN
 
     if (faceId == FACE_XMAX) {
       
@@ -1108,7 +1118,7 @@ public:
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
@@ -1126,7 +1136,7 @@ public:
 	  
 	}
       }
-    }
+    } // end FACE_XMAX
     
     if (faceId == FACE_YMIN) {
       
@@ -1141,7 +1151,7 @@ public:
 	
 	real_t sign=1.0;
 	
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
 	    if (iVar==IV) sign=-ONE_F;
@@ -1157,7 +1167,7 @@ public:
 	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
 	}
       }
-    }
+    } // end FACE_YMIN
 
     if (faceId == FACE_YMAX) {
 
@@ -1172,7 +1182,7 @@ public:
 	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
 	
 	real_t sign=1.0;
-	for ( iVar=0; iVar<NBVAR; iVar++ ) {
+	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
@@ -1191,13 +1201,17 @@ public:
 	}
 
       }
-    }
+    } // end FACE_YMAX
     
   } // end operator ()
 
   DataArray Udata;
   
 }; // MakeBoundariesFunctor
-  
+
+} // namespace mhd2d
+} // namespace muscl
+} // namespace ppkMHD
+
 #endif // MHD_RUN_FUNCTORS_2D_H_
 

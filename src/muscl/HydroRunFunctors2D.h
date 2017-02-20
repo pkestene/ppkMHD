@@ -10,6 +10,8 @@
 
 #include "BlastParams.h"
 
+namespace ppkMHD { namespace muscl { namespace hydro2d {
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
@@ -1282,8 +1284,8 @@ public:
 	  
 	}
 	
-      } // end xmin
-    }
+      }
+    } // end FACE_XMIN
 
     if (faceId == FACE_XMAX) {
       
@@ -1314,8 +1316,8 @@ public:
 	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
 	  
 	}
-      } // end xmax
-    }
+      }
+    } // end FACE_XMAX
     
     if (faceId == FACE_YMIN) {
       
@@ -1344,8 +1346,8 @@ public:
 	  index_in  = coord2index(i,j0,isize,jsize);
 	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
 	}
-      } // end ymin
-    }
+      }
+    } // end FACE_YMIN
 
     if (faceId == FACE_YMAX) {
 
@@ -1377,13 +1379,17 @@ public:
 	}
 
       }
-    } // end ymax
+    } // end FACE_YMAX
     
   } // end operator ()
 
   DataArray Udata;
   
 }; // MakeBoundariesFunctor
-  
+
+} // namespace hydro2d
+} // namespace muscl
+} // namespace ppkMHD
+
 #endif // HYDRO_RUN_FUNCTORS_2D_H_
 

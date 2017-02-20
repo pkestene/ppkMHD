@@ -19,6 +19,14 @@ void HydroParams::setup(ConfigMap &configMap)
   nOutput  = configMap.getInteger("run","noutput",100);
   if (nOutput == -1)
     enableOutput = false;
+
+  std::string solver_name = configMap.getString("run", "solver_name", "unknown");
+  if ( !solver_name.compare("MHD_Muscl_2D") ||
+       !solver_name.compare("MHD_Muscl_3D") ) {
+    ghostWidth = 3;
+  } else {
+    ghostWidth = 2;
+  }
   
   /* initialize MESH parameters */
   nx = configMap.getInteger("mesh","nx", 1);
@@ -55,14 +63,14 @@ void HydroParams::setup(ConfigMap &configMap)
     riemannSolverType = RIEMANN_HLL;
   } else if ( !riemannSolverStr.compare("hllc") ) {
     riemannSolverType = RIEMANN_HLLC;
+  } else if ( !riemannSolverStr.compare("hlld") ) {
+    riemannSolverType = RIEMANN_HLLD;
   } else {
     std::cout << "Riemann Solver specified in parameter file is invalid\n";
     std::cout << "Use the default one : approx\n";
     riemannSolverType = RIEMANN_APPROX;
   }
   
-  //solver_name = configMap.getString("run", "solver_name", "unknown");
-
   implementationVersion  = configMap.getFloat("OTHER","implementationVersion", 0);
   if (implementationVersion != 0 and
       implementationVersion != 1) {
@@ -81,6 +89,10 @@ void HydroParams::init()
 {
 
   // set other parameters
+  imin = 0;
+  jmin = 0;
+  kmin = 0;
+
   imax = nx - 1 + 2*ghostWidth;
   jmax = ny - 1 + 2*ghostWidth;
   kmax = nz - 1 + 2*ghostWidth;
@@ -136,13 +148,17 @@ void HydroParams::print()
   printf( "kmin       : %d\n", kmin);      
   printf( "kmax       : %d\n", kmax);      
 
+  printf( "ghostWidth : %d\n", ghostWidth);
   printf( "nStepmax   : %d\n", nStepmax);
   printf( "tEnd       : %f\n", tEnd);
   printf( "nOutput    : %d\n", nOutput);
   printf( "gamma0     : %f\n", settings.gamma0);
+  printf( "gamma6     : %f\n", settings.gamma6);
   printf( "cfl        : %f\n", settings.cfl);
   printf( "smallr     : %12.10f\n", settings.smallr);
   printf( "smallc     : %12.10f\n", settings.smallc);
+  printf( "smallp     : %12.10f\n", settings.smallp);
+  printf( "smallpp    : %g\n", settings.smallpp);
   //printf( "niter_riemann : %d\n", niter_riemann);
   printf( "iorder     : %d\n", settings.iorder);
   printf( "slope_type : %f\n", settings.slope_type);

@@ -8,6 +8,8 @@
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 
+namespace ppkMHD {
+
 /**
  * Main hydrodynamics data structure for 3D MUSCL-Hancock scheme.
  */
@@ -91,5 +93,7 @@ public:
   static const int nbvar = 5;
   
 }; // class SolverMuscl3D
+
+} // namespace ppkMHD
 
 #endif // SOLVER_MUSCL_3D_H_

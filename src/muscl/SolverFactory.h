@@ -9,6 +9,8 @@
 class HydroParams;
 class ConfigMap;
 
+namespace ppkMHD {
+
 /**
  * An abstract base class to define a common interface for concrete solvers.
  *
@@ -102,5 +104,7 @@ public:
   }; // create
 
 }; // class SolverFactory
-  
+
+} // namespace ppkMHD
+
 #endif // SOLVER_FACTORY_H_

@@ -8,6 +8,8 @@
 #include "HydroParams.h"
 #include "kokkos_shared.h"
 
+namespace ppkMHD {
+
 /**
  * Main hydrodynamics data structure.
  */
@@ -60,7 +62,7 @@ public:
    */
   
   //! compute time step inside an MPI process, at shared memory level.
-  double compute_dt_local(int useU);
+  double compute_dt_local();
   
   //! perform 1 time step (time integration).
   void next_iteration_impl();
@@ -82,7 +84,7 @@ public:
   void make_boundaries(DataArray Udata);
 
   // host routines (initialization)
-  void init_implode(DataArray Udata);
+  //void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
   void init_orszag_tang(DataArray Udata);
 
@@ -96,5 +98,7 @@ public:
   static const int nbvar = 8;
   
 }; // class SolverMHDMuscl2D
+
+} // namespace ppkMHD
 
 #endif // SOLVER_MHD_MUSCL_2D_H_

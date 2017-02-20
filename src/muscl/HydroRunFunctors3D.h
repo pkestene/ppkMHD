@@ -10,6 +10,8 @@
 
 #include "BlastParams.h"
 
+namespace ppkMHD { namespace muscl { namespace hydro3d {
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
@@ -1513,5 +1515,9 @@ public:
   
 }; // MakeBoundariesFunctor3D
   
+} // namespace hydro3d
+} // namespace muscl
+} // namespace ppkMHD
+
 #endif // HYDRO_RUN_FUNCTORS_3D_H_
 

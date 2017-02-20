@@ -23,6 +23,10 @@ static bool isBigEndian()
   return ( (*(char*)&i) == 0 );
 }
 
+namespace ppkMHD {
+
+using namespace muscl::hydro2d;
+
 // =======================================================
 // ==== CLASS SolverMuscl2D IMPL =========================
 // =======================================================
@@ -497,3 +501,4 @@ void SolverMuscl2D::saveVTK(DataArray Udata,
 
 } // SolverMuscl2D::saveVTK
 
+} // namespace ppkMHD

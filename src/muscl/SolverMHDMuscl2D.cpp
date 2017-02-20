@@ -14,11 +14,18 @@
 // Kokkos
 #include "kokkos_shared.h"
 
+// for init condition
+#include "BlastParams.h"
+
 static bool isBigEndian()
 {
   const int i = 1;
   return ( (*(char*)&i) == 0 );
 }
+
+namespace ppkMHD {
+
+using namespace muscl::mhd2d;
 
 // =======================================================
 // ==== CLASS SolverMHDMuscl2D IMPL ======================
@@ -48,25 +55,25 @@ SolverMHDMuscl2D::SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap) :
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijsize);
+  U     = DataArray("U", ijsize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijsize);
-  Q     = DataArray("Q", ijsize);
+  U2    = DataArray("U2",ijsize, nbvar);
+  Q     = DataArray("Q", ijsize, nbvar);
 
   if (params.implementationVersion == 0) {
   
-    Qm_x = DataArray("Qm_x", ijsize);
-    Qm_y = DataArray("Qm_y", ijsize);
-    Qp_x = DataArray("Qp_x", ijsize);
-    Qp_y = DataArray("Qp_y", ijsize);
+    Qm_x = DataArray("Qm_x", ijsize, nbvar);
+    Qm_y = DataArray("Qm_y", ijsize, nbvar);
+    Qp_x = DataArray("Qp_x", ijsize, nbvar);
+    Qp_y = DataArray("Qp_y", ijsize, nbvar);
 
-    QEdge_RT = DataArray("QEdge_RT", ijsize);
-    QEdge_RB = DataArray("QEdge_RB", ijsize);
-    QEdge_LT = DataArray("QEdge_LT", ijsize);
-    QEdge_LB = DataArray("QEdge_LB", ijsize);
+    QEdge_RT = DataArray("QEdge_RT", ijsize, nbvar);
+    QEdge_RB = DataArray("QEdge_RB", ijsize, nbvar);
+    QEdge_LT = DataArray("QEdge_LT", ijsize, nbvar);
+    QEdge_LB = DataArray("QEdge_LB", ijsize, nbvar);
     
-    Fluxes_x = DataArray("Fluxes_x", ijsize);
-    Fluxes_y = DataArray("Fluxes_y", ijsize);
+    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", ijsize, nbvar);
 
     Emf = DataArrayScalar("Emf", ijsize);
     
@@ -80,12 +87,16 @@ SolverMHDMuscl2D::SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap) :
   /*
    * initialize hydro array at t=0
    */
-  if ( !m_problem_name == "orszag_tang") {
+  if ( !m_problem_name.compare("blast") ) {
 
+    init_blast(U);
+    
+  } else if ( !m_problem_name.compare("orszag_tang") ) {
+    
     init_orszag_tang(U);
-
+    
   } else {
-
+    
     std::cout << "Problem : " << m_problem_name
 	      << " is not recognized / implemented."
 	      << std::endl;
@@ -108,7 +119,7 @@ SolverMHDMuscl2D::SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap) :
   // initialize boundaries
   make_boundaries(U);
 
-  // upload Uhost to device
+  // copy U into U2
   Kokkos::deep_copy(U2,U);
 
 } // SolverMHDMuscl2D::SolverMHDMuscl2D
@@ -129,11 +140,9 @@ SolverMHDMuscl2D::~SolverMHDMuscl2D()
 /**
  * Compute time step satisfying CFL condition.
  *
- * \param[in] useU integer, if 0 use data in U else use U2
- *
  * \return dt time step
  */
-real_t SolverMHDMuscl2D::compute_dt_local()
+double SolverMHDMuscl2D::compute_dt_local()
 {
 
   real_t dt;
@@ -147,7 +156,7 @@ real_t SolverMHDMuscl2D::compute_dt_local()
     Udata = U2;
 
   // call device functor
-  ComputeDtFunctor computeDtFunctor(params, Udata);
+  ComputeDtFunctorMHD computeDtFunctor(params, Udata);
   Kokkos::parallel_reduce(ijsize, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
@@ -164,7 +173,7 @@ void SolverMHDMuscl2D::next_iteration_impl()
   if (m_iteration % 10 == 0) {
     std::cout << "time step=" << m_iteration << std::endl;
   }
-  
+    
   // output
   if (params.enableOutput) {
     if ( should_save_solution() ) {
@@ -221,16 +230,16 @@ void SolverMHDMuscl2D::godunov_unsplit_cpu(DataArray data_in,
   dtdy = dt / params.dy;
 
   // fill ghost cell in data_in
-  boundaries_timer.start();
+  timers[TIMER_BOUNDARIES]->start();
   make_boundaries(data_in);
-  boundaries_timer.stop();
+  timers[TIMER_BOUNDARIES]->stop();
     
   // copy data_in into data_out (not necessary)
   // data_out = data_in;
   Kokkos::deep_copy(data_out, data_in);
   
   // start main computation
-  godunov_timer.start();
+  timers[TIMER_NUM_SCHEME]->start();
 
   // convert conservative variable into primitives ones for the entire domain
   convertToPrimitives(data_in);
@@ -261,7 +270,7 @@ void SolverMHDMuscl2D::godunov_unsplit_cpu(DataArray data_in,
     }
     
   }
-  godunov_timer.stop();
+  timers[TIMER_NUM_SCHEME]->stop();
   
 } // SolverMHDMuscl2D::godunov_unsplit_cpu
 
@@ -403,13 +412,15 @@ void SolverMHDMuscl2D::make_boundaries(DataArray Udata)
  * Hydrodynamical blast Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/blast/blast.html
  */
-// void SolverMHDMuscl2D::init_blast(DataArray Udata)
-// {
+void SolverMHDMuscl2D::init_blast(DataArray Udata)
+{
 
-//   InitBlastFunctor functor(params, Udata);
-//   Kokkos::parallel_for(ijsize, functor);
+  BlastParams blastParams = BlastParams(configMap);
   
-// } // SolverMHDMuscl2D::init_blast
+  InitBlastFunctor functor(params, blastParams, Udata);
+  Kokkos::parallel_for(ijsize, functor);
+  
+} // SolverMHDMuscl2D::init_blast
 
 // =======================================================
 // =======================================================
@@ -436,7 +447,7 @@ void SolverMHDMuscl2D::init_orszag_tang(DataArray Udata)
 
 // =======================================================
 // =======================================================
-void SolverMuscl2D::save_solution_impl()
+void SolverMHDMuscl2D::save_solution_impl()
 {
 
   timers[TIMER_IO]->start();
@@ -447,12 +458,15 @@ void SolverMuscl2D::save_solution_impl()
   
   timers[TIMER_IO]->stop();
     
-} // SolverMuscl2D::save_solution_impl()
+} // SolverMHDMuscl2D::save_solution_impl()
 
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////////////////
 // output routine (VTK file format, ASCII, VtkImageData)
+// Take care that VTK uses row major (i+j*nx)
+// To make sure OpenMP and CUDA version give the same
+// results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
 void SolverMHDMuscl2D::saveVTK(DataArray Udata,
 			       int iStep,
@@ -520,13 +534,13 @@ void SolverMHDMuscl2D::saveVTK(DataArray Udata,
   outFile << "    <CellData>\n";
 
   // write data array (ascii), remove ghost cells
-  for ( iVar=0; iVar<NBVAR; iVar++) {
+  for ( iVar=0; iVar<nbvar; iVar++) {
     outFile << "    <DataArray type=\"";
     if (useDouble)
       outFile << "Float64";
     else
       outFile << "Float32";
-    outFile << "\" Name=\"" << varNames[iVar] << "\" format=\"ascii\" >\n";
+    outFile << "\" Name=\"" << m_variables_names[iVar] << "\" format=\"ascii\" >\n";
 
     for (int index=0; index<ijsize; ++index) {
       //index2coord(index,i,j,isize,jsize);
@@ -560,3 +574,4 @@ void SolverMHDMuscl2D::saveVTK(DataArray Udata,
 
 } // SolverMHDMuscl2D::saveVTK
 
+} // namespace ppkMHD
