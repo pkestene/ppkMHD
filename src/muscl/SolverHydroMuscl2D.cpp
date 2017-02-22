@@ -51,23 +51,23 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params, ConfigMap& configMap
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijsize, nbvar);
+  U     = DataArray("U", isize, jsize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijsize, nbvar);
-  Q     = DataArray("Q", ijsize, nbvar);
+  U2    = DataArray("U2",isize, jsize, nbvar);
+  Q     = DataArray("Q", isize, jsize, nbvar);
 
   if (params.implementationVersion == 0) {
 
-    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
-    Fluxes_y = DataArray("Fluxes_y", ijsize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
     
   } else if (params.implementationVersion == 1) {
 
-    Slopes_x = DataArray("Slope_x", ijsize, nbvar);
-    Slopes_y = DataArray("Slope_y", ijsize, nbvar);
+    Slopes_x = DataArray("Slope_x", isize, jsize, nbvar);
+    Slopes_y = DataArray("Slope_y", isize, jsize, nbvar);
 
     // direction splitting (only need one flux array)
-    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = Fluxes_x;
     
   } 
@@ -479,12 +479,7 @@ void SolverHydroMuscl2D::saveVTK(DataArray Udata,
 
       if (j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	  i>=imin+ghostWidth and i<=imax-ghostWidth) {
-#ifdef CUDA
-    	outFile << Uhost(index , iVar) << " ";
-#else
-	int index2 = j+jsize*i;
-    	outFile << Uhost(index2 , iVar) << " ";
-#endif
+    	outFile << Uhost(i, j, iVar) << " ";
       }
     }
     outFile << "\n    </DataArray>\n";

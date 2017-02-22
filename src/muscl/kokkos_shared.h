@@ -22,13 +22,13 @@
 
 // last index is hydro variable
 // n-1 first indexes are space (i,j,k,....)
-typedef Kokkos::View<real_t**, DEVICE>   DataArray2d;
-typedef DataArray2d::HostMirror          DataArray2dHost;
+typedef Kokkos::View<real_t***, DEVICE>   DataArray2d;
+typedef DataArray2d::HostMirror           DataArray2dHost;
 
-//typedef Kokkos::View<real_t***, DEVICE>  DataArray3d;
-//typedef DataArray3d::HostMirror          DataArray3dHost;
-typedef DataArray2d     DataArray3d;
-typedef DataArray2dHost DataArray3dHost;
+typedef Kokkos::View<real_t****, DEVICE>  DataArray3d;
+typedef DataArray3d::HostMirror           DataArray3dHost;
+//typedef DataArray2d     DataArray3d;
+//typedef DataArray2dHost DataArray3dHost;
 
 typedef Kokkos::View<real_t*,        DEVICE> DataArrayScalar;
 typedef DataArrayScalar::HostMirror          DataArrayScalarHost;
