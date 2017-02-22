@@ -53,7 +53,8 @@ include(kokkos)
 #
 # External packages: MPI, ...
 #
-find_package(MPI REQUIRED)
+#find_package(MPI REQUIRED)
+find_package(MPI)
 
 #
 # common flags
