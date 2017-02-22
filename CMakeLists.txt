@@ -55,7 +55,11 @@ include(kokkos)
 #
 #find_package(MPI REQUIRED)
 find_package(MPI)
-
+find_package(VTK)
+if(VTK_FOUND)
+  include(${VTK_USE_FILE})
+endif(VTK_FOUND)
+  
 #
 # common flags
 #
