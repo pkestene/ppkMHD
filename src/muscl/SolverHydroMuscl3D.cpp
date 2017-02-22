@@ -53,25 +53,25 @@ SolverHydroMuscl3D::SolverHydroMuscl3D(HydroParams& params, ConfigMap& configMap
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijksize, nbvar);
+  U     = DataArray("U", isize,jsize,ksize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijksize, nbvar);
-  Q     = DataArray("Q", ijksize, nbvar);
+  U2    = DataArray("U2",isize,jsize,ksize, nbvar);
+  Q     = DataArray("Q", isize,jsize,ksize, nbvar);
 
   if (params.implementationVersion == 0) {
 
-    Fluxes_x = DataArray("Fluxes_x", ijksize, nbvar);
-    Fluxes_y = DataArray("Fluxes_y", ijksize, nbvar);
-    Fluxes_z = DataArray("Fluxes_z", ijksize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize,jsize,ksize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", isize,jsize,ksize, nbvar);
+    Fluxes_z = DataArray("Fluxes_z", isize,jsize,ksize, nbvar);
     
   } else if (params.implementationVersion == 1) {
 
-    Slopes_x = DataArray("Slope_x", ijksize, nbvar);
-    Slopes_y = DataArray("Slope_y", ijksize, nbvar);
-    Slopes_z = DataArray("Slope_z", ijksize, nbvar);
+    Slopes_x = DataArray("Slope_x", isize,jsize,ksize, nbvar);
+    Slopes_y = DataArray("Slope_y", isize,jsize,ksize, nbvar);
+    Slopes_z = DataArray("Slope_z", isize,jsize,ksize, nbvar);
 
     // direction splitting (only need one flux array)
-    Fluxes_x = DataArray("Fluxes_x", ijksize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize,jsize,ksize, nbvar);
     Fluxes_y = Fluxes_x;
     Fluxes_z = Fluxes_x;
     
@@ -523,12 +523,7 @@ void SolverHydroMuscl3D::saveVTK(DataArray Udata,
       if (k>=kmin+ghostWidth and k<=kmax-ghostWidth and
 	  j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	  i>=imin+ghostWidth and i<=imax-ghostWidth) {
-#ifdef CUDA
-    	outFile << Uhost(index , iVar) << " ";
-#else
-	int index2 = k+ksize*j+ksize*jsize*i;
-    	outFile << Uhost(index2 , iVar) << " ";
-#endif
+    	outFile << Uhost(i,j,k,iVar) << " ";
       }
     }
     outFile << "\n    </DataArray>\n";

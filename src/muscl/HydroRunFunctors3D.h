@@ -64,11 +64,11 @@ public:
       real_t vx, vy, vz;
       
       // get local conservative variable
-      uLoc.d = Udata(index,ID);
-      uLoc.p = Udata(index,IP);
-      uLoc.u = Udata(index,IU);
-      uLoc.v = Udata(index,IV);
-      uLoc.w = Udata(index,IW);
+      uLoc.d = Udata(i,j,k,ID);
+      uLoc.p = Udata(i,j,k,IP);
+      uLoc.u = Udata(i,j,k,IU);
+      uLoc.v = Udata(i,j,k,IV);
+      uLoc.w = Udata(i,j,k,IW);
 
       // get primitive variables in current cell
       computePrimitives(&uLoc, &c, &qLoc);
@@ -133,21 +133,21 @@ public:
       real_t c;
       
       // get local conservative variable
-      uLoc.d = Udata(index,ID);
-      uLoc.p = Udata(index,IP);
-      uLoc.u = Udata(index,IU);
-      uLoc.v = Udata(index,IV);
-      uLoc.w = Udata(index,IW);
+      uLoc.d = Udata(i,j,k,ID);
+      uLoc.p = Udata(i,j,k,IP);
+      uLoc.u = Udata(i,j,k,IU);
+      uLoc.v = Udata(i,j,k,IV);
+      uLoc.w = Udata(i,j,k,IW);
       
       // get primitive variables in current cell
       computePrimitives(&uLoc, &c, &qLoc);
 
       // copy q state in q global
-      Qdata(index,ID) = qLoc.d;
-      Qdata(index,IP) = qLoc.p;
-      Qdata(index,IU) = qLoc.u;
-      Qdata(index,IV) = qLoc.v;
-      Qdata(index,IW) = qLoc.w;
+      Qdata(i,j,k,ID) = qLoc.d;
+      Qdata(i,j,k,IP) = qLoc.p;
+      Qdata(i,j,k,IU) = qLoc.u;
+      Qdata(i,j,k,IV) = qLoc.v;
+      Qdata(i,j,k,IW) = qLoc.w;
       
     }
     
@@ -241,45 +241,45 @@ public:
       index5 = coord2index(i  ,j  ,k-1,isize,jsize,ksize);
 
       // get primitive variables state vector
-      qLoc.d         = Qdata(index , ID);
-      qNeighbors_0.d = Qdata(index0, ID);
-      qNeighbors_1.d = Qdata(index1, ID);
-      qNeighbors_2.d = Qdata(index2, ID);
-      qNeighbors_3.d = Qdata(index3, ID);
-      qNeighbors_4.d = Qdata(index4, ID);
-      qNeighbors_5.d = Qdata(index5, ID);
+      qLoc.d         = Qdata(i  ,j  ,k  , ID);
+      qNeighbors_0.d = Qdata(i+1,j  ,k  , ID);
+      qNeighbors_1.d = Qdata(i-1,j  ,k  , ID);
+      qNeighbors_2.d = Qdata(i  ,j+1,k  , ID);
+      qNeighbors_3.d = Qdata(i  ,j-1,k  , ID);
+      qNeighbors_4.d = Qdata(i  ,j  ,k+1, ID);
+      qNeighbors_5.d = Qdata(i  ,j  ,k-1, ID);
       
-      qLoc.p         = Qdata(index , IP);
-      qNeighbors_0.p = Qdata(index0, IP);
-      qNeighbors_1.p = Qdata(index1, IP);
-      qNeighbors_2.p = Qdata(index2, IP);
-      qNeighbors_3.p = Qdata(index3, IP);
-      qNeighbors_4.p = Qdata(index4, IP);
-      qNeighbors_5.p = Qdata(index5, IP);
+      qLoc.p         = Qdata(i  ,j  ,k  , IP);
+      qNeighbors_0.p = Qdata(i+1,j  ,k  , IP);
+      qNeighbors_1.p = Qdata(i-1,j  ,k  , IP);
+      qNeighbors_2.p = Qdata(i  ,j+1,k  , IP);
+      qNeighbors_3.p = Qdata(i  ,j-1,k  , IP);
+      qNeighbors_4.p = Qdata(i  ,j  ,k+1, IP);
+      qNeighbors_5.p = Qdata(i  ,j  ,k-1, IP);
       
-      qLoc.u         = Qdata(index , IU);
-      qNeighbors_0.u = Qdata(index0, IU);
-      qNeighbors_1.u = Qdata(index1, IU);
-      qNeighbors_2.u = Qdata(index2, IU);
-      qNeighbors_3.u = Qdata(index3, IU);
-      qNeighbors_4.u = Qdata(index4, IU);
-      qNeighbors_5.u = Qdata(index5, IU);
+      qLoc.u         = Qdata(i  ,j  ,k  , IU);
+      qNeighbors_0.u = Qdata(i+1,j  ,k  , IU);
+      qNeighbors_1.u = Qdata(i-1,j  ,k  , IU);
+      qNeighbors_2.u = Qdata(i  ,j+1,k  , IU);
+      qNeighbors_3.u = Qdata(i  ,j-1,k  , IU);
+      qNeighbors_4.u = Qdata(i  ,j  ,k+1, IU);
+      qNeighbors_5.u = Qdata(i  ,j  ,k-1, IU);
       
-      qLoc.v         = Qdata(index , IV);
-      qNeighbors_0.v = Qdata(index0, IV);
-      qNeighbors_1.v = Qdata(index1, IV);
-      qNeighbors_2.v = Qdata(index2, IV);
-      qNeighbors_3.v = Qdata(index3, IV);
-      qNeighbors_4.v = Qdata(index4, IV);
-      qNeighbors_5.v = Qdata(index5, IV);
+      qLoc.v         = Qdata(i  ,j  ,k  , IV);
+      qNeighbors_0.v = Qdata(i+1,j  ,k  , IV);
+      qNeighbors_1.v = Qdata(i-1,j  ,k  , IV);
+      qNeighbors_2.v = Qdata(i  ,j+1,k  , IV);
+      qNeighbors_3.v = Qdata(i  ,j-1,k  , IV);
+      qNeighbors_4.v = Qdata(i  ,j  ,k+1, IV);
+      qNeighbors_5.v = Qdata(i  ,j  ,k-1, IV);
       
-      qLoc.w         = Qdata(index , IW);
-      qNeighbors_0.w = Qdata(index0, IW);
-      qNeighbors_1.w = Qdata(index1, IW);
-      qNeighbors_2.w = Qdata(index2, IW);
-      qNeighbors_3.w = Qdata(index3, IW);
-      qNeighbors_4.w = Qdata(index4, IW);
-      qNeighbors_5.w = Qdata(index5, IW);
+      qLoc.w         = Qdata(i  ,j  ,k  , IW);
+      qNeighbors_0.w = Qdata(i+1,j  ,k  , IW);
+      qNeighbors_1.w = Qdata(i-1,j  ,k  , IW);
+      qNeighbors_2.w = Qdata(i  ,j+1,k  , IW);
+      qNeighbors_3.w = Qdata(i  ,j-1,k  , IW);
+      qNeighbors_4.w = Qdata(i  ,j  ,k+1, IW);
+      qNeighbors_5.w = Qdata(i  ,j  ,k-1, IW);
       
       slope_unsplit_hydro_3d(&qLoc, 
 			     &qNeighbors_0, &qNeighbors_1, 
@@ -296,45 +296,45 @@ public:
       index4 = coord2index(i-1,j  ,k+1,isize,jsize,ksize);
       index5 = coord2index(i-1,j  ,k-1,isize,jsize,ksize);
 
-      qLocNeighbor.d = Qdata(indexc, ID);
-      qNeighbors_0.d = Qdata(index0, ID);
-      qNeighbors_1.d = Qdata(index1, ID);
-      qNeighbors_2.d = Qdata(index2, ID);
-      qNeighbors_3.d = Qdata(index3, ID);
-      qNeighbors_4.d = Qdata(index4, ID);
-      qNeighbors_5.d = Qdata(index5, ID);
+      qLocNeighbor.d = Qdata(i-1,j  ,k  , ID);
+      qNeighbors_0.d = Qdata(i  ,j  ,k  , ID);
+      qNeighbors_1.d = Qdata(i-2,j  ,k  , ID);
+      qNeighbors_2.d = Qdata(i-1,j+1,k  , ID);
+      qNeighbors_3.d = Qdata(i-1,j-1,k  , ID);
+      qNeighbors_4.d = Qdata(i-1,j  ,k+1, ID);
+      qNeighbors_5.d = Qdata(i-1,j  ,k-1, ID);
       
-      qLocNeighbor.p = Qdata(indexc, IP);
-      qNeighbors_0.p = Qdata(index0, IP);
-      qNeighbors_1.p = Qdata(index1, IP);
-      qNeighbors_2.p = Qdata(index2, IP);
-      qNeighbors_3.p = Qdata(index3, IP);
-      qNeighbors_4.p = Qdata(index4, IP);
-      qNeighbors_5.p = Qdata(index5, IP);
+      qLocNeighbor.p = Qdata(i-1,j  ,k  , IP);
+      qNeighbors_0.p = Qdata(i  ,j  ,k  , IP);
+      qNeighbors_1.p = Qdata(i-2,j  ,k  , IP);
+      qNeighbors_2.p = Qdata(i-1,j+1,k  , IP);
+      qNeighbors_3.p = Qdata(i-1,j-1,k  , IP);
+      qNeighbors_4.p = Qdata(i-1,j  ,k+1, IP);
+      qNeighbors_5.p = Qdata(i-1,j  ,k-1, IP);
       
-      qLocNeighbor.u = Qdata(indexc, IU);
-      qNeighbors_0.u = Qdata(index0, IU);
-      qNeighbors_1.u = Qdata(index1, IU);
-      qNeighbors_2.u = Qdata(index2, IU);
-      qNeighbors_3.u = Qdata(index3, IU);
-      qNeighbors_4.u = Qdata(index4, IU);
-      qNeighbors_5.u = Qdata(index5, IU);
+      qLocNeighbor.u = Qdata(i-1,j  ,k  , IU);
+      qNeighbors_0.u = Qdata(i  ,j  ,k  , IU);
+      qNeighbors_1.u = Qdata(i-2,j  ,k  , IU);
+      qNeighbors_2.u = Qdata(i-1,j+1,k  , IU);
+      qNeighbors_3.u = Qdata(i-1,j-1,k  , IU);
+      qNeighbors_4.u = Qdata(i-1,j  ,k+1, IU);
+      qNeighbors_5.u = Qdata(i-1,j  ,k-1, IU);
 
-      qLocNeighbor.v = Qdata(indexc, IV);
-      qNeighbors_0.v = Qdata(index0, IV);
-      qNeighbors_1.v = Qdata(index1, IV);
-      qNeighbors_2.v = Qdata(index2, IV);
-      qNeighbors_3.v = Qdata(index3, IV);
-      qNeighbors_4.v = Qdata(index4, IV);
-      qNeighbors_5.v = Qdata(index5, IV);
+      qLocNeighbor.v = Qdata(i-1,j  ,k  , IV);
+      qNeighbors_0.v = Qdata(i  ,j  ,k  , IV);
+      qNeighbors_1.v = Qdata(i-2,j  ,k  , IV);
+      qNeighbors_2.v = Qdata(i-1,j+1,k  , IV);
+      qNeighbors_3.v = Qdata(i-1,j-1,k  , IV);
+      qNeighbors_4.v = Qdata(i-1,j  ,k+1, IV);
+      qNeighbors_5.v = Qdata(i-1,j  ,k-1, IV);
 
-      qLocNeighbor.w = Qdata(indexc, IW);
-      qNeighbors_0.w = Qdata(index0, IW);
-      qNeighbors_1.w = Qdata(index1, IW);
-      qNeighbors_2.w = Qdata(index2, IW);
-      qNeighbors_3.w = Qdata(index3, IW);
-      qNeighbors_4.w = Qdata(index4, IW);
-      qNeighbors_5.w = Qdata(index5, IW);
+      qLocNeighbor.w = Qdata(i-1,j  ,k  , IW);
+      qNeighbors_0.w = Qdata(i  ,j  ,k  , IW);
+      qNeighbors_1.w = Qdata(i-2,j  ,k  , IW);
+      qNeighbors_2.w = Qdata(i-1,j+1,k  , IW);
+      qNeighbors_3.w = Qdata(i-1,j-1,k  , IW);
+      qNeighbors_4.w = Qdata(i-1,j  ,k+1, IW);
+      qNeighbors_5.w = Qdata(i-1,j  ,k-1, IW);
 
       slope_unsplit_hydro_3d(&qLocNeighbor, 
 			     &qNeighbors_0, &qNeighbors_1, 
@@ -364,11 +364,11 @@ public:
       //
       // store fluxes X
       //
-      FluxData_x(index , ID) = flux_x.d * dtdx;
-      FluxData_x(index , IP) = flux_x.p * dtdx;
-      FluxData_x(index , IU) = flux_x.u * dtdx;
-      FluxData_x(index , IV) = flux_x.v * dtdx;
-      FluxData_x(index , IW) = flux_x.w * dtdx;
+      FluxData_x(i  ,j  ,k  , ID) = flux_x.d * dtdx;
+      FluxData_x(i  ,j  ,k  , IP) = flux_x.p * dtdx;
+      FluxData_x(i  ,j  ,k  , IU) = flux_x.u * dtdx;
+      FluxData_x(i  ,j  ,k  , IV) = flux_x.v * dtdx;
+      FluxData_x(i  ,j  ,k  , IW) = flux_x.w * dtdx;
       
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       // deal with left interface along Y !
@@ -383,45 +383,45 @@ public:
       index4 = coord2index(i  ,j-1,k+1,isize,jsize,ksize);
       index5 = coord2index(i  ,j-1,k-1,isize,jsize,ksize);
 
-      qLocNeighbor.d = Qdata(indexc, ID);
-      qNeighbors_0.d = Qdata(index0, ID);
-      qNeighbors_1.d = Qdata(index1, ID);
-      qNeighbors_2.d = Qdata(index2, ID);
-      qNeighbors_3.d = Qdata(index3, ID);
-      qNeighbors_4.d = Qdata(index4, ID);
-      qNeighbors_5.d = Qdata(index5, ID);
+      qLocNeighbor.d = Qdata(i  ,j-1,k  , ID);
+      qNeighbors_0.d = Qdata(i+1,j-1,k  , ID);
+      qNeighbors_1.d = Qdata(i-1,j-1,k  , ID);
+      qNeighbors_2.d = Qdata(i  ,j  ,k  , ID);
+      qNeighbors_3.d = Qdata(i  ,j-2,k  , ID);
+      qNeighbors_4.d = Qdata(i  ,j-1,k+1, ID);
+      qNeighbors_5.d = Qdata(i  ,j-1,k-1, ID);
       
-      qLocNeighbor.p = Qdata(indexc, IP);
-      qNeighbors_0.p = Qdata(index0, IP);
-      qNeighbors_1.p = Qdata(index1, IP);
-      qNeighbors_2.p = Qdata(index2, IP);
-      qNeighbors_3.p = Qdata(index3, IP);
-      qNeighbors_4.p = Qdata(index4, IP);
-      qNeighbors_5.p = Qdata(index5, IP);
+      qLocNeighbor.p = Qdata(i  ,j-1,k  , IP);
+      qNeighbors_0.p = Qdata(i+1,j-1,k  , IP);
+      qNeighbors_1.p = Qdata(i-1,j-1,k  , IP);
+      qNeighbors_2.p = Qdata(i  ,j  ,k  , IP);
+      qNeighbors_3.p = Qdata(i  ,j-2,k  , IP);
+      qNeighbors_4.p = Qdata(i  ,j-1,k+1, IP);
+      qNeighbors_5.p = Qdata(i  ,j-1,k-1, IP);
       
-      qLocNeighbor.u = Qdata(indexc, IU);
-      qNeighbors_0.u = Qdata(index0, IU);
-      qNeighbors_1.u = Qdata(index1, IU);
-      qNeighbors_2.u = Qdata(index2, IU);
-      qNeighbors_3.u = Qdata(index3, IU);
-      qNeighbors_4.u = Qdata(index4, IU);
-      qNeighbors_5.u = Qdata(index5, IU);
+      qLocNeighbor.u = Qdata(i  ,j-1,k  , IU);
+      qNeighbors_0.u = Qdata(i+1,j-1,k  , IU);
+      qNeighbors_1.u = Qdata(i-1,j-1,k  , IU);
+      qNeighbors_2.u = Qdata(i  ,j  ,k  , IU);
+      qNeighbors_3.u = Qdata(i  ,j-2,k  , IU);
+      qNeighbors_4.u = Qdata(i  ,j-1,k+1, IU);
+      qNeighbors_5.u = Qdata(i  ,j-1,k-1, IU);
 
-      qLocNeighbor.v = Qdata(indexc, IV);
-      qNeighbors_0.v = Qdata(index0, IV);
-      qNeighbors_1.v = Qdata(index1, IV);
-      qNeighbors_2.v = Qdata(index2, IV);
-      qNeighbors_3.v = Qdata(index3, IV);
-      qNeighbors_4.v = Qdata(index4, IV);
-      qNeighbors_5.v = Qdata(index5, IV);
+      qLocNeighbor.v = Qdata(i  ,j-1,k  , IV);
+      qNeighbors_0.v = Qdata(i+1,j-1,k  , IV);
+      qNeighbors_1.v = Qdata(i-1,j-1,k  , IV);
+      qNeighbors_2.v = Qdata(i  ,j  ,k  , IV);
+      qNeighbors_3.v = Qdata(i  ,j-2,k  , IV);
+      qNeighbors_4.v = Qdata(i  ,j-1,k+1, IV);
+      qNeighbors_5.v = Qdata(i  ,j-1,k-1, IV);
 
-      qLocNeighbor.w = Qdata(indexc, IW);
-      qNeighbors_0.w = Qdata(index0, IW);
-      qNeighbors_1.w = Qdata(index1, IW);
-      qNeighbors_2.w = Qdata(index2, IW);
-      qNeighbors_3.w = Qdata(index3, IW);
-      qNeighbors_4.w = Qdata(index4, IW);
-      qNeighbors_5.w = Qdata(index5, IW);
+      qLocNeighbor.w = Qdata(i  ,j-1,k  , IW);
+      qNeighbors_0.w = Qdata(i+1,j-1,k  , IW);
+      qNeighbors_1.w = Qdata(i-1,j-1,k  , IW);
+      qNeighbors_2.w = Qdata(i  ,j  ,k  , IW);
+      qNeighbors_3.w = Qdata(i  ,j-2,k  , IW);
+      qNeighbors_4.w = Qdata(i  ,j-1,k+1, IW);
+      qNeighbors_5.w = Qdata(i  ,j-1,k-1, IW);
 
       slope_unsplit_hydro_3d(&qLocNeighbor, 
 			     &qNeighbors_0, &qNeighbors_1, 
@@ -453,11 +453,11 @@ public:
       //
       // store fluxes Y
       //
-      FluxData_y(index , ID) = flux_y.d * dtdy;
-      FluxData_y(index , IP) = flux_y.p * dtdy;
-      FluxData_y(index , IU) = flux_y.u * dtdy;
-      FluxData_y(index , IV) = flux_y.v * dtdy;
-      FluxData_y(index , IW) = flux_y.w * dtdy;
+      FluxData_y(i  ,j  ,k  , ID) = flux_y.d * dtdy;
+      FluxData_y(i  ,j  ,k  , IP) = flux_y.p * dtdy;
+      FluxData_y(i  ,j  ,k  , IU) = flux_y.u * dtdy;
+      FluxData_y(i  ,j  ,k  , IV) = flux_y.v * dtdy;
+      FluxData_y(i  ,j  ,k  , IW) = flux_y.w * dtdy;
           
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       // deal with left interface along Z !
@@ -472,45 +472,45 @@ public:
       index4 = coord2index(i  ,j  ,k  ,isize,jsize,ksize);
       index5 = coord2index(i  ,j  ,k-2,isize,jsize,ksize);
 
-      qLocNeighbor.d = Qdata(indexc, ID);
-      qNeighbors_0.d = Qdata(index0, ID);
-      qNeighbors_1.d = Qdata(index1, ID);
-      qNeighbors_2.d = Qdata(index2, ID);
-      qNeighbors_3.d = Qdata(index3, ID);
-      qNeighbors_4.d = Qdata(index4, ID);
-      qNeighbors_5.d = Qdata(index5, ID);
+      qLocNeighbor.d = Qdata(i  ,j  ,k-1, ID);
+      qNeighbors_0.d = Qdata(i+1,j  ,k-1, ID);
+      qNeighbors_1.d = Qdata(i-1,j  ,k-1, ID);
+      qNeighbors_2.d = Qdata(i  ,j+1,k-1, ID);
+      qNeighbors_3.d = Qdata(i  ,j-1,k-1, ID);
+      qNeighbors_4.d = Qdata(i  ,j  ,k  , ID);
+      qNeighbors_5.d = Qdata(i  ,j  ,k-2, ID);
       
-      qLocNeighbor.p = Qdata(indexc, IP);
-      qNeighbors_0.p = Qdata(index0, IP);
-      qNeighbors_1.p = Qdata(index1, IP);
-      qNeighbors_2.p = Qdata(index2, IP);
-      qNeighbors_3.p = Qdata(index3, IP);
-      qNeighbors_4.p = Qdata(index4, IP);
-      qNeighbors_5.p = Qdata(index5, IP);
+      qLocNeighbor.p = Qdata(i  ,j  ,k-1, IP);
+      qNeighbors_0.p = Qdata(i+1,j  ,k-1, IP);
+      qNeighbors_1.p = Qdata(i-1,j  ,k-1, IP);
+      qNeighbors_2.p = Qdata(i  ,j+1,k-1, IP);
+      qNeighbors_3.p = Qdata(i  ,j-1,k-1, IP);
+      qNeighbors_4.p = Qdata(i  ,j  ,k  , IP);
+      qNeighbors_5.p = Qdata(i  ,j  ,k-2, IP);
       
-      qLocNeighbor.u = Qdata(indexc, IU);
-      qNeighbors_0.u = Qdata(index0, IU);
-      qNeighbors_1.u = Qdata(index1, IU);
-      qNeighbors_2.u = Qdata(index2, IU);
-      qNeighbors_3.u = Qdata(index3, IU);
-      qNeighbors_4.u = Qdata(index4, IU);
-      qNeighbors_5.u = Qdata(index5, IU);
+      qLocNeighbor.u = Qdata(i  ,j  ,k-1, IU);
+      qNeighbors_0.u = Qdata(i+1,j  ,k-1, IU);
+      qNeighbors_1.u = Qdata(i-1,j  ,k-1, IU);
+      qNeighbors_2.u = Qdata(i  ,j+1,k-1, IU);
+      qNeighbors_3.u = Qdata(i  ,j-1,k-1, IU);
+      qNeighbors_4.u = Qdata(i  ,j  ,k  , IU);
+      qNeighbors_5.u = Qdata(i  ,j  ,k-2, IU);
 
-      qLocNeighbor.v = Qdata(indexc, IV);
-      qNeighbors_0.v = Qdata(index0, IV);
-      qNeighbors_1.v = Qdata(index1, IV);
-      qNeighbors_2.v = Qdata(index2, IV);
-      qNeighbors_3.v = Qdata(index3, IV);
-      qNeighbors_4.v = Qdata(index4, IV);
-      qNeighbors_5.v = Qdata(index5, IV);
+      qLocNeighbor.v = Qdata(i  ,j  ,k-1, IV);
+      qNeighbors_0.v = Qdata(i+1,j  ,k-1, IV);
+      qNeighbors_1.v = Qdata(i-1,j  ,k-1, IV);
+      qNeighbors_2.v = Qdata(i  ,j+1,k-1, IV);
+      qNeighbors_3.v = Qdata(i  ,j-1,k-1, IV);
+      qNeighbors_4.v = Qdata(i  ,j  ,k  , IV);
+      qNeighbors_5.v = Qdata(i  ,j  ,k-2, IV);
 
-      qLocNeighbor.w = Qdata(indexc, IW);
-      qNeighbors_0.w = Qdata(index0, IW);
-      qNeighbors_1.w = Qdata(index1, IW);
-      qNeighbors_2.w = Qdata(index2, IW);
-      qNeighbors_3.w = Qdata(index3, IW);
-      qNeighbors_4.w = Qdata(index4, IW);
-      qNeighbors_5.w = Qdata(index5, IW);
+      qLocNeighbor.w = Qdata(i  ,j  ,k-1, IW);
+      qNeighbors_0.w = Qdata(i+1,j  ,k-1, IW);
+      qNeighbors_1.w = Qdata(i-1,j  ,k-1, IW);
+      qNeighbors_2.w = Qdata(i  ,j+1,k-1, IW);
+      qNeighbors_3.w = Qdata(i  ,j-1,k-1, IW);
+      qNeighbors_4.w = Qdata(i  ,j  ,k  , IW);
+      qNeighbors_5.w = Qdata(i  ,j  ,k-2, IW);
       
       slope_unsplit_hydro_3d(&qLocNeighbor, 
 			     &qNeighbors_0, &qNeighbors_1, 
@@ -542,11 +542,11 @@ public:
       //
       // store fluxes Z
       //
-      FluxData_z(index , ID) = flux_z.d * dtdz;
-      FluxData_z(index , IP) = flux_z.p * dtdz;
-      FluxData_z(index , IU) = flux_z.u * dtdz;
-      FluxData_z(index , IV) = flux_z.v * dtdz;
-      FluxData_z(index , IW) = flux_z.w * dtdz;
+      FluxData_z(i  ,j  ,k  , ID) = flux_z.d * dtdz;
+      FluxData_z(i  ,j  ,k  , IP) = flux_z.p * dtdz;
+      FluxData_z(i  ,j  ,k  , IU) = flux_z.u * dtdz;
+      FluxData_z(i  ,j  ,k  , IV) = flux_z.v * dtdz;
+      FluxData_z(i  ,j  ,k  , IW) = flux_z.w * dtdz;
           
     } // end if
     
@@ -595,44 +595,44 @@ public:
        j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
-      Udata(index, ID) +=  FluxData_x(index , ID);
-      Udata(index, IP) +=  FluxData_x(index , IP);
-      Udata(index, IU) +=  FluxData_x(index , IU);
-      Udata(index, IV) +=  FluxData_x(index , IV);
-      Udata(index, IW) +=  FluxData_x(index , IW);
+      Udata(i  ,j  ,k    , ID) +=  FluxData_x(i  ,j  ,k  , ID);
+      Udata(i  ,j  ,k    , IP) +=  FluxData_x(i  ,j  ,k  , IP);
+      Udata(i  ,j  ,k    , IU) +=  FluxData_x(i  ,j  ,k  , IU);
+      Udata(i  ,j  ,k    , IV) +=  FluxData_x(i  ,j  ,k  , IV);
+      Udata(i  ,j  ,k    , IW) +=  FluxData_x(i  ,j  ,k  , IW);
 
       index2 = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
-      Udata(index, ID) -=  FluxData_x(index2 , ID);
-      Udata(index, IP) -=  FluxData_x(index2 , IP);
-      Udata(index, IU) -=  FluxData_x(index2 , IU);
-      Udata(index, IV) -=  FluxData_x(index2 , IV);
-      Udata(index, IW) -=  FluxData_x(index2 , IW);
+      Udata(i  ,j  ,k    , ID) -=  FluxData_x(i+1,j  ,k   , ID);
+      Udata(i  ,j  ,k    , IP) -=  FluxData_x(i+1,j  ,k   , IP);
+      Udata(i  ,j  ,k    , IU) -=  FluxData_x(i+1,j  ,k   , IU);
+      Udata(i  ,j  ,k    , IV) -=  FluxData_x(i+1,j  ,k   , IV);
+      Udata(i  ,j  ,k    , IW) -=  FluxData_x(i+1,j  ,k   , IW);
       
-      Udata(index, ID) +=  FluxData_y(index, ID);
-      Udata(index, IP) +=  FluxData_y(index, IP);
-      Udata(index, IU) +=  FluxData_y(index, IV); //
-      Udata(index, IV) +=  FluxData_y(index, IU); //
-      Udata(index, IW) +=  FluxData_y(index, IW);
+      Udata(i  ,j  ,k    , ID) +=  FluxData_y(i  ,j  ,k    , ID);
+      Udata(i  ,j  ,k    , IP) +=  FluxData_y(i  ,j  ,k    , IP);
+      Udata(i  ,j  ,k    , IU) +=  FluxData_y(i  ,j  ,k    , IV); //
+      Udata(i  ,j  ,k    , IV) +=  FluxData_y(i  ,j  ,k    , IU); //
+      Udata(i  ,j  ,k    , IW) +=  FluxData_y(i  ,j  ,k    , IW);
       
       index2 = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
-      Udata(index, ID) -=  FluxData_y(index2, ID);
-      Udata(index, IP) -=  FluxData_y(index2, IP);
-      Udata(index, IU) -=  FluxData_y(index2, IV); //
-      Udata(index, IV) -=  FluxData_y(index2, IU); //
-      Udata(index, IW) -=  FluxData_y(index2, IW);
+      Udata(i  ,j  ,k    , ID) -=  FluxData_y(i  ,j+1,k  , ID);
+      Udata(i  ,j  ,k    , IP) -=  FluxData_y(i  ,j+1,k  , IP);
+      Udata(i  ,j  ,k    , IU) -=  FluxData_y(i  ,j+1,k  , IV); //
+      Udata(i  ,j  ,k    , IV) -=  FluxData_y(i  ,j+1,k  , IU); //
+      Udata(i  ,j  ,k    , IW) -=  FluxData_y(i  ,j+1,k  , IW);
 
-      Udata(index, ID) +=  FluxData_z(index, ID);
-      Udata(index, IP) +=  FluxData_z(index, IP);
-      Udata(index, IU) +=  FluxData_z(index, IW); //
-      Udata(index, IV) +=  FluxData_z(index, IV);
-      Udata(index, IW) +=  FluxData_z(index, IU); //
+      Udata(i  ,j  ,k    , ID) +=  FluxData_z(i  ,j  ,k    , ID);
+      Udata(i  ,j  ,k    , IP) +=  FluxData_z(i  ,j  ,k    , IP);
+      Udata(i  ,j  ,k    , IU) +=  FluxData_z(i  ,j  ,k    , IW); //
+      Udata(i  ,j  ,k    , IV) +=  FluxData_z(i  ,j  ,k    , IV);
+      Udata(i  ,j  ,k    , IW) +=  FluxData_z(i  ,j  ,k    , IU); //
       
       index2 = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
-      Udata(index, ID) -=  FluxData_z(index2, ID);
-      Udata(index, IP) -=  FluxData_z(index2, IP);
-      Udata(index, IU) -=  FluxData_z(index2, IW); //
-      Udata(index, IV) -=  FluxData_z(index2, IV);
-      Udata(index, IW) -=  FluxData_z(index2, IU); //
+      Udata(i  ,j  ,k    , ID) -=  FluxData_z(i  ,j  ,k+1, ID);
+      Udata(i  ,j  ,k    , IP) -=  FluxData_z(i  ,j  ,k+1, IP);
+      Udata(i  ,j  ,k    , IU) -=  FluxData_z(i  ,j  ,k+1, IW); //
+      Udata(i  ,j  ,k    , IV) -=  FluxData_z(i  ,j  ,k+1, IV);
+      Udata(i  ,j  ,k    , IW) -=  FluxData_z(i  ,j  ,k+1, IU); //
 
     } // end if
     
@@ -678,48 +678,48 @@ public:
 
       if (dir == XDIR) {
 
-	Udata(index , ID) +=  FluxData(index , ID);
-	Udata(index , IP) +=  FluxData(index , IP);
-	Udata(index , IU) +=  FluxData(index , IU);
-	Udata(index , IV) +=  FluxData(index , IV);
-	Udata(index , IW) +=  FluxData(index , IW);
+	Udata(i  ,j  ,k  , ID) +=  FluxData(i  ,j  ,k  , ID);
+	Udata(i  ,j  ,k  , IP) +=  FluxData(i  ,j  ,k  , IP);
+	Udata(i  ,j  ,k  , IU) +=  FluxData(i  ,j  ,k  , IU);
+	Udata(i  ,j  ,k  , IV) +=  FluxData(i  ,j  ,k  , IV);
+	Udata(i  ,j  ,k  , IW) +=  FluxData(i  ,j  ,k  , IW);
 	
 	index2 = coord2index(i+1,j,k,isize,jsize,ksize);
-	Udata(index , ID) -=  FluxData(index2 , ID);
-	Udata(index , IP) -=  FluxData(index2 , IP);
-	Udata(index , IU) -=  FluxData(index2 , IU);
-	Udata(index , IV) -=  FluxData(index2 , IV);
-	Udata(index , IW) -=  FluxData(index2 , IW);
+	Udata(i  ,j  ,k  , ID) -=  FluxData(i+1,j  ,k   , ID);
+	Udata(i  ,j  ,k  , IP) -=  FluxData(i+1,j  ,k   , IP);
+	Udata(i  ,j  ,k  , IU) -=  FluxData(i+1,j  ,k   , IU);
+	Udata(i  ,j  ,k  , IV) -=  FluxData(i+1,j  ,k   , IV);
+	Udata(i  ,j  ,k  , IW) -=  FluxData(i+1,j  ,k   , IW);
 
       } else if (dir == YDIR) {
 
-	Udata(index , ID) +=  FluxData(index , ID);
-	Udata(index , IP) +=  FluxData(index , IP);
-	Udata(index , IU) +=  FluxData(index , IU);
-	Udata(index , IV) +=  FluxData(index , IV);
-	Udata(index , IW) +=  FluxData(index , IW);
+	Udata(i  ,j  ,k  , ID) +=  FluxData(i  ,j  ,k  , ID);
+	Udata(i  ,j  ,k  , IP) +=  FluxData(i  ,j  ,k  , IP);
+	Udata(i  ,j  ,k  , IU) +=  FluxData(i  ,j  ,k  , IU);
+	Udata(i  ,j  ,k  , IV) +=  FluxData(i  ,j  ,k  , IV);
+	Udata(i  ,j  ,k  , IW) +=  FluxData(i  ,j  ,k  , IW);
 	
 	index2 = coord2index(i,j+1,k,isize,jsize,ksize);
-	Udata(index , ID) -=  FluxData(index2 , ID);
-	Udata(index , IP) -=  FluxData(index2 , IP);
-	Udata(index , IU) -=  FluxData(index2 , IU);
-	Udata(index , IV) -=  FluxData(index2 , IV);
-	Udata(index , IW) -=  FluxData(index2 , IW);
+	Udata(i  ,j  ,k  , ID) -=  FluxData(i  ,j+1,k   , ID);
+	Udata(i  ,j  ,k  , IP) -=  FluxData(i  ,j+1,k   , IP);
+	Udata(i  ,j  ,k  , IU) -=  FluxData(i  ,j+1,k   , IU);
+	Udata(i  ,j  ,k  , IV) -=  FluxData(i  ,j+1,k   , IV);
+	Udata(i  ,j  ,k  , IW) -=  FluxData(i  ,j+1,k   , IW);
 
       } else if (dir == ZDIR) {
 
-	Udata(index , ID) +=  FluxData(index , ID);
-	Udata(index , IP) +=  FluxData(index , IP);
-	Udata(index , IU) +=  FluxData(index , IU);
-	Udata(index , IV) +=  FluxData(index , IV);
-	Udata(index , IW) +=  FluxData(index , IW);
+	Udata(i  ,j  ,k  , ID) +=  FluxData(i  ,j  ,k  , ID);
+	Udata(i  ,j  ,k  , IP) +=  FluxData(i  ,j  ,k  , IP);
+	Udata(i  ,j  ,k  , IU) +=  FluxData(i  ,j  ,k  , IU);
+	Udata(i  ,j  ,k  , IV) +=  FluxData(i  ,j  ,k  , IV);
+	Udata(i  ,j  ,k  , IW) +=  FluxData(i  ,j  ,k  , IW);
 	
 	index2 = coord2index(i,j,k+1,isize,jsize,ksize);
-	Udata(index , ID) -=  FluxData(index2 , ID);
-	Udata(index , IP) -=  FluxData(index2 , IP);
-	Udata(index , IU) -=  FluxData(index2 , IU);
-	Udata(index , IV) -=  FluxData(index2 , IV);
-	Udata(index , IW) -=  FluxData(index2,  IW);
+	Udata(i  ,j  ,k  , ID) -=  FluxData(i  ,j  ,k+1 , ID);
+	Udata(i  ,j  ,k  , IP) -=  FluxData(i  ,j  ,k+1 , IP);
+	Udata(i  ,j  ,k  , IU) -=  FluxData(i  ,j  ,k+1 , IU);
+	Udata(i  ,j  ,k  , IV) -=  FluxData(i  ,j  ,k+1 , IV);
+	Udata(i  ,j  ,k  , IW) -=  FluxData(i  ,j  ,k+1,  IW);
 
       }
       
@@ -789,45 +789,45 @@ public:
 	index5 = coord2index(i  ,j  ,k-1,isize,jsize,ksize);
 
 	// get primitive variables state vector
-	qLoc.d         = Qdata(index  , ID);
-	qNeighbors_0.d = Qdata(index0 , ID);
-	qNeighbors_1.d = Qdata(index1 , ID);
-	qNeighbors_2.d = Qdata(index2 , ID);
-	qNeighbors_3.d = Qdata(index3 , ID);
-	qNeighbors_4.d = Qdata(index4 , ID);
-	qNeighbors_5.d = Qdata(index5 , ID);
+	qLoc.d         = Qdata(i  ,j  ,k   , ID);
+	qNeighbors_0.d = Qdata(i+1,j  ,k   , ID);
+	qNeighbors_1.d = Qdata(i-1,j  ,k   , ID);
+	qNeighbors_2.d = Qdata(i  ,j+1,k   , ID);
+	qNeighbors_3.d = Qdata(i  ,j-1,k   , ID);
+	qNeighbors_4.d = Qdata(i  ,j  ,k+1 , ID);
+	qNeighbors_5.d = Qdata(i  ,j  ,k-1 , ID);
 	
-	qLoc.p         = Qdata(index  , IP);
-	qNeighbors_0.p = Qdata(index0 , IP);
-	qNeighbors_1.p = Qdata(index1 , IP);
-	qNeighbors_2.p = Qdata(index2 , IP);
-	qNeighbors_3.p = Qdata(index3 , IP);
-	qNeighbors_4.p = Qdata(index4 , IP);
-	qNeighbors_5.p = Qdata(index5 , IP);
+	qLoc.p         = Qdata(i  ,j  ,k   , IP);
+	qNeighbors_0.p = Qdata(i+1,j  ,k   , IP);
+	qNeighbors_1.p = Qdata(i-1,j  ,k   , IP);
+	qNeighbors_2.p = Qdata(i  ,j+1,k   , IP);
+	qNeighbors_3.p = Qdata(i  ,j-1,k   , IP);
+	qNeighbors_4.p = Qdata(i  ,j  ,k+1 , IP);
+	qNeighbors_5.p = Qdata(i  ,j  ,k-1 , IP);
 	
-	qLoc.u         = Qdata(index  , IU);
-	qNeighbors_0.u = Qdata(index0 , IU);
-	qNeighbors_1.u = Qdata(index1 , IU);
-	qNeighbors_2.u = Qdata(index2 , IU);
-	qNeighbors_3.u = Qdata(index3 , IU);
-	qNeighbors_4.u = Qdata(index4 , IU);
-	qNeighbors_5.u = Qdata(index5 , IU);
+	qLoc.u         = Qdata(i  ,j  ,k   , IU);
+	qNeighbors_0.u = Qdata(i+1,j  ,k   , IU);
+	qNeighbors_1.u = Qdata(i-1,j  ,k   , IU);
+	qNeighbors_2.u = Qdata(i  ,j+1,k   , IU);
+	qNeighbors_3.u = Qdata(i  ,j-1,k   , IU);
+	qNeighbors_4.u = Qdata(i  ,j  ,k+1 , IU);
+	qNeighbors_5.u = Qdata(i  ,j  ,k-1 , IU);
 	
-	qLoc.v         = Qdata(index  , IV);
-	qNeighbors_0.v = Qdata(index0 , IV);
-	qNeighbors_1.v = Qdata(index1 , IV);
-	qNeighbors_2.v = Qdata(index2 , IV);
-	qNeighbors_3.v = Qdata(index3 , IV);
-	qNeighbors_4.v = Qdata(index4 , IV);
-	qNeighbors_5.v = Qdata(index5 , IV);
+	qLoc.v         = Qdata(i  ,j  ,k   , IV);
+	qNeighbors_0.v = Qdata(i+1,j  ,k   , IV);
+	qNeighbors_1.v = Qdata(i-1,j  ,k   , IV);
+	qNeighbors_2.v = Qdata(i  ,j+1,k   , IV);
+	qNeighbors_3.v = Qdata(i  ,j-1,k   , IV);
+	qNeighbors_4.v = Qdata(i  ,j  ,k+1 , IV);
+	qNeighbors_5.v = Qdata(i  ,j  ,k-1 , IV);
 	
-	qLoc.w         = Qdata(index  , IW);
-	qNeighbors_0.w = Qdata(index0 , IW);
-	qNeighbors_1.w = Qdata(index1 , IW);
-	qNeighbors_2.w = Qdata(index2 , IW);
-	qNeighbors_3.w = Qdata(index3 , IW);
-	qNeighbors_4.w = Qdata(index4 , IW);
-	qNeighbors_5.w = Qdata(index5 , IW);
+	qLoc.w         = Qdata(i  ,j  ,k   , IW);
+	qNeighbors_0.w = Qdata(i+1,j  ,k   , IW);
+	qNeighbors_1.w = Qdata(i-1,j  ,k   , IW);
+	qNeighbors_2.w = Qdata(i  ,j+1,k   , IW);
+	qNeighbors_3.w = Qdata(i  ,j-1,k   , IW);
+	qNeighbors_4.w = Qdata(i  ,j  ,k+1 , IW);
+	qNeighbors_5.w = Qdata(i  ,j  ,k-1 , IW);
 	
 	slope_unsplit_hydro_3d(&qLoc, 
 			       &qNeighbors_0, &qNeighbors_1, 
@@ -836,25 +836,25 @@ public:
 			       &dqX, &dqY, &dqZ);
 	
 	// copy back slopes in global arrays
-	Slopes_x(index, ID) = dqX.d;
-	Slopes_y(index, ID) = dqY.d;
-	Slopes_z(index, ID) = dqZ.d;
+	Slopes_x(i,j,k, ID) = dqX.d;
+	Slopes_y(i,j,k, ID) = dqY.d;
+	Slopes_z(i,j,k, ID) = dqZ.d;
 	
-	Slopes_x(index, IP) = dqX.p;
-	Slopes_y(index, IP) = dqY.p;
-	Slopes_z(index, IP) = dqZ.p;
+	Slopes_x(i,j,k, IP) = dqX.p;
+	Slopes_y(i,j,k, IP) = dqY.p;
+	Slopes_z(i,j,k, IP) = dqZ.p;
 	
-	Slopes_x(index, IU) = dqX.u;
-	Slopes_y(index, IU) = dqY.u;
-	Slopes_z(index, IU) = dqZ.u;
+	Slopes_x(i,j,k, IU) = dqX.u;
+	Slopes_y(i,j,k, IU) = dqY.u;
+	Slopes_z(i,j,k, IU) = dqZ.u;
 	
-	Slopes_x(index, IV) = dqX.v;
-	Slopes_y(index, IV) = dqY.v;
-	Slopes_z(index, IV) = dqZ.v;
+	Slopes_x(i,j,k, IV) = dqX.v;
+	Slopes_y(i,j,k, IV) = dqY.v;
+	Slopes_z(i,j,k, IV) = dqZ.v;
 
-	Slopes_x(index, IW) = dqX.w;
-	Slopes_y(index, IW) = dqY.w;
-	Slopes_z(index, IW) = dqZ.w;
+	Slopes_x(i,j,k, IW) = dqX.w;
+	Slopes_y(i,j,k, IW) = dqY.w;
+	Slopes_z(i,j,k, IW) = dqZ.w;
       
     } // end if
     
@@ -926,30 +926,30 @@ public:
 	//
 	// compute reconstructed states at left interface along X
 	//
-	qLoc.d = Qdata   (index, ID);
-	dqX.d  = Slopes_x(index, ID);
-	dqY.d  = Slopes_y(index, ID);
-	dqZ.d  = Slopes_z(index, ID);
+	qLoc.d = Qdata   (i,j,k, ID);
+	dqX.d  = Slopes_x(i,j,k, ID);
+	dqY.d  = Slopes_y(i,j,k, ID);
+	dqZ.d  = Slopes_z(i,j,k, ID);
 	
-	qLoc.p = Qdata   (index, IP);
-	dqX.p  = Slopes_x(index, IP);
-	dqY.p  = Slopes_y(index, IP);
-	dqZ.p  = Slopes_z(index, IP);
+	qLoc.p = Qdata   (i,j,k, IP);
+	dqX.p  = Slopes_x(i,j,k, IP);
+	dqY.p  = Slopes_y(i,j,k, IP);
+	dqZ.p  = Slopes_z(i,j,k, IP);
 	
-	qLoc.u = Qdata   (index, IU);
-	dqX.u  = Slopes_x(index, IU);
-	dqY.u  = Slopes_y(index, IU);
-	dqZ.u  = Slopes_z(index, IU);
+	qLoc.u = Qdata   (i,j,k, IU);
+	dqX.u  = Slopes_x(i,j,k, IU);
+	dqY.u  = Slopes_y(i,j,k, IU);
+	dqZ.u  = Slopes_z(i,j,k, IU);
 
-	qLoc.v = Qdata   (index, IV);
-	dqX.v  = Slopes_x(index, IV);
-	dqY.v  = Slopes_y(index, IV);
-	dqZ.v  = Slopes_z(index, IV);
+	qLoc.v = Qdata   (i,j,k, IV);
+	dqX.v  = Slopes_x(i,j,k, IV);
+	dqY.v  = Slopes_y(i,j,k, IV);
+	dqZ.v  = Slopes_z(i,j,k, IV);
 
-	qLoc.w = Qdata   (index, IW);
-	dqX.w  = Slopes_x(index, IW);
-	dqY.w  = Slopes_y(index, IW);
-	dqZ.w  = Slopes_z(index, IW);
+	qLoc.w = Qdata   (i,j,k, IW);
+	dqX.w  = Slopes_x(i,j,k, IW);
+	dqY.w  = Slopes_y(i,j,k, IW);
+	dqZ.w  = Slopes_z(i,j,k, IW);
 
 	if (dir == XDIR) {
 
@@ -961,30 +961,30 @@ public:
 				     dtdx, dtdy, dtdz,
 				     FACE_XMIN, &qright);
 	  
-	  qLocNeighbor.d = Qdata   (index2, ID);
-	  dqX_neighbor.d = Slopes_x(index2, ID);
-	  dqY_neighbor.d = Slopes_y(index2, ID);
-	  dqZ_neighbor.d = Slopes_z(index2, ID);
+	  qLocNeighbor.d = Qdata   (i-1,j  ,k  , ID);
+	  dqX_neighbor.d = Slopes_x(i-1,j  ,k  , ID);
+	  dqY_neighbor.d = Slopes_y(i-1,j  ,k  , ID);
+	  dqZ_neighbor.d = Slopes_z(i-1,j  ,k  , ID);
 	  
-	  qLocNeighbor.p = Qdata   (index2, IP);
-	  dqX_neighbor.p = Slopes_x(index2, IP);
-	  dqY_neighbor.p = Slopes_y(index2, IP);
-	  dqZ_neighbor.p = Slopes_z(index2, IP);
+	  qLocNeighbor.p = Qdata   (i-1,j  ,k  , IP);
+	  dqX_neighbor.p = Slopes_x(i-1,j  ,k  , IP);
+	  dqY_neighbor.p = Slopes_y(i-1,j  ,k  , IP);
+	  dqZ_neighbor.p = Slopes_z(i-1,j  ,k  , IP);
 	  
-	  qLocNeighbor.u = Qdata   (index2, IU);
-	  dqX_neighbor.u = Slopes_x(index2, IU);
-	  dqY_neighbor.u = Slopes_y(index2, IU);
-	  dqZ_neighbor.u = Slopes_z(index2, IU);
+	  qLocNeighbor.u = Qdata   (i-1,j  ,k  , IU);
+	  dqX_neighbor.u = Slopes_x(i-1,j  ,k  , IU);
+	  dqY_neighbor.u = Slopes_y(i-1,j  ,k  , IU);
+	  dqZ_neighbor.u = Slopes_z(i-1,j  ,k  , IU);
 	  
-	  qLocNeighbor.v = Qdata   (index2, IV);
-	  dqX_neighbor.v = Slopes_x(index2, IV);
-	  dqY_neighbor.v = Slopes_y(index2, IV);
-	  dqZ_neighbor.v = Slopes_z(index2, IV);
+	  qLocNeighbor.v = Qdata   (i-1,j  ,k  , IV);
+	  dqX_neighbor.v = Slopes_x(i-1,j  ,k  , IV);
+	  dqY_neighbor.v = Slopes_y(i-1,j  ,k  , IV);
+	  dqZ_neighbor.v = Slopes_z(i-1,j  ,k  , IV);
 	  
-	  qLocNeighbor.w = Qdata   (index2, IW);
-	  dqX_neighbor.w = Slopes_x(index2, IW);
-	  dqY_neighbor.w = Slopes_y(index2, IW);
-	  dqZ_neighbor.w = Slopes_z(index2, IW);
+	  qLocNeighbor.w = Qdata   (i-1,j  ,k  , IW);
+	  dqX_neighbor.w = Slopes_x(i-1,j  ,k  , IW);
+	  dqY_neighbor.w = Slopes_y(i-1,j  ,k  , IW);
+	  dqZ_neighbor.w = Slopes_z(i-1,j  ,k  , IW);
 	  
 	  // left interface : left state
 	  trace_unsplit_3d_along_dir(&qLocNeighbor,
@@ -998,11 +998,11 @@ public:
 	  //
 	  // store fluxes
 	  //	
-	  Fluxes(index , ID) =  flux.d*dtdx;
-	  Fluxes(index , IP) =  flux.p*dtdx;
-	  Fluxes(index , IU) =  flux.u*dtdx;
-	  Fluxes(index , IV) =  flux.v*dtdx;
-	  Fluxes(index , IW) =  flux.w*dtdx;
+	  Fluxes(i  ,j  ,k  , ID) =  flux.d*dtdx;
+	  Fluxes(i  ,j  ,k  , IP) =  flux.p*dtdx;
+	  Fluxes(i  ,j  ,k  , IU) =  flux.u*dtdx;
+	  Fluxes(i  ,j  ,k  , IV) =  flux.v*dtdx;
+	  Fluxes(i  ,j  ,k  , IW) =  flux.w*dtdx;
 
 	} else if (dir == YDIR) {
 
@@ -1014,30 +1014,30 @@ public:
 				     dtdx, dtdy, dtdz,
 				     FACE_YMIN, &qright);
 	  
-	  qLocNeighbor.d = Qdata   (index2, ID);
-	  dqX_neighbor.d = Slopes_x(index2, ID);
-	  dqY_neighbor.d = Slopes_y(index2, ID);
-	  dqZ_neighbor.d = Slopes_z(index2, ID);
+	  qLocNeighbor.d = Qdata   (i  ,j-1,k  , ID);
+	  dqX_neighbor.d = Slopes_x(i  ,j-1,k  , ID);
+	  dqY_neighbor.d = Slopes_y(i  ,j-1,k  , ID);
+	  dqZ_neighbor.d = Slopes_z(i  ,j-1,k  , ID);
 	  
-	  qLocNeighbor.p = Qdata   (index2, IP);
-	  dqX_neighbor.p = Slopes_x(index2, IP);
-	  dqY_neighbor.p = Slopes_y(index2, IP);
-	  dqZ_neighbor.p = Slopes_z(index2, IP);
+	  qLocNeighbor.p = Qdata   (i  ,j-1,k  , IP);
+	  dqX_neighbor.p = Slopes_x(i  ,j-1,k  , IP);
+	  dqY_neighbor.p = Slopes_y(i  ,j-1,k  , IP);
+	  dqZ_neighbor.p = Slopes_z(i  ,j-1,k  , IP);
 	  
-	  qLocNeighbor.u = Qdata   (index2, IU);
-	  dqX_neighbor.u = Slopes_x(index2, IU);
-	  dqY_neighbor.u = Slopes_y(index2, IU);
-	  dqZ_neighbor.u = Slopes_z(index2, IU);
+	  qLocNeighbor.u = Qdata   (i  ,j-1,k  , IU);
+	  dqX_neighbor.u = Slopes_x(i  ,j-1,k  , IU);
+	  dqY_neighbor.u = Slopes_y(i  ,j-1,k  , IU);
+	  dqZ_neighbor.u = Slopes_z(i  ,j-1,k  , IU);
 
-	  qLocNeighbor.v = Qdata   (index2, IV);
-	  dqX_neighbor.v = Slopes_x(index2, IV);
-	  dqY_neighbor.v = Slopes_y(index2, IV);
-	  dqZ_neighbor.v = Slopes_z(index2, IV);
+	  qLocNeighbor.v = Qdata   (i  ,j-1,k  , IV);
+	  dqX_neighbor.v = Slopes_x(i  ,j-1,k  , IV);
+	  dqY_neighbor.v = Slopes_y(i  ,j-1,k  , IV);
+	  dqZ_neighbor.v = Slopes_z(i  ,j-1,k  , IV);
 
-	  qLocNeighbor.w = Qdata   (index2, IW);
-	  dqX_neighbor.w = Slopes_x(index2, IW);
-	  dqY_neighbor.w = Slopes_y(index2, IW);
-	  dqZ_neighbor.w = Slopes_z(index2, IW);
+	  qLocNeighbor.w = Qdata   (i  ,j-1,k  , IW);
+	  dqX_neighbor.w = Slopes_x(i  ,j-1,k  , IW);
+	  dqY_neighbor.w = Slopes_y(i  ,j-1,k  , IW);
+	  dqZ_neighbor.w = Slopes_z(i  ,j-1,k  , IW);
 
 	  // left interface : left state
 	  trace_unsplit_3d_along_dir(&qLocNeighbor,
@@ -1053,11 +1053,11 @@ public:
 	  //
 	  // update hydro array
 	  //	  
-	  Fluxes(index , ID) =  flux.d*dtdy;
-	  Fluxes(index , IP) =  flux.p*dtdy;
-	  Fluxes(index , IU) =  flux.v*dtdy; // IU/IV swapped
-	  Fluxes(index , IV) =  flux.u*dtdy; // IU/IV swapped
-	  Fluxes(index , IW) =  flux.w*dtdy;
+	  Fluxes(i  ,j  ,k  , ID) =  flux.d*dtdy;
+	  Fluxes(i  ,j  ,k  , IP) =  flux.p*dtdy;
+	  Fluxes(i  ,j  ,k  , IU) =  flux.v*dtdy; // IU/IV swapped
+	  Fluxes(i  ,j  ,k  , IV) =  flux.u*dtdy; // IU/IV swapped
+	  Fluxes(i  ,j  ,k  , IW) =  flux.w*dtdy;
 
 	} else if (dir == ZDIR) {
 
@@ -1069,30 +1069,30 @@ public:
 				     dtdx, dtdy, dtdz,
 				     FACE_ZMIN, &qright);
 	  
-	  qLocNeighbor.d = Qdata   (index2, ID);
-	  dqX_neighbor.d = Slopes_x(index2, ID);
-	  dqY_neighbor.d = Slopes_y(index2, ID);
-	  dqZ_neighbor.d = Slopes_z(index2, ID);
+	  qLocNeighbor.d = Qdata   (i  ,j  ,k-1  , ID);
+	  dqX_neighbor.d = Slopes_x(i  ,j  ,k-1  , ID);
+	  dqY_neighbor.d = Slopes_y(i  ,j  ,k-1  , ID);
+	  dqZ_neighbor.d = Slopes_z(i  ,j  ,k-1  , ID);
 	  
-	  qLocNeighbor.p = Qdata   (index2, IP);
-	  dqX_neighbor.p = Slopes_x(index2, IP);
-	  dqY_neighbor.p = Slopes_y(index2, IP);
-	  dqZ_neighbor.p = Slopes_z(index2, IP);
+	  qLocNeighbor.p = Qdata   (i  ,j  ,k-1  , IP);
+	  dqX_neighbor.p = Slopes_x(i  ,j  ,k-1  , IP);
+	  dqY_neighbor.p = Slopes_y(i  ,j  ,k-1  , IP);
+	  dqZ_neighbor.p = Slopes_z(i  ,j  ,k-1  , IP);
 	  
-	  qLocNeighbor.u = Qdata   (index2, IU);
-	  dqX_neighbor.u = Slopes_x(index2, IU);
-	  dqY_neighbor.u = Slopes_y(index2, IU);
-	  dqZ_neighbor.u = Slopes_z(index2, IU);
+	  qLocNeighbor.u = Qdata   (i  ,j  ,k-1  , IU);
+	  dqX_neighbor.u = Slopes_x(i  ,j  ,k-1  , IU);
+	  dqY_neighbor.u = Slopes_y(i  ,j  ,k-1  , IU);
+	  dqZ_neighbor.u = Slopes_z(i  ,j  ,k-1  , IU);
 
-	  qLocNeighbor.v = Qdata   (index2, IV);
-	  dqX_neighbor.v = Slopes_x(index2, IV);
-	  dqY_neighbor.v = Slopes_y(index2, IV);
-	  dqZ_neighbor.v = Slopes_z(index2, IV);
+	  qLocNeighbor.v = Qdata   (i  ,j  ,k-1  , IV);
+	  dqX_neighbor.v = Slopes_x(i  ,j  ,k-1  , IV);
+	  dqY_neighbor.v = Slopes_y(i  ,j  ,k-1  , IV);
+	  dqZ_neighbor.v = Slopes_z(i  ,j  ,k-1  , IV);
 
-	  qLocNeighbor.w = Qdata   (index2, IW);
-	  dqX_neighbor.w = Slopes_x(index2, IW);
-	  dqY_neighbor.w = Slopes_y(index2, IW);
-	  dqZ_neighbor.w = Slopes_z(index2, IW);
+	  qLocNeighbor.w = Qdata   (i  ,j  ,k-1  , IW);
+	  dqX_neighbor.w = Slopes_x(i  ,j  ,k-1  , IW);
+	  dqY_neighbor.w = Slopes_y(i  ,j  ,k-1  , IW);
+	  dqZ_neighbor.w = Slopes_z(i  ,j  ,k-1  , IW);
 
 	  // left interface : left state
 	  trace_unsplit_3d_along_dir(&qLocNeighbor,
@@ -1108,11 +1108,11 @@ public:
 	  //
 	  // update hydro array
 	  //	  
-	  Fluxes(index , ID) =  flux.d*dtdz;
-	  Fluxes(index , IP) =  flux.p*dtdz;
-	  Fluxes(index , IU) =  flux.w*dtdz; // IU/IW swapped
-	  Fluxes(index , IV) =  flux.v*dtdz;
-	  Fluxes(index , IW) =  flux.u*dtdz; // IU/IW swapped
+	  Fluxes(i  ,j  ,k  , ID) =  flux.d*dtdz;
+	  Fluxes(i  ,j  ,k  , IP) =  flux.p*dtdz;
+	  Fluxes(i  ,j  ,k  , IU) =  flux.w*dtdz; // IU/IW swapped
+	  Fluxes(i  ,j  ,k  , IV) =  flux.v*dtdz;
+	  Fluxes(i  ,j  ,k  , IW) =  flux.u*dtdz; // IU/IW swapped
 
 	}
 	      
@@ -1165,17 +1165,17 @@ public:
     
     real_t tmp = x + y + z;
     if (tmp > 0.5 && tmp < 2.5) {
-      Udata(index , ID) = 1.0;
-      Udata(index , IP) = 1.0/(gamma0-1.0);
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
+      Udata(i  ,j  ,k  , ID) = 1.0;
+      Udata(i  ,j  ,k  , IP) = 1.0/(gamma0-1.0);
+      Udata(i  ,j  ,k  , IU) = 0.0;
+      Udata(i  ,j  ,k  , IV) = 0.0;
+      Udata(i  ,j  ,k  , IW) = 0.0;
     } else {
-      Udata(index , ID) = 0.125;
-      Udata(index , IP) = 0.14/(gamma0-1.0);
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;	    
+      Udata(i  ,j  ,k  , ID) = 0.125;
+      Udata(i  ,j  ,k  , IP) = 0.14/(gamma0-1.0);
+      Udata(i  ,j  ,k  , IU) = 0.0;
+      Udata(i  ,j  ,k  , IV) = 0.0;
+      Udata(i  ,j  ,k  , IW) = 0.0;	    
     }
     
   } // end operator ()
@@ -1238,17 +1238,17 @@ public:
       (z-blast_center_z)*(z-blast_center_z);    
     
     if (d2 < radius2) {
-      Udata(index , ID) = blast_density_in;
-      Udata(index , IP) = blast_pressure_in/(gamma0-1.0);
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
+      Udata(i  ,j  ,k  , ID) = blast_density_in;
+      Udata(i  ,j  ,k  , IP) = blast_pressure_in/(gamma0-1.0);
+      Udata(i  ,j  ,k  , IU) = 0.0;
+      Udata(i  ,j  ,k  , IV) = 0.0;
+      Udata(i  ,j  ,k  , IW) = 0.0;
     } else {
-      Udata(index , ID) = blast_density_out;
-      Udata(index , IP) = blast_pressure_out/(gamma0-1.0);
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
+      Udata(i  ,j  ,k  , ID) = blast_density_out;
+      Udata(i  ,j  ,k  , IP) = blast_pressure_out/(gamma0-1.0);
+      Udata(i  ,j  ,k  , IU) = 0.0;
+      Udata(i  ,j  ,k  , IV) = 0.0;
+      Udata(i  ,j  ,k  , IW) = 0.0;
     }
     
   } // end operator ()
@@ -1327,7 +1327,7 @@ public:
 	  
 	  index_out = coord2index(i ,j,k,isize,jsize,ksize);
 	  index_in  = coord2index(i0,j,k,isize,jsize,ksize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i0,j,k, iVar)*sign;
 	  
 	}
 	
@@ -1364,7 +1364,7 @@ public:
 	  
 	  index_out = coord2index(i ,j,k,isize,jsize,ksize);
 	  index_in  = coord2index(i0,j,k,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i0,j,k, iVar)*sign;
 	  
 	}
       } // end xmax
@@ -1397,7 +1397,7 @@ public:
 	  
 	  index_out = coord2index(i,j ,k,isize,jsize,ksize);
 	  index_in  = coord2index(i,j0,k,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j0,k, iVar)*sign;
 	  
 	}
       } // end ymin
@@ -1433,7 +1433,7 @@ public:
 	  
 	  index_out = coord2index(i,j ,k,isize,jsize,ksize);
 	  index_in  = coord2index(i,j0,k,isize,jsize,ksize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j0,k, iVar)*sign;
 	  
 	}
 	
@@ -1467,7 +1467,7 @@ public:
 	  
 	  index_out = coord2index(i,j,k ,isize,jsize,ksize);
 	  index_in  = coord2index(i,j,k0,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
 	  
 	}
       } // end zmin
@@ -1503,7 +1503,7 @@ public:
 	  
 	  index_out = coord2index(i,j,k ,isize,jsize,ksize);
 	  index_in  = coord2index(i,j,k0,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
 	  
 	}
       } // end zmax
