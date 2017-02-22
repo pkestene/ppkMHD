@@ -1,5 +1,5 @@
 add_subdirectory(config)
 add_subdirectory(time)
-if (MPI_FOUND)
+if (USE_MPI)
   add_subdirectory(mpiUtils)
-endif(MPI_FOUND)
+endif(USE_MPI)

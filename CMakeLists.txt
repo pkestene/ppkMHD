@@ -67,6 +67,9 @@ endif()
   
 set(CMAKE_EXE_LINKER_FLAGS  "${KOKKOS_LDFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 
+# options
+option (USE_MPI "Activate build with mpi" ON)
+
 #
 # sources
 #
