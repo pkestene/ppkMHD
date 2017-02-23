@@ -1,3 +1,4 @@
 add_subdirectory(kokkos)
-add_subdirectory(mpiBasic)
-
+if(USE_MPI)
+  add_subdirectory(mpiBasic)
+endif(USE_MPI)
