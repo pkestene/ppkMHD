@@ -60,47 +60,47 @@ SolverMHDMuscl3D::SolverMHDMuscl3D(HydroParams& params, ConfigMap& configMap) :
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijksize, nbvar);
+  U     = DataArray("U", isize,jsize,ksize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijksize, nbvar);
-  Q     = DataArray("Q", ijksize, nbvar);
+  U2    = DataArray("U2",isize,jsize,ksize, nbvar);
+  Q     = DataArray("Q", isize,jsize,ksize, nbvar);
 
   if (params.implementationVersion == 0) {
   
-    Qm_x = DataArray("Qm_x", ijksize, nbvar);
-    Qm_y = DataArray("Qm_y", ijksize, nbvar);
-    Qm_z = DataArray("Qm_z", ijksize, nbvar);
+    Qm_x = DataArray("Qm_x", isize,jsize,ksize, nbvar);
+    Qm_y = DataArray("Qm_y", isize,jsize,ksize, nbvar);
+    Qm_z = DataArray("Qm_z", isize,jsize,ksize, nbvar);
     
-    Qp_x = DataArray("Qp_x", ijksize, nbvar);
-    Qp_y = DataArray("Qp_y", ijksize, nbvar);
-    Qp_z = DataArray("Qp_z", ijksize, nbvar);
+    Qp_x = DataArray("Qp_x", isize,jsize,ksize, nbvar);
+    Qp_y = DataArray("Qp_y", isize,jsize,ksize, nbvar);
+    Qp_z = DataArray("Qp_z", isize,jsize,ksize, nbvar);
 
-    QEdge_RT  = DataArray("QEdge_RT", ijksize, nbvar);
-    QEdge_RB  = DataArray("QEdge_RB", ijksize, nbvar);
-    QEdge_LT  = DataArray("QEdge_LT", ijksize, nbvar);
-    QEdge_LB  = DataArray("QEdge_LB", ijksize, nbvar);
+    QEdge_RT  = DataArray("QEdge_RT", isize,jsize,ksize, nbvar);
+    QEdge_RB  = DataArray("QEdge_RB", isize,jsize,ksize, nbvar);
+    QEdge_LT  = DataArray("QEdge_LT", isize,jsize,ksize, nbvar);
+    QEdge_LB  = DataArray("QEdge_LB", isize,jsize,ksize, nbvar);
 
-    QEdge_RT2 = DataArray("QEdge_RT2", ijksize, nbvar);
-    QEdge_RB2 = DataArray("QEdge_RB2", ijksize, nbvar);
-    QEdge_LT2 = DataArray("QEdge_LT2", ijksize, nbvar);
-    QEdge_LB2 = DataArray("QEdge_LB2", ijksize, nbvar);
+    QEdge_RT2 = DataArray("QEdge_RT2", isize,jsize,ksize, nbvar);
+    QEdge_RB2 = DataArray("QEdge_RB2", isize,jsize,ksize, nbvar);
+    QEdge_LT2 = DataArray("QEdge_LT2", isize,jsize,ksize, nbvar);
+    QEdge_LB2 = DataArray("QEdge_LB2", isize,jsize,ksize, nbvar);
 
-    QEdge_RT3 = DataArray("QEdge_RT3", ijksize, nbvar);
-    QEdge_RB3 = DataArray("QEdge_RB3", ijksize, nbvar);
-    QEdge_LT3 = DataArray("QEdge_LT3", ijksize, nbvar);
-    QEdge_LB3 = DataArray("QEdge_LB3", ijksize, nbvar);
+    QEdge_RT3 = DataArray("QEdge_RT3", isize,jsize,ksize, nbvar);
+    QEdge_RB3 = DataArray("QEdge_RB3", isize,jsize,ksize, nbvar);
+    QEdge_LT3 = DataArray("QEdge_LT3", isize,jsize,ksize, nbvar);
+    QEdge_LB3 = DataArray("QEdge_LB3", isize,jsize,ksize, nbvar);
 
-    Fluxes_x  = DataArray("Fluxes_x", ijksize, nbvar);
-    Fluxes_y  = DataArray("Fluxes_y", ijksize, nbvar);
-    Fluxes_z  = DataArray("Fluxes_z", ijksize, nbvar);
+    Fluxes_x  = DataArray("Fluxes_x", isize,jsize,ksize, nbvar);
+    Fluxes_y  = DataArray("Fluxes_y", isize,jsize,ksize, nbvar);
+    Fluxes_z  = DataArray("Fluxes_z", isize,jsize,ksize, nbvar);
 
-    Emf       = DataArrayVector3("Emf", ijksize);
+    Emf       = DataArrayVector3("Emf", isize,jsize,ksize);
 
-    ElecField = DataArrayVector3("ElecField", ijksize); 
+    ElecField = DataArrayVector3("ElecField", isize,jsize,ksize); 
 
-    DeltaA    = DataArrayVector3("DeltaA", ijksize);
-    DeltaB    = DataArrayVector3("DeltaB", ijksize);
-    DeltaC    = DataArrayVector3("DeltaC", ijksize);
+    DeltaA    = DataArrayVector3("DeltaA", isize,jsize,ksize);
+    DeltaB    = DataArrayVector3("DeltaB", isize,jsize,ksize);
+    DeltaC    = DataArrayVector3("DeltaC", isize,jsize,ksize);
     
   }
   
@@ -642,12 +642,7 @@ void SolverMHDMuscl3D::saveVTK(DataArray Udata,
       if (k>=kmin+ghostWidth and k<=kmax-ghostWidth and
 	  j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	  i>=imin+ghostWidth and i<=imax-ghostWidth) {
-#ifdef CUDA
-    	outFile << Uhost(index , iVar) << " ";
-#else
-	int index2 = k+ksize*j+ksize*jsize*i;
-    	outFile << Uhost(index2 , iVar) << " ";
-#endif
+    	outFile << Uhost(i,j,k,iVar) << " ";
       }
     }
     outFile << "\n    </DataArray>\n";

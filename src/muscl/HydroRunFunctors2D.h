@@ -169,14 +169,14 @@ public:
     dtdx(dtdx), dtdy(dtdy) {};
   
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index_) const
+  void operator()(const int& index) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
     
     int i,j;
-    index2coord(index_,i,j,isize,jsize);
+    index2coord(index,i,j,isize,jsize);
     
     if(j >= ghostWidth && j <= jsize - ghostWidth &&
        i >= ghostWidth && i <= isize - ghostWidth) {
@@ -184,19 +184,16 @@ public:
       HydroState qleft, qright;
       HydroState flux_x, flux_y;
       HydroState qgdnv;
-      int index;
 
       //
       // Solve Riemann problem at X-interfaces and compute
       // X-fluxes
       //
-      index = coord2index(i-1,j,isize,jsize);
       qleft.d   = Qm_x(i-1,j , ID);
       qleft.p   = Qm_x(i-1,j , IP);
       qleft.u   = Qm_x(i-1,j , IU);
       qleft.v   = Qm_x(i-1,j , IV);
       
-      index = coord2index(i,j,isize,jsize);
       qright.d  = Qp_x(i  ,j , ID);
       qright.p  = Qp_x(i  ,j , IP);
       qright.u  = Qp_x(i  ,j , IU);
@@ -208,13 +205,11 @@ public:
       //
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       //
-      index = coord2index(i,j-1,isize,jsize);
       qleft.d   = Qm_y(i  ,j-1, ID);
       qleft.p   = Qm_y(i  ,j-1, IP);
       qleft.u   = Qm_y(i  ,j-1, IV); // watchout IU, IV permutation
       qleft.v   = Qm_y(i  ,j-1, IU); // watchout IU, IV permutation
 
-      index = coord2index(i,j,isize,jsize);
       qright.d  = Qp_y(i  ,j , ID);
       qright.p  = Qp_y(i  ,j , IP);
       qright.u  = Qp_y(i  ,j , IV); // watchout IU, IV permutation
@@ -226,25 +221,21 @@ public:
       //
       // update hydro array
       //
-      index = coord2index(i-1,j,isize,jsize);
       Udata(i-1,j  , ID) += - flux_x.d*dtdx;
       Udata(i-1,j  , IP) += - flux_x.p*dtdx;
       Udata(i-1,j  , IU) += - flux_x.u*dtdx;
       Udata(i-1,j  , IV) += - flux_x.v*dtdx;
 
-      index = coord2index(i,j,isize,jsize);
       Udata(i  ,j  , ID) +=   flux_x.d*dtdx;
       Udata(i  ,j  , IP) +=   flux_x.p*dtdx;
       Udata(i  ,j  , IU) +=   flux_x.u*dtdx;
       Udata(i  ,j  , IV) +=   flux_x.v*dtdx;
 
-      index = coord2index(i,j-1,isize,jsize);
       Udata(i  ,j-1, ID) += - flux_y.d*dtdy;
       Udata(i  ,j-1, IP) += - flux_y.p*dtdy;
       Udata(i  ,j-1, IU) += - flux_y.v*dtdy; // watchout IU and IV swapped
       Udata(i  ,j-1, IV) += - flux_y.u*dtdy; // watchout IU and IV swapped
 
-      index = coord2index(i,j,isize,jsize);
       Udata(i  ,j  , ID) +=   flux_y.d*dtdy;
       Udata(i  ,j  , IP) +=   flux_y.p*dtdy;
       Udata(i  ,j  , IU) +=   flux_y.v*dtdy; // watchout IU and IV swapped
@@ -290,7 +281,6 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    int index0, index1, index2, index3;
     
     if(j >= 1 && j <= jsize - ghostWidth &&
        i >= 1 && i <= isize - ghostWidth) {
@@ -308,11 +298,6 @@ public:
       HydroState qmY;
       HydroState qpX;
       HydroState qpY;
-
-      index0 = coord2index(i+1,j  ,isize,jsize);
-      index1 = coord2index(i-1,j  ,isize,jsize);
-      index2 = coord2index(i  ,j+1,isize,jsize);
-      index3 = coord2index(i  ,j-1,isize,jsize);
       
       // get primitive variables state vector
       {
@@ -415,7 +400,6 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    int indexc, index0, index1, index2, index3;
     
     if(j >= ghostWidth && j <= jsize-ghostWidth  &&
        i >= ghostWidth && i <= isize-ghostWidth ) {
@@ -449,11 +433,6 @@ public:
       // deal with left interface along X !
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      index0 = coord2index(i+1,j  ,isize,jsize);
-      index1 = coord2index(i-1,j  ,isize,jsize);
-      index2 = coord2index(i  ,j+1,isize,jsize);
-      index3 = coord2index(i  ,j-1,isize,jsize);
-
       // get primitive variables state vector
       qLoc.d         = Qdata(i  ,j  , ID);
       qNeighbors_0.d = Qdata(i+1,j  , ID);
@@ -484,13 +463,7 @@ public:
 			     &qNeighbors_2, &qNeighbors_3,
 			     &dqX, &dqY);
 	
-      // slopes at left neighbor along X
-      indexc = coord2index(i-1,j  ,isize,jsize);
-      index0 = coord2index(i  ,j  ,isize,jsize);
-      index1 = coord2index(i-2,j  ,isize,jsize);
-      index2 = coord2index(i-1,j+1,isize,jsize);
-      index3 = coord2index(i-2,j-1,isize,jsize);
-      
+      // slopes at left neighbor along X      
       qLocNeighbor.d = Qdata(i-1,j  , ID);
       qNeighbors_0.d = Qdata(i  ,j  , ID);
       qNeighbors_1.d = Qdata(i-2,j  , ID);
@@ -551,12 +524,6 @@ public:
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       // slopes at left neighbor along Y
-      indexc = coord2index(i  ,j-1,isize,jsize);
-      index0 = coord2index(i+1,j-1,isize,jsize);
-      index1 = coord2index(i-1,j-1,isize,jsize);
-      index2 = coord2index(i  ,j  ,isize,jsize);
-      index3 = coord2index(i  ,j-2,isize,jsize);
-
       qLocNeighbor.d = Qdata(i  ,j-1, ID);
       qNeighbors_0.d = Qdata(i+1,j-1, ID);
       qNeighbors_1.d = Qdata(i-1,j-1, ID);
@@ -651,8 +618,6 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
-    int index2;
-    
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
@@ -661,7 +626,6 @@ public:
       Udata(i  ,j  , IU) +=  FluxData_x(i  ,j  , IU);
       Udata(i  ,j  , IV) +=  FluxData_x(i  ,j  , IV);
 
-      index2 = coord2index(i+1,j,isize,jsize);
       Udata(i  ,j  , ID) -=  FluxData_x(i+1,j  , ID);
       Udata(i  ,j  , IP) -=  FluxData_x(i+1,j  , IP);
       Udata(i  ,j  , IU) -=  FluxData_x(i+1,j  , IU);
@@ -672,7 +636,6 @@ public:
       Udata(i  ,j  , IU) +=  FluxData_y(i  ,j  , IV); //
       Udata(i  ,j  , IV) +=  FluxData_y(i  ,j  , IU); //
       
-      index2 = coord2index(i,j+1,isize,jsize);
       Udata(i  ,j  , ID) -=  FluxData_y(i  ,j+1, ID);
       Udata(i  ,j  , IP) -=  FluxData_y(i  ,j+1, IP);
       Udata(i  ,j  , IU) -=  FluxData_y(i  ,j+1, IV); //
@@ -711,7 +674,7 @@ public:
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
     
-    int i,j, index2;
+    int i,j;
     index2coord(index,i,j,isize,jsize);
     
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
@@ -724,7 +687,6 @@ public:
 	Udata(i  ,j  , IU) +=  FluxData(i  ,j  , IU);
 	Udata(i  ,j  , IV) +=  FluxData(i  ,j  , IV);
 
-	index2 = coord2index(i+1,j,isize,jsize);
 	Udata(i  ,j  , ID) -=  FluxData(i+1,j  , ID);
 	Udata(i  ,j  , IP) -=  FluxData(i+1,j  , IP);
 	Udata(i  ,j  , IU) -=  FluxData(i+1,j  , IU);
@@ -737,7 +699,6 @@ public:
 	Udata(i  ,j  , IU) +=  FluxData(i  ,j  , IU);
 	Udata(i  ,j  , IV) +=  FluxData(i  ,j  , IV);
 	
-	index2 = coord2index(i,j+1,isize,jsize);
 	Udata(i  ,j  , ID) -=  FluxData(i  ,j+1, ID);
 	Udata(i  ,j  , IP) -=  FluxData(i  ,j+1, IP);
 	Udata(i  ,j  , IU) -=  FluxData(i  ,j+1, IU);
@@ -779,8 +740,6 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
-    int index0, index1, index2, index3;
-    
     if(j >= ghostWidth-1 && j <= jsize-ghostWidth  &&
        i >= ghostWidth-1 && i <= isize-ghostWidth ) {
 
@@ -797,11 +756,6 @@ public:
 	HydroState dqX;
 	HydroState dqY;
 
-	index0 = coord2index(i+1,j  ,isize,jsize);
-	index1 = coord2index(i-1,j  ,isize,jsize);
-	index2 = coord2index(i  ,j+1,isize,jsize);
-	index3 = coord2index(i  ,j-1,isize,jsize);
-      
 	// get primitive variables state vector
 	qLoc.d         = Qdata(i  ,j  , ID);
 	qNeighbors_0.d = Qdata(i+1,j  , ID);
@@ -883,7 +837,6 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    int index2;
     
     if(j >= ghostWidth && j <= jsize-ghostWidth  &&
        i >= ghostWidth && i <= isize-ghostWidth ) {
@@ -927,8 +880,6 @@ public:
 
 	if (dir == XDIR) {
 
-	  index2 = coord2index(i-1,j,isize,jsize);
-
 	  // left interface : right state
 	  trace_unsplit_2d_along_dir(&qLoc,
 				     &dqX, &dqY,
@@ -967,8 +918,6 @@ public:
 	  Fluxes(i  ,j , IV) =  flux.v*dtdx;
 
 	} else if (dir == YDIR) {
-
-	  index2 = coord2index(i,j-1,isize,jsize);
 
 	  // left interface : right state
 	  trace_unsplit_2d_along_dir(&qLoc,
@@ -1022,87 +971,7 @@ public:
   
 }; // ComputeTraceAndFluxes_Functor
 
-/*************************************************/
-/*************************************************/
-/*************************************************/
-// class ComputeTraceAndUpdate_Y_Functor : public HydroBaseFunctor2D {
-  
-// public:
-  
-//   ComputeTraceAndUpdate_Y_Functor(HydroParams params,
-// 				  DataArray Udata,
-// 				  DataArray Qdata,
-// 				  DataArray Slopes_x,
-// 				  DataArray Slopes_y,
-// 				  real_t    dtdx,
-// 				  real_t    dtdy) :
-//     HydroBaseFunctor2D(params), Udata(Udata), Qdata(Qdata),
-//     Slopes_x(Slopes_x), Slopes_y(Slopes_y),
-//     dtdx(dtdx), dtdy(dtdy) {};
-  
-//   KOKKOS_INLINE_FUNCTION
-//   void operator()(const int& index) const
-//   {
-//     const int isize = params.isize;
-//     const int jsize = params.jsize;
-//     const int ghostWidth = params.ghostWidth;
-    
-//     const int j = index / isize;
-//     const int i = index - j*isize;
-    
-//     if(j >= ghostWidth && j <= jsize-ghostWidth  &&
-//        i >= ghostWidth && i <= isize-ghostWidth ) {
-      
-//       // local primitive variables
-//       HydroState qLoc; // local primitive variables
-      
-//       // local primitive variables in neighbor cell
-//       HydroState qLocNeighbor;
-      
-//       // Local slopes and neighbor slopes
-//       HydroState dqX;
-//       HydroState dqY;
-//       HydroState dqX_neighbor;
-//       HydroState dqY_neighbor;
-      
-//       // Local variables for Riemann problems solving
-//       HydroState qleft;
-//       HydroState qright;
-//       HydroState qgdnv;
-//       HydroState flux_y;
-      
-//       //int index = i  + isize * j;	
-      
-//       //
-//       // compute reconstructed states at left interface along Y
-//       //
-//       qLoc.d = Qdata   (index, ID);
-//       dqX.d  = Slopes_x(index, ID);
-//       dqY.d  = Slopes_y(index, ID);
-      
-//       qLoc.p = Qdata   (index, IP);
-//       dqX.p  = Slopes_x(index, IP);
-//       dqY.p  = Slopes_y(index, IP);
-      
-//       qLoc.u = Qdata   (index, IU);
-//       dqX.u  = Slopes_x(index, IU);
-//       dqY.u  = Slopes_y(index, IU);
-      
-//       qLoc.v = Qdata   (index, IV);
-//       dqX.v  = Slopes_x(index, IV);
-//       dqY.v  = Slopes_y(index, IV);
-      
-      
-//     }
 
-//   } // end operator ()
-  
-//   DataArray Udata, Qdata;
-//   DataArray Slopes_x, Slopes_y;
-//   real_t dtdx, dtdy;
-  
-// }; // ComputeTraceAndUpdate_Y_Functor
-    
 /*************************************************/
 /*************************************************/
 /*************************************************/
@@ -1237,8 +1106,6 @@ public:
     const int nx = params.nx;
     const int ny = params.ny;
     
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
     const int imin = params.imin;
@@ -1253,7 +1120,6 @@ public:
     
     int i0, j0;
     int iVar;
-    int index_out, index_in;
 
     if (faceId == FACE_XMIN) {
       
@@ -1278,8 +1144,6 @@ public:
 	    i0=nx+i;
 	  }
 	  
-	  index_out = coord2index(i ,j,isize,jsize);
-	  index_in  = coord2index(i0,j,isize,jsize);
 	  Udata(i  ,j  , iVar) = Udata(i0  ,j  , iVar)*sign;
 	  
 	}
@@ -1311,8 +1175,6 @@ public:
 	    i0=i-nx;
 	  }
 	  
-	  index_out = coord2index(i ,j,isize,jsize);
-	  index_in  = coord2index(i0,j,isize,jsize);
 	  Udata(i  ,j  , iVar) = Udata(i0 ,j  , iVar)*sign;
 	  
 	}
@@ -1342,8 +1204,6 @@ public:
 	    j0=ny+j;
 	  }
 	  
-	  index_out = coord2index(i,j ,isize,jsize);
-	  index_in  = coord2index(i,j0,isize,jsize);
 	  Udata(i  ,j  , iVar) = Udata(i  ,j0 , iVar)*sign;
 	}
       }
@@ -1372,8 +1232,6 @@ public:
 	    j0=j-ny;
 	  }
 	  
-	  index_out = coord2index(i,j ,isize,jsize);
-	  index_in  = coord2index(i,j0,isize,jsize);
 	  Udata(i  ,j  , iVar) = Udata(i  ,j0  , iVar)*sign;
 	  
 	}

@@ -83,38 +83,38 @@ public:
   } // FMAX5
 
   /**
-   * Copy data(index) into q.
+   * Copy data(i,j,k) into q.
    */
   KOKKOS_INLINE_FUNCTION
-  void get_state(DataArray data, int index, MHDState& q) const
+  void get_state(DataArray data, int i, int j, int k, MHDState& q) const
   {
 
-    q.d  = data(index, ID);
-    q.p  = data(index, IP);
-    q.u  = data(index, IU);
-    q.v  = data(index, IV);
-    q.w  = data(index, IW);
-    q.bx = data(index, IBX);
-    q.by = data(index, IBY);
-    q.bz = data(index, IBZ);
+    q.d  = data(i,j,k, ID);
+    q.p  = data(i,j,k, IP);
+    q.u  = data(i,j,k, IU);
+    q.v  = data(i,j,k, IV);
+    q.w  = data(i,j,k, IW);
+    q.bx = data(i,j,k, IBX);
+    q.by = data(i,j,k, IBY);
+    q.bz = data(i,j,k, IBZ);
     
   } // get_state
 
   /**
-   * Copy q into data(index).
+   * Copy q into data(i,j,k).
    */
   KOKKOS_INLINE_FUNCTION
-  void set_state(DataArray data, int index, const MHDState& q) const
+  void set_state(DataArray data, int i, int j, int k, const MHDState& q) const
   {
 
-    data(index, ID)  = q.d;
-    data(index, IP)  = q.p;
-    data(index, IU)  = q.u;
-    data(index, IV)  = q.v;
-    data(index, IW)  = q.w;
-    data(index, IBX) = q.bx;
-    data(index, IBY) = q.by;
-    data(index, IBZ) = q.bz;
+    data(i,j,k, ID)  = q.d;
+    data(i,j,k, IP)  = q.p;
+    data(i,j,k, IU)  = q.u;
+    data(i,j,k, IV)  = q.v;
+    data(i,j,k, IW)  = q.w;
+    data(i,j,k, IBX) = q.bx;
+    data(i,j,k, IBY) = q.by;
+    data(i,j,k, IBZ) = q.bz;
     
   } // set_state
 
@@ -122,12 +122,12 @@ public:
    *
    */
   KOKKOS_INLINE_FUNCTION
-  void get_magField(const DataArray& data, int index, BField& b) const
+  void get_magField(const DataArray& data, int i, int j, int k, BField& b) const
   {
 
-    b.bx = data(index, IBX);
-    b.by = data(index, IBY);
-    b.bz = data(index, IBZ);
+    b.bx = data(i,j,k, IBX);
+    b.by = data(i,j,k, IBY);
+    b.bz = data(i,j,k, IBZ);
     
   } // get_magField
   

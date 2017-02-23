@@ -124,9 +124,6 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
-    // index of a neighbor cell
-    int indexN;
-
     // magnetic field in neighbor cells
     real_t magFieldNeighbors[3];
     
@@ -148,9 +145,7 @@ public:
       uLoc.bz = Udata(i,j,IBZ);
 
       // get mag field in neighbor cells
-      indexN = coord2index(i+1,j  ,isize,jsize);
       magFieldNeighbors[IX] = Udata(i+1,j  ,IBX);
-      indexN = coord2index(i  ,j+1,isize,jsize);
       magFieldNeighbors[IY] = Udata(i  ,j+1,IBY);
       magFieldNeighbors[IZ] = 0.0;
       
@@ -214,14 +209,10 @@ public:
       MHDState qleft, qright;
       MHDState flux;
 
-      int index2;
-
       //
       // Solve Riemann problem at X-interfaces and compute X-fluxes
       //
-      index2 = coord2index(i-1,j,isize,jsize);
       get_state(Qm_x, i-1, j  , qleft);
-      
       get_state(Qp_x, i  , j  , qright);
       
       // compute hydro flux along X
@@ -233,7 +224,6 @@ public:
       //
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       //
-      index2 = coord2index(i,j-1,isize,jsize);
       get_state(Qm_y, i  ,j-1, qleft);
       swapValues(&(qleft.u) ,&(qleft.v) );
       swapValues(&(qleft.bx) ,&(qleft.by) );
@@ -288,7 +278,6 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    int index2;
     
     if(j >= ghostWidth && j < jsize - ghostWidth+1 &&
        i >= ghostWidth && i < isize - ghostWidth+1) {
@@ -301,16 +290,9 @@ public:
       // in the following, the 2 first indexes in qEdge_emf array play
       // the same offset role as in the calling argument of cmp_mag_flx 
       // in DUMSES (if you see what I mean ?!)
-      index2 = coord2index(i-1,j-1,isize,jsize);
       get_state(QEdge_RT, i-1,j-1, qEdge_emfZ[IRT]);
-
-      index2 = coord2index(i-1,j  ,isize,jsize);
       get_state(QEdge_RB, i-1,j  , qEdge_emfZ[IRB]);
-
-      index2 = coord2index(i  ,j-1,isize,jsize);
       get_state(QEdge_LT, i  ,j-1, qEdge_emfZ[ILT]);
-
-      index2 = index;
       get_state(QEdge_LB, i  ,j  , qEdge_emfZ[ILB]);
 
       // actually compute emfZ
@@ -377,11 +359,6 @@ public:
       MHDState qEdge[4];
       real_t c = 0.0;
       
-      // index0 = coord2index(i+1,j  ,isize,jsize);
-      // index1 = coord2index(i-1,j  ,isize,jsize);
-      // index2 = coord2index(i  ,j+1,isize,jsize);
-      // index3 = coord2index(i  ,j-1,isize,jsize);
-
       // prepare qNb : q state in the 3-by-3 neighborhood
       // note that current cell (ii,jj) is in qNb[1][1]
       // also note that the effective stencil is 4-by-4 since
@@ -389,7 +366,6 @@ public:
       // field on the right (see computePrimitives_MHD_2D)
       for (int di=0; di<3; di++)
 	for (int dj=0; dj<3; dj++) {
-	  int indexLoc = coord2index( i+di-1, j+dj-1, isize, jsize);
 	  get_state(Qdata, i+di-1, j+dj-1, qNb[di][dj]);
 	}
       
@@ -398,7 +374,6 @@ public:
       // note that current cell (ii,jj) is in bfNb[1][1]
       for (int di=0; di<4; di++)
 	for (int dj=0; dj<4; dj++) {
-	  int indexLoc = coord2index( i+di-1, j+dj-1, isize, jsize);
 	  get_magField(Udata, i+di-1, j+dj-1, bfNb[di][dj]);
 	}
 
@@ -457,8 +432,6 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
-    int index2;
-    
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
@@ -478,7 +451,6 @@ public:
       //udata.by +=  flux.by*dtdx;
       udata.bz +=  flux.bz*dtdx;
       
-      index2 = coord2index(i+1,j,isize,jsize);
       get_state(FluxData_x, i+1,j  , flux);      
       udata.d  -=  flux.d*dtdx;
       udata.p  -=  flux.p*dtdx;
@@ -499,7 +471,6 @@ public:
       //udata.by +=  flux.by*dtdy;
       udata.bz +=  flux.bz*dtdy;
                   
-      index2 = coord2index(i,j+1,isize,jsize);
       get_state(FluxData_y, i,j+1, flux);
       udata.d  -=  flux.d*dtdy;
       udata.p  -=  flux.p*dtdy;
@@ -552,8 +523,6 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
-    int index2;
-    
     if(j >= ghostWidth && j < jsize-ghostWidth /*+1*/  &&
        i >= ghostWidth && i < isize-ghostWidth /*+1*/ ) {
 
@@ -561,10 +530,7 @@ public:
       //get_state(Udata, index, udata);
 
       // left-face B-field
-      index2 = coord2index(i  ,j+1,isize,jsize);
       Udata(i,j,IA) += ( Emf(i  ,j+1) - Emf(i,j) )*dtdy;
-
-      index2 = coord2index(i+1,j  ,isize,jsize);
       Udata(i,j,IB) -= ( Emf(i+1,j  ) - Emf(i,j) )*dtdx;		    
 
     }
@@ -606,7 +572,6 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    int index2;
     
     if(j >= ghostWidth && j <= jsize-ghostWidth  &&
        i >= ghostWidth && i <= isize-ghostWidth ) {
@@ -650,8 +615,6 @@ public:
 
 	if (dir == XDIR) {
 
-	  index2 = coord2index(i-1,j,isize,jsize);
-
 	  // left interface : right state
 	  trace_unsplit_2d_along_dir(&qLoc,
 				     &dqX, &dqY,
@@ -690,8 +653,6 @@ public:
 	  Fluxes(i,j , IV) =  flux.v*dtdx;
 
 	} else if (dir == YDIR) {
-
-	  index2 = coord2index(i,j-1,isize,jsize);
 
 	  // left interface : right state
 	  trace_unsplit_2d_along_dir(&qLoc,
@@ -988,13 +949,7 @@ public:
     
     //double xPos = xmin + dx/2 + (i-ghostWidth)*dx;
     //double yPos = ymin + dy/2 + (j-ghostWidth)*dy;
-    
-    int index_ip1 = coord2index(i+1,j  ,isize,jsize);
-    int index_jp1 = coord2index(i  ,j+1,isize,jsize);
-    
-    int index_ig  = coord2index(i,2*ghostWidth,isize,jsize);
-    int index_gj  = coord2index(2*ghostWidth,j,isize,jsize);
-    
+        
     if (i<isize-1 and j<jsize-1) {
       Udata(i,j,IP)  = p0 / (gamma0-1.0) +
 	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
@@ -1052,8 +1007,6 @@ public:
     const int nx = params.nx;
     const int ny = params.ny;
     
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
     const int imin = params.imin;
@@ -1068,7 +1021,6 @@ public:
     
     int i0, j0;
     int iVar;
-    int index_out, index_in;
 
     if (faceId == FACE_XMIN) {
       
@@ -1094,8 +1046,6 @@ public:
 	    i0=nx+i;
 	  }
 	  
-	  index_out = coord2index(i ,j,isize,jsize);
-	  index_in  = coord2index(i0,j,isize,jsize);
 	  Udata(i,j, iVar) = Udata(i0,j , iVar)*sign;
 	  
 	}
@@ -1128,8 +1078,6 @@ public:
 	    i0=i-nx;
 	  }
 	  
-	  index_out = coord2index(i ,j,isize,jsize);
-	  index_in  = coord2index(i0,j,isize,jsize);
 	  Udata(i,j, iVar) = Udata(i0,j , iVar)*sign;
 	  
 	}
@@ -1160,8 +1108,6 @@ public:
 	    j0=ny+j;
 	  }
 	  
-	  index_out = coord2index(i,j ,isize,jsize);
-	  index_in  = coord2index(i,j0,isize,jsize);
 	  Udata(i,j, iVar) = Udata(i,j0, iVar)*sign;
 	}
       }
@@ -1192,8 +1138,6 @@ public:
 	    j0=j-ny;
 	  }
 	  
-	  index_out = coord2index(i,j ,isize,jsize);
-	  index_in  = coord2index(i,j0,isize,jsize);
 	  Udata(i,j, iVar) = Udata(i,j0, iVar)*sign;
 	  
 	}

@@ -193,7 +193,6 @@ public:
 
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
-    int indexc, index0, index1, index2, index3, index4, index5;
 
     if(k >= ghostWidth && k <= ksize-ghostWidth  &&
        j >= ghostWidth && j <= jsize-ghostWidth  &&
@@ -233,13 +232,6 @@ public:
       // deal with left interface along X !
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
-      index0 = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
-      index1 = coord2index(i-1,j  ,k  ,isize,jsize,ksize);
-      index2 = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
-      index3 = coord2index(i  ,j-1,k  ,isize,jsize,ksize);
-      index4 = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
-      index5 = coord2index(i  ,j  ,k-1,isize,jsize,ksize);
-
       // get primitive variables state vector
       qLoc.d         = Qdata(i  ,j  ,k  , ID);
       qNeighbors_0.d = Qdata(i+1,j  ,k  , ID);
@@ -288,14 +280,6 @@ public:
 			     &dqX, &dqY, &dqZ);
 	
       // slopes at left neighbor along X
-      indexc = coord2index(i-1,j  ,k  ,isize,jsize,ksize);
-      index0 = coord2index(i  ,j  ,k  ,isize,jsize,ksize);
-      index1 = coord2index(i-2,j  ,k  ,isize,jsize,ksize);
-      index2 = coord2index(i-1,j+1,k  ,isize,jsize,ksize);
-      index3 = coord2index(i-1,j-1,k  ,isize,jsize,ksize);
-      index4 = coord2index(i-1,j  ,k+1,isize,jsize,ksize);
-      index5 = coord2index(i-1,j  ,k-1,isize,jsize,ksize);
-
       qLocNeighbor.d = Qdata(i-1,j  ,k  , ID);
       qNeighbors_0.d = Qdata(i  ,j  ,k  , ID);
       qNeighbors_1.d = Qdata(i-2,j  ,k  , ID);
@@ -375,14 +359,6 @@ public:
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       // slopes at left neighbor along Y
-      indexc = coord2index(i  ,j-1,k  ,isize,jsize,ksize);
-      index0 = coord2index(i+1,j-1,k  ,isize,jsize,ksize);
-      index1 = coord2index(i-1,j-1,k  ,isize,jsize,ksize);
-      index2 = coord2index(i  ,j  ,k  ,isize,jsize,ksize);
-      index3 = coord2index(i  ,j-2,k  ,isize,jsize,ksize);
-      index4 = coord2index(i  ,j-1,k+1,isize,jsize,ksize);
-      index5 = coord2index(i  ,j-1,k-1,isize,jsize,ksize);
-
       qLocNeighbor.d = Qdata(i  ,j-1,k  , ID);
       qNeighbors_0.d = Qdata(i+1,j-1,k  , ID);
       qNeighbors_1.d = Qdata(i-1,j-1,k  , ID);
@@ -464,14 +440,6 @@ public:
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       // slopes at left neighbor along Z
-      indexc = coord2index(i  ,j  ,k-1,isize,jsize,ksize);
-      index0 = coord2index(i+1,j  ,k-1,isize,jsize,ksize);
-      index1 = coord2index(i-1,j  ,k-1,isize,jsize,ksize);
-      index2 = coord2index(i  ,j+1,k-1,isize,jsize,ksize);
-      index3 = coord2index(i  ,j-1,k-1,isize,jsize,ksize);
-      index4 = coord2index(i  ,j  ,k  ,isize,jsize,ksize);
-      index5 = coord2index(i  ,j  ,k-2,isize,jsize,ksize);
-
       qLocNeighbor.d = Qdata(i  ,j  ,k-1, ID);
       qNeighbors_0.d = Qdata(i+1,j  ,k-1, ID);
       qNeighbors_1.d = Qdata(i-1,j  ,k-1, ID);
@@ -589,8 +557,6 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
-    int index2;
-
     if(k >= ghostWidth && k < ksize-ghostWidth  &&
        j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
@@ -601,7 +567,6 @@ public:
       Udata(i  ,j  ,k    , IV) +=  FluxData_x(i  ,j  ,k  , IV);
       Udata(i  ,j  ,k    , IW) +=  FluxData_x(i  ,j  ,k  , IW);
 
-      index2 = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
       Udata(i  ,j  ,k    , ID) -=  FluxData_x(i+1,j  ,k   , ID);
       Udata(i  ,j  ,k    , IP) -=  FluxData_x(i+1,j  ,k   , IP);
       Udata(i  ,j  ,k    , IU) -=  FluxData_x(i+1,j  ,k   , IU);
@@ -614,7 +579,6 @@ public:
       Udata(i  ,j  ,k    , IV) +=  FluxData_y(i  ,j  ,k    , IU); //
       Udata(i  ,j  ,k    , IW) +=  FluxData_y(i  ,j  ,k    , IW);
       
-      index2 = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
       Udata(i  ,j  ,k    , ID) -=  FluxData_y(i  ,j+1,k  , ID);
       Udata(i  ,j  ,k    , IP) -=  FluxData_y(i  ,j+1,k  , IP);
       Udata(i  ,j  ,k    , IU) -=  FluxData_y(i  ,j+1,k  , IV); //
@@ -627,7 +591,6 @@ public:
       Udata(i  ,j  ,k    , IV) +=  FluxData_z(i  ,j  ,k    , IV);
       Udata(i  ,j  ,k    , IW) +=  FluxData_z(i  ,j  ,k    , IU); //
       
-      index2 = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
       Udata(i  ,j  ,k    , ID) -=  FluxData_z(i  ,j  ,k+1, ID);
       Udata(i  ,j  ,k    , IP) -=  FluxData_z(i  ,j  ,k+1, IP);
       Udata(i  ,j  ,k    , IU) -=  FluxData_z(i  ,j  ,k+1, IW); //
@@ -669,7 +632,7 @@ public:
     const int ksize = params.ksize;
     const int ghostWidth = params.ghostWidth;
     
-    int i,j,k, index2;
+    int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
     if(k >= ghostWidth && k < ksize-ghostWidth  &&
@@ -684,7 +647,6 @@ public:
 	Udata(i  ,j  ,k  , IV) +=  FluxData(i  ,j  ,k  , IV);
 	Udata(i  ,j  ,k  , IW) +=  FluxData(i  ,j  ,k  , IW);
 	
-	index2 = coord2index(i+1,j,k,isize,jsize,ksize);
 	Udata(i  ,j  ,k  , ID) -=  FluxData(i+1,j  ,k   , ID);
 	Udata(i  ,j  ,k  , IP) -=  FluxData(i+1,j  ,k   , IP);
 	Udata(i  ,j  ,k  , IU) -=  FluxData(i+1,j  ,k   , IU);
@@ -699,7 +661,6 @@ public:
 	Udata(i  ,j  ,k  , IV) +=  FluxData(i  ,j  ,k  , IV);
 	Udata(i  ,j  ,k  , IW) +=  FluxData(i  ,j  ,k  , IW);
 	
-	index2 = coord2index(i,j+1,k,isize,jsize,ksize);
 	Udata(i  ,j  ,k  , ID) -=  FluxData(i  ,j+1,k   , ID);
 	Udata(i  ,j  ,k  , IP) -=  FluxData(i  ,j+1,k   , IP);
 	Udata(i  ,j  ,k  , IU) -=  FluxData(i  ,j+1,k   , IU);
@@ -714,7 +675,6 @@ public:
 	Udata(i  ,j  ,k  , IV) +=  FluxData(i  ,j  ,k  , IV);
 	Udata(i  ,j  ,k  , IW) +=  FluxData(i  ,j  ,k  , IW);
 	
-	index2 = coord2index(i,j,k+1,isize,jsize,ksize);
 	Udata(i  ,j  ,k  , ID) -=  FluxData(i  ,j  ,k+1 , ID);
 	Udata(i  ,j  ,k  , IP) -=  FluxData(i  ,j  ,k+1 , IP);
 	Udata(i  ,j  ,k  , IU) -=  FluxData(i  ,j  ,k+1 , IU);
@@ -759,8 +719,6 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
-    int index0, index1, index2, index3, index4, index5;
-
     if(k >= ghostWidth-1 && k <= ksize-ghostWidth  &&
        j >= ghostWidth-1 && j <= jsize-ghostWidth  &&
        i >= ghostWidth-1 && i <= isize-ghostWidth ) {
@@ -780,13 +738,6 @@ public:
 	HydroState dqX;
 	HydroState dqY;
 	HydroState dqZ;
-
-	index0 = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
-	index1 = coord2index(i-1,j  ,k  ,isize,jsize,ksize);
-	index2 = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
-	index3 = coord2index(i  ,j-1,k  ,isize,jsize,ksize);
-	index4 = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
-	index5 = coord2index(i  ,j  ,k-1,isize,jsize,ksize);
 
 	// get primitive variables state vector
 	qLoc.d         = Qdata(i  ,j  ,k   , ID);
@@ -897,7 +848,6 @@ public:
     
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
-    int index2;
     
     if(k >= ghostWidth && k <= ksize-ghostWidth  &&
        j >= ghostWidth && j <= jsize-ghostWidth  &&
@@ -953,8 +903,6 @@ public:
 
 	if (dir == XDIR) {
 
-	  index2 = coord2index(i-1,j,k,isize,jsize,ksize);
-
 	  // left interface : right state
 	  trace_unsplit_3d_along_dir(&qLoc,
 				     &dqX, &dqY, &dqZ,
@@ -1005,8 +953,6 @@ public:
 	  Fluxes(i  ,j  ,k  , IW) =  flux.w*dtdx;
 
 	} else if (dir == YDIR) {
-
-	  index2 = coord2index(i,j-1,k,isize,jsize,ksize);
 
 	  // left interface : right state
 	  trace_unsplit_3d_along_dir(&qLoc,
@@ -1060,8 +1006,6 @@ public:
 	  Fluxes(i  ,j  ,k  , IW) =  flux.w*dtdy;
 
 	} else if (dir == ZDIR) {
-
-	  index2 = coord2index(i,j,k-1,isize,jsize,ksize);
 
 	  // left interface : right state
 	  trace_unsplit_3d_along_dir(&qLoc,
@@ -1280,7 +1224,7 @@ public:
     
     const int isize = params.isize;
     const int jsize = params.jsize;
-    const int ksize = params.ksize;
+    //const int ksize = params.ksize;
     const int ghostWidth = params.ghostWidth;
 
     const int imin = params.imin;
@@ -1298,7 +1242,6 @@ public:
     
     int i0, j0, k0;
     int iVar;
-    int index_out, index_in;
     
     if (faceId == FACE_XMIN) {
       
@@ -1325,8 +1268,6 @@ public:
 	    i0=nx+i;
 	  }
 	  
-	  index_out = coord2index(i ,j,k,isize,jsize,ksize);
-	  index_in  = coord2index(i0,j,k,isize,jsize,ksize);
 	  Udata(i,j,k, iVar) = Udata(i0,j,k, iVar)*sign;
 	  
 	}
@@ -1362,8 +1303,6 @@ public:
 	    i0=i-nx;
 	  }
 	  
-	  index_out = coord2index(i ,j,k,isize,jsize,ksize);
-	  index_in  = coord2index(i0,j,k,isize,jsize,ksize);
 	  Udata(i,j,k, iVar) = Udata(i0,j,k, iVar)*sign;
 	  
 	}
@@ -1395,8 +1334,6 @@ public:
 	    j0=ny+j;
 	  }
 	  
-	  index_out = coord2index(i,j ,k,isize,jsize,ksize);
-	  index_in  = coord2index(i,j0,k,isize,jsize,ksize);
 	  Udata(i,j,k, iVar) = Udata(i,j0,k, iVar)*sign;
 	  
 	}
@@ -1431,8 +1368,6 @@ public:
 	    j0=j-ny;
 	  }
 	  
-	  index_out = coord2index(i,j ,k,isize,jsize,ksize);
-	  index_in  = coord2index(i,j0,k,isize,jsize,ksize);
 	  Udata(i,j,k, iVar) = Udata(i,j0,k, iVar)*sign;
 	  
 	}
@@ -1465,8 +1400,6 @@ public:
 	    k0=nz+k;
 	  }
 	  
-	  index_out = coord2index(i,j,k ,isize,jsize,ksize);
-	  index_in  = coord2index(i,j,k0,isize,jsize,ksize);
 	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
 	  
 	}
@@ -1501,8 +1434,6 @@ public:
 	    k0=k-nz;
 	  }
 	  
-	  index_out = coord2index(i,j,k ,isize,jsize,ksize);
-	  index_in  = coord2index(i,j,k0,isize,jsize,ksize);
 	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
 	  
 	}

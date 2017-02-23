@@ -64,14 +64,14 @@ public:
       MHDState qLoc; // primitive    variables in current cell
       
       // get primitive variables in current cell
-      qLoc.d  = Qdata(index,ID);
-      qLoc.p  = Qdata(index,IP);
-      qLoc.u  = Qdata(index,IU);
-      qLoc.v  = Qdata(index,IV);
-      qLoc.w  = Qdata(index,IW);
-      qLoc.bx = Qdata(index,IBX);
-      qLoc.by = Qdata(index,IBY);
-      qLoc.bz = Qdata(index,IBZ);
+      qLoc.d  = Qdata(i,j,k,ID);
+      qLoc.p  = Qdata(i,j,k,IP);
+      qLoc.u  = Qdata(i,j,k,IU);
+      qLoc.v  = Qdata(i,j,k,IV);
+      qLoc.w  = Qdata(i,j,k,IW);
+      qLoc.bx = Qdata(i,j,k,IBX);
+      qLoc.by = Qdata(i,j,k,IBY);
+      qLoc.bz = Qdata(i,j,k,IBZ);
 
       // compute fastest information speeds
       real_t fastInfoSpeed[3];
@@ -129,9 +129,6 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
-    // index of a neighbor cell
-    int indexN;
-
     // magnetic field in neighbor cells
     real_t magFieldNeighbors[3];
     
@@ -144,35 +141,32 @@ public:
       real_t c;
       
       // get local conservative variable
-      uLoc.d  = Udata(index,ID);
-      uLoc.p  = Udata(index,IP);
-      uLoc.u  = Udata(index,IU);
-      uLoc.v  = Udata(index,IV);
-      uLoc.w  = Udata(index,IW);
-      uLoc.bx = Udata(index,IBX);
-      uLoc.by = Udata(index,IBY);
-      uLoc.bz = Udata(index,IBZ);
+      uLoc.d  = Udata(i,j,k,ID);
+      uLoc.p  = Udata(i,j,k,IP);
+      uLoc.u  = Udata(i,j,k,IU);
+      uLoc.v  = Udata(i,j,k,IV);
+      uLoc.w  = Udata(i,j,k,IW);
+      uLoc.bx = Udata(i,j,k,IBX);
+      uLoc.by = Udata(i,j,k,IBY);
+      uLoc.bz = Udata(i,j,k,IBZ);
 
       // get mag field in neighbor cells
-      indexN = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
-      magFieldNeighbors[IX] = Udata(indexN,IBX);
-      indexN = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
-      magFieldNeighbors[IY] = Udata(indexN,IBY);
-      indexN = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
-      magFieldNeighbors[IZ] = Udata(indexN,IBZ);
+      magFieldNeighbors[IX] = Udata(i+1,j  ,k  ,IBX);
+      magFieldNeighbors[IY] = Udata(i  ,j+1,k  ,IBY);
+      magFieldNeighbors[IZ] = Udata(i  ,j  ,k+1,IBZ);
       
       // get primitive variables in current cell
       constoprim_mhd(uLoc, magFieldNeighbors, c, qLoc);
 
       // copy q state in q global
-      Qdata(index,ID)  = qLoc.d;
-      Qdata(index,IP)  = qLoc.p;
-      Qdata(index,IU)  = qLoc.u;
-      Qdata(index,IV)  = qLoc.v;
-      Qdata(index,IW)  = qLoc.w;
-      Qdata(index,IBX) = qLoc.bx;
-      Qdata(index,IBY) = qLoc.by;
-      Qdata(index,IBZ) = qLoc.bz;
+      Qdata(i,j,k,ID)  = qLoc.d;
+      Qdata(i,j,k,IP)  = qLoc.p;
+      Qdata(i,j,k,IU)  = qLoc.u;
+      Qdata(i,j,k,IV)  = qLoc.v;
+      Qdata(i,j,k,IW)  = qLoc.w;
+      Qdata(i,j,k,IBX) = qLoc.bx;
+      Qdata(i,j,k,IBY) = qLoc.by;
+      Qdata(i,j,k,IBZ) = qLoc.bz;
       
     }
     
@@ -215,61 +209,61 @@ public:
       real_t u, v, w, A, B, C;
       
       // compute Ex
-      v = ONE_FOURTH_F * ( Qdata   (coord2index(i  ,j-1,k-1,isize,jsize,ksize), IV) +
-			   Qdata   (coord2index(i  ,j-1,k  ,isize,jsize,ksize), IV) +
-			   Qdata   (coord2index(i  ,j  ,k-1,isize,jsize,ksize), IV) +
-			   Qdata   (coord2index(i  ,j  ,k  ,isize,jsize,ksize), IV) );
+      v = ONE_FOURTH_F * ( Qdata(i  ,j-1,k-1,IV) +
+			   Qdata(i  ,j-1,k  ,IV) +
+			   Qdata(i  ,j  ,k-1,IV) +
+			   Qdata(i  ,j  ,k  ,IV) );
       
-      w = ONE_FOURTH_F * ( Qdata   (coord2index(i  ,j-1,k-1,isize,jsize,ksize), IW) +
-			   Qdata   (coord2index(i  ,j-1,k  ,isize,jsize,ksize), IW) +
-			   Qdata   (coord2index(i  ,j  ,k-1,isize,jsize,ksize), IW) +
-			   Qdata   (coord2index(i  ,j  ,k  ,isize,jsize,ksize), IW) );
+      w = ONE_FOURTH_F * ( Qdata(i  ,j-1,k-1,IW) +
+			   Qdata(i  ,j-1,k  ,IW) +
+			   Qdata(i  ,j  ,k-1,IW) +
+			   Qdata(i  ,j  ,k  ,IW) );
       
-      B = HALF_F  * ( Udata(coord2index(i  ,j  ,k-1,isize,jsize,ksize),IB) +
-		      Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize),IB) );
+      B = HALF_F  * ( Udata(i  ,j  ,k-1,IB) +
+		      Udata(i  ,j  ,k  ,IB) );
       
-      C = HALF_F  * ( Udata(coord2index(i  ,j-1,k  ,isize,jsize,ksize),IC) +
-		      Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize),IC) );
+      C = HALF_F  * ( Udata(i  ,j-1,k  ,IC) +
+		      Udata(i  ,j  ,k  ,IC) );
       
-      ElecField(index,IX) = v*C-w*B;
+      ElecField(i,j,k,IX) = v*C-w*B;
       
       // compute Ey
-      u = ONE_FOURTH_F * ( Qdata   (coord2index(i-1,j  ,k-1,isize,jsize,ksize),IU) +
-			   Qdata   (coord2index(i-1,j  ,k  ,isize,jsize,ksize),IU) +
-			   Qdata   (coord2index(i  ,j  ,k-1,isize,jsize,ksize),IU) +
-			   Qdata   (coord2index(i  ,j  ,k  ,isize,jsize,ksize),IU) );
+      u = ONE_FOURTH_F * ( Qdata   (i-1,j  ,k-1,IU) +
+			   Qdata   (i-1,j  ,k  ,IU) +
+			   Qdata   (i  ,j  ,k-1,IU) +
+			   Qdata   (i  ,j  ,k  ,IU) );
       
-      w = ONE_FOURTH_F * ( Qdata   (coord2index(i-1,j  ,k-1,isize,jsize,ksize),IW) +
-			   Qdata   (coord2index(i-1,j  ,k  ,isize,jsize,ksize),IW) +
-			   Qdata   (coord2index(i  ,j  ,k-1,isize,jsize,ksize),IW) +
-			   Qdata   (coord2index(i  ,j  ,k  ,isize,jsize,ksize),IW) );
+      w = ONE_FOURTH_F * ( Qdata   (i-1,j  ,k-1,IW) +
+			   Qdata   (i-1,j  ,k  ,IW) +
+			   Qdata   (i  ,j  ,k-1,IW) +
+			   Qdata   (i  ,j  ,k  ,IW) );
       
-      A = HALF_F  * ( Udata(coord2index(i  ,j  ,k-1,isize,jsize,ksize),IA) +
-		      Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize),IA) );
+      A = HALF_F  * ( Udata(i  ,j  ,k-1,IA) +
+		      Udata(i  ,j  ,k  ,IA) );
       
-      C = HALF_F  * ( Udata(coord2index(i-1,j  ,k  ,isize,jsize,ksize),IC) +
-		      Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize),IC) );
+      C = HALF_F  * ( Udata(i-1,j  ,k  ,IC) +
+		      Udata(i  ,j  ,k  ,IC) );
       
-      ElecField(index,IY) = w*A-u*C;
+      ElecField(i,j,k,IY) = w*A-u*C;
       
       // compute Ez
-      u = ONE_FOURTH_F * ( Qdata   (coord2index(i-1,j-1,k  ,isize,jsize,ksize),IU) +
-			   Qdata   (coord2index(i-1,j  ,k  ,isize,jsize,ksize),IU) +
-			   Qdata   (coord2index(i  ,j-1,k  ,isize,jsize,ksize),IU) +
-			   Qdata   (coord2index(i  ,j  ,k  ,isize,jsize,ksize),IU) );
+      u = ONE_FOURTH_F * ( Qdata   (i-1,j-1,k  ,IU) +
+			   Qdata   (i-1,j  ,k  ,IU) +
+			   Qdata   (i  ,j-1,k  ,IU) +
+			   Qdata   (i  ,j  ,k  ,IU) );
       
-      v = ONE_FOURTH_F * ( Qdata   (coord2index(i-1,j-1,k  ,isize,jsize,ksize),IV) +
-			   Qdata   (coord2index(i-1,j  ,k  ,isize,jsize,ksize),IV) +
-			   Qdata   (coord2index(i  ,j-1,k  ,isize,jsize,ksize),IV) +
-			   Qdata   (coord2index(i  ,j  ,k  ,isize,jsize,ksize),IV) );
+      v = ONE_FOURTH_F * ( Qdata   (i-1,j-1,k  ,IV) +
+			   Qdata   (i-1,j  ,k  ,IV) +
+			   Qdata   (i  ,j-1,k  ,IV) +
+			   Qdata   (i  ,j  ,k  ,IV) );
       
-      A = HALF_F  * ( Udata(coord2index(i  ,j-1,k  ,isize,jsize,ksize),IA) +
-		      Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize),IA) );
+      A = HALF_F  * ( Udata(i  ,j-1,k  ,IA) +
+		      Udata(i  ,j  ,k  ,IA) );
       
-      B = HALF_F  * ( Udata(coord2index(i-1,j  ,k  ,isize,jsize,ksize),IB) +
-		      Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize),IB) );
+      B = HALF_F  * ( Udata(i-1,j  ,k  ,IB) +
+		      Udata(i  ,j  ,k  ,IB) );
       
-      ElecField(index,IZ) = u*B-v*A;
+      ElecField(i,j,k,IZ) = u*B-v*A;
       
     }
   } // operator ()
@@ -318,39 +312,39 @@ public:
       real_t (&dbfZ)[3] = dbfSlopes[IZ];
       
       // get magnetic slopes dbf
-      bfSlopes[0]  = Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IA);
-      bfSlopes[1]  = Udata(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IA);
-      bfSlopes[2]  = Udata(coord2index(i  ,j-1,k  ,isize,jsize,ksize), IA);
-      bfSlopes[3]  = Udata(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IA);
-      bfSlopes[4]  = Udata(coord2index(i  ,j  ,k-1,isize,jsize,ksize), IA);
+      bfSlopes[0]  = Udata(i  ,j  ,k  , IA);
+      bfSlopes[1]  = Udata(i  ,j+1,k  , IA);
+      bfSlopes[2]  = Udata(i  ,j-1,k  , IA);
+      bfSlopes[3]  = Udata(i  ,j  ,k+1, IA);
+      bfSlopes[4]  = Udata(i  ,j  ,k-1, IA);
       
-      bfSlopes[5]  = Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IB);
-      bfSlopes[6]  = Udata(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IB);
-      bfSlopes[7]  = Udata(coord2index(i-1,j  ,k  ,isize,jsize,ksize), IB);
-      bfSlopes[8]  = Udata(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IB);
-      bfSlopes[9]  = Udata(coord2index(i  ,j  ,k-1,isize,jsize,ksize), IB);
+      bfSlopes[5]  = Udata(i  ,j  ,k  , IB);
+      bfSlopes[6]  = Udata(i+1,j  ,k  , IB);
+      bfSlopes[7]  = Udata(i-1,j  ,k  , IB);
+      bfSlopes[8]  = Udata(i  ,j  ,k+1, IB);
+      bfSlopes[9]  = Udata(i  ,j  ,k-1, IB);
       
-      bfSlopes[10] = Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IC);
-      bfSlopes[11] = Udata(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IC);
-      bfSlopes[12] = Udata(coord2index(i-1,j  ,k  ,isize,jsize,ksize), IC);
-      bfSlopes[13] = Udata(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IC);
-      bfSlopes[14] = Udata(coord2index(i  ,j-1,k  ,isize,jsize,ksize), IC);
+      bfSlopes[10] = Udata(i  ,j  ,k  , IC);
+      bfSlopes[11] = Udata(i+1,j  ,k  , IC);
+      bfSlopes[12] = Udata(i-1,j  ,k  , IC);
+      bfSlopes[13] = Udata(i  ,j+1,k  , IC);
+      bfSlopes[14] = Udata(i  ,j-1,k  , IC);
       
       // compute magnetic slopes
       slope_unsplit_mhd_3d(bfSlopes, dbfSlopes);
       
       // store magnetic slopes
-      DeltaA(index,0) = dbfX[IX];
-      DeltaA(index,1) = dbfY[IX];
-      DeltaA(index,2) = dbfZ[IX];
+      DeltaA(i,j,k,0) = dbfX[IX];
+      DeltaA(i,j,k,1) = dbfY[IX];
+      DeltaA(i,j,k,2) = dbfZ[IX];
       
-      DeltaB(index,0) = dbfX[IY];
-      DeltaB(index,1) = dbfY[IY];
-      DeltaB(index,2) = dbfZ[IY];
+      DeltaB(i,j,k,0) = dbfX[IY];
+      DeltaB(i,j,k,1) = dbfY[IY];
+      DeltaB(i,j,k,2) = dbfZ[IY];
       
-      DeltaC(index,0) = dbfX[IZ];
-      DeltaC(index,1) = dbfY[IZ];
-      DeltaC(index,2) = dbfZ[IZ];
+      DeltaC(i,j,k,0) = dbfX[IZ];
+      DeltaC(i,j,k,1) = dbfY[IZ];
+      DeltaC(i,j,k,2) = dbfZ[IZ];
       
     }
 
@@ -442,13 +436,13 @@ public:
       real_t xPos = params.xmin + params.dx/2 + (i-ghostWidth)*params.dx;
       
       // get primitive variables state vector
-      get_state(Qdata, coord2index(i  ,j  ,k  , isize, jsize, ksize), q      );
-      get_state(Qdata, coord2index(i+1,j  ,k  , isize, jsize, ksize), qPlusX );
-      get_state(Qdata, coord2index(i-1,j  ,k  , isize, jsize, ksize), qMinusX);
-      get_state(Qdata, coord2index(i  ,j+1,k  , isize, jsize, ksize), qPlusY );
-      get_state(Qdata, coord2index(i  ,j-1,k  , isize, jsize, ksize), qMinusY);
-      get_state(Qdata, coord2index(i  ,j  ,k+1, isize, jsize, ksize), qPlusZ );
-      get_state(Qdata, coord2index(i  ,j  ,k-1, isize, jsize, ksize), qMinusZ);
+      get_state(Qdata, i  ,j  ,k  , q      );
+      get_state(Qdata, i+1,j  ,k  , qPlusX );
+      get_state(Qdata, i-1,j  ,k  , qMinusX);
+      get_state(Qdata, i  ,j+1,k  , qPlusY );
+      get_state(Qdata, i  ,j-1,k  , qMinusY);
+      get_state(Qdata, i  ,j  ,k+1, qPlusZ );
+      get_state(Qdata, i  ,j  ,k-1, qMinusZ);
       
       // get hydro slopes dq
       slope_unsplit_hydro_3d(q, 
@@ -458,43 +452,43 @@ public:
 			     dq);
       
       // get face-centered magnetic components
-      bfNb[0] = Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IA);
-      bfNb[1] = Udata(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IA);
-      bfNb[2] = Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IB);
-      bfNb[3] = Udata(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IB);
-      bfNb[4] = Udata(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IC);
-      bfNb[5] = Udata(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IC);
+      bfNb[0] = Udata(i  ,j  ,k  , IA);
+      bfNb[1] = Udata(i+1,j  ,k  , IA);
+      bfNb[2] = Udata(i  ,j  ,k  , IB);
+      bfNb[3] = Udata(i  ,j+1,k  , IB);
+      bfNb[4] = Udata(i  ,j  ,k  , IC);
+      bfNb[5] = Udata(i  ,j  ,k+1, IC);
       
       // get dbf (transverse magnetic slopes)
-      dbf[0]  = DeltaA(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IY);
-      dbf[1]  = DeltaA(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IZ);
-      dbf[2]  = DeltaB(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IX);
-      dbf[3]  = DeltaB(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IZ);
-      dbf[4]  = DeltaC(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IX);
-      dbf[5]  = DeltaC(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IY);
+      dbf[0]  = DeltaA(i  ,j  ,k  , IY);
+      dbf[1]  = DeltaA(i  ,j  ,k  , IZ);
+      dbf[2]  = DeltaB(i  ,j  ,k  , IX);
+      dbf[3]  = DeltaB(i  ,j  ,k  , IZ);
+      dbf[4]  = DeltaC(i  ,j  ,k  , IX);
+      dbf[5]  = DeltaC(i  ,j  ,k  , IY);
       
-      dbf[6]  = DeltaA(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IY);
-      dbf[7]  = DeltaA(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IZ);
-      dbf[8]  = DeltaB(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IX);
-      dbf[9]  = DeltaB(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IZ);
-      dbf[10] = DeltaC(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IX);
-      dbf[11] = DeltaC(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IY);
+      dbf[6]  = DeltaA(i+1,j  ,k  , IY);
+      dbf[7]  = DeltaA(i+1,j  ,k  , IZ);
+      dbf[8]  = DeltaB(i  ,j+1,k  , IX);
+      dbf[9]  = DeltaB(i  ,j+1,k  , IZ);
+      dbf[10] = DeltaC(i  ,j  ,k+1, IX);
+      dbf[11] = DeltaC(i  ,j  ,k+1, IY);
       
       // get electric field components
-      Ex[0][0] = ElecField(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IX);
-      Ex[0][1] = ElecField(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IX);
-      Ex[1][0] = ElecField(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IX);
-      Ex[1][1] = ElecField(coord2index(i  ,j+1,k+1,isize,jsize,ksize), IX);
+      Ex[0][0] = ElecField(i  ,j  ,k  , IX);
+      Ex[0][1] = ElecField(i  ,j  ,k+1, IX);
+      Ex[1][0] = ElecField(i  ,j+1,k  , IX);
+      Ex[1][1] = ElecField(i  ,j+1,k+1, IX);
       
-      Ey[0][0] = ElecField(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IY);
-      Ey[0][1] = ElecField(coord2index(i  ,j  ,k+1,isize,jsize,ksize), IY);
-      Ey[1][0] = ElecField(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IY);
-      Ey[1][1] = ElecField(coord2index(i+1,j  ,k+1,isize,jsize,ksize), IY);
+      Ey[0][0] = ElecField(i  ,j  ,k  , IY);
+      Ey[0][1] = ElecField(i  ,j  ,k+1, IY);
+      Ey[1][0] = ElecField(i+1,j  ,k  , IY);
+      Ey[1][1] = ElecField(i+1,j  ,k+1, IY);
       
-      Ez[0][0] = ElecField(coord2index(i  ,j  ,k  ,isize,jsize,ksize), IZ);
-      Ez[0][1] = ElecField(coord2index(i  ,j+1,k  ,isize,jsize,ksize), IZ);
-      Ez[1][0] = ElecField(coord2index(i+1,j  ,k  ,isize,jsize,ksize), IZ);
-      Ez[1][1] = ElecField(coord2index(i+1,j+1,k  ,isize,jsize,ksize), IZ);
+      Ez[0][0] = ElecField(i  ,j  ,k  , IZ);
+      Ez[0][1] = ElecField(i  ,j+1,k  , IZ);
+      Ez[1][0] = ElecField(i+1,j  ,k  , IZ);
+      Ez[1][1] = ElecField(i+1,j+1,k  , IZ);
       
       // compute qm, qp and qEdge
       trace_unsplit_mhd_3d_simpler(q, dq, bfNb, dbf, elecFields, 
@@ -560,27 +554,27 @@ public:
       // } // end gravity predictor
       
       // store qm, qp, qEdge : only what is really needed
-      set_state(Qm_x, index, qm[0]);
-      set_state(Qp_x, index, qp[0]);
-      set_state(Qm_y, index, qm[1]);
-      set_state(Qp_y, index, qp[1]);
-      set_state(Qm_z, index, qm[2]);
-      set_state(Qp_z, index, qp[2]);
+      set_state(Qm_x, i,j,k, qm[0]);
+      set_state(Qp_x, i,j,k, qp[0]);
+      set_state(Qm_y, i,j,k, qm[1]);
+      set_state(Qp_y, i,j,k, qp[1]);
+      set_state(Qm_z, i,j,k, qm[2]);
+      set_state(Qp_z, i,j,k, qp[2]);
       
-      set_state(QEdge_RT , index, qEdge[IRT][0]); 
-      set_state(QEdge_RB , index, qEdge[IRB][0]); 
-      set_state(QEdge_LT , index, qEdge[ILT][0]); 
-      set_state(QEdge_LB , index, qEdge[ILB][0]); 
+      set_state(QEdge_RT , i,j,k, qEdge[IRT][0]); 
+      set_state(QEdge_RB , i,j,k, qEdge[IRB][0]); 
+      set_state(QEdge_LT , i,j,k, qEdge[ILT][0]); 
+      set_state(QEdge_LB , i,j,k, qEdge[ILB][0]); 
       
-      set_state(QEdge_RT2, index, qEdge[IRT][1]); 
-      set_state(QEdge_RB2, index, qEdge[IRB][1]); 
-      set_state(QEdge_LT2, index, qEdge[ILT][1]); 
-      set_state(QEdge_LB2, index, qEdge[ILB][1]); 
+      set_state(QEdge_RT2, i,j,k, qEdge[IRT][1]); 
+      set_state(QEdge_RB2, i,j,k, qEdge[IRB][1]); 
+      set_state(QEdge_LT2, i,j,k, qEdge[ILT][1]); 
+      set_state(QEdge_LB2, i,j,k, qEdge[ILB][1]); 
       
-      set_state(QEdge_RT3, index, qEdge[IRT][2]); 
-      set_state(QEdge_RB3, index, qEdge[IRB][2]); 
-      set_state(QEdge_LT3, index, qEdge[ILT][2]); 
-      set_state(QEdge_LB3, index, qEdge[ILB][2]); 
+      set_state(QEdge_RT3, i,j,k, qEdge[IRT][2]); 
+      set_state(QEdge_RB3, i,j,k, qEdge[IRB][2]); 
+      set_state(QEdge_LT3, i,j,k, qEdge[ILT][2]); 
+      set_state(QEdge_LB3, i,j,k, qEdge[ILB][2]); 
       
     }
     
@@ -641,31 +635,26 @@ public:
       MHDState qleft, qright;
       MHDState flux;
 
-      int index2;
-
       //
       // Solve Riemann problem at X-interfaces and compute X-fluxes
       //
-      index2 = coord2index(i-1,j  ,k  ,isize,jsize,ksize);
-      get_state(Qm_x, index2, qleft);
-      
-      get_state(Qp_x, index, qright);
+      get_state(Qm_x, i-1,j  ,k, qleft);      
+      get_state(Qp_x, i  ,j  ,k, qright);
       
       // compute hydro flux along X
       riemann_hlld(qleft,qright,flux);
 
       // store fluxes
-      set_state(Fluxes_x, index, flux);
+      set_state(Fluxes_x, i, j, k, flux);
 
       //
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       //
-      index2 = coord2index(i  ,j-1,k  ,isize,jsize,ksize);
-      get_state(Qm_y, index2, qleft);
+      get_state(Qm_y, i,j-1,k, qleft);
       swapValues(&(qleft.u)  ,&(qleft.v) );
       swapValues(&(qleft.bx) ,&(qleft.by) );
 
-      get_state(Qp_y, index, qright);
+      get_state(Qp_y, i,j,k, qright);
       swapValues(&(qright.u)  ,&(qright.v) );
       swapValues(&(qright.bx) ,&(qright.by) );
       
@@ -673,17 +662,16 @@ public:
       riemann_hlld(qleft,qright,flux);
             
       // store fluxes
-      set_state(Fluxes_y, index, flux);
+      set_state(Fluxes_y, i,j,k, flux);
       
       //
       // Solve Riemann problem at Z-interfaces and compute Z-fluxes
       //
-      index2 = coord2index(i  ,j  ,k-1,isize,jsize,ksize);
-      get_state(Qm_z, index2, qleft);
+      get_state(Qm_z, i,j,k-1, qleft);
       swapValues(&(qleft.u)  ,&(qleft.w) );
       swapValues(&(qleft.bx) ,&(qleft.bz) );
 
-      get_state(Qp_z, index, qright);
+      get_state(Qp_z, i,j,k, qright);
       swapValues(&(qright.u)  ,&(qright.w) );
       swapValues(&(qright.bx) ,&(qright.bz) );
       
@@ -691,7 +679,7 @@ public:
       riemann_hlld(qleft,qright,flux);
             
       // store fluxes
-      set_state(Fluxes_z, index, flux);
+      set_state(Fluxes_z, i,j,k, flux);
 
     }
     
@@ -759,29 +747,29 @@ public:
       // in DUMSES (if you see what I mean ?!)
 
       // actually compute emfZ 
-      get_state(QEdge_RT3, coord2index(i-1,j-1,k  ,isize, jsize, ksize), qEdge_emf[IRT]);
-      get_state(QEdge_RB3, coord2index(i-1,j  ,k  ,isize, jsize, ksize), qEdge_emf[IRB]); 
-      get_state(QEdge_LT3, coord2index(i  ,j-1,k  ,isize, jsize, ksize), qEdge_emf[ILT]);
-      get_state(QEdge_LB3, coord2index(i  ,j  ,k  ,isize, jsize, ksize), qEdge_emf[ILB]);
+      get_state(QEdge_RT3, i-1,j-1,k  , qEdge_emf[IRT]);
+      get_state(QEdge_RB3, i-1,j  ,k  , qEdge_emf[IRB]); 
+      get_state(QEdge_LT3, i  ,j-1,k  , qEdge_emf[ILT]);
+      get_state(QEdge_LB3, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(index,I_EMFZ) = compute_emf<EMFZ>(qEdge_emf);
+      Emf(i,j,k,I_EMFZ) = compute_emf<EMFZ>(qEdge_emf);
       
       // actually compute emfY (take care that RB and LT are
       // swapped !!!)
-      get_state(QEdge_RT2, coord2index(i-1,j  ,k-1,isize, jsize, ksize), qEdge_emf[IRT]);
-      get_state(QEdge_LT2, coord2index(i  ,j  ,k-1,isize, jsize, ksize), qEdge_emf[IRB]); 
-      get_state(QEdge_RB2, coord2index(i-1,j  ,k  ,isize, jsize, ksize), qEdge_emf[ILT]);
-      get_state(QEdge_LB2, coord2index(i  ,j  ,k  ,isize, jsize, ksize), qEdge_emf[ILB]);
+      get_state(QEdge_RT2, i-1,j  ,k-1, qEdge_emf[IRT]);
+      get_state(QEdge_LT2, i  ,j  ,k-1, qEdge_emf[IRB]); 
+      get_state(QEdge_RB2, i-1,j  ,k  , qEdge_emf[ILT]);
+      get_state(QEdge_LB2, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(index,I_EMFY) = compute_emf<EMFY>(qEdge_emf);
+      Emf(i,j,k,I_EMFY) = compute_emf<EMFY>(qEdge_emf);
       
       // actually compute emfX
-      get_state(QEdge_RT, coord2index(i  ,j-1,k-1,isize, jsize, ksize), qEdge_emf[IRT]);
-      get_state(QEdge_RB, coord2index(i  ,j-1,k  ,isize, jsize, ksize), qEdge_emf[IRB]); 
-      get_state(QEdge_LT, coord2index(i  ,j  ,k-1,isize, jsize, ksize), qEdge_emf[ILT]);
-      get_state(QEdge_LB, coord2index(i  ,j  ,k  ,isize, jsize, ksize), qEdge_emf[ILB]);
+      get_state(QEdge_RT, i  ,j-1,k-1, qEdge_emf[IRT]);
+      get_state(QEdge_RB, i  ,j-1,k  , qEdge_emf[IRB]); 
+      get_state(QEdge_LT, i  ,j  ,k-1, qEdge_emf[ILT]);
+      get_state(QEdge_LB, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(index,I_EMFX) = compute_emf<EMFX>(qEdge_emf);
+      Emf(i,j,k,I_EMFX) = compute_emf<EMFX>(qEdge_emf);
     }
   }
 
@@ -829,57 +817,52 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
-    int index2;
-    
     if(k >= ghostWidth && k < ksize-ghostWidth  &&
        j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
       MHDState udata;
       MHDState flux;
-      get_state(Udata, index, udata);
+      get_state(Udata, i,j,k, udata);
 
       // add up contributions from all 6 faces
       
-      get_state(FluxData_x, index, flux);      
+      get_state(FluxData_x, i  ,j  ,k  , flux);      
       udata.d  +=  flux.d*dtdx;
       udata.p  +=  flux.p*dtdx;
       udata.u  +=  flux.u*dtdx;
       udata.v  +=  flux.v*dtdx;
       udata.w  +=  flux.w*dtdx;
       
-      index2 = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
-      get_state(FluxData_x, index2, flux);
+      get_state(FluxData_x, i+1,j  ,k  , flux);
       udata.d  -=  flux.d*dtdx;
       udata.p  -=  flux.p*dtdx;
       udata.u  -=  flux.u*dtdx;
       udata.v  -=  flux.v*dtdx;
       udata.w  -=  flux.w*dtdx;
       
-      get_state(FluxData_y, index, flux);
+      get_state(FluxData_y, i  ,j  ,k  , flux);
       udata.d  +=  flux.d*dtdy;
       udata.p  +=  flux.p*dtdy;
       udata.u  +=  flux.v*dtdy; //
       udata.v  +=  flux.u*dtdy; //
       udata.w  +=  flux.w*dtdy;
-                  
-      index2 = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
-      get_state(FluxData_y, index2, flux);
+      
+      get_state(FluxData_y, i  ,j+1,k  , flux);
       udata.d  -=  flux.d*dtdy;
       udata.p  -=  flux.p*dtdy;
       udata.u  -=  flux.v*dtdy; //
       udata.v  -=  flux.u*dtdy; //
       udata.w  -=  flux.w*dtdy;
 
-      get_state(FluxData_z, index, flux);
+      get_state(FluxData_z, i  ,j  ,k  , flux);
       udata.d  +=  flux.d*dtdy;
       udata.p  +=  flux.p*dtdy;
       udata.u  +=  flux.w*dtdy; //
       udata.v  +=  flux.v*dtdy;
       udata.w  +=  flux.u*dtdy; //
 
-      index2 = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
-      get_state(FluxData_z, index2, flux);
+      get_state(FluxData_z, i  ,j  ,k+1, flux);
       udata.d  -=  flux.d*dtdz;
       udata.p  -=  flux.p*dtdz;
       udata.u  -=  flux.w*dtdz; //
@@ -887,7 +870,7 @@ public:
       udata.w  -=  flux.u*dtdz; //
       
       // write back result in Udata
-      set_state(Udata, index, udata);
+      set_state(Udata, i  ,j  ,k  , udata);
       
     } // end if
     
@@ -935,35 +918,35 @@ public:
        i >= ghostWidth && i < isize-ghostWidth+1 ) {
 
       MHDState udata;
-      get_state(Udata, index, udata);
+      get_state(Udata, i,j,k, udata);
 
       if (k<ksize-ghostWidth) {
-	udata.bx += ( Emf(coord2index(i  ,j+1, k, isize, jsize, ksize), I_EMFZ) - 
-		      Emf(coord2index(i,  j  , k, isize, jsize, ksize), I_EMFZ) ) * dtdy;
+	udata.bx += ( Emf(i  ,j+1, k,  I_EMFZ) - 
+		      Emf(i,  j  , k,  I_EMFZ) ) * dtdy;
 	
-	udata.by -= ( Emf(coord2index(i+1,j  , k, isize, jsize, ksize), I_EMFZ) - 
-		      Emf(coord2index(i  ,j  , k, isize, jsize, ksize), I_EMFZ) ) * dtdx;
+	udata.by -= ( Emf(i+1,j  , k,  I_EMFZ) - 
+		      Emf(i  ,j  , k,  I_EMFZ) ) * dtdx;
 	
       }
       
       // update BX
-      udata.bx -= ( Emf(coord2index(i,j,k+1, isize, jsize, ksize), I_EMFY) -
-		    Emf(coord2index(i,j,k  , isize, jsize, ksize), I_EMFY) ) * dtdz;
+      udata.bx -= ( Emf(i  ,j  ,k+1,  I_EMFY) -
+		    Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdz;
       
       // update BY
-      udata.by += ( Emf(coord2index(i,j,k+1, isize, jsize, ksize), I_EMFX) -
-		    Emf(coord2index(i,j,k  , isize, jsize, ksize), I_EMFX) ) * dtdz;
+      udata.by += ( Emf(i  ,j  ,k+1,  I_EMFX) -
+		    Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdz;
       
       // update BZ
-      udata.bz += ( Emf(coord2index(i+1,j  ,k, isize, jsize, ksize), I_EMFY) -
-		    Emf(coord2index(i  ,j  ,k, isize, jsize, ksize), I_EMFY) ) * dtdx;
+      udata.bz += ( Emf(i+1,j  ,k  ,  I_EMFY) -
+		    Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdx;
       
-      udata.bz -= ( Emf(coord2index(i  ,j+1,k, isize, jsize, ksize), I_EMFX) -
-		    Emf(coord2index(i  ,j  ,k, isize, jsize, ksize), I_EMFX) ) * dtdy;
+      udata.bz -= ( Emf(i  ,j+1,k  ,  I_EMFX) -
+		    Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdy;
 
-      Udata(index, IA) = udata.bx;
-      Udata(index, IB) = udata.by;
-      Udata(index, IC) = udata.bz;
+      Udata(i,j,k, IA) = udata.bx;
+      Udata(i,j,k, IB) = udata.by;
+      Udata(i,j,k, IC) = udata.bz;
       
     }
   } // operator()
@@ -1012,29 +995,29 @@ public:
     
     real_t tmp = x+y+z;
     if (tmp > 0.5 && tmp < 2.5) {
-      Udata(index , ID)  = 1.0;
-      Udata(index , IU)  = 0.0;
-      Udata(index , IV)  = 0.0;
-      Udata(index , IW)  = 0.0;
-      Udata(index , IBX) = 0.5;
-      Udata(index , IBY) = 0.0;
-      Udata(index , IBZ) = 0.0;
-      Udata(index , IP)  = 1.0/(gamma0-1.0) +
-	0.5* ( SQR(Udata(index , IBX)) +
-	       SQR(Udata(index , IBY)) +
-	       SQR(Udata(index , IBZ)) );
+      Udata(i,j,k , ID)  = 1.0;
+      Udata(i,j,k , IU)  = 0.0;
+      Udata(i,j,k , IV)  = 0.0;
+      Udata(i,j,k , IW)  = 0.0;
+      Udata(i,j,k , IBX) = 0.5;
+      Udata(i,j,k , IBY) = 0.0;
+      Udata(i,j,k , IBZ) = 0.0;
+      Udata(i,j,k , IP)  = 1.0/(gamma0-1.0) +
+	0.5* ( SQR(Udata(i,j,k , IBX)) +
+	       SQR(Udata(i,j,k , IBY)) +
+	       SQR(Udata(i,j,k , IBZ)) );
     } else {
-      Udata(index , ID)  = 0.125;
-      Udata(index , IU)  = 0.0;
-      Udata(index , IV)  = 0.0;
-      Udata(index , IW)  = 0.0;
-      Udata(index , IBX) = 0.5;
-      Udata(index , IBY) = 0.0;
-      Udata(index , IBZ) = 0.0;
-      Udata(index , IP)  = 0.14/(gamma0-1.0)  +
-	0.5* ( SQR(Udata(index , IBX)) +
-	       SQR(Udata(index , IBY)) +
-	       SQR(Udata(index , IBZ)) );
+      Udata(i,j,k , ID)  = 0.125;
+      Udata(i,j,k , IU)  = 0.0;
+      Udata(i,j,k , IV)  = 0.0;
+      Udata(i,j,k , IW)  = 0.0;
+      Udata(i,j,k , IBX) = 0.5;
+      Udata(i,j,k , IBY) = 0.0;
+      Udata(i,j,k , IBZ) = 0.0;
+      Udata(i,j,k , IP)  = 0.14/(gamma0-1.0)  +
+	0.5* ( SQR(Udata(i,j,k , IBX)) +
+	       SQR(Udata(i,j,k , IBY)) +
+	       SQR(Udata(i,j,k , IBZ)) );
     }
     
   } // end operator ()
@@ -1098,29 +1081,29 @@ public:
       (z-blast_center_z)*(z-blast_center_z);
     
     if (d2 < radius2) {
-      Udata(index , ID) = blast_density_in;
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
-      Udata(index , IA) = 0.5;
-      Udata(index , IB) = 0.5;
-      Udata(index , IC) = 0.5;
-      Udata(index , IP) = blast_pressure_in/(gamma0-1.0) +
-	0.5* ( SQR(Udata(index , IA)) +
-	       SQR(Udata(index , IB)) +
-	       SQR(Udata(index , IC)) );
+      Udata(i,j,k , ID) = blast_density_in;
+      Udata(i,j,k , IU) = 0.0;
+      Udata(i,j,k , IV) = 0.0;
+      Udata(i,j,k , IW) = 0.0;
+      Udata(i,j,k , IA) = 0.5;
+      Udata(i,j,k , IB) = 0.5;
+      Udata(i,j,k , IC) = 0.5;
+      Udata(i,j,k , IP) = blast_pressure_in/(gamma0-1.0) +
+	0.5* ( SQR(Udata(i,j,k , IA)) +
+	       SQR(Udata(i,j,k , IB)) +
+	       SQR(Udata(i,j,k , IC)) );
     } else {
-      Udata(index , ID) = blast_density_out;
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
-      Udata(index , IA) = 0.5;
-      Udata(index , IB) = 0.5;
-      Udata(index , IC) = 0.5;
-      Udata(index , IP) = blast_pressure_out/(gamma0-1.0) +
-	0.5* ( SQR(Udata(index , IA)) +
-	       SQR(Udata(index , IB)) +
-	       SQR(Udata(index , IC)) );
+      Udata(i,j,k , ID) = blast_density_out;
+      Udata(i,j,k , IU) = 0.0;
+      Udata(i,j,k , IV) = 0.0;
+      Udata(i,j,k , IW) = 0.0;
+      Udata(i,j,k , IA) = 0.5;
+      Udata(i,j,k , IB) = 0.5;
+      Udata(i,j,k , IC) = 0.5;
+      Udata(i,j,k , IP) = blast_pressure_out/(gamma0-1.0) +
+	0.5* ( SQR(Udata(i,j,k , IA)) +
+	       SQR(Udata(i,j,k , IB)) +
+	       SQR(Udata(i,j,k , IC)) );
     }
     
   } // end operator ()
@@ -1189,21 +1172,21 @@ public:
     //double zPos = zmin + dz/2 + (k-ghostWidth)*dz;
     
     // density
-    Udata(index,ID) = d0;
+    Udata(i,j,k,ID) = d0;
     
     // rho*vx
-    Udata(index,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
+    Udata(i,j,k,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
     
     // rho*vy
-    Udata(index,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
+    Udata(i,j,k,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
     
     // rho*vz
-    Udata(index,IW) =  ZERO_F;
+    Udata(i,j,k,IW) =  ZERO_F;
 
     // bx, by, bz
-    Udata(index, IBX) = -B0*sin(    yPos*TwoPi);
-    Udata(index, IBY) =  B0*sin(2.0*xPos*TwoPi);
-    Udata(index, IBZ) =  0.0;
+    Udata(i,j,k, IBX) = -B0*sin(    yPos*TwoPi);
+    Udata(i,j,k, IBY) =  B0*sin(2.0*xPos*TwoPi);
+    Udata(i,j,k, IBZ) =  0.0;
 
   } // init_all_var_but_energy
 
@@ -1238,46 +1221,38 @@ public:
     //double xPos = xmin + dx/2 + (i-ghostWidth)*dx;
     //double yPos = ymin + dy/2 + (j-ghostWidth)*dy;
     //double zPos = zmin + dz/2 + (k-ghostWidth)*dz;
-    
-    int index_ip1 = coord2index(i+1,j  ,k  ,isize,jsize,ksize);
-    int index_jp1 = coord2index(i  ,j+1,k  ,isize,jsize,ksize);
-    int index_kp1 = coord2index(i  ,j  ,k+1,isize,jsize,ksize);
-
-    int index_igk  = coord2index(i,2*ghostWidth,k,isize,jsize,ksize);
-    int index_gjk  = coord2index(2*ghostWidth,j,k,isize,jsize,ksize);
-    int index_ijg  = coord2index(i,j,2*ghostWidth,isize,jsize,ksize);
-    
+        
     if (i<isize-1 and j<jsize-1) {
 
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_ip1,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_jp1,IBY)) );
+      Udata(i,j,k,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,k,IU)) / Udata(i,j,k,ID) +
+		SQR(Udata(i,j,k,IV)) / Udata(i,j,k,ID) +
+		0.25*SQR(Udata(i,j,k,IBX) + Udata(i+1,j  ,k  ,IBX)) + 
+		0.25*SQR(Udata(i,j,k,IBY) + Udata(i  ,j+1,k  ,IBY)) );
 
     } else if ( (i <isize-1) and (j==jsize-1)) {
 
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_ip1,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_igk,IBY)) );
+      Udata(i,j,k,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,k,IU)) / Udata(i,j,k,ID) +
+		SQR(Udata(i,j,k,IV)) / Udata(i,j,k,ID) +
+		0.25*SQR(Udata(i,j,k,IBX) + Udata(i+1,j           ,k,IBX)) + 
+		0.25*SQR(Udata(i,j,k,IBY) + Udata(i  ,2*ghostWidth,k,IBY)) );
 
     } else if ( (i==isize-1) and (j <jsize-1)) {
 
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_gjk ,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_jp1,IBY)) );
+      Udata(i,j,k,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,k,IU)) / Udata(i,j,k,ID) +
+		SQR(Udata(i,j,k,IV)) / Udata(i,j,k,ID) +
+		0.25*SQR(Udata(i,j,k,IBX) + Udata(2*ghostWidth,j  ,k  ,IBX)) + 
+		0.25*SQR(Udata(i,j,k,IBY) + Udata(i           ,j+1,k  ,IBY)) );
 
     } else if ( (i==isize-1) and (j==jsize-1) ) {
 
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_gjk ,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_igk ,IBY)) );
+      Udata(i,j,k,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,k,IU)) / Udata(i,j,k,ID) +
+		SQR(Udata(i,j,k,IV)) / Udata(i,j,k,ID) +
+		0.25*SQR(Udata(i,j,k,IBX) + Udata(2*ghostWidth,j,k ,IBX)) + 
+		0.25*SQR(Udata(i,j,k,IBY) + Udata(i,2*ghostWidth,k ,IBY)) );
 
     }
     
@@ -1308,7 +1283,7 @@ public:
     
     const int isize = params.isize;
     const int jsize = params.jsize;
-    const int ksize = params.ksize;
+    //const int ksize = params.ksize;
     const int ghostWidth = params.ghostWidth;
 
     const int imin = params.imin;
@@ -1326,7 +1301,6 @@ public:
     
     int i0, j0, k0;
     int iVar;
-    int index_out, index_in;
     
     if (faceId == FACE_XMIN) {
       // boundary xmin (index = i + j * ghostWidth + k * ghostWidth*jsize)
@@ -1353,9 +1327,7 @@ public:
 	    i0=nx+i;
 	  }
 
-	  index_out = coord2index(i ,j,k,isize,jsize,ksize);
-	  index_in  = coord2index(i0,j,k,isize,jsize,ksize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j,k , iVar) = Udata(i0,j,k , iVar)*sign;
 
 	}
 
@@ -1391,9 +1363,7 @@ public:
 	    i0=i-nx;
 	  }
 
-	  index_out = coord2index(i ,j,k,isize,jsize,ksize);
-	  index_in  = coord2index(i0,j,k,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i0,j,k, iVar)*sign;
 
 	}
       }
@@ -1425,9 +1395,7 @@ public:
 	    j0=ny+j;
 	  }
 
-	  index_out = coord2index(i,j ,k,isize,jsize,ksize);
-	  index_in  = coord2index(i,j0,k,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j0,k, iVar)*sign;
 	
 	}
       }
@@ -1462,9 +1430,7 @@ public:
 	    j0=j-ny;
 	  }
 
-	  index_out = coord2index(i,j ,k,isize,jsize,ksize);
-	  index_in  = coord2index(i,j0,k,isize,jsize,ksize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j,k , iVar) = Udata(i,j0,k , iVar)*sign;
 
 	}
 
@@ -1497,9 +1463,7 @@ public:
 	    k0=nz+k;
 	  }
 
-	  index_out = coord2index(i,j,k ,isize,jsize,ksize);
-	  index_in  = coord2index(i,j,k0,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
 	
 	}
       }
@@ -1534,9 +1498,7 @@ public:
 	    k0=k-nz;
 	  }
 
-	  index_out = coord2index(i,j,k ,isize,jsize,ksize);
-	  index_in  = coord2index(i,j,k0,isize,jsize,ksize);
-	  Udata(index_out, iVar) = Udata(index_in, iVar)*sign;
+	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
 	
 	}
       }
