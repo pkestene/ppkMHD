@@ -684,10 +684,10 @@ public:
 	  //
 	  // store fluxes
 	  //	
-	  Fluxes(index , ID) =  flux.d*dtdx;
-	  Fluxes(index , IP) =  flux.p*dtdx;
-	  Fluxes(index , IU) =  flux.u*dtdx;
-	  Fluxes(index , IV) =  flux.v*dtdx;
+	  Fluxes(i,j , ID) =  flux.d*dtdx;
+	  Fluxes(i,j , IP) =  flux.p*dtdx;
+	  Fluxes(i,j , IU) =  flux.u*dtdx;
+	  Fluxes(i,j , IV) =  flux.v*dtdx;
 
 	} else if (dir == YDIR) {
 
@@ -727,10 +727,10 @@ public:
 	  //
 	  // update hydro array
 	  //	  
-	  Fluxes(index , ID) =  flux.d*dtdy;
-	  Fluxes(index , IP) =  flux.p*dtdy;
-	  Fluxes(index , IU) =  flux.v*dtdy; // IU/IV swapped
-	  Fluxes(index , IV) =  flux.u*dtdy; // IU/IV swapped
+	  Fluxes(i,j , ID) =  flux.d*dtdy;
+	  Fluxes(i,j , IP) =  flux.p*dtdy;
+	  Fluxes(i,j , IU) =  flux.v*dtdy; // IU/IV swapped
+	  Fluxes(i,j , IV) =  flux.u*dtdy; // IU/IV swapped
 
 	}
 	      
