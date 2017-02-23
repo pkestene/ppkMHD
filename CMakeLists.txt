@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-option(BUILD_KOKKOS "Whether or not kokkos is build as an external project" OFF)
+# options
+option (BUILD_KOKKOS "Whether or not kokkos is build as an external project" OFF)
+option (USE_MPI "Activate / want MPI build" ON)
+option (USE_VTK "Activate / want VTK build" OFF)
 
 if(BUILD_KOKKOS)
   project(kokkos)
@@ -53,13 +56,27 @@ include(kokkos)
 #
 # External packages: MPI, ...
 #
+
 #find_package(MPI REQUIRED)
 find_package(MPI)
+
+# VTK configuration tips, see
+# /usr/lib/cmake/vtk-6.2/VTKConfig.cmake
+# /usr/lib/cmake/vtk-6.2/UseVTK.cmake
 find_package(VTK)
-if(VTK_FOUND)
-  include(${VTK_USE_FILE})
-endif(VTK_FOUND)
-  
+if (USE_VTK)
+
+  # the following add VTK to all targets
+  # if(VTK_FOUND)
+  #   include(${VTK_USE_FILE})
+  # endif(VTK_FOUND)
+  if (VTK_FOUND)
+    message("***VTK FOUND ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+  else()
+    message ("*** VTK NOT FOUND")
+  endIF()
+endif(USE_VTK)
+
 #
 # common flags
 #
@@ -71,8 +88,6 @@ endif()
   
 set(CMAKE_EXE_LINKER_FLAGS  "${KOKKOS_LDFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 
-# options
-option (USE_MPI "Activate build with mpi" ON)
 
 #
 # sources
