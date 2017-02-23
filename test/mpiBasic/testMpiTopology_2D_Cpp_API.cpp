@@ -19,6 +19,11 @@
 #include <cstdlib>
 #include <unistd.h>
 
+// make the compiler ignore an unused variable
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
+
 #define SIZE_X 4
 #define SIZE_Y 3
 #define SIZE_Z 4
@@ -76,6 +81,11 @@ int main(int argc, char* argv[])
   MPI::Request reqs[2*N_NEIGHBORS_2D];
   MPI::Status stats[2*N_NEIGHBORS_2D];
 
+  UNUSED(MPI_REORDER_FALSE);
+  UNUSED(MPI_REORDER_TRUE);
+  UNUSED(MPI_CART_PERIODIC_FALSE);
+  UNUSED(MPI_CART_PERIODIC_TRUE);
+  
   // MPI initialize
   MPI::Init(argc,argv);
   numTasks  = MPI::COMM_WORLD.Get_size();
