@@ -55,27 +55,27 @@ SolverMHDMuscl2D::SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap) :
   /*
    * memory allocation (use sizes with ghosts included)
    */
-  U     = DataArray("U", ijsize, nbvar);
+  U     = DataArray("U", isize,jsize, nbvar);
   Uhost = Kokkos::create_mirror_view(U);
-  U2    = DataArray("U2",ijsize, nbvar);
-  Q     = DataArray("Q", ijsize, nbvar);
+  U2    = DataArray("U2",isize,jsize, nbvar);
+  Q     = DataArray("Q", isize,jsize, nbvar);
 
   if (params.implementationVersion == 0) {
   
-    Qm_x = DataArray("Qm_x", ijsize, nbvar);
-    Qm_y = DataArray("Qm_y", ijsize, nbvar);
-    Qp_x = DataArray("Qp_x", ijsize, nbvar);
-    Qp_y = DataArray("Qp_y", ijsize, nbvar);
+    Qm_x = DataArray("Qm_x", isize,jsize, nbvar);
+    Qm_y = DataArray("Qm_y", isize,jsize, nbvar);
+    Qp_x = DataArray("Qp_x", isize,jsize, nbvar);
+    Qp_y = DataArray("Qp_y", isize,jsize, nbvar);
 
-    QEdge_RT = DataArray("QEdge_RT", ijsize, nbvar);
-    QEdge_RB = DataArray("QEdge_RB", ijsize, nbvar);
-    QEdge_LT = DataArray("QEdge_LT", ijsize, nbvar);
-    QEdge_LB = DataArray("QEdge_LB", ijsize, nbvar);
+    QEdge_RT = DataArray("QEdge_RT", isize,jsize, nbvar);
+    QEdge_RB = DataArray("QEdge_RB", isize,jsize, nbvar);
+    QEdge_LT = DataArray("QEdge_LT", isize,jsize, nbvar);
+    QEdge_LB = DataArray("QEdge_LB", isize,jsize, nbvar);
     
-    Fluxes_x = DataArray("Fluxes_x", ijsize, nbvar);
-    Fluxes_y = DataArray("Fluxes_y", ijsize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize,jsize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", isize,jsize, nbvar);
 
-    Emf = DataArrayScalar("Emf", ijsize);
+    Emf = DataArrayScalar("Emf", isize,jsize);
     
   }
   
@@ -552,12 +552,7 @@ void SolverMHDMuscl2D::saveVTK(DataArray Udata,
 
       if (j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	  i>=imin+ghostWidth and i<=imax-ghostWidth) {
-#ifdef CUDA
-    	outFile << Uhost(index , iVar) << " ";
-#else
-	int index2 = j+jsize*i;
-    	outFile << Uhost(index2 , iVar) << " ";
-#endif
+    	outFile << Uhost(i,j, iVar) << " ";
       }
     }
     outFile << "\n    </DataArray>\n";

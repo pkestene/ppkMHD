@@ -61,14 +61,14 @@ public:
       MHDState qLoc; // primitive    variables in current cell
       
       // get primitive variables in current cell
-      qLoc.d  = Qdata(index,ID);
-      qLoc.p  = Qdata(index,IP);
-      qLoc.u  = Qdata(index,IU);
-      qLoc.v  = Qdata(index,IV);
-      qLoc.w  = Qdata(index,IW);
-      qLoc.bx = Qdata(index,IBX);
-      qLoc.by = Qdata(index,IBY);
-      qLoc.bz = Qdata(index,IBZ);
+      qLoc.d  = Qdata(i,j,ID);
+      qLoc.p  = Qdata(i,j,IP);
+      qLoc.u  = Qdata(i,j,IU);
+      qLoc.v  = Qdata(i,j,IV);
+      qLoc.w  = Qdata(i,j,IW);
+      qLoc.bx = Qdata(i,j,IBX);
+      qLoc.by = Qdata(i,j,IBY);
+      qLoc.bz = Qdata(i,j,IBZ);
 
       // compute fastest information speeds
       real_t fastInfoSpeed[3];
@@ -138,34 +138,34 @@ public:
       real_t c;
       
       // get local conservative variable
-      uLoc.d  = Udata(index,ID);
-      uLoc.p  = Udata(index,IP);
-      uLoc.u  = Udata(index,IU);
-      uLoc.v  = Udata(index,IV);
-      uLoc.w  = Udata(index,IW);
-      uLoc.bx = Udata(index,IBX);
-      uLoc.by = Udata(index,IBY);
-      uLoc.bz = Udata(index,IBZ);
+      uLoc.d  = Udata(i,j,ID);
+      uLoc.p  = Udata(i,j,IP);
+      uLoc.u  = Udata(i,j,IU);
+      uLoc.v  = Udata(i,j,IV);
+      uLoc.w  = Udata(i,j,IW);
+      uLoc.bx = Udata(i,j,IBX);
+      uLoc.by = Udata(i,j,IBY);
+      uLoc.bz = Udata(i,j,IBZ);
 
       // get mag field in neighbor cells
       indexN = coord2index(i+1,j  ,isize,jsize);
-      magFieldNeighbors[IX] = Udata(indexN,IBX);
+      magFieldNeighbors[IX] = Udata(i+1,j  ,IBX);
       indexN = coord2index(i  ,j+1,isize,jsize);
-      magFieldNeighbors[IY] = Udata(indexN,IBY);
+      magFieldNeighbors[IY] = Udata(i  ,j+1,IBY);
       magFieldNeighbors[IZ] = 0.0;
       
       // get primitive variables in current cell
       constoprim_mhd(uLoc, magFieldNeighbors, c, qLoc);
 
       // copy q state in q global
-      Qdata(index,ID)  = qLoc.d;
-      Qdata(index,IP)  = qLoc.p;
-      Qdata(index,IU)  = qLoc.u;
-      Qdata(index,IV)  = qLoc.v;
-      Qdata(index,IW)  = qLoc.w;
-      Qdata(index,IBX) = qLoc.bx;
-      Qdata(index,IBY) = qLoc.by;
-      Qdata(index,IBZ) = qLoc.bz;
+      Qdata(i,j,ID)  = qLoc.d;
+      Qdata(i,j,IP)  = qLoc.p;
+      Qdata(i,j,IU)  = qLoc.u;
+      Qdata(i,j,IV)  = qLoc.v;
+      Qdata(i,j,IW)  = qLoc.w;
+      Qdata(i,j,IBX) = qLoc.bx;
+      Qdata(i,j,IBY) = qLoc.by;
+      Qdata(i,j,IBZ) = qLoc.bz;
       
     }
     
@@ -220,25 +220,25 @@ public:
       // Solve Riemann problem at X-interfaces and compute X-fluxes
       //
       index2 = coord2index(i-1,j,isize,jsize);
-      get_state(Qm_x, index2, qleft);
+      get_state(Qm_x, i-1, j  , qleft);
       
-      get_state(Qp_x, index, qright);
+      get_state(Qp_x, i  , j  , qright);
       
       // compute hydro flux along X
       riemann_hlld(qleft,qright,flux);
 
       // store fluxes
-      set_state(Fluxes_x, index, flux);
+      set_state(Fluxes_x, i  , j  , flux);
 
       //
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       //
       index2 = coord2index(i,j-1,isize,jsize);
-      get_state(Qm_y, index2, qleft);
+      get_state(Qm_y, i  ,j-1, qleft);
       swapValues(&(qleft.u) ,&(qleft.v) );
       swapValues(&(qleft.bx) ,&(qleft.by) );
 
-      get_state(Qp_y, index, qright);
+      get_state(Qp_y, i  ,j  , qright);
       swapValues(&(qright.u) ,&(qright.v) );
       swapValues(&(qright.bx) ,&(qright.by) );
       
@@ -246,7 +246,7 @@ public:
       riemann_hlld(qleft,qright,flux);
             
       // store fluxes
-      set_state(Fluxes_y, index, flux);
+      set_state(Fluxes_y, i  ,j  , flux);
       
     }
     
@@ -302,20 +302,20 @@ public:
       // the same offset role as in the calling argument of cmp_mag_flx 
       // in DUMSES (if you see what I mean ?!)
       index2 = coord2index(i-1,j-1,isize,jsize);
-      get_state(QEdge_RT, index2, qEdge_emfZ[IRT]);
+      get_state(QEdge_RT, i-1,j-1, qEdge_emfZ[IRT]);
 
       index2 = coord2index(i-1,j  ,isize,jsize);
-      get_state(QEdge_RB, index2, qEdge_emfZ[IRB]);
+      get_state(QEdge_RB, i-1,j  , qEdge_emfZ[IRB]);
 
       index2 = coord2index(i  ,j-1,isize,jsize);
-      get_state(QEdge_LT, index2, qEdge_emfZ[ILT]);
+      get_state(QEdge_LT, i  ,j-1, qEdge_emfZ[ILT]);
 
       index2 = index;
-      get_state(QEdge_LB, index2, qEdge_emfZ[ILB]);
+      get_state(QEdge_LB, i  ,j  , qEdge_emfZ[ILB]);
 
       // actually compute emfZ
       real_t emfZ = compute_emf<EMFZ>(qEdge_emfZ);
-      Emf(index) = emfZ;
+      Emf(i,j) = emfZ;
       
     }
   }
@@ -390,7 +390,7 @@ public:
       for (int di=0; di<3; di++)
 	for (int dj=0; dj<3; dj++) {
 	  int indexLoc = coord2index( i+di-1, j+dj-1, isize, jsize);
-	  get_state(Qdata, indexLoc, qNb[di][dj]);
+	  get_state(Qdata, i+di-1, j+dj-1, qNb[di][dj]);
 	}
       
       // prepare bfNb : bf (face centered mag field) in the
@@ -399,22 +399,21 @@ public:
       for (int di=0; di<4; di++)
 	for (int dj=0; dj<4; dj++) {
 	  int indexLoc = coord2index( i+di-1, j+dj-1, isize, jsize);
-	  //if (i>127 && j> 127) printf("kk %d %d - %d %d - %d %d --- %d\n",i,j,i+di-1,j+dj-1,indexLoc,isize*jsize,ghostWidth);
-	  get_magField(Udata, indexLoc, bfNb[di][dj]);
+	  get_magField(Udata, i+di-1, j+dj-1, bfNb[di][dj]);
 	}
 
       trace_unsplit_mhd_2d(qNb, bfNb, c, dtdx, dtdy, 0.0, qm, qp, qEdge);
 
       // store qm, qp : only what is really needed
-      set_state(Qm_x, index, qm[0]);
-      set_state(Qp_x, index, qp[0]);
-      set_state(Qm_y, index, qm[1]);
-      set_state(Qp_y, index, qp[1]);
+      set_state(Qm_x, i,j, qm[0]);
+      set_state(Qp_x, i,j, qp[0]);
+      set_state(Qm_y, i,j, qm[1]);
+      set_state(Qp_y, i,j, qp[1]);
 
-      set_state(QEdge_RT, index, qEdge[IRT]);
-      set_state(QEdge_RB, index, qEdge[IRB]);
-      set_state(QEdge_LT, index, qEdge[ILT]);
-      set_state(QEdge_LB, index, qEdge[ILB]);
+      set_state(QEdge_RT, i,j, qEdge[IRT]);
+      set_state(QEdge_RB, i,j, qEdge[IRB]);
+      set_state(QEdge_LT, i,j, qEdge[ILT]);
+      set_state(QEdge_LB, i,j, qEdge[ILB]);
       
     }
   }
@@ -465,11 +464,11 @@ public:
 
       MHDState udata;
       MHDState flux;
-      get_state(Udata, index, udata);
+      get_state(Udata, i,j, udata);
 
       // add up contributions from all 4 faces
       
-      get_state(FluxData_x, index, flux);      
+      get_state(FluxData_x, i,j, flux);      
       udata.d  +=  flux.d*dtdx;
       udata.p  +=  flux.p*dtdx;
       udata.u  +=  flux.u*dtdx;
@@ -480,7 +479,7 @@ public:
       udata.bz +=  flux.bz*dtdx;
       
       index2 = coord2index(i+1,j,isize,jsize);
-      get_state(FluxData_x, index2, flux);      
+      get_state(FluxData_x, i+1,j  , flux);      
       udata.d  -=  flux.d*dtdx;
       udata.p  -=  flux.p*dtdx;
       udata.u  -=  flux.u*dtdx;
@@ -490,7 +489,7 @@ public:
       //udata.by -=  flux.by*dtdx;
       udata.bz -=  flux.bz*dtdx;
       
-      get_state(FluxData_y, index, flux);      
+      get_state(FluxData_y, i,j, flux);      
       udata.d  +=  flux.d*dtdy;
       udata.p  +=  flux.p*dtdy;
       udata.u  +=  flux.v*dtdy; //
@@ -501,7 +500,7 @@ public:
       udata.bz +=  flux.bz*dtdy;
                   
       index2 = coord2index(i,j+1,isize,jsize);
-      get_state(FluxData_y, index2, flux);
+      get_state(FluxData_y, i,j+1, flux);
       udata.d  -=  flux.d*dtdy;
       udata.p  -=  flux.p*dtdy;
       udata.u  -=  flux.v*dtdy; //
@@ -512,7 +511,7 @@ public:
       udata.bz -=  flux.bz*dtdy;
 
       // write back result in Udata
-      set_state(Udata, index, udata);
+      set_state(Udata, i,j, udata);
       
     } // end if
     
@@ -563,10 +562,10 @@ public:
 
       // left-face B-field
       index2 = coord2index(i  ,j+1,isize,jsize);
-      Udata(index,IA) += ( Emf(index2) - Emf(index) )*dtdy;
+      Udata(i,j,IA) += ( Emf(i  ,j+1) - Emf(i,j) )*dtdy;
 
       index2 = coord2index(i+1,j  ,isize,jsize);
-      Udata(index,IB) -= ( Emf(index2) - Emf(index) )*dtdx;		    
+      Udata(i,j,IB) -= ( Emf(i+1,j  ) - Emf(i,j) )*dtdx;		    
 
     }
   }
@@ -633,21 +632,21 @@ public:
 	//
 	// compute reconstructed states at left interface along X
 	//
-	qLoc.d = Qdata   (index, ID);
-	dqX.d  = Slopes_x(index, ID);
-	dqY.d  = Slopes_y(index, ID);
+	qLoc.d = Qdata   (i,j, ID);
+	dqX.d  = Slopes_x(i,j, ID);
+	dqY.d  = Slopes_y(i,j, ID);
 	
-	qLoc.p = Qdata   (index, IP);
-	dqX.p  = Slopes_x(index, IP);
-	dqY.p  = Slopes_y(index, IP);
+	qLoc.p = Qdata   (i,j, IP);
+	dqX.p  = Slopes_x(i,j, IP);
+	dqY.p  = Slopes_y(i,j, IP);
 	
-	qLoc.u = Qdata   (index, IU);
-	dqX.u  = Slopes_x(index, IU);
-	dqY.u  = Slopes_y(index, IU);
+	qLoc.u = Qdata   (i,j, IU);
+	dqX.u  = Slopes_x(i,j, IU);
+	dqY.u  = Slopes_y(i,j, IU);
 	
-	qLoc.v = Qdata   (index, IV);
-	dqX.v  = Slopes_x(index, IV);
-	dqY.v  = Slopes_y(index, IV);
+	qLoc.v = Qdata   (i,j, IV);
+	dqX.v  = Slopes_x(i,j, IV);
+	dqY.v  = Slopes_y(i,j, IV);
 
 	if (dir == XDIR) {
 
@@ -658,21 +657,21 @@ public:
 				     &dqX, &dqY,
 				     dtdx, dtdy, FACE_XMIN, &qright);
 	  
-	  qLocNeighbor.d = Qdata   (index2, ID);
-	  dqX_neighbor.d = Slopes_x(index2, ID);
-	  dqY_neighbor.d = Slopes_y(index2, ID);
+	  qLocNeighbor.d = Qdata   (i-1,j, ID);
+	  dqX_neighbor.d = Slopes_x(i-1,j, ID);
+	  dqY_neighbor.d = Slopes_y(i-1,j, ID);
 	  
-	  qLocNeighbor.p = Qdata   (index2, IP);
-	  dqX_neighbor.p = Slopes_x(index2, IP);
-	  dqY_neighbor.p = Slopes_y(index2, IP);
+	  qLocNeighbor.p = Qdata   (i-1,j, IP);
+	  dqX_neighbor.p = Slopes_x(i-1,j, IP);
+	  dqY_neighbor.p = Slopes_y(i-1,j, IP);
 	  
-	  qLocNeighbor.u = Qdata   (index2, IU);
-	  dqX_neighbor.u = Slopes_x(index2, IU);
-	  dqY_neighbor.u = Slopes_y(index2, IU);
+	  qLocNeighbor.u = Qdata   (i-1,j, IU);
+	  dqX_neighbor.u = Slopes_x(i-1,j, IU);
+	  dqY_neighbor.u = Slopes_y(i-1,j, IU);
 	  
-	  qLocNeighbor.v = Qdata   (index2, IV);
-	  dqX_neighbor.v = Slopes_x(index2, IV);
-	  dqY_neighbor.v = Slopes_y(index2, IV);
+	  qLocNeighbor.v = Qdata   (i-1,j, IV);
+	  dqX_neighbor.v = Slopes_x(i-1,j, IV);
+	  dqY_neighbor.v = Slopes_y(i-1,j, IV);
 	  
 	  // left interface : left state
 	  trace_unsplit_2d_along_dir(&qLocNeighbor,
@@ -699,21 +698,21 @@ public:
 				     &dqX, &dqY,
 				     dtdx, dtdy, FACE_YMIN, &qright);
 	  
-	  qLocNeighbor.d = Qdata   (index2, ID);
-	  dqX_neighbor.d = Slopes_x(index2, ID);
-	  dqY_neighbor.d = Slopes_y(index2, ID);
+	  qLocNeighbor.d = Qdata   (i,j-1, ID);
+	  dqX_neighbor.d = Slopes_x(i,j-1, ID);
+	  dqY_neighbor.d = Slopes_y(i,j-1, ID);
 	  
-	  qLocNeighbor.p = Qdata   (index2, IP);
-	  dqX_neighbor.p = Slopes_x(index2, IP);
-	  dqY_neighbor.p = Slopes_y(index2, IP);
+	  qLocNeighbor.p = Qdata   (i,j-1, IP);
+	  dqX_neighbor.p = Slopes_x(i,j-1, IP);
+	  dqY_neighbor.p = Slopes_y(i,j-1, IP);
 	  
-	  qLocNeighbor.u = Qdata   (index2, IU);
-	  dqX_neighbor.u = Slopes_x(index2, IU);
-	  dqY_neighbor.u = Slopes_y(index2, IU);
+	  qLocNeighbor.u = Qdata   (i,j-1, IU);
+	  dqX_neighbor.u = Slopes_x(i,j-1, IU);
+	  dqY_neighbor.u = Slopes_y(i,j-1, IU);
 	  
-	  qLocNeighbor.v = Qdata   (index2, IV);
-	  dqX_neighbor.v = Slopes_x(index2, IV);
-	  dqY_neighbor.v = Slopes_y(index2, IV);
+	  qLocNeighbor.v = Qdata   (i,j-1, IV);
+	  dqX_neighbor.v = Slopes_x(i,j-1, IV);
+	  dqY_neighbor.v = Slopes_y(i,j-1, IV);
 	  
 	  // left interface : left state
 	  trace_unsplit_2d_along_dir(&qLocNeighbor,
@@ -779,23 +778,23 @@ public:
     
     real_t tmp = x+y;
     if (tmp > 0.5 && tmp < 1.5) {
-      Udata(index , ID)  = 1.0;
-      Udata(index , IP)  = 1.0/(gamma0-1.0);
-      Udata(index , IU)  = 0.0;
-      Udata(index , IV)  = 0.0;
-      Udata(index , IW)  = 0.0;
-      Udata(index , IBX) = 0.5;
-      Udata(index , IBY) = 0.0;
-      Udata(index , IBZ) = 0.0;
+      Udata(i,j , ID)  = 1.0;
+      Udata(i,j , IP)  = 1.0/(gamma0-1.0);
+      Udata(i,j , IU)  = 0.0;
+      Udata(i,j , IV)  = 0.0;
+      Udata(i,j , IW)  = 0.0;
+      Udata(i,j , IBX) = 0.5;
+      Udata(i,j , IBY) = 0.0;
+      Udata(i,j , IBZ) = 0.0;
     } else {
-      Udata(index , ID)  = 0.125;
-      Udata(index , IP)  = 0.14/(gamma0-1.0);
-      Udata(index , IU)  = 0.0;
-      Udata(index , IV)  = 0.0;
-      Udata(index , IW)  = 0.0;
-      Udata(index , IBX) = 0.5;
-      Udata(index , IBY) = 0.0;
-      Udata(index , IBZ) = 0.0;
+      Udata(i,j , ID)  = 0.125;
+      Udata(i,j , IP)  = 0.14/(gamma0-1.0);
+      Udata(i,j , IU)  = 0.0;
+      Udata(i,j , IV)  = 0.0;
+      Udata(i,j , IW)  = 0.0;
+      Udata(i,j , IBX) = 0.5;
+      Udata(i,j , IBY) = 0.0;
+      Udata(i,j , IBZ) = 0.0;
     }
     
   } // end operator ()
@@ -852,29 +851,29 @@ public:
       (y-blast_center_y)*(y-blast_center_y);    
     
     if (d2 < radius2) {
-      Udata(index , ID) = blast_density_in;
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
-      Udata(index , IA) = 0.5;
-      Udata(index , IB) = 0.5;
-      Udata(index , IC) = 0.5;
-      Udata(index , IP) = blast_pressure_in/(gamma0-1.0) +
-	0.5* ( SQR(Udata(index , IA)) +
-	       SQR(Udata(index , IB)) +
-	       SQR(Udata(index , IC)) );
+      Udata(i,j , ID) = blast_density_in;
+      Udata(i,j , IU) = 0.0;
+      Udata(i,j , IV) = 0.0;
+      Udata(i,j , IW) = 0.0;
+      Udata(i,j , IA) = 0.5;
+      Udata(i,j , IB) = 0.5;
+      Udata(i,j , IC) = 0.5;
+      Udata(i,j , IP) = blast_pressure_in/(gamma0-1.0) +
+	0.5* ( SQR(Udata(i,j , IA)) +
+	       SQR(Udata(i,j , IB)) +
+	       SQR(Udata(i,j , IC)) );
     } else {
-      Udata(index , ID) = blast_density_out;
-      Udata(index , IU) = 0.0;
-      Udata(index , IV) = 0.0;
-      Udata(index , IW) = 0.0;
-      Udata(index , IA) = 0.5;
-      Udata(index , IB) = 0.5;
-      Udata(index , IC) = 0.5;
-      Udata(index , IP) = blast_pressure_out/(gamma0-1.0) +
-	0.5* ( SQR(Udata(index , IA)) +
-	       SQR(Udata(index , IB)) +
-	       SQR(Udata(index , IC)) );
+      Udata(i,j , ID) = blast_density_out;
+      Udata(i,j , IU) = 0.0;
+      Udata(i,j , IV) = 0.0;
+      Udata(i,j , IW) = 0.0;
+      Udata(i,j , IA) = 0.5;
+      Udata(i,j , IB) = 0.5;
+      Udata(i,j , IC) = 0.5;
+      Udata(i,j , IP) = blast_pressure_out/(gamma0-1.0) +
+	0.5* ( SQR(Udata(i,j , IA)) +
+	       SQR(Udata(i,j , IB)) +
+	       SQR(Udata(i,j , IC)) );
     }
     
   } // end operator ()
@@ -942,21 +941,21 @@ public:
        i < isize ) {
 
       // density
-      Udata(index,ID) = d0;
+      Udata(i,j,ID) = d0;
       
       // rho*vx
-      Udata(index,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
+      Udata(i,j,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
       
       // rho*vy
-      Udata(index,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
+      Udata(i,j,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
       
       // rho*vz
-      Udata(index,IW) =  ZERO_F;
+      Udata(i,j,IW) =  ZERO_F;
       
       // bx, by, bz
-      Udata(index, IBX) = -B0*sin(    yPos*TwoPi);
-      Udata(index, IBY) =  B0*sin(2.0*xPos*TwoPi);
-      Udata(index, IBZ) =  0.0;
+      Udata(i,j, IBX) = -B0*sin(    yPos*TwoPi);
+      Udata(i,j, IBY) =  B0*sin(2.0*xPos*TwoPi);
+      Udata(i,j, IBZ) =  0.0;
 
     }
     
@@ -997,29 +996,29 @@ public:
     int index_gj  = coord2index(2*ghostWidth,j,isize,jsize);
     
     if (i<isize-1 and j<jsize-1) {
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_ip1,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_jp1,IBY)) );
+      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
+		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
+		0.25*SQR(Udata(i,j,IBX) + Udata(i+1,j,IBX)) + 
+		0.25*SQR(Udata(i,j,IBY) + Udata(i,j+1,IBY)) );
     } else if ( (i <isize-1) and (j==jsize-1)) {
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_ip1,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_ig ,IBY)) );
+      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
+		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
+		0.25*SQR(Udata(i,j,IBX) + Udata(i+1,j           ,IBX)) + 
+		0.25*SQR(Udata(i,j,IBY) + Udata(i  ,2*ghostWidth,IBY)) );
     } else if ( (i==isize-1) and (j <jsize-1)) {
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_gj ,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_jp1,IBY)) );
+      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
+		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
+		0.25*SQR(Udata(i,j,IBX) + Udata(2*ghostWidth,j  ,IBX)) + 
+		0.25*SQR(Udata(i,j,IBY) + Udata(i           ,j+1,IBY)) );
     } else if ( (i==isize-1) and (j==jsize-1) ) {
-      Udata(index,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(index,IU)) / Udata(index,ID) +
-		SQR(Udata(index,IV)) / Udata(index,ID) +
-		0.25*SQR(Udata(index,IBX) + Udata(index_gj ,IBX)) + 
-		0.25*SQR(Udata(index,IBY) + Udata(index_ig ,IBY)) );
+      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
+	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
+		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
+		0.25*SQR(Udata(i,j,IBX) + Udata(2*ghostWidth,j ,IBX)) + 
+		0.25*SQR(Udata(i,j,IBY) + Udata(i,2*ghostWidth ,IBY)) );
     }
     
   } // init_energy
@@ -1097,7 +1096,7 @@ public:
 	  
 	  index_out = coord2index(i ,j,isize,jsize);
 	  index_in  = coord2index(i0,j,isize,jsize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j, iVar) = Udata(i0,j , iVar)*sign;
 	  
 	}
 	
@@ -1131,7 +1130,7 @@ public:
 	  
 	  index_out = coord2index(i ,j,isize,jsize);
 	  index_in  = coord2index(i0,j,isize,jsize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j, iVar) = Udata(i0,j , iVar)*sign;
 	  
 	}
       }
@@ -1163,7 +1162,7 @@ public:
 	  
 	  index_out = coord2index(i,j ,isize,jsize);
 	  index_in  = coord2index(i,j0,isize,jsize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j, iVar) = Udata(i,j0, iVar)*sign;
 	}
       }
     } // end FACE_YMIN
@@ -1195,7 +1194,7 @@ public:
 	  
 	  index_out = coord2index(i,j ,isize,jsize);
 	  index_in  = coord2index(i,j0,isize,jsize);
-	  Udata(index_out , iVar) = Udata(index_in , iVar)*sign;
+	  Udata(i,j, iVar) = Udata(i,j0, iVar)*sign;
 	  
 	}
 
