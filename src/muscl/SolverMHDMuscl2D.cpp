@@ -20,12 +20,6 @@
 // for init condition
 #include "BlastParams.h"
 
-static bool isBigEndian()
-{
-  const int i = 1;
-  return ( (*(char*)&i) == 0 );
-}
-
 namespace ppkMHD {
 
 using namespace muscl::mhd2d;
