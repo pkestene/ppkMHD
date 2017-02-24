@@ -53,7 +53,7 @@ public:
   template<class DataArray>
   void save_data_impl(DataArray                      Udata,
 		      typename DataArray::HostMirror Uhost,
-		      int iStep) {};
+		      int iStep) {}
     
   //! names of variables to save (inherited from Solver)
   std::map<int, std::string>& variables_names;
