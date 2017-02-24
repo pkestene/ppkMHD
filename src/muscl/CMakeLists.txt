@@ -33,8 +33,10 @@ add_library(muscl OBJECT
   )
 target_include_directories(muscl
   PUBLIC
+  ${CMAKE_SOURCE_DIR}/src/muscl
   ${CMAKE_SOURCE_DIR}/src/utils
   ${CMAKE_SOURCE_DIR}/src/utils/time
+  ${CMAKE_SOURCE_DIR}/src/utils/io
   ) 
 #set_target_properties(muscl PROPERTIES
 #  COMPILE_FLAGS "${KOKKOS_CPPFLAGS} ${KOKKOS_CXXFLAGS}")

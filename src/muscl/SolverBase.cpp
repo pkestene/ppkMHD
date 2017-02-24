@@ -2,6 +2,8 @@
 
 #include "utils.h"
 
+#include <io/IO_Writer.h>
+
 namespace ppkMHD {
 
 // =======================================================
@@ -42,15 +44,19 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   m_variables_names[IA] = "bx"; // mag field X
   m_variables_names[IB] = "by"; // mag field Y
   m_variables_names[IC] = "bz"; // mag field Z
+
+  m_io_writer = new io::IO_Writer(params, configMap, 0, m_variables_names);
   
-} // SolverRunbase::SolverRunbase
+} // SolverBase::SolverBase
 
 // =======================================================
 // =======================================================
 SolverBase::~SolverBase()
 {
 
-} // SolverRunbase::~SolverRunbase
+  delete m_io_writer;
+  
+} // SolverBase::~SolverBase
 
 // =======================================================
 // =======================================================
@@ -115,7 +121,7 @@ SolverBase::finished()
 
   return m_t >= (m_tEnd - 1e-14) || m_iteration >= params.nStepmax;
   
-} // SolverRunbase::finished
+} // SolverBase::finished
 
 // =======================================================
 // =======================================================
@@ -134,7 +140,7 @@ SolverBase::next_iteration()
   ++m_iteration;
   m_t += m_dt;
 
-} // SolverRunbase::next_iteration
+} // SolverBase::next_iteration
 
 // =======================================================
 // =======================================================
@@ -202,5 +208,25 @@ SolverBase::should_save_solution()
   return 0;
   
 } // SolverBase::should_save_solution
+
+// =======================================================
+// =======================================================
+void
+SolverBase::save_data(DataArray2d             U,
+		      DataArray2d::HostMirror Uh,
+		      int iStep)
+{
+  m_io_writer->save_data(U, Uh, iStep);
+}
+
+// =======================================================
+// =======================================================
+void
+SolverBase::save_data(DataArray3d             U,
+		      DataArray3d::HostMirror Uh,
+		      int iStep)
+{
+  m_io_writer->save_data(U, Uh, iStep);
+}
 
 } // namespace ppkMHD

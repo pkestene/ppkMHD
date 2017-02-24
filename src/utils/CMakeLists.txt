@@ -1,6 +1,6 @@
 add_subdirectory(config)
 add_subdirectory(time)
-#add_subdirectory(io)
+add_subdirectory(io)
 if (USE_MPI)
   add_subdirectory(mpiUtils)
 endif(USE_MPI)

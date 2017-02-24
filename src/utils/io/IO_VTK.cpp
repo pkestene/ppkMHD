@@ -7,17 +7,36 @@ namespace ppkMHD { namespace io {
 
 // =======================================================
 // =======================================================
-void save_VTK_2D(DataArray2d Udata,
+static bool isBigEndian()
+{
+  const int i = 1;
+  return ( (*(char*)&i) == 0 );
+}
+
+// =======================================================
+// =======================================================
+void save_VTK_2D(DataArray2d             Udata,
+		 DataArray2d::HostMirror Uhost,
+		 HydroParams& params,
+		 ConfigMap& configMap,
+		 int nbvar,
+		 const std::map<int, std::string>& variables_names,
 		 int iStep)
 {
 
   const int nx = params.nx;
   const int ny = params.ny;
+
   const int imin = params.imin;
   const int imax = params.imax;
+
   const int jmin = params.jmin;
   const int jmax = params.jmax;
+
   const int ghostWidth = params.ghostWidth;
+
+  const int isize = params.isize;
+  const int ijsize = params.isize * params.jsize;
   
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
@@ -78,7 +97,7 @@ void save_VTK_2D(DataArray2d Udata,
       outFile << "Float64";
     else
       outFile << "Float32";
-    outFile << "\" Name=\"" << m_variables_names[iVar] << "\" format=\"ascii\" >\n";
+    outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
 
     for (int index=0; index<ijsize; ++index) {
       //index2coord(index,i,j,isize,jsize);
@@ -109,7 +128,12 @@ void save_VTK_2D(DataArray2d Udata,
 
 // =======================================================
 // =======================================================
-void save_VTK_3D(DataArray3d Udata,
+void save_VTK_3D(DataArray3d             Udata,
+		 DataArray3d::HostMirror Uhost,
+		 HydroParams& params,
+		 ConfigMap& configMap,
+		 int nbvar,
+		 const std::map<int, std::string>& variables_names,
 		 int iStep)
 {
 
@@ -126,6 +150,11 @@ void save_VTK_3D(DataArray3d Udata,
   const int kmin = params.kmin;
   const int kmax = params.kmax;
 
+  const int isize = params.isize;
+  const int ijsize = params.isize * params.jsize;
+  const int ijksize = params.isize * params.jsize * params.ksize;
+
+  
   const int ghostWidth = params.ghostWidth;
   
   // copy device data to host
@@ -187,7 +216,7 @@ void save_VTK_3D(DataArray3d Udata,
       outFile << "Float64";
     else
       outFile << "Float32";
-    outFile << "\" Name=\"" << m_variables_names[iVar] << "\" format=\"ascii\" >\n";
+    outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
     
     for (int index=0; index<ijksize; ++index) {
       //index2coord(index,i,j,k,isize,jsize,ksize);

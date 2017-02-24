@@ -3,9 +3,10 @@
 
 #include "HydroParams.h"
 #include "config/ConfigMap.h"
+#include "kokkos_shared.h"
 
 #include <map>
-#include <memory>
+#include <memory> // for std::unique_ptr
 
 // for timer
 #ifdef CUDA
@@ -13,6 +14,10 @@
 #else
 #include "OpenMPTimer.h"
 #endif
+
+namespace ppkMHD { namespace io {
+class IO_WriterBase;
+} }
 
 enum TimerIds {
   TIMER_TOTAL = 0,
@@ -60,7 +65,7 @@ public:
   
   //! solver name (use in output file).
   std::string          m_solver_name;
-
+  
   /*
    *
    * Computation interface that may be overriden in a derived 
@@ -118,6 +123,19 @@ public:
   using TimerMap = std::map<int, std::shared_ptr<Timer> >;
   TimerMap timers;
 
+  void save_data(DataArray2d             U,
+		 DataArray2d::HostMirror Uh,
+		 int iStep);
+
+  void save_data(DataArray3d             U,
+		 DataArray3d::HostMirror Uh,
+		 int iStep);
+  
+protected:
+
+  //! io writer
+  io::IO_WriterBase*       m_io_writer;
+  
 }; // class SolverBase
 
 } // namespace ppkMHD

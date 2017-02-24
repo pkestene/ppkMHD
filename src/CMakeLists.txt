@@ -18,10 +18,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
 #
 set(EXE_NAME "${PROJECT_NAME}")
 add_executable(${EXE_NAME}
-  main.cpp
-  $<TARGET_OBJECTS:muscl>
   $<TARGET_OBJECTS:config>
   $<TARGET_OBJECTS:time>
+  $<TARGET_OBJECTS:io>
+  $<TARGET_OBJECTS:muscl>
+  main.cpp
   )
 
 # set_target_properties(${EXE_NAME} PROPERTIES
