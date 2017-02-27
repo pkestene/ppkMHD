@@ -21,11 +21,18 @@ void HydroParams::setup(ConfigMap &configMap)
     enableOutput = false;
 
   std::string solver_name = configMap.getString("run", "solver_name", "unknown");
-  if ( !solver_name.compare("MHD_Muscl_2D") ||
-       !solver_name.compare("MHD_Muscl_3D") ) {
-    ghostWidth = 3;
-  } else {
+  if ( !solver_name.compare("Hydro_Muscl_2D") ) {
+    nbvar = 4;
     ghostWidth = 2;
+  } else if ( !solver_name.compare("Hydro_Muscl_3D")) {
+    nbvar = 5;
+    ghostWidth = 2;
+  } else if ( !solver_name.compare("MHD_Muscl_2D") ) {
+    nbvar = 8;
+    ghostWidth = 3;
+  } else if ( !solver_name.compare("MHD_Muscl_3D") ) {
+    nbvar = 8;
+    ghostWidth = 3;
   }
   
   /* initialize MESH parameters */
@@ -149,6 +156,7 @@ void HydroParams::print()
   printf( "kmax       : %d\n", kmax);      
 
   printf( "ghostWidth : %d\n", ghostWidth);
+  printf( "nbvar      : %d\n", nbvar);
   printf( "nStepmax   : %d\n", nStepmax);
   printf( "tEnd       : %f\n", tEnd);
   printf( "nOutput    : %d\n", nOutput);

@@ -117,7 +117,6 @@ public:
   void saveVTK(DataArray Udata, int iStep, std::string name);
   
   int isize, jsize, ksize, ijsize, ijksize;
-  static const int nbvar = 8;
   
 }; // class SolverMHDMuscl3D
 

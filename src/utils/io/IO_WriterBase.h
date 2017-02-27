@@ -13,7 +13,7 @@ namespace ppkMHD { namespace io {
 class IO_WriterBase {
 
 public:
-  IO_WriterBase(int nbvar) : nbvar(nbvar) {};
+  IO_WriterBase() {};
   virtual ~IO_WriterBase() {};
 
   virtual void save_data(DataArray2d             Udata,
@@ -24,11 +24,6 @@ public:
 			 DataArray3d::HostMirror Uhost,
 			 int iStep) {};
 
-  void set_nbvar(int nbvar_) {nbvar = nbvar_;}
-
-protected:
-    int nbvar;
-  
 }; // class IO_WriterBase
 
 } // namespace io

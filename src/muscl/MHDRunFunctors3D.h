@@ -14,17 +14,17 @@
 #define SQR(x) ((x)*(x))
 #endif
 
-namespace ppkMHD { namespace muscl { namespace mhd3d {
+namespace ppkMHD { namespace muscl {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeDtFunctor : public MHDBaseFunctor3D {
+class ComputeDtFunctor3D_MHD : public MHDBaseFunctor3D {
 
 public:
   
-  ComputeDtFunctor(HydroParams params,
-		   DataArray Qdata) :
+  ComputeDtFunctor3D_MHD(HydroParams params,
+			 DataArray3d Qdata) :
     MHDBaseFunctor3D(params),
     Qdata(Qdata)  {};
 
@@ -102,20 +102,20 @@ public:
     }
   } // join
 
-  DataArray Qdata;
+  DataArray3d Qdata;
   
-}; // ComputeDtFunctor
+}; // ComputeDtFunctor3D_MHD
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ConvertToPrimitivesFunctor : public MHDBaseFunctor3D {
+class ConvertToPrimitivesFunctor3D_MHD : public MHDBaseFunctor3D {
 
 public:
 
-  ConvertToPrimitivesFunctor(HydroParams params,
-			     DataArray Udata,
-			     DataArray Qdata) :
+  ConvertToPrimitivesFunctor3D_MHD(HydroParams params,
+				   DataArray3d Udata,
+				   DataArray3d Qdata) :
     MHDBaseFunctor3D(params), Udata(Udata), Qdata(Qdata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -172,22 +172,22 @@ public:
     
   }
   
-  DataArray Udata;
-  DataArray Qdata;
+  DataArray3d Udata;
+  DataArray3d Qdata;
     
-}; // ConvertToPrimitivesFunctor
+}; // ConvertToPrimitivesFunctor3D_MHD
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeElecFieldFunctor : public MHDBaseFunctor3D {
+class ComputeElecFieldFunctor3D : public MHDBaseFunctor3D {
 
 public:
 
-  ComputeElecFieldFunctor(HydroParams params,
-			  DataArray Udata,
-			  DataArray Qdata,
-			  DataArrayVector3 ElecField) :
+  ComputeElecFieldFunctor3D(HydroParams params,
+			    DataArray3d Udata,
+			    DataArray3d Qdata,
+			    DataArrayVector3 ElecField) :
     MHDBaseFunctor3D(params),
     Udata(Udata), Qdata(Qdata), ElecField(ElecField) {};
 
@@ -268,24 +268,24 @@ public:
     }
   } // operator ()
 
-  DataArray Udata;
-  DataArray Qdata;  
+  DataArray3d Udata;
+  DataArray3d Qdata;  
   DataArrayVector3 ElecField;
   
-}; // ComputeElecFieldFunctor
+}; // ComputeElecFieldFunctor3D
   
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeMagSlopesFunctor : public MHDBaseFunctor3D {
+class ComputeMagSlopesFunctor3D : public MHDBaseFunctor3D {
 
 public:
 
-  ComputeMagSlopesFunctor(HydroParams      params,
-			  DataArray        Udata,
-			  DataArrayVector3 DeltaA,
-			  DataArrayVector3 DeltaB,
-			  DataArrayVector3 DeltaC) :
+  ComputeMagSlopesFunctor3D(HydroParams      params,
+			    DataArray3d      Udata,
+			    DataArrayVector3 DeltaA,
+			    DataArrayVector3 DeltaB,
+			    DataArrayVector3 DeltaC) :
     MHDBaseFunctor3D(params), Udata(Udata),
     DeltaA(DeltaA), DeltaB(DeltaB), DeltaC(DeltaC) {};
 
@@ -349,48 +349,48 @@ public:
     }
 
   } // operator ()
-  DataArray Udata;
+  DataArray3d Udata;
   DataArrayVector3 DeltaA;
   DataArrayVector3 DeltaB;
   DataArrayVector3 DeltaC;
     
-}; // class ComputeMagSlopesFunctor
+}; // class ComputeMagSlopesFunctor3D
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeTraceFunctor : public MHDBaseFunctor3D {
+class ComputeTraceFunctor3D_MHD : public MHDBaseFunctor3D {
 
 public:
 
-  ComputeTraceFunctor(HydroParams params,
-		      DataArray Udata,
-		      DataArray Qdata,
-		      DataArrayVector3 DeltaA,
-		      DataArrayVector3 DeltaB,
-		      DataArrayVector3 DeltaC,
-		      DataArrayVector3 ElecField,
-		      DataArray Qm_x,
-		      DataArray Qm_y,
-		      DataArray Qm_z,
-		      DataArray Qp_x,
-		      DataArray Qp_y,
-		      DataArray Qp_z,
-		      DataArray QEdge_RT,
-		      DataArray QEdge_RB,
-		      DataArray QEdge_LT,
-		      DataArray QEdge_LB,
-		      DataArray QEdge_RT2,
-		      DataArray QEdge_RB2,
-		      DataArray QEdge_LT2,
-		      DataArray QEdge_LB2,
-		      DataArray QEdge_RT3,
-		      DataArray QEdge_RB3,
-		      DataArray QEdge_LT3,
-		      DataArray QEdge_LB3,
-		      real_t dtdx,
-		      real_t dtdy,
-		      real_t dtdz) :
+  ComputeTraceFunctor3D_MHD(HydroParams params,
+			    DataArray3d Udata,
+			    DataArray3d Qdata,
+			    DataArrayVector3 DeltaA,
+			    DataArrayVector3 DeltaB,
+			    DataArrayVector3 DeltaC,
+			    DataArrayVector3 ElecField,
+			    DataArray3d Qm_x,
+			    DataArray3d Qm_y,
+			    DataArray3d Qm_z,
+			    DataArray3d Qp_x,
+			    DataArray3d Qp_y,
+			    DataArray3d Qp_z,
+			    DataArray3d QEdge_RT,
+			    DataArray3d QEdge_RB,
+			    DataArray3d QEdge_LT,
+			    DataArray3d QEdge_LB,
+			    DataArray3d QEdge_RT2,
+			    DataArray3d QEdge_RB2,
+			    DataArray3d QEdge_LT2,
+			    DataArray3d QEdge_LB2,
+			    DataArray3d QEdge_RT3,
+			    DataArray3d QEdge_RB3,
+			    DataArray3d QEdge_LT3,
+			    DataArray3d QEdge_LB3,
+			    real_t dtdx,
+			    real_t dtdy,
+			    real_t dtdz) :
     MHDBaseFunctor3D(params),
     Udata(Udata), Qdata(Qdata),
     DeltaA(DeltaA), DeltaB(DeltaB), DeltaC(DeltaC), ElecField(ElecField),
@@ -580,37 +580,37 @@ public:
     
   } // operator ()
       
-  DataArray Udata, Qdata;
+  DataArray3d Udata, Qdata;
   DataArrayVector3 DeltaA, DeltaB, DeltaC, ElecField;
-  DataArray Qm_x, Qm_y, Qm_z;
-  DataArray Qp_x, Qp_y, Qp_z;
-  DataArray QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB;
-  DataArray QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2;
-  DataArray QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3;
+  DataArray3d Qm_x, Qm_y, Qm_z;
+  DataArray3d Qp_x, Qp_y, Qp_z;
+  DataArray3d QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB;
+  DataArray3d QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2;
+  DataArray3d QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3;
   real_t dtdx, dtdy, dtdz;
   
-}; // class ComputeTraceFunctor
+}; // class ComputeTraceFunctor3D_MHD
   
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeFluxesAndStoreFunctor : public MHDBaseFunctor3D {
+class ComputeFluxesAndStoreFunctor3D_MHD : public MHDBaseFunctor3D {
 
 public:
 
-  ComputeFluxesAndStoreFunctor(HydroParams params,
-			       DataArray Qm_x,
-			       DataArray Qm_y,
-			       DataArray Qm_z,
-			       DataArray Qp_x,
-			       DataArray Qp_y,
-			       DataArray Qp_z,
-			       DataArray Fluxes_x,
-			       DataArray Fluxes_y,
-			       DataArray Fluxes_z,
-			       real_t dtdx,
-			       real_t dtdy,
-			       real_t dtdz) :
+  ComputeFluxesAndStoreFunctor3D_MHD(HydroParams params,
+				     DataArray3d Qm_x,
+				     DataArray3d Qm_y,
+				     DataArray3d Qm_z,
+				     DataArray3d Qp_x,
+				     DataArray3d Qp_y,
+				     DataArray3d Qp_z,
+				     DataArray3d Fluxes_x,
+				     DataArray3d Fluxes_y,
+				     DataArray3d Fluxes_z,
+				     real_t dtdx,
+				     real_t dtdy,
+				     real_t dtdz) :
     MHDBaseFunctor3D(params),
     Qm_x(Qm_x), Qm_y(Qm_y), Qm_z(Qm_z),
     Qp_x(Qp_x), Qp_y(Qp_y), Qp_z(Qp_z),
@@ -685,37 +685,37 @@ public:
     
   }
   
-  DataArray Qm_x, Qm_y, Qm_z;
-  DataArray Qp_x, Qp_y, Qp_z;
-  DataArray Fluxes_x, Fluxes_y, Fluxes_z;
+  DataArray3d Qm_x, Qm_y, Qm_z;
+  DataArray3d Qp_x, Qp_y, Qp_z;
+  DataArray3d Fluxes_x, Fluxes_y, Fluxes_z;
   real_t dtdx, dtdy, dtdz;
   
-}; // ComputeFluxesAndStoreFunctor
+}; // ComputeFluxesAndStoreFunctor3D_MHD
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeEmfAndStoreFunctor : public MHDBaseFunctor3D {
-
+class ComputeEmfAndStoreFunctor3D : public MHDBaseFunctor3D {
+  
 public:
-
-  ComputeEmfAndStoreFunctor(HydroParams params,
-			    DataArray QEdge_RT,
-			    DataArray QEdge_RB,
-			    DataArray QEdge_LT,
-			    DataArray QEdge_LB,
-			    DataArray QEdge_RT2,
-			    DataArray QEdge_RB2,
-			    DataArray QEdge_LT2,
-			    DataArray QEdge_LB2,
-			    DataArray QEdge_RT3,
-			    DataArray QEdge_RB3,
-			    DataArray QEdge_LT3,
-			    DataArray QEdge_LB3,
-			    DataArrayVector3 Emf,
-			    real_t dtdx,
-			    real_t dtdy,
-			    real_t dtdz) :
+  
+  ComputeEmfAndStoreFunctor3D(HydroParams params,
+			      DataArray3d QEdge_RT,
+			      DataArray3d QEdge_RB,
+			      DataArray3d QEdge_LT,
+			      DataArray3d QEdge_LB,
+			      DataArray3d QEdge_RT2,
+			      DataArray3d QEdge_RB2,
+			      DataArray3d QEdge_LT2,
+			      DataArray3d QEdge_LB2,
+			      DataArray3d QEdge_RT3,
+			      DataArray3d QEdge_RB3,
+			      DataArray3d QEdge_LT3,
+			      DataArray3d QEdge_LB3,
+			      DataArrayVector3 Emf,
+			      real_t dtdx,
+			      real_t dtdy,
+			      real_t dtdz) :
     MHDBaseFunctor3D(params),
     QEdge_RT(QEdge_RT),   QEdge_RB(QEdge_RB),   QEdge_LT(QEdge_LT),   QEdge_LB(QEdge_LB),
     QEdge_RT2(QEdge_RT2), QEdge_RB2(QEdge_RB2), QEdge_LT2(QEdge_LT2), QEdge_LB2(QEdge_LB2),
@@ -773,30 +773,30 @@ public:
     }
   }
 
-  DataArray QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB;
-  DataArray QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2;
-  DataArray QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3;
+  DataArray3d QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB;
+  DataArray3d QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2;
+  DataArray3d QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3;
   DataArrayVector3 Emf;
   real_t dtdx, dtdy, dtdz;
 
-}; // ComputeEmfAndStoreFunctor
+}; // ComputeEmfAndStoreFunctor3D
 
   
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class UpdateFunctor : public MHDBaseFunctor3D {
+class UpdateFunctor3D_MHD : public MHDBaseFunctor3D {
 
 public:
 
-  UpdateFunctor(HydroParams params,
-		DataArray Udata,
-		DataArray FluxData_x,
-		DataArray FluxData_y,
-		DataArray FluxData_z,
-		real_t dtdx,
-		real_t dtdy,
-		real_t dtdz) :
+  UpdateFunctor3D_MHD(HydroParams params,
+		      DataArray3d Udata,
+		      DataArray3d FluxData_x,
+		      DataArray3d FluxData_y,
+		      DataArray3d FluxData_z,
+		      real_t dtdx,
+		      real_t dtdy,
+		      real_t dtdz) :
     MHDBaseFunctor3D(params),
     Udata(Udata), 
     FluxData_x(FluxData_x),
@@ -876,25 +876,25 @@ public:
     
   } // end operator ()
   
-  DataArray Udata;
-  DataArray FluxData_x, FluxData_y, FluxData_z;
+  DataArray3d Udata;
+  DataArray3d FluxData_x, FluxData_y, FluxData_z;
   real_t dtdx, dtdy, dtdz;
   
-}; // UpdateFunctor
+}; // UpdateFunctor3D_MHD
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class UpdateEmfFunctor : public MHDBaseFunctor3D {
+class UpdateEmfFunctor3D : public MHDBaseFunctor3D {
 
 public:
 
-  UpdateEmfFunctor(HydroParams params,
-		   DataArray Udata,
-		   DataArrayVector3 Emf,
-		   real_t dtdx,
-		   real_t dtdy,
-		   real_t dtdz) :
+  UpdateEmfFunctor3D(HydroParams params,
+		     DataArray3d Udata,
+		     DataArrayVector3 Emf,
+		     real_t dtdx,
+		     real_t dtdy,
+		     real_t dtdz) :
     MHDBaseFunctor3D(params),
     Udata(Udata), 
     Emf(Emf),
@@ -951,11 +951,11 @@ public:
     }
   } // operator()
 
-  DataArray Udata;
+  DataArray3d Udata;
   DataArrayVector3 Emf;
   real_t dtdx, dtdy, dtdz;
 
-}; // UpdateEmfFunctor
+}; // UpdateEmfFunctor3D
 
 
 /*************************************************/
@@ -965,7 +965,7 @@ class InitImplodeFunctor : public MHDBaseFunctor3D {
 
 public:
   InitImplodeFunctor(HydroParams params,
-		     DataArray Udata) :
+		     DataArray3d Udata) :
     MHDBaseFunctor3D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -1022,19 +1022,19 @@ public:
     
   } // end operator ()
 
-  DataArray Udata;
+  DataArray3d Udata;
 
 }; // InitImplodeFunctor
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitBlastFunctor : public MHDBaseFunctor3D {
+class InitBlastFunctor3D_MHD : public MHDBaseFunctor3D {
 
 public:
-  InitBlastFunctor(HydroParams params,
-		   BlastParams bParams,
-		   DataArray Udata) :
+  InitBlastFunctor3D_MHD(HydroParams params,
+			 BlastParams bParams,
+			 DataArray3d Udata) :
     MHDBaseFunctor3D(params), bParams(bParams), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -1108,10 +1108,10 @@ public:
     
   } // end operator ()
   
-  DataArray Udata;
+  DataArray3d Udata;
   BlastParams bParams;
   
-}; // InitBlastFunctor
+}; // InitBlastFunctor3D_MHD
 
 /*************************************************/
 /*************************************************/
@@ -1121,11 +1121,11 @@ enum OrszagTang_init_type {
   INIT_ENERGY = 1
 };
 template<OrszagTang_init_type ot_type>
-class InitOrszagTangFunctor : public MHDBaseFunctor3D {
+class InitOrszagTangFunctor3D : public MHDBaseFunctor3D {
 
 public:
-  InitOrszagTangFunctor(HydroParams params,
-			DataArray Udata) :
+  InitOrszagTangFunctor3D(HydroParams params,
+			  DataArray3d Udata) :
     MHDBaseFunctor3D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -1258,259 +1258,10 @@ public:
     
   } // init_energy
   
-  DataArray Udata;
+  DataArray3d Udata;
   
-}; // InitOrszagTangFunctor
+}; // InitOrszagTangFunctor3D
 
-/*************************************************/
-/*************************************************/
-/*************************************************/
-template <FaceIdType faceId>
-class MakeBoundariesFunctor : public MHDBaseFunctor3D {
-
-public:
-
-  MakeBoundariesFunctor(HydroParams params,
-			DataArray Udata) :
-    MHDBaseFunctor3D(params), Udata(Udata)  {};
-  
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const
-  {
-    const int nx = params.nx;
-    const int ny = params.ny;
-    const int nz = params.nz;
-    
-    const int isize = params.isize;
-    const int jsize = params.jsize;
-    //const int ksize = params.ksize;
-    const int ghostWidth = params.ghostWidth;
-
-    const int imin = params.imin;
-    const int imax = params.imax;
-    
-    const int jmin = params.jmin;
-    const int jmax = params.jmax;
-
-    const int kmin = params.kmin;
-    const int kmax = params.kmax;
-    
-    int i,j,k;
-    
-    int boundary_type;
-    
-    int i0, j0, k0;
-    int iVar;
-    
-    if (faceId == FACE_XMIN) {
-      // boundary xmin (index = i + j * ghostWidth + k * ghostWidth*jsize)
-      k = index / (ghostWidth*jsize);
-      j = (index - k*ghostWidth*jsize) / ghostWidth;
-      i = index - j*ghostWidth - k*ghostWidth*jsize;
-
-      boundary_type = params.boundary_type_xmin;
-
-      if(k >= kmin && k <= kmax &&
-	 j >= jmin && j <= jmax &&
-	 i >= 0    && i <ghostWidth) {
-	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    i0=2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	    if (iVar==IA) sign=-ONE_F;
-	  } else if( boundary_type == BC_NEUMANN ) {
-	    i0=ghostWidth;
-	  } else { // periodic
-	    i0=nx+i;
-	  }
-
-	  Udata(i,j,k , iVar) = Udata(i0,j,k , iVar)*sign;
-
-	}
-
-      }
-    } // end FACE_XMIN
-
-    if (faceId == FACE_XMAX) {
-      
-      // boundary xmax (index = i + j *ghostWidth + k * ghostWidth*jsize)
-      // same i,j,k as xmin, except translation along x-axis
-      k = index / (ghostWidth*jsize);
-      j = (index - k*ghostWidth*jsize) / ghostWidth;
-      i = index - j*ghostWidth - k*ghostWidth*jsize;
-
-      i += (nx+ghostWidth);
-      
-      boundary_type = params.boundary_type_xmax;
-      
-      if(k >= kmin          && k <= kmax &&
-	 j >= jmin          && j <= jmax &&
-	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
-	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    i0=2*nx+2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	    if (iVar==IA) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    i0=nx+ghostWidth-1;
-	  } else { // periodic
-	    i0=i-nx;
-	  }
-
-	  Udata(i,j,k, iVar) = Udata(i0,j,k, iVar)*sign;
-
-	}
-      }
-    } // end FACE_XMAX
-    
-    if (faceId == FACE_YMIN) {
-
-      // boundary ymin (index = i + j*isize + k*isize*ghostWidth)
-      k = index / (isize*ghostWidth);
-      j = (index - k*isize*ghostWidth) / isize;
-      i = index - j*isize - k*isize*ghostWidth;
-
-      boundary_type = params.boundary_type_ymin;
-      
-      if(k >= kmin && k <= kmax       && 
-	 j >= 0    && j <  ghostWidth &&
-	 i >= imin && i <= imax) {
-	
-	real_t sign=1.0;
-
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    j0=2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	    if (iVar==IB) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    j0=ghostWidth;
-	  } else { // periodic
-	    j0=ny+j;
-	  }
-
-	  Udata(i,j,k, iVar) = Udata(i,j0,k, iVar)*sign;
-	
-	}
-      }
-    } // end FACE_YMIN
-
-    if (faceId == FACE_YMAX) {
-      
-      // boundary ymax (index = i + j*isize + k*isize*ghostWidth)
-      // same i,j,k as ymin, except translation along y-axis
-      k = index / (isize*ghostWidth);
-      j = (index - k*isize*ghostWidth) / isize;
-      i = index - j*isize - k*isize*ghostWidth;
-
-      j += (ny+ghostWidth);
-
-      boundary_type = params.boundary_type_ymax;
-
-      if(k >= kmin           && k <= kmax              &&
-	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
-	 i >= imin           && i <= imax) {
-	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    j0=2*ny+2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	    if (iVar==IB) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    j0=ny+ghostWidth-1;
-	  } else { // periodic
-	    j0=j-ny;
-	  }
-
-	  Udata(i,j,k , iVar) = Udata(i,j0,k , iVar)*sign;
-
-	}
-
-      }
-    } // end FACE_YMAX
-    
-    if (faceId == FACE_ZMIN) {
-      
-      // boundary zmin (index = i + j*isize + k*isize*jsize)
-      k = index / (isize*jsize);
-      j = (index - k*isize*jsize) / isize;
-      i = index - j*isize - k*isize*jsize;
-
-      boundary_type = params.boundary_type_zmin;
-      
-      if(k >= 0    && k <  ghostWidth &&
-	 j >= jmin && j <= jmax       &&
-	 i >= imin && i <= imax) {
-	
-	real_t sign=1.0;
-
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    k0=2*ghostWidth-1-k;
-	    if (iVar==IW) sign=-ONE_F;
-	    if (iVar==IC) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    k0=ghostWidth;
-	  } else { // periodic
-	    k0=nz+k;
-	  }
-
-	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
-	
-	}
-      }
-    } // end FACE_ZMIN
-    
-    if (faceId == FACE_ZMAX) {
-      
-      // boundary zmax (index = i + j*isize + k*isize*jsize)
-      // same i,j,k as ymin, except translation along y-axis
-      k = index / (isize*jsize);
-      j = (index - k*isize*jsize) / isize;
-      i = index - j*isize - k*isize*jsize;
-
-      k += (nz+ghostWidth);
-
-      boundary_type = params.boundary_type_zmax;
-
-      if(k >= nz+ghostWidth && k <= nz+2*ghostWidth-1 &&
-	 j >= jmin          && j <= jmax              &&
-	 i >= imin          && i <= imax) {
-	
-	real_t sign=1.0;
-	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    k0=2*nz+2*ghostWidth-1-k;
-	    if (iVar==IW) sign=-ONE_F;
-	    if (iVar==IC) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    k0=nz+ghostWidth-1;
-	  } else { // periodic
-	    k0=k-nz;
-	  }
-
-	  Udata(i,j,k, iVar) = Udata(i,j,k0, iVar)*sign;
-	
-	}
-      }
-    } // end FACE_ZMAX
-    
-  } // end operator ()
-
-  DataArray Udata;
-  
-}; // MakeBoundariesFunctor
-
-} // namespace mhd3d
 } // namespace muscl
 } // namespace ppkMHD
 

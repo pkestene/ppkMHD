@@ -20,7 +20,7 @@ public:
 
   using DataArray     = DataArray2d;
   using DataArrayHost = DataArray2dHost;
-  
+
   SolverHydroMuscl2D(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMuscl2D();
 
@@ -86,7 +86,6 @@ public:
   void saveVTK(DataArray Udata, int iStep, std::string name);
   
   int isize, jsize, ijsize;
-  static const int nbvar = 4;
   
 }; // class SolverHydroMuscl2D
 

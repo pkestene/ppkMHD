@@ -10,6 +10,7 @@
 
 // the actual computational functors called in SolverMHDMuscl3D
 #include "MHDRunFunctors3D.h"
+#include "BoundariesFunctors.h"
 
 // Kokkos
 #include "kokkos_shared.h"
@@ -22,7 +23,7 @@
 
 namespace ppkMHD {
 
-using namespace muscl::mhd3d;
+using namespace muscl;
 
 // =======================================================
 // ==== CLASS SolverMHDMuscl3D IMPL ======================
@@ -53,6 +54,8 @@ SolverMHDMuscl3D::SolverMHDMuscl3D(HydroParams& params, ConfigMap& configMap) :
 {
 
   m_nCells = ijksize;
+
+  int nbvar = params.nbvar;
 
   /*
    * memory allocation (use sizes with ghosts included)
@@ -106,9 +109,6 @@ SolverMHDMuscl3D::SolverMHDMuscl3D(HydroParams& params, ConfigMap& configMap) :
   // if (!riemannSolverStr.compare("hllc"))
   //   riemann_solver_fn = &SolverMHDMuscl3D::riemann_hllc;
   
-  // IO writer
-  m_io_writer->set_nbvar(nbvar);
-
   /*
    * initialize hydro array at t=0
    */
@@ -181,7 +181,7 @@ double SolverMHDMuscl3D::compute_dt_local()
     Udata = U2;
 
   // call device functor
-  ComputeDtFunctor computeDtFunctor(params, Udata);
+  ComputeDtFunctor3D_MHD computeDtFunctor(params, Udata);
   Kokkos::parallel_reduce(ijksize, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
@@ -290,15 +290,15 @@ void SolverMHDMuscl3D::godunov_unsplit_cpu(DataArray data_in,
     
     // actual update with fluxes
     {
-      UpdateFunctor functor(params, data_out,
-			    Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
+      UpdateFunctor3D_MHD functor(params, data_out,
+				  Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
       Kokkos::parallel_for(ijksize, functor);
     }
 
     // actual update with emf
     {
-      UpdateEmfFunctor functor(params, data_out,
-			       Emf, dtdx, dtdy, dtdz);
+      UpdateEmfFunctor3D functor(params, data_out,
+				 Emf, dtdx, dtdy, dtdz);
       Kokkos::parallel_for(ijksize, functor);
     }
     
@@ -316,7 +316,7 @@ void SolverMHDMuscl3D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
-  ConvertToPrimitivesFunctor functor(params, Udata, Q);
+  ConvertToPrimitivesFunctor3D_MHD functor(params, Udata, Q);
   Kokkos::parallel_for(ijksize, functor);
   
 } // SolverMHDMuscl3D::convertToPrimitives
@@ -330,7 +330,7 @@ void SolverMHDMuscl3D::computeElectricField(DataArray Udata)
 {
 
   // call device functor
-  ComputeElecFieldFunctor functor(params, Udata, Q, ElecField);
+  ComputeElecFieldFunctor3D functor(params, Udata, Q, ElecField);
   Kokkos::parallel_for(ijksize, functor);
   
 } // SolverMHDMuscl3D::computeElectricField
@@ -344,7 +344,7 @@ void SolverMHDMuscl3D::computeMagSlopes(DataArray Udata)
 {
 
   // call device functor
-  ComputeMagSlopesFunctor functor(params, Udata, DeltaA, DeltaB, DeltaC);
+  ComputeMagSlopesFunctor3D functor(params, Udata, DeltaA, DeltaB, DeltaC);
   Kokkos::parallel_for(ijksize, functor);
   
 } // SolverMHDMuscl3D::computeMagSlopes
@@ -368,16 +368,16 @@ void SolverMHDMuscl3D::computeTrace(DataArray Udata, real_t dt)
   dtdz = dt / params.dz;
 
   // call device functor
-  ComputeTraceFunctor functor(params, Udata, Q,
-			      DeltaA, DeltaB, DeltaC, ElecField,
-			      Qm_x, Qm_y, Qm_z,
-			      Qp_x, Qp_y, Qp_z,
-			      QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB,
-			      QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2,
-			      QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3,
-			      dtdx, dtdy, dtdz);
+  ComputeTraceFunctor3D_MHD functor(params, Udata, Q,
+				    DeltaA, DeltaB, DeltaC, ElecField,
+				    Qm_x, Qm_y, Qm_z,
+				    Qp_x, Qp_y, Qp_z,
+				    QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB,
+				    QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2,
+				    QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3,
+				    dtdx, dtdy, dtdz);
   Kokkos::parallel_for(ijksize, functor);
-
+  
 } // SolverMHDMuscl3D::computeTrace
 
 // =======================================================
@@ -393,7 +393,7 @@ void SolverMHDMuscl3D::computeFluxesAndStore(real_t dt)
   real_t dtdz = dt / params.dz;
 
   // call device functor
-  ComputeFluxesAndStoreFunctor
+  ComputeFluxesAndStoreFunctor3D_MHD
     functor(params,
 	    Qm_x, Qm_y, Qm_z,
 	    Qp_x, Qp_y, Qp_z,
@@ -416,12 +416,12 @@ void SolverMHDMuscl3D::computeEmfAndStore(real_t dt)
   real_t dtdz = dt / params.dz;
 
   // call device functor
-  ComputeEmfAndStoreFunctor functor(params,
-				    QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB,
-				    QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2,
-				    QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3,
-				    Emf,
-				    dtdx, dtdy, dtdz);
+  ComputeEmfAndStoreFunctor3D functor(params,
+				      QEdge_RT,  QEdge_RB,  QEdge_LT,  QEdge_LB,
+				      QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2,
+				      QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3,
+				      Emf,
+				      dtdx, dtdy, dtdz);
   Kokkos::parallel_for(ijksize, functor);
   
 } // computeEmfAndStore
@@ -442,32 +442,32 @@ void SolverMHDMuscl3D::make_boundaries(DataArray Udata)
   // call device functor
   {
     int nbIter = ghostWidth * jsize * ksize;
-    MakeBoundariesFunctor<FACE_XMIN> functor(params, Udata);
+    MakeBoundariesFunctor3D_MHD<FACE_XMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
     int nbIter = ghostWidth * jsize * ksize;
-    MakeBoundariesFunctor<FACE_XMAX> functor(params, Udata);
+    MakeBoundariesFunctor3D_MHD<FACE_XMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
     int nbIter = isize * ghostWidth * ksize;
-    MakeBoundariesFunctor<FACE_YMIN> functor(params, Udata);
+    MakeBoundariesFunctor3D_MHD<FACE_YMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
     int nbIter = isize * ghostWidth * ksize;
-    MakeBoundariesFunctor<FACE_YMAX> functor(params, Udata);
+    MakeBoundariesFunctor3D_MHD<FACE_YMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
     int nbIter = isize * jsize * ghostWidth;
-    MakeBoundariesFunctor<FACE_ZMIN> functor(params, Udata);
+    MakeBoundariesFunctor3D_MHD<FACE_ZMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
     int nbIter = isize * jsize * ghostWidth;
-    MakeBoundariesFunctor<FACE_ZMAX> functor(params, Udata);
+    MakeBoundariesFunctor3D_MHD<FACE_ZMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   
@@ -498,7 +498,7 @@ void SolverMHDMuscl3D::init_blast(DataArray Udata)
 
   BlastParams blastParams = BlastParams(configMap);
   
-  InitBlastFunctor functor(params, blastParams, Udata);
+  InitBlastFunctor3D_MHD functor(params, blastParams, Udata);
   Kokkos::parallel_for(ijksize, functor);
 
 } // SolverMHDMuscl3D::init_blast
@@ -514,13 +514,13 @@ void SolverMHDMuscl3D::init_orszag_tang(DataArray Udata)
   
   // init all vars but energy
   {
-    InitOrszagTangFunctor<INIT_ALL_VAR_BUT_ENERGY> functor(params, Udata);
+    InitOrszagTangFunctor3D<INIT_ALL_VAR_BUT_ENERGY> functor(params, Udata);
     Kokkos::parallel_for(ijksize, functor);
   }
 
   // init energy
   {
-    InitOrszagTangFunctor<INIT_ENERGY> functor(params, Udata);
+    InitOrszagTangFunctor3D<INIT_ENERGY> functor(params, Udata);
     Kokkos::parallel_for(ijksize, functor);
   }  
   

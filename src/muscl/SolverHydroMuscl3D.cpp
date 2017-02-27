@@ -10,6 +10,7 @@
 
 // the actual computational functors called in HydroRun
 #include "HydroRunFunctors3D.h"
+#include "BoundariesFunctors.h"
 
 // Kokkos
 #include "kokkos_shared.h"
@@ -22,7 +23,7 @@
 
 namespace ppkMHD {
 
-using namespace muscl::hydro3d;
+using namespace muscl;
 
 // =======================================================
 // ==== CLASS SolverHydroMuscl3D IMPL ====================
@@ -47,6 +48,8 @@ SolverHydroMuscl3D::SolverHydroMuscl3D(HydroParams& params, ConfigMap& configMap
 
   m_nCells = ijksize;
 
+  int nbvar = params.nbvar;
+ 
   /*
    * memory allocation (use sizes with ghosts included)
    */
@@ -79,9 +82,6 @@ SolverHydroMuscl3D::SolverHydroMuscl3D(HydroParams& params, ConfigMap& configMap
   // if (!riemannSolverStr.compare("hllc"))
   //   riemann_solver_fn = &SolverHydroMuscl3D::riemann_hllc;
   
-  // IO writer
-  m_io_writer->set_nbvar(nbvar);
-
   /*
    * initialize hydro array at t=0
    */

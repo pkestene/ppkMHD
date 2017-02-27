@@ -26,7 +26,6 @@ class IO_Writer : public IO_WriterBase {
 public:
   IO_Writer(HydroParams& params,
 	    ConfigMap& configMap,
-	    int nbvar,
 	    std::map<int, std::string>& variables_names);
 
   //! destructor

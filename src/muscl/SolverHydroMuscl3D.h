@@ -90,7 +90,6 @@ public:
   
   int isize, jsize, ksize;
   int ijsize, ijksize;
-  static const int nbvar = 5;
   
 }; // class SolverHydroMuscl3D
 

@@ -7,20 +7,21 @@
 #endif // __CUDA_ARCH__
 
 #include "HydroBaseFunctor2D.h"
+#include "kokkos_shared.h"
 
 #include "BlastParams.h"
 
-namespace ppkMHD { namespace muscl { namespace hydro2d {
+namespace ppkMHD { namespace muscl {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeDtFunctor : public HydroBaseFunctor2D {
+class ComputeDtFunctor2D : public HydroBaseFunctor2D {
 
 public:
   
-  ComputeDtFunctor(HydroParams params,
-		   DataArray Udata) :
+  ComputeDtFunctor2D(HydroParams params,
+		     DataArray2d Udata) :
     HydroBaseFunctor2D(params),
     Udata(Udata)  {};
 
@@ -45,6 +46,7 @@ public:
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
+    //const int nbvar = params.nbvar;
     const real_t dx = params.dx;
     const real_t dy = params.dy;
     
@@ -92,20 +94,20 @@ public:
   } // join
 
   
-  DataArray Udata;
+  DataArray2d Udata;
   
-}; // ComputeDtFunctor
+}; // ComputeDtFunctor2D
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ConvertToPrimitivesFunctor : public HydroBaseFunctor2D {
+class ConvertToPrimitivesFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
-  ConvertToPrimitivesFunctor(HydroParams params,
-			     DataArray Udata,
-			     DataArray Qdata) :
+  ConvertToPrimitivesFunctor2D(HydroParams params,
+			       DataArray2d Udata,
+			       DataArray2d Qdata) :
     HydroBaseFunctor2D(params), Udata(Udata), Qdata(Qdata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -144,26 +146,26 @@ public:
     
   }
   
-  DataArray Udata;
-  DataArray Qdata;
+  DataArray2d Udata;
+  DataArray2d Qdata;
     
-}; // ConvertToPrimitivesFunctor
+}; // ConvertToPrimitivesFunctor2D
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeFluxesAndUpdateFunctor : public HydroBaseFunctor2D {
+class ComputeFluxesAndUpdateFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
-  ComputeFluxesAndUpdateFunctor(HydroParams params,
-				DataArray Udata,
-				DataArray Qm_x,
-				DataArray Qm_y,
-				DataArray Qp_x,
-				DataArray Qp_y,
-				real_t dtdx,
-				real_t dtdy) :
+  ComputeFluxesAndUpdateFunctor2D(HydroParams params,
+				  DataArray2d Udata,
+				  DataArray2d Qm_x,
+				  DataArray2d Qm_y,
+				  DataArray2d Qp_x,
+				  DataArray2d Qp_y,
+				  real_t dtdx,
+				  real_t dtdy) :
     HydroBaseFunctor2D(params), Udata(Udata),
     Qm_x(Qm_x), Qm_y(Qm_y), Qp_x(Qp_x), Qp_y(Qp_y),
     dtdx(dtdx), dtdy(dtdy) {};
@@ -245,28 +247,28 @@ public:
     
   }
   
-  DataArray Udata;
-  DataArray Qm_x, Qm_y, Qp_x, Qp_y;
+  DataArray2d Udata;
+  DataArray2d Qm_x, Qm_y, Qp_x, Qp_y;
   real_t dtdx, dtdy;
   
-}; // ComputeFluxesAndUpdateFunctor
+}; // ComputeFluxesAndUpdateFunctor2D
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeTraceFunctor : public HydroBaseFunctor2D {
+class ComputeTraceFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
-  ComputeTraceFunctor(HydroParams params,
-		      DataArray Udata,
-		      DataArray Qdata,
-		      DataArray Qm_x,
-		      DataArray Qm_y,
-		      DataArray Qp_x,
-		      DataArray Qp_y,
-		      real_t dtdx,
-		      real_t dtdy) :
+  ComputeTraceFunctor2D(HydroParams params,
+			DataArray2d Udata,
+			DataArray2d Qdata,
+			DataArray2d Qm_x,
+			DataArray2d Qm_y,
+			DataArray2d Qp_x,
+			DataArray2d Qp_y,
+			real_t dtdx,
+			real_t dtdy) :
     HydroBaseFunctor2D(params),
     Udata(Udata), Qdata(Qdata),
     Qm_x(Qm_x), Qm_y(Qm_y), Qp_x(Qp_x), Qp_y(Qp_y),
@@ -364,26 +366,26 @@ public:
     }
   }
 
-  DataArray Udata, Qdata;
-  DataArray Qm_x, Qm_y, Qp_x, Qp_y;
+  DataArray2d Udata, Qdata;
+  DataArray2d Qm_x, Qm_y, Qp_x, Qp_y;
   real_t dtdx, dtdy;
   
-}; // ComputeTraceFunctor
+}; // ComputeTraceFunctor2D
 
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeAndStoreFluxesFunctor : public HydroBaseFunctor2D {
+class ComputeAndStoreFluxesFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
-  ComputeAndStoreFluxesFunctor(HydroParams params,
-			       DataArray Qdata,
-			       DataArray FluxData_x,
-			       DataArray FluxData_y,		       
-			       real_t dtdx,
-			       real_t dtdy) :
+  ComputeAndStoreFluxesFunctor2D(HydroParams params,
+				 DataArray2d Qdata,
+				 DataArray2d FluxData_x,
+				 DataArray2d FluxData_y,		       
+				 real_t dtdx,
+				 real_t dtdy) :
     HydroBaseFunctor2D(params),
     Qdata(Qdata),
     FluxData_x(FluxData_x),
@@ -585,24 +587,24 @@ public:
     
   } // end operator ()
   
-  DataArray Qdata;
-  DataArray FluxData_x;
-  DataArray FluxData_y;
+  DataArray2d Qdata;
+  DataArray2d FluxData_x;
+  DataArray2d FluxData_y;
   real_t dtdx, dtdy;
   
-}; // ComputeAndStoreFluxesFunctor
+}; // ComputeAndStoreFluxesFunctor2D
   
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class UpdateFunctor : public HydroBaseFunctor2D {
+class UpdateFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
-  UpdateFunctor(HydroParams params,
-		DataArray Udata,
-		DataArray FluxData_x,
-		DataArray FluxData_y) :
+  UpdateFunctor2D(HydroParams params,
+		  DataArray2d Udata,
+		  DataArray2d FluxData_x,
+		  DataArray2d FluxData_y) :
     HydroBaseFunctor2D(params),
     Udata(Udata), 
     FluxData_x(FluxData_x),
@@ -645,24 +647,24 @@ public:
     
   } // end operator ()
   
-  DataArray Udata;
-  DataArray FluxData_x;
-  DataArray FluxData_y;
+  DataArray2d Udata;
+  DataArray2d FluxData_x;
+  DataArray2d FluxData_y;
   
-}; // UpdateFunctor
+}; // UpdateFunctor2D
 
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 template <Direction dir>
-class UpdateDirFunctor : public HydroBaseFunctor2D {
+class UpdateDirFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
-  UpdateDirFunctor(HydroParams params,
-		   DataArray Udata,
-		   DataArray FluxData) :
+  UpdateDirFunctor2D(HydroParams params,
+		     DataArray2d Udata,
+		     DataArray2d FluxData) :
     HydroBaseFunctor2D(params),
     Udata(Udata), 
     FluxData(FluxData) {};
@@ -710,8 +712,8 @@ public:
     
   } // end operator ()
   
-  DataArray Udata;
-  DataArray FluxData;
+  DataArray2d Udata;
+  DataArray2d FluxData;
   
 }; // UpdateDirFunctor
 
@@ -719,14 +721,14 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class ComputeSlopesFunctor : public HydroBaseFunctor2D {
+class ComputeSlopesFunctor2D : public HydroBaseFunctor2D {
   
 public:
   
-  ComputeSlopesFunctor(HydroParams params,
-		       DataArray Qdata,
-		       DataArray Slopes_x,
-		       DataArray Slopes_y) :
+  ComputeSlopesFunctor2D(HydroParams params,
+			 DataArray2d Qdata,
+			 DataArray2d Slopes_x,
+			 DataArray2d Slopes_y) :
     HydroBaseFunctor2D(params), Qdata(Qdata),
     Slopes_x(Slopes_x), Slopes_y(Slopes_y) {};
   
@@ -803,26 +805,26 @@ public:
     
   } // end operator ()
   
-  DataArray Qdata;
-  DataArray Slopes_x, Slopes_y;
+  DataArray2d Qdata;
+  DataArray2d Slopes_x, Slopes_y;
   
-}; // ComputeSlopesFunctor
+}; // ComputeSlopesFunctor2D
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 template <Direction dir>
-class ComputeTraceAndFluxes_Functor : public HydroBaseFunctor2D {
+class ComputeTraceAndFluxes_Functor2D : public HydroBaseFunctor2D {
   
 public:
   
-  ComputeTraceAndFluxes_Functor(HydroParams params,
-				DataArray Qdata,
-				DataArray Slopes_x,
-				DataArray Slopes_y,
-				DataArray Fluxes,
-				real_t    dtdx,
-				real_t    dtdy) :
+  ComputeTraceAndFluxes_Functor2D(HydroParams params,
+				  DataArray2d Qdata,
+				  DataArray2d Slopes_x,
+				  DataArray2d Slopes_y,
+				  DataArray2d Fluxes,
+				  real_t    dtdx,
+				  real_t    dtdy) :
     HydroBaseFunctor2D(params), Qdata(Qdata),
     Slopes_x(Slopes_x), Slopes_y(Slopes_y),
     Fluxes(Fluxes),
@@ -964,22 +966,22 @@ public:
     
   } // end operator ()
   
-  DataArray Qdata;
-  DataArray Slopes_x, Slopes_y;
-  DataArray Fluxes;
+  DataArray2d Qdata;
+  DataArray2d Slopes_x, Slopes_y;
+  DataArray2d Fluxes;
   real_t dtdx, dtdy;
   
-}; // ComputeTraceAndFluxes_Functor
+}; // ComputeTraceAndFluxes_Functor2D
 
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitImplodeFunctor : public HydroBaseFunctor2D {
+class InitImplodeFunctor2D : public HydroBaseFunctor2D {
 
 public:
-  InitImplodeFunctor(HydroParams params,
-		     DataArray Udata) :
+  InitImplodeFunctor2D(HydroParams params,
+		       DataArray2d Udata) :
     HydroBaseFunctor2D(params), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -1018,19 +1020,19 @@ public:
     
   } // end operator ()
 
-  DataArray Udata;
+  DataArray2d Udata;
 
-}; // InitImplodeFunctor
+}; // InitImplodeFunctor2D
   
 /*************************************************/
 /*************************************************/
 /*************************************************/
-class InitBlastFunctor : public HydroBaseFunctor2D {
+class InitBlastFunctor2D : public HydroBaseFunctor2D {
 
 public:
-  InitBlastFunctor(HydroParams params,
-		   BlastParams bParams,
-		   DataArray Udata) :
+  InitBlastFunctor2D(HydroParams params,
+		     BlastParams bParams,
+		     DataArray2d Udata) :
     HydroBaseFunctor2D(params), bParams(bParams), Udata(Udata)  {};
   
   KOKKOS_INLINE_FUNCTION
@@ -1082,171 +1084,13 @@ public:
     
   } // end operator ()
   
-  DataArray Udata;
+  DataArray2d Udata;
   BlastParams bParams;
   
-}; // InitBlastFunctor
+}; // InitBlastFunctor2D
   
-
-/*************************************************/
-/*************************************************/
-/*************************************************/
- template <FaceIdType faceId>
- class MakeBoundariesFunctor : public HydroBaseFunctor2D {
-
-public:
-
-  MakeBoundariesFunctor(HydroParams params,
-			DataArray Udata) :
-    HydroBaseFunctor2D(params), Udata(Udata)  {};
-  
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const
-  {
-    const int nx = params.nx;
-    const int ny = params.ny;
-    
-    const int ghostWidth = params.ghostWidth;
-
-    const int imin = params.imin;
-    const int imax = params.imax;
-    
-    const int jmin = params.jmin;
-    const int jmax = params.jmax;
-    
-    int i,j;
-
-    int boundary_type;
-    
-    int i0, j0;
-    int iVar;
-
-    if (faceId == FACE_XMIN) {
-      
-      // boundary xmin
-      boundary_type = params.boundary_type_xmin;
-
-      j = index / ghostWidth;
-      i = index - j*ghostWidth;
-      
-      if(j >= jmin && j <= jmax    &&
-	 i >= 0    && i <ghostWidth) {
-	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    i0=2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	  } else if( boundary_type == BC_NEUMANN ) {
-	    i0=ghostWidth;
-	  } else { // periodic
-	    i0=nx+i;
-	  }
-	  
-	  Udata(i  ,j  , iVar) = Udata(i0  ,j  , iVar)*sign;
-	  
-	}
-	
-      }
-    } // end FACE_XMIN
-
-    if (faceId == FACE_XMAX) {
-      
-      // boundary xmax
-      boundary_type = params.boundary_type_xmax;
-
-      j = index / ghostWidth;
-      i = index - j*ghostWidth;
-      i += (nx+ghostWidth);
-
-      if(j >= jmin          && j <= jmax             &&
-	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
-	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    i0=2*nx+2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    i0=nx+ghostWidth-1;
-	  } else { // periodic
-	    i0=i-nx;
-	  }
-	  
-	  Udata(i  ,j  , iVar) = Udata(i0 ,j  , iVar)*sign;
-	  
-	}
-      }
-    } // end FACE_XMAX
-    
-    if (faceId == FACE_YMIN) {
-      
-      // boundary ymin
-      boundary_type = params.boundary_type_ymin;
-
-      i = index / ghostWidth;
-      j = index - i*ghostWidth;
-
-      if(i >= imin && i <= imax    &&
-	 j >= 0    && j <ghostWidth) {
-	
-	real_t sign=1.0;
-	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    j0=2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    j0=ghostWidth;
-	  } else { // periodic
-	    j0=ny+j;
-	  }
-	  
-	  Udata(i  ,j  , iVar) = Udata(i  ,j0 , iVar)*sign;
-	}
-      }
-    } // end FACE_YMIN
-
-    if (faceId == FACE_YMAX) {
-
-      // boundary ymax
-      boundary_type = params.boundary_type_ymax;
-
-      i = index / ghostWidth;
-      j = index - i*ghostWidth;
-      j += (ny+ghostWidth);
-      if(i >= imin          && i <= imax              &&
-	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
-	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
-	  
-	  if ( boundary_type == BC_DIRICHLET ) {
-	    j0=2*ny+2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	  } else if ( boundary_type == BC_NEUMANN ) {
-	    j0=ny+ghostWidth-1;
-	  } else { // periodic
-	    j0=j-ny;
-	  }
-	  
-	  Udata(i  ,j  , iVar) = Udata(i  ,j0  , iVar)*sign;
-	  
-	}
-
-      }
-    } // end FACE_YMAX
-    
-  } // end operator ()
-
-  DataArray Udata;
-  
-}; // MakeBoundariesFunctor
-
-} // namespace hydro2d
 } // namespace muscl
+
 } // namespace ppkMHD
 
 #endif // HYDRO_RUN_FUNCTORS_2D_H_

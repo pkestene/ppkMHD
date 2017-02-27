@@ -10,6 +10,7 @@
 
 // the actual computational functors called in HydroRun
 #include "HydroRunFunctors2D.h"
+#include "BoundariesFunctors.h"
 
 // Kokkos
 #include "kokkos_shared.h"
@@ -23,7 +24,7 @@
 
 namespace ppkMHD {
 
-using namespace muscl::hydro2d;
+using namespace muscl;
 
 // =======================================================
 // ==== CLASS SolverHydroMuscl2D IMPL ====================
@@ -34,7 +35,8 @@ using namespace muscl::hydro2d;
 /**
  *
  */
-SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params, ConfigMap& configMap) :
+SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
+				       ConfigMap& configMap) :
   SolverBase(params, configMap),
   U(), U2(), Q(),
   Fluxes_x(), Fluxes_y(),
@@ -46,6 +48,8 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params, ConfigMap& configMap
 
   m_nCells = ijsize;
 
+  int nbvar = params.nbvar;
+  
   /*
    * memory allocation (use sizes with ghosts included)
    */
@@ -75,9 +79,6 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params, ConfigMap& configMap
   // if (!riemannSolverStr.compare("hllc"))
   //   riemann_solver_fn = &SolverHydroMuscl2D::riemann_hllc;
   
-  // IO writer
-  m_io_writer->set_nbvar(nbvar);
-
   /*
    * initialize hydro array at t=0
    */
@@ -150,7 +151,7 @@ double SolverHydroMuscl2D::compute_dt_local()
     Udata = U2;
 
   // call device functor
-  ComputeDtFunctor computeDtFunctor(params, Udata);
+  ComputeDtFunctor2D computeDtFunctor(params, Udata);
   Kokkos::parallel_reduce(ijsize, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
@@ -242,55 +243,55 @@ void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in,
     
     // compute fluxes
     {
-      ComputeAndStoreFluxesFunctor functor(params, Q,
-					   Fluxes_x, Fluxes_y,
-					   dtdx, dtdy);
+      ComputeAndStoreFluxesFunctor2D functor(params, Q,
+					     Fluxes_x, Fluxes_y,
+					     dtdx, dtdy);
       Kokkos::parallel_for(ijsize, functor);
     }
 
     // actual update
     {
-      UpdateFunctor functor(params, data_out,
-			    Fluxes_x, Fluxes_y);
+      UpdateFunctor2D functor(params, data_out,
+			      Fluxes_x, Fluxes_y);
       Kokkos::parallel_for(ijsize, functor);
     }
     
   } else if (params.implementationVersion == 1) {
 
     // call device functor to compute slopes
-    ComputeSlopesFunctor computeSlopesFunctor(params, Q, Slopes_x, Slopes_y);
+    ComputeSlopesFunctor2D computeSlopesFunctor(params, Q, Slopes_x, Slopes_y);
     Kokkos::parallel_for(ijsize, computeSlopesFunctor);
 
     // now trace along X axis
     {
-      ComputeTraceAndFluxes_Functor<XDIR> functor(params, Q,
-						  Slopes_x, Slopes_y,
-						  Fluxes_x,
-						  dtdx, dtdy);
+      ComputeTraceAndFluxes_Functor2D<XDIR> functor(params, Q,
+						    Slopes_x, Slopes_y,
+						    Fluxes_x,
+						    dtdx, dtdy);
       Kokkos::parallel_for(ijsize, functor);
     }
     
     // and update along X axis
     {
-      UpdateDirFunctor<XDIR> functor(params, data_out, Fluxes_x);
+      UpdateDirFunctor2D<XDIR> functor(params, data_out, Fluxes_x);
       Kokkos::parallel_for(ijsize, functor);
     }
-
+    
     // now trace along Y axis
     {
-      ComputeTraceAndFluxes_Functor<YDIR> functor(params, Q,
-						  Slopes_x, Slopes_y,
-						  Fluxes_y,
-						  dtdx, dtdy);
+      ComputeTraceAndFluxes_Functor2D<YDIR> functor(params, Q,
+						    Slopes_x, Slopes_y,
+						    Fluxes_y,
+						    dtdx, dtdy);
       Kokkos::parallel_for(ijsize, functor);
     }
     
     // and update along Y axis
     {
-      UpdateDirFunctor<YDIR> functor(params, data_out, Fluxes_y);
+      UpdateDirFunctor2D<YDIR> functor(params, data_out, Fluxes_y);
       Kokkos::parallel_for(ijsize, functor);
     }
-
+    
   } // end params.implementationVersion == 1
   
   timers[TIMER_NUM_SCHEME]->stop();
@@ -306,7 +307,7 @@ void SolverHydroMuscl2D::convertToPrimitives(DataArray Udata)
 {
 
   // call device functor
-  ConvertToPrimitivesFunctor convertToPrimitivesFunctor(params, Udata, Q);
+  ConvertToPrimitivesFunctor2D convertToPrimitivesFunctor(params, Udata, Q);
   Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
   
 } // SolverHydroMuscl2D::convertToPrimitives
@@ -324,20 +325,20 @@ void SolverHydroMuscl2D::make_boundaries(DataArray Udata)
   
   // call device functor
   {
-    MakeBoundariesFunctor<FACE_XMIN> functor(params, Udata);
+    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
-    MakeBoundariesFunctor<FACE_XMAX> functor(params, Udata);
+    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
 
   {
-    MakeBoundariesFunctor<FACE_YMIN> functor(params, Udata);
+    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   {
-    MakeBoundariesFunctor<FACE_YMAX> functor(params, Udata);
+    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
   
@@ -352,7 +353,7 @@ void SolverHydroMuscl2D::make_boundaries(DataArray Udata)
 void SolverHydroMuscl2D::init_implode(DataArray Udata)
 {
 
-  InitImplodeFunctor functor(params, Udata);
+  InitImplodeFunctor2D functor(params, Udata);
   Kokkos::parallel_for(ijsize, functor);
   
 } // init_implode
@@ -368,7 +369,7 @@ void SolverHydroMuscl2D::init_blast(DataArray Udata)
 
   BlastParams blastParams = BlastParams(configMap);
   
-  InitBlastFunctor functor(params, blastParams, Udata);
+  InitBlastFunctor2D functor(params, blastParams, Udata);
   Kokkos::parallel_for(ijsize, functor);
 
 } // SolverHydroMuscl2D::init_blast

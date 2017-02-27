@@ -45,7 +45,7 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   m_variables_names[IB] = "by"; // mag field Y
   m_variables_names[IC] = "bz"; // mag field Z
 
-  m_io_writer = new io::IO_Writer(params, configMap, 0, m_variables_names);
+  m_io_writer = new io::IO_Writer(params, configMap, m_variables_names);
   
 } // SolverBase::SolverBase
 

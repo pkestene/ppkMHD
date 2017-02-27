@@ -170,6 +170,7 @@ struct HydroParams {
   int ny;     /*!< logical size along Y (without ghost cells).*/
   int nz;     /*!< logical size along Z (without ghost cells).*/
   int ghostWidth;  
+  int nbvar;  /*!< number of variables in HydroState / MHDState. */
   int imin;   /*!< index minimum at X border*/
   int imax;   /*!< index maximum at X border*/
   int jmin;   /*!< index minimum at Y border*/
@@ -213,7 +214,7 @@ struct HydroParams {
 
   HydroParams() :
     nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true),
-    nx(0), ny(0), nz(0), ghostWidth(2),
+    nx(0), ny(0), nz(0), ghostWidth(2), nbvar(4),
     imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0),
     isize(0), jsize(0), ksize(0),
     xmin(0.0), xmax(1.0), ymin(0.0), ymax(1.0), zmin(0.0), zmax(1.0),

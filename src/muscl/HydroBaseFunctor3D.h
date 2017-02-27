@@ -6,7 +6,7 @@
 #include "HydroParams.h"
 #include "HydroState.h"
 
-namespace ppkMHD { namespace muscl { namespace hydro3d {
+namespace ppkMHD { namespace muscl {
 
 /**
  * Base class to derive actual kokkos functor for hydro 3D.
@@ -24,7 +24,7 @@ HydroBaseFunctor3D(HydroParams params) : params(params) {};
   virtual ~HydroBaseFunctor3D() {};
 
   HydroParams params;
-  static const int nbvar = 5;
+  const int nbvar = params.nbvar;
   
   // utility routines used in various computational kernels
 
@@ -808,8 +808,6 @@ HydroBaseFunctor3D(HydroParams params) : params(params) {};
   } // riemann_hllc
 
 }; // class HydroBaseFunctor3D
-
-} // namespace hydro3d
 
 } // namespace muscl
 
