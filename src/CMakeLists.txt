@@ -5,10 +5,14 @@
 # config file reader / ConfigMap / monitoring timer
 add_subdirectory(utils)
 
+# common solver code
+add_subdirectory(shared)
+
 # Hydro solver using 2nd order Muscl-Hancock solver
 add_subdirectory(muscl)
 
 # include header for main application
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/shared)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/muscl)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
@@ -22,6 +26,7 @@ add_executable(${EXE_NAME}
   $<TARGET_OBJECTS:time>
   $<TARGET_OBJECTS:io>
   $<TARGET_OBJECTS:muscl>
+  $<TARGET_OBJECTS:shared>
   main.cpp
   )
 
