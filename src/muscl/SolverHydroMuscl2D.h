@@ -78,6 +78,7 @@ public:
   // host routines (initialization)
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
+  void init_four_quadrant(DataArray Udata);
 
   void save_solution_impl();
 

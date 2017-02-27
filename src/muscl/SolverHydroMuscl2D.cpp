@@ -90,6 +90,10 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
 
     init_blast(U);
 
+  } else if ( !m_problem_name.compare("four_quadrant") ) {
+
+    init_four_quadrant(U);
+
   } else {
 
     std::cout << "Problem : " << m_problem_name
@@ -373,6 +377,37 @@ void SolverHydroMuscl2D::init_blast(DataArray Udata)
   Kokkos::parallel_for(ijsize, functor);
 
 } // SolverHydroMuscl2D::init_blast
+
+// =======================================================
+// =======================================================
+/**
+ * Four quadrant 2D riemann problem.
+ *
+ * See article: Lax and Liu, "Solution of two-dimensional riemann
+ * problems of gas dynamics by positive schemes",SIAM journal on
+ * scientific computing, 1998, vol. 19, no2, pp. 319-340
+ */
+void SolverHydroMuscl2D::init_four_quadrant(DataArray Udata)
+{
+
+  int configNumber = configMap.getInteger("riemann2d","config_number",0);
+  real_t xt = configMap.getFloat("riemann2d","x",0.8);
+  real_t yt = configMap.getFloat("riemann2d","y",0.8);
+
+  HydroState2d U0, U1, U2, U3;
+  getRiemannConfig2d(configNumber, U0, U1, U2, U3);
+  
+  primToCons_2D(U0, params.settings.gamma0);
+  primToCons_2D(U1, params.settings.gamma0);
+  primToCons_2D(U2, params.settings.gamma0);
+  primToCons_2D(U3, params.settings.gamma0);
+
+  InitFourQuadrantFunctor2D functor(params, Udata, configNumber,
+				    U0, U1, U2, U3,
+				    xt, yt);
+  Kokkos::parallel_for(ijsize, functor);
+  
+} // init_four_quadrant
 
 // =======================================================
 // =======================================================

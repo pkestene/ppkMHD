@@ -9,7 +9,9 @@
 #include "HydroBaseFunctor2D.h"
 #include "kokkos_shared.h"
 
+// init conditions
 #include "BlastParams.h"
+#include "initRiemannConfig2d.h"
 
 namespace ppkMHD { namespace muscl {
 
@@ -1089,6 +1091,82 @@ public:
   
 }; // InitBlastFunctor2D
   
+/*************************************************/
+/*************************************************/
+/*************************************************/
+class InitFourQuadrantFunctor2D : public HydroBaseFunctor2D {
+
+public:
+  InitFourQuadrantFunctor2D(HydroParams params,
+			    DataArray2d Udata,
+			    int configNumber,
+			    HydroState U0,
+			    HydroState U1,
+			    HydroState U2,
+			    HydroState U3,
+			    real_t xt,
+			    real_t yt) :
+    HydroBaseFunctor2D(params), Udata(Udata),
+    U0(U0), U1(U1), U2(U2), U3(U3), xt(xt), yt(yt)
+  {};
+  
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+    const real_t xmin = params.xmin;
+    const real_t ymin = params.ymin;
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    
+    if (x<xt) {
+      if (y<yt) {
+	// quarter 2
+	Udata(i  ,j  , ID) = U2.d;
+	Udata(i  ,j  , IP) = U2.p;
+	Udata(i  ,j  , IU) = U2.u;
+	Udata(i  ,j  , IV) = U2.v;
+      } else {
+	// quarter 1
+	Udata(i  ,j  , ID) = U1.d;
+	Udata(i  ,j  , IP) = U1.p;
+	Udata(i  ,j  , IU) = U1.u;
+	Udata(i  ,j  , IV) = U1.v;
+      }
+    } else {
+      if (y<yt) {
+	// quarter 3
+	Udata(i  ,j  , ID) = U3.d;
+	Udata(i  ,j  , IP) = U3.p;
+	Udata(i  ,j  , IU) = U3.u;
+	Udata(i  ,j  , IV) = U3.v;
+      } else {
+	// quarter 0
+	Udata(i  ,j  , ID) = U0.d;
+	Udata(i  ,j  , IP) = U0.p;
+	Udata(i  ,j  , IU) = U0.u;
+	Udata(i  ,j  , IV) = U0.v;
+      }
+    }
+    
+  } // end operator ()
+
+  DataArray2d Udata;
+  HydroState2d U0, U1, U2, U3;
+  real_t xt, yt;
+  
+}; // InitFourQuadrantFunctor2D
+
 } // namespace muscl
 
 } // namespace ppkMHD
