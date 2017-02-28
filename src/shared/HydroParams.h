@@ -18,7 +18,9 @@
 //! dimension of the problem
 enum DimensionType {
   TWO_D = 2, 
-  THREE_D = 3
+  THREE_D = 3,
+  DIM2 = 2,
+  DIM3 = 3
 };
 
 //! hydro field indexes
