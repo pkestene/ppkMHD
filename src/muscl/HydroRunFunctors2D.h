@@ -6,8 +6,9 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
-#include "HydroBaseFunctor2D.h"
 #include "kokkos_shared.h"
+#include "HydroBaseFunctor2D.h"
+//#include "RiemannSolvers.h"
 
 // init conditions
 #include "BlastParams.h"
@@ -205,6 +206,7 @@ public:
       
       // compute hydro flux_x
       riemann_hllc(&qleft,&qright,&qgdnv,&flux_x);
+      //riemann_hydro(&qleft,&qright,&qgdnv,&flux_x,params);
 
       //
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
