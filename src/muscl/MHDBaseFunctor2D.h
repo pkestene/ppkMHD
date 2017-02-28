@@ -125,9 +125,9 @@ public:
   void get_magField(const DataArray& data, int i, int j, BField& b) const
   {
 
-    b.bx = data(i,j, IBX);
-    b.by = data(i,j, IBY);
-    b.bz = data(i,j, IBZ);
+    b[IBFX] = data(i,j, IBX);
+    b[IBFY] = data(i,j, IBY);
+    b[IBFZ] = data(i,j, IBZ);
     
   } // get_magField
   
@@ -689,11 +689,11 @@ public:
 			      qNb[centerX  ][centerY-1].v + 
 			      qNb[centerX  ][centerY  ].v);
       
-	real_t A  = 0.5f  * (bfNb[centerX  ][centerY-1].bx + 
-			     bfNb[centerX  ][centerY  ].bx);
+	real_t A  = 0.5f  * (bfNb[centerX  ][centerY-1][IBFX] + 
+			     bfNb[centerX  ][centerY  ][IBFX]);
 
-	real_t B  = 0.5f  * (bfNb[centerX-1][centerY  ].by + 
-			     bfNb[centerX  ][centerY  ].by);
+	real_t B  = 0.5f  * (bfNb[centerX-1][centerY  ][IBFY] + 
+			     bfNb[centerX  ][centerY  ][IBFY]);
       
 	Ez[di][dj] = u*B-v*A;
       }
@@ -715,10 +715,10 @@ public:
     real_t C = q.bz;            
     
     // Face centered variables
-    real_t AL =  bfNb[CENTER  ][CENTER  ].bx;
-    real_t AR =  bfNb[CENTER+1][CENTER  ].bx;
-    real_t BL =  bfNb[CENTER  ][CENTER  ].by;
-    real_t BR =  bfNb[CENTER  ][CENTER+1].by;
+    real_t AL =  bfNb[CENTER  ][CENTER  ][IBFX];
+    real_t AR =  bfNb[CENTER+1][CENTER  ][IBFX];
+    real_t BL =  bfNb[CENTER  ][CENTER  ][IBFY];
+    real_t BR =  bfNb[CENTER  ][CENTER+1][IBFY];
 
     // TODO LATER : compute xL, xR and xC using ::gParam
     // this is only needed when doing cylindrical or spherical coordinates
@@ -760,12 +760,12 @@ public:
     real_t (&dbfX)[3] = dbf[IX];
     real_t (&dbfY)[3] = dbf[IY];
   
-    bfNeighbors[0] =  bfNb[CENTER  ][CENTER  ].bx;
-    bfNeighbors[1] =  bfNb[CENTER  ][CENTER+1].bx;
-    bfNeighbors[2] =  bfNb[CENTER  ][CENTER-1].bx;
-    bfNeighbors[3] =  bfNb[CENTER  ][CENTER  ].by;
-    bfNeighbors[4] =  bfNb[CENTER+1][CENTER  ].by;
-    bfNeighbors[5] =  bfNb[CENTER-1][CENTER  ].by;
+    bfNeighbors[0] =  bfNb[CENTER  ][CENTER  ][IBFX];
+    bfNeighbors[1] =  bfNb[CENTER  ][CENTER+1][IBFX];
+    bfNeighbors[2] =  bfNb[CENTER  ][CENTER-1][IBFX];
+    bfNeighbors[3] =  bfNb[CENTER  ][CENTER  ][IBFY];
+    bfNeighbors[4] =  bfNb[CENTER+1][CENTER  ][IBFY];
+    bfNeighbors[5] =  bfNb[CENTER-1][CENTER  ][IBFY];
   
     slope_unsplit_mhd_2d(bfNeighbors, dbf);
   
@@ -774,24 +774,24 @@ public:
     real_t dBLx = 0.5 * dbfX[IY];
 
     // change neighbors to i+1, j and recompute dbf
-    bfNeighbors[0] =  bfNb[CENTER+1][CENTER  ].bx;
-    bfNeighbors[1] =  bfNb[CENTER+1][CENTER+1].bx;
-    bfNeighbors[2] =  bfNb[CENTER+1][CENTER-1].bx;
-    bfNeighbors[3] =  bfNb[CENTER+1][CENTER  ].by;
-    bfNeighbors[4] =  bfNb[CENTER+2][CENTER  ].by;
-    bfNeighbors[5] =  bfNb[CENTER  ][CENTER  ].by;
+    bfNeighbors[0] =  bfNb[CENTER+1][CENTER  ][IBFX];
+    bfNeighbors[1] =  bfNb[CENTER+1][CENTER+1][IBFX];
+    bfNeighbors[2] =  bfNb[CENTER+1][CENTER-1][IBFX];
+    bfNeighbors[3] =  bfNb[CENTER+1][CENTER  ][IBFY];
+    bfNeighbors[4] =  bfNb[CENTER+2][CENTER  ][IBFY];
+    bfNeighbors[5] =  bfNb[CENTER  ][CENTER  ][IBFY];
 
     slope_unsplit_mhd_2d(bfNeighbors, dbf);  
 
     real_t dARy = 0.5 * dbfY[IX];
 
     // change neighbors to i, j+1 and recompute dbf
-    bfNeighbors[0] =  bfNb[CENTER  ][CENTER+1].bx;
-    bfNeighbors[1] =  bfNb[CENTER  ][CENTER+2].bx;
-    bfNeighbors[2] =  bfNb[CENTER  ][CENTER  ].bx;
-    bfNeighbors[3] =  bfNb[CENTER  ][CENTER+1].by;
-    bfNeighbors[4] =  bfNb[CENTER+1][CENTER+1].by;
-    bfNeighbors[5] =  bfNb[CENTER-1][CENTER+1].by;
+    bfNeighbors[0] =  bfNb[CENTER  ][CENTER+1][IBFX];
+    bfNeighbors[1] =  bfNb[CENTER  ][CENTER+2][IBFX];
+    bfNeighbors[2] =  bfNb[CENTER  ][CENTER  ][IBFX];
+    bfNeighbors[3] =  bfNb[CENTER  ][CENTER+1][IBFY];
+    bfNeighbors[4] =  bfNb[CENTER+1][CENTER+1][IBFY];
+    bfNeighbors[5] =  bfNb[CENTER-1][CENTER+1][IBFY];
 
     slope_unsplit_mhd_2d(bfNeighbors, dbf);
 

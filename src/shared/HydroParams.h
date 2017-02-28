@@ -35,7 +35,10 @@ enum VarIndex {
   IC=7,   /*!< Z magnetic field index */ 
   IBX=5,  /*!< X magnetic field index */ 
   IBY=6,  /*!< Y magnetic field index */ 
-  IBZ=7,  /*!< Z magnetic field index */ 
+  IBZ=7,   /*!< Z magnetic field index */
+  IBFX = 0,
+  IBFY = 1,
+  IBFZ = 2
 };
 
 //! face index

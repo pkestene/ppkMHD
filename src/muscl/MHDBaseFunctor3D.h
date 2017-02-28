@@ -125,9 +125,9 @@ public:
   void get_magField(const DataArray& data, int i, int j, int k, BField& b) const
   {
 
-    b.bx = data(i,j,k, IBX);
-    b.by = data(i,j,k, IBY);
-    b.bz = data(i,j,k, IBZ);
+    b[IBFX] = data(i,j,k, IBX);
+    b[IBFY] = data(i,j,k, IBY);
+    b[IBFZ] = data(i,j,k, IBZ);
     
   } // get_magField
   
