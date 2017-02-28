@@ -11,7 +11,7 @@ constexpr int MHD_NBVAR=8;
 
 using HydroState2d = Kokkos::Array<real_t,HYDRO_2D_NBVAR>;
 using HydroState3d = Kokkos::Array<real_t,HYDRO_3D_NBVAR>;
-// using MHDState     = Kokkos::Array<real_t,MHD_NBVAR>;
+using MHDState     = Kokkos::Array<real_t,MHD_NBVAR>;
 using BField       = Kokkos::Array<real_t,3>;
 
 //!< a POD data structure to store local conservative / primitive variables (hydro 2d)
@@ -38,19 +38,19 @@ using BField       = Kokkos::Array<real_t,3>;
 // };
 
 //!< a POD data structure to store local conservative / primitive variables (mhd 2d and 3d)
-struct MHDState {
-  real_t d;
-  real_t p;
-  real_t u;
-  real_t v;
-  real_t w;
-  real_t bx;
-  real_t by;
-  real_t bz;
+// struct MHDState {
+//   real_t d;
+//   real_t p;
+//   real_t u;
+//   real_t v;
+//   real_t w;
+//   real_t bx;
+//   real_t by;
+//   real_t bz;
 
-  KOKKOS_INLINE_FUNCTION
-  MHDState() : d(0.0), p(0.0), u(0.0), v(0.0), w(0.0), bx(0.0), by(0.0), bz(0.0) {}
-};
+//   KOKKOS_INLINE_FUNCTION
+//   MHDState() : d(0.0), p(0.0), u(0.0), v(0.0), w(0.0), bx(0.0), by(0.0), bz(0.0) {}
+// };
 
 //!< a POD data structure to store magnetif field
 // struct BField {

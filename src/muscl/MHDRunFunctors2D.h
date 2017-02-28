@@ -61,14 +61,14 @@ public:
       MHDState qLoc; // primitive    variables in current cell
       
       // get primitive variables in current cell
-      qLoc.d  = Qdata(i,j,ID);
-      qLoc.p  = Qdata(i,j,IP);
-      qLoc.u  = Qdata(i,j,IU);
-      qLoc.v  = Qdata(i,j,IV);
-      qLoc.w  = Qdata(i,j,IW);
-      qLoc.bx = Qdata(i,j,IBX);
-      qLoc.by = Qdata(i,j,IBY);
-      qLoc.bz = Qdata(i,j,IBZ);
+      qLoc[ID]  = Qdata(i,j,ID);
+      qLoc[IP]  = Qdata(i,j,IP);
+      qLoc[IU]  = Qdata(i,j,IU);
+      qLoc[IV]  = Qdata(i,j,IV);
+      qLoc[IW]  = Qdata(i,j,IW);
+      qLoc[IBX] = Qdata(i,j,IBX);
+      qLoc[IBY] = Qdata(i,j,IBY);
+      qLoc[IBZ] = Qdata(i,j,IBZ);
 
       // compute fastest information speeds
       real_t fastInfoSpeed[3];
@@ -135,14 +135,14 @@ public:
       real_t c;
       
       // get local conservative variable
-      uLoc.d  = Udata(i,j,ID);
-      uLoc.p  = Udata(i,j,IP);
-      uLoc.u  = Udata(i,j,IU);
-      uLoc.v  = Udata(i,j,IV);
-      uLoc.w  = Udata(i,j,IW);
-      uLoc.bx = Udata(i,j,IBX);
-      uLoc.by = Udata(i,j,IBY);
-      uLoc.bz = Udata(i,j,IBZ);
+      uLoc[ID]  = Udata(i,j,ID);
+      uLoc[IP]  = Udata(i,j,IP);
+      uLoc[IU]  = Udata(i,j,IU);
+      uLoc[IV]  = Udata(i,j,IV);
+      uLoc[IW]  = Udata(i,j,IW);
+      uLoc[IBX] = Udata(i,j,IBX);
+      uLoc[IBY] = Udata(i,j,IBY);
+      uLoc[IBZ] = Udata(i,j,IBZ);
 
       // get mag field in neighbor cells
       magFieldNeighbors[IX] = Udata(i+1,j  ,IBX);
@@ -153,14 +153,14 @@ public:
       constoprim_mhd(uLoc, magFieldNeighbors, c, qLoc);
 
       // copy q state in q global
-      Qdata(i,j,ID)  = qLoc.d;
-      Qdata(i,j,IP)  = qLoc.p;
-      Qdata(i,j,IU)  = qLoc.u;
-      Qdata(i,j,IV)  = qLoc.v;
-      Qdata(i,j,IW)  = qLoc.w;
-      Qdata(i,j,IBX) = qLoc.bx;
-      Qdata(i,j,IBY) = qLoc.by;
-      Qdata(i,j,IBZ) = qLoc.bz;
+      Qdata(i,j,ID)  = qLoc[ID];
+      Qdata(i,j,IP)  = qLoc[IP];
+      Qdata(i,j,IU)  = qLoc[IU];
+      Qdata(i,j,IV)  = qLoc[IV];
+      Qdata(i,j,IW)  = qLoc[IW];
+      Qdata(i,j,IBX) = qLoc[IBX];
+      Qdata(i,j,IBY) = qLoc[IBY];
+      Qdata(i,j,IBZ) = qLoc[IBZ];
       
     }
     
@@ -225,12 +225,12 @@ public:
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       //
       get_state(Qm_y, i  ,j-1, qleft);
-      swapValues(&(qleft.u) ,&(qleft.v) );
-      swapValues(&(qleft.bx) ,&(qleft.by) );
+      swapValues(&(qleft[IU]) ,&(qleft[IV]) );
+      swapValues(&(qleft[IBX]) ,&(qleft[IBY]) );
 
       get_state(Qp_y, i  ,j  , qright);
-      swapValues(&(qright.u) ,&(qright.v) );
-      swapValues(&(qright.bx) ,&(qright.by) );
+      swapValues(&(qright[IU]) ,&(qright[IV]) );
+      swapValues(&(qright[IBX]) ,&(qright[IBY]) );
       
       // compute hydro flux along Y
       riemann_hlld(qleft,qright,flux);
@@ -441,44 +441,44 @@ public:
       // add up contributions from all 4 faces
       
       get_state(FluxData_x, i,j, flux);      
-      udata.d  +=  flux.d*dtdx;
-      udata.p  +=  flux.p*dtdx;
-      udata.u  +=  flux.u*dtdx;
-      udata.v  +=  flux.v*dtdx;
-      udata.w  +=  flux.w*dtdx;
-      //udata.bx +=  flux.bx*dtdx;
-      //udata.by +=  flux.by*dtdx;
-      udata.bz +=  flux.bz*dtdx;
+      udata[ID]  +=  flux[ID]*dtdx;
+      udata[IP]  +=  flux[IP]*dtdx;
+      udata[IU]  +=  flux[IU]*dtdx;
+      udata[IV]  +=  flux[IV]*dtdx;
+      udata[IW]  +=  flux[IW]*dtdx;
+      //udata[IBX] +=  flux[IBX]*dtdx;
+      //udata[IBY] +=  flux[IBY]*dtdx;
+      udata[IBZ] +=  flux[IBZ]*dtdx;
       
       get_state(FluxData_x, i+1,j  , flux);      
-      udata.d  -=  flux.d*dtdx;
-      udata.p  -=  flux.p*dtdx;
-      udata.u  -=  flux.u*dtdx;
-      udata.v  -=  flux.v*dtdx;
-      udata.w  -=  flux.w*dtdx;
-      //udata.bx -=  flux.bx*dtdx;
-      //udata.by -=  flux.by*dtdx;
-      udata.bz -=  flux.bz*dtdx;
+      udata[ID]  -=  flux[ID]*dtdx;
+      udata[IP]  -=  flux[IP]*dtdx;
+      udata[IU]  -=  flux[IU]*dtdx;
+      udata[IV]  -=  flux[IV]*dtdx;
+      udata[IW]  -=  flux[IW]*dtdx;
+      //udata[IBX] -=  flux[IBX]*dtdx;
+      //udata[IBY] -=  flux[IBY]*dtdx;
+      udata[IBZ] -=  flux[IBZ]*dtdx;
       
       get_state(FluxData_y, i,j, flux);      
-      udata.d  +=  flux.d*dtdy;
-      udata.p  +=  flux.p*dtdy;
-      udata.u  +=  flux.v*dtdy; //
-      udata.v  +=  flux.u*dtdy; //
-      udata.w  +=  flux.w*dtdy;
-      //udata.bx +=  flux.bx*dtdy;
-      //udata.by +=  flux.by*dtdy;
-      udata.bz +=  flux.bz*dtdy;
+      udata[ID]  +=  flux[ID]*dtdy;
+      udata[IP]  +=  flux[IP]*dtdy;
+      udata[IU]  +=  flux[IV]*dtdy; //
+      udata[IV]  +=  flux[IU]*dtdy; //
+      udata[IW]  +=  flux[IW]*dtdy;
+      //udata[IBX] +=  flux[IBX]*dtdy;
+      //udata[IBY] +=  flux[IBY]*dtdy;
+      udata[IBZ] +=  flux[IBZ]*dtdy;
                   
       get_state(FluxData_y, i,j+1, flux);
-      udata.d  -=  flux.d*dtdy;
-      udata.p  -=  flux.p*dtdy;
-      udata.u  -=  flux.v*dtdy; //
-      udata.v  -=  flux.u*dtdy; //
-      udata.w  -=  flux.w*dtdy;
-      //udata.bx -=  flux.bx*dtdy;
-      //udata.by -=  flux.by*dtdy;
-      udata.bz -=  flux.bz*dtdy;
+      udata[ID]  -=  flux[ID]*dtdy;
+      udata[IP]  -=  flux[IP]*dtdy;
+      udata[IU]  -=  flux[IV]*dtdy; //
+      udata[IV]  -=  flux[IU]*dtdy; //
+      udata[IW]  -=  flux[IW]*dtdy;
+      //udata[IBX] -=  flux[IBX]*dtdy;
+      //udata[IBY] -=  flux[IBY]*dtdy;
+      udata[IBZ] -=  flux[IBZ]*dtdy;
 
       // write back result in Udata
       set_state(Udata, i,j, udata);
@@ -590,55 +590,55 @@ public:
 	// Local variables for Riemann problems solving
 	MHDState qleft;
 	MHDState qright;
-	MHDState qgdnv;
+	//MHDState qgdnv;
 	MHDState flux;
 
 	//
 	// compute reconstructed states at left interface along X
 	//
-	qLoc.d = Qdata   (i,j, ID);
-	dqX.d  = Slopes_x(i,j, ID);
-	dqY.d  = Slopes_y(i,j, ID);
+	qLoc[ID] = Qdata   (i,j, ID);
+	dqX[ID]  = Slopes_x(i,j, ID);
+	dqY[ID]  = Slopes_y(i,j, ID);
 	
-	qLoc.p = Qdata   (i,j, IP);
-	dqX.p  = Slopes_x(i,j, IP);
-	dqY.p  = Slopes_y(i,j, IP);
+	qLoc[IP] = Qdata   (i,j, IP);
+	dqX[IP]  = Slopes_x(i,j, IP);
+	dqY[IP]  = Slopes_y(i,j, IP);
 	
-	qLoc.u = Qdata   (i,j, IU);
-	dqX.u  = Slopes_x(i,j, IU);
-	dqY.u  = Slopes_y(i,j, IU);
+	qLoc[IU] = Qdata   (i,j, IU);
+	dqX[IU]  = Slopes_x(i,j, IU);
+	dqY[IU]  = Slopes_y(i,j, IU);
 	
-	qLoc.v = Qdata   (i,j, IV);
-	dqX.v  = Slopes_x(i,j, IV);
-	dqY.v  = Slopes_y(i,j, IV);
+	qLoc[IV] = Qdata   (i,j, IV);
+	dqX[IV]  = Slopes_x(i,j, IV);
+	dqY[IV]  = Slopes_y(i,j, IV);
 
 	if (dir == XDIR) {
 
 	  // left interface : right state
-	  trace_unsplit_2d_along_dir(&qLoc,
-				     &dqX, &dqY,
-				     dtdx, dtdy, FACE_XMIN, &qright);
+	  trace_unsplit_2d_along_dir(qLoc,
+				     dqX, dqY,
+				     dtdx, dtdy, FACE_XMIN, qright);
 	  
-	  qLocNeighbor.d = Qdata   (i-1,j, ID);
-	  dqX_neighbor.d = Slopes_x(i-1,j, ID);
-	  dqY_neighbor.d = Slopes_y(i-1,j, ID);
+	  qLocNeighbor[ID] = Qdata   (i-1,j, ID);
+	  dqX_neighbor[ID] = Slopes_x(i-1,j, ID);
+	  dqY_neighbor[ID] = Slopes_y(i-1,j, ID);
 	  
-	  qLocNeighbor.p = Qdata   (i-1,j, IP);
-	  dqX_neighbor.p = Slopes_x(i-1,j, IP);
-	  dqY_neighbor.p = Slopes_y(i-1,j, IP);
+	  qLocNeighbor[IP] = Qdata   (i-1,j, IP);
+	  dqX_neighbor[IP] = Slopes_x(i-1,j, IP);
+	  dqY_neighbor[IP] = Slopes_y(i-1,j, IP);
 	  
-	  qLocNeighbor.u = Qdata   (i-1,j, IU);
-	  dqX_neighbor.u = Slopes_x(i-1,j, IU);
-	  dqY_neighbor.u = Slopes_y(i-1,j, IU);
+	  qLocNeighbor[IU] = Qdata   (i-1,j, IU);
+	  dqX_neighbor[IU] = Slopes_x(i-1,j, IU);
+	  dqY_neighbor[IU] = Slopes_y(i-1,j, IU);
 	  
-	  qLocNeighbor.v = Qdata   (i-1,j, IV);
-	  dqX_neighbor.v = Slopes_x(i-1,j, IV);
-	  dqY_neighbor.v = Slopes_y(i-1,j, IV);
+	  qLocNeighbor[IV] = Qdata   (i-1,j, IV);
+	  dqX_neighbor[IV] = Slopes_x(i-1,j, IV);
+	  dqY_neighbor[IV] = Slopes_y(i-1,j, IV);
 	  
 	  // left interface : left state
-	  trace_unsplit_2d_along_dir(&qLocNeighbor,
-				     &dqX_neighbor,&dqY_neighbor,
-				     dtdx, dtdy, FACE_XMAX, &qleft);
+	  trace_unsplit_2d_along_dir(qLocNeighbor,
+				     dqX_neighbor,dqY_neighbor,
+				     dtdx, dtdy, FACE_XMAX, qleft);
 	  
 	  // Solve Riemann problem at X-interfaces and compute X-fluxes
 	  riemann_hlld(qleft,qright,flux);
@@ -646,51 +646,51 @@ public:
 	  //
 	  // store fluxes
 	  //	
-	  Fluxes(i,j , ID) =  flux.d*dtdx;
-	  Fluxes(i,j , IP) =  flux.p*dtdx;
-	  Fluxes(i,j , IU) =  flux.u*dtdx;
-	  Fluxes(i,j , IV) =  flux.v*dtdx;
+	  Fluxes(i,j , ID) =  flux[ID]*dtdx;
+	  Fluxes(i,j , IP) =  flux[IP]*dtdx;
+	  Fluxes(i,j , IU) =  flux[IU]*dtdx;
+	  Fluxes(i,j , IV) =  flux[IV]*dtdx;
 
 	} else if (dir == YDIR) {
 
 	  // left interface : right state
-	  trace_unsplit_2d_along_dir(&qLoc,
-				     &dqX, &dqY,
-				     dtdx, dtdy, FACE_YMIN, &qright);
+	  trace_unsplit_2d_along_dir(qLoc,
+				     dqX, dqY,
+				     dtdx, dtdy, FACE_YMIN, qright);
 	  
-	  qLocNeighbor.d = Qdata   (i,j-1, ID);
-	  dqX_neighbor.d = Slopes_x(i,j-1, ID);
-	  dqY_neighbor.d = Slopes_y(i,j-1, ID);
+	  qLocNeighbor[ID] = Qdata   (i,j-1, ID);
+	  dqX_neighbor[ID] = Slopes_x(i,j-1, ID);
+	  dqY_neighbor[ID] = Slopes_y(i,j-1, ID);
 	  
-	  qLocNeighbor.p = Qdata   (i,j-1, IP);
-	  dqX_neighbor.p = Slopes_x(i,j-1, IP);
-	  dqY_neighbor.p = Slopes_y(i,j-1, IP);
+	  qLocNeighbor[IP] = Qdata   (i,j-1, IP);
+	  dqX_neighbor[IP] = Slopes_x(i,j-1, IP);
+	  dqY_neighbor[IP] = Slopes_y(i,j-1, IP);
 	  
-	  qLocNeighbor.u = Qdata   (i,j-1, IU);
-	  dqX_neighbor.u = Slopes_x(i,j-1, IU);
-	  dqY_neighbor.u = Slopes_y(i,j-1, IU);
+	  qLocNeighbor[IU] = Qdata   (i,j-1, IU);
+	  dqX_neighbor[IU] = Slopes_x(i,j-1, IU);
+	  dqY_neighbor[IU] = Slopes_y(i,j-1, IU);
 	  
-	  qLocNeighbor.v = Qdata   (i,j-1, IV);
-	  dqX_neighbor.v = Slopes_x(i,j-1, IV);
-	  dqY_neighbor.v = Slopes_y(i,j-1, IV);
+	  qLocNeighbor[IV] = Qdata   (i,j-1, IV);
+	  dqX_neighbor[IV] = Slopes_x(i,j-1, IV);
+	  dqY_neighbor[IV] = Slopes_y(i,j-1, IV);
 	  
 	  // left interface : left state
-	  trace_unsplit_2d_along_dir(&qLocNeighbor,
-				     &dqX_neighbor,&dqY_neighbor,
-				     dtdx, dtdy, FACE_YMAX, &qleft);
+	  trace_unsplit_2d_along_dir(qLocNeighbor,
+				     dqX_neighbor,dqY_neighbor,
+				     dtdx, dtdy, FACE_YMAX, qleft);
 	  
 	  // Solve Riemann problem at Y-interfaces and compute Y-fluxes
-	  swapValues(&(qleft.u) ,&(qleft.v) );
-	  swapValues(&(qright.u),&(qright.v));
+	  swapValues(&(qleft[IU]) ,&(qleft[IV]) );
+	  swapValues(&(qright[IU]),&(qright[IV]));
 	  riemann_hll(qleft,qright,flux);
 	  
 	  //
 	  // update hydro array
 	  //	  
-	  Fluxes(i,j , ID) =  flux.d*dtdy;
-	  Fluxes(i,j , IP) =  flux.p*dtdy;
-	  Fluxes(i,j , IU) =  flux.v*dtdy; // IU/IV swapped
-	  Fluxes(i,j , IV) =  flux.u*dtdy; // IU/IV swapped
+	  Fluxes(i,j , ID) =  flux[ID]*dtdy;
+	  Fluxes(i,j , IP) =  flux[IP]*dtdy;
+	  Fluxes(i,j , IU) =  flux[IV]*dtdy; // IU/IV swapped
+	  Fluxes(i,j , IV) =  flux[IU]*dtdy; // IU/IV swapped
 
 	}
 	      
