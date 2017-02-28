@@ -10,7 +10,7 @@ constexpr int MHD_3D_NBVAR=8;
 constexpr int MHD_NBVAR=8;
 
 using HydroState2d = Kokkos::Array<real_t,HYDRO_2D_NBVAR>;
-// using HydroState3d = Kokkos::Array<real_t,HYDRO_3D_NBVAR>;
+using HydroState3d = Kokkos::Array<real_t,HYDRO_3D_NBVAR>;
 // using MHDState     = Kokkos::Array<real_t,MHD_NBVAR>;
 using BField       = Kokkos::Array<real_t,3>;
 
@@ -26,16 +26,16 @@ using BField       = Kokkos::Array<real_t,3>;
 // };
 
 //!< a POD data structure to store local conservative / primitive variables (hydro 3d)
-struct HydroState3d {
-  real_t d;
-  real_t p;
-  real_t u;
-  real_t v;
-  real_t w;
+// struct HydroState3d {
+//   real_t d;
+//   real_t p;
+//   real_t u;
+//   real_t v;
+//   real_t w;
 
-  KOKKOS_INLINE_FUNCTION
-  HydroState3d() : d(0.0), p(0.0), u(0.0), v(0.0), w(0.0) {}
-};
+//   KOKKOS_INLINE_FUNCTION
+//   HydroState3d() : d(0.0), p(0.0), u(0.0), v(0.0), w(0.0) {}
+// };
 
 //!< a POD data structure to store local conservative / primitive variables (mhd 2d and 3d)
 struct MHDState {
