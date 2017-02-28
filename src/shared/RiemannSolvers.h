@@ -16,30 +16,37 @@ namespace ppkMHD {
  * \param[in]  qgdnv input Godunov state
  * \param[out] flux  output flux vector
  */
+template <class HydroState>
 KOKKOS_INLINE_FUNCTION
-void cmpflx(const HydroState2d *qgdnv, 
-	    HydroState2d *flux,
+void cmpflx(const HydroState& qgdnv, 
+	    HydroState& flux,
 	    const HydroParams& params)
 {
   real_t gamma0 = params.settings.gamma0;
   
   // Compute fluxes
   // Mass density
-  flux->d = qgdnv->d * qgdnv->u;
+  flux[ID] = qgdnv[ID] * qgdnv[IU];
   
   // Normal momentum
-  flux->u = flux->d * qgdnv->u + qgdnv->p;
+  flux[IU] = flux[ID] * qgdnv[IU] + qgdnv[IP];
   
-  // Transverse momentum
-  flux->v = flux->d * qgdnv->v;
+  // Transverse momentum 1
+  flux[IV] = flux[ID] * qgdnv[IV];
+
+  if (std::is_same<HydroState,HydroState3d>::value)
+    flux[IW] = flux[ID] * qgdnv[IW];
   
   // Total energy
   real_t entho = ONE_F / (gamma0 - ONE_F);
   real_t ekin;
-  ekin = HALF_F * qgdnv->d * (qgdnv->u*qgdnv->u + qgdnv->v*qgdnv->v);
+  ekin = HALF_F * qgdnv[ID] * (qgdnv[IU]*qgdnv[IU] +
+			       qgdnv[IV]*qgdnv[IV]);
+  if (std::is_same<HydroState,HydroState3d>::value)
+    ekin += HALF_F * qgdnv[ID] * (qgdnv[IW]*qgdnv[IW]);
   
-  real_t etot = qgdnv->p * entho + ekin;
-  flux->p = qgdnv->u * (etot + qgdnv->p);
+  real_t etot = qgdnv[IP] * entho + ekin;
+  flux[IP] = qgdnv[IU] * (etot + qgdnv[IP]);
   
 } // cmpflx
 
@@ -52,12 +59,12 @@ void cmpflx(const HydroState2d *qgdnv,
  * @param[out] qgdnv : output Godunov state
  * @param[out] flux  : output flux
  */
-//template<DimensionType>
+template<class HydroState>
 KOKKOS_INLINE_FUNCTION
-void riemann_approx(const HydroState2d *qleft,
-		    const HydroState2d *qright,
-		    HydroState2d *qgdnv, 
-		    HydroState2d *flux,
+void riemann_approx(const HydroState& qleft,
+		    const HydroState& qright,
+		    HydroState& qgdnv, 
+		    HydroState& flux,
 		    const HydroParams& params)
 {
   real_t gamma0  = params.settings.gamma0;
@@ -68,12 +75,12 @@ void riemann_approx(const HydroState2d *qleft,
   real_t smallpp = params.settings.smallpp;
   
   // Pressure, density and velocity
-  real_t rl = fmax(qleft ->d, smallr);
-  real_t ul =      qleft ->u;
-  real_t pl = fmax(qleft ->p, rl*smallp);
-  real_t rr = fmax(qright->d, smallr);
-  real_t ur =      qright->u;
-  real_t pr = fmax(qright->p, rr*smallp);
+  real_t rl = fmax(qleft [ID], smallr);
+  real_t ul =      qleft [IU];
+  real_t pl = fmax(qleft [IP], rl*smallp);
+  real_t rr = fmax(qright[ID], smallr);
+  real_t ur =      qright[IU];
+  real_t pr = fmax(qright[IP], rr*smallp);
   
   // Lagrangian sound speed
   real_t cl = gamma0*pl*rl;
@@ -158,37 +165,145 @@ void riemann_approx(const HydroState2d *qleft,
   else
     frac = frac >= 1.0 ? 1.0 : frac <= 0.0 ? 0.0 : frac;
   
-  qgdnv->d = frac*rstar + (ONE_F-frac)*ro;
-  qgdnv->u = frac*ustar + (ONE_F-frac)*uo;
-  qgdnv->p = frac*pstar + (ONE_F-frac)*po;
+  qgdnv[ID] = frac*rstar + (ONE_F-frac)*ro;
+  qgdnv[IU] = frac*ustar + (ONE_F-frac)*uo;
+  qgdnv[IP] = frac*pstar + (ONE_F-frac)*po;
   
   if(spout < ZERO_F)
     {
-      qgdnv->d = ro;
-      qgdnv->u = uo;
-      qgdnv->p = po;
+      qgdnv[ID] = ro;
+      qgdnv[IU] = uo;
+      qgdnv[IP] = po;
     }
   
   if(spin > ZERO_F)
     {
-      qgdnv->d = rstar;
-      qgdnv->u = ustar;
-      qgdnv->p = pstar;
+      qgdnv[ID] = rstar;
+      qgdnv[IU] = ustar;
+      qgdnv[IP] = pstar;
     }
   
   // transverse velocity
   if(sgnm > ZERO_F)
     {
-      qgdnv->v = qleft->v;
+      qgdnv[IV] = qleft[IV];
+      if (std::is_same<HydroState,HydroState3d>::value)
+	qgdnv[IW] = qleft[IW];	
     }
   else
     {
-      qgdnv->v = qright->v;
+      qgdnv[IV] = qright[IV];
+      if (std::is_same<HydroState,HydroState3d>::value)
+	qgdnv[IW] = qright[IW];
     }
   
-  cmpflx(qgdnv, flux, params);
+  cmpflx<HydroState>(qgdnv, flux, params);
   
 } // riemann_approx
+
+/** 
+ * Riemann solver, equivalent to riemann_hll in RAMSES (see file
+ * godunov_utils.f90 in RAMSES).
+ * 
+ * This is the HYDRO only version. The MHD version is in file riemann_mhd.h
+ *
+ * Reference : E.F. Toro, Riemann solvers and numerical methods for
+ * fluid dynamics, Springer, chapter 10 (The HLL and HLLC Riemann solver).
+ *
+ * @param[in] qleft  : input left state
+ * @param[in] qright : input right state
+ * @param[out] qgdnv : output Godunov state
+ * @param[out] flux  : output flux
+ */
+template<class HydroState>
+KOKKOS_INLINE_FUNCTION
+void riemann_hll(const HydroState& qleft,
+		 const HydroState& qright,
+		 HydroState& qgdnv,
+		 HydroState& flux,
+		 const HydroParams& params)
+{
+
+  // 1D HLL Riemann solver
+  
+  // constants
+  real_t gamma0 = params.settings.gamma0;
+  real_t smallr = params.settings.smallr;
+  real_t smallp = params.settings.smallp;
+  //real_t smallc = params.settings.smallc;
+
+  //const real_t smallp = smallc*smallc/gamma0;
+  const real_t entho = ONE_F / (gamma0 - ONE_F);
+  
+  // Maximum wave speed
+  real_t rl=FMAX(qleft [ID],smallr);
+  real_t ul=     qleft [IU];
+  real_t pl=FMAX(qleft [IP],rl*smallp);
+  
+  real_t rr=FMAX(qright[ID],smallr);
+  real_t ur=     qright[IU];
+  real_t pr=FMAX(qright[IP],rr*smallp);
+  
+  real_t cl= SQRT(gamma0*pl/rl);
+  real_t cr= SQRT(gamma0*pr/rr);
+  
+  real_t SL = FMIN(FMIN(ul,ur)-FMAX(cl,cr),(real_t) ZERO_F);
+  real_t SR = FMAX(FMAX(ul,ur)+FMAX(cl,cr),(real_t) ZERO_F);
+  
+  // Compute average velocity
+  qgdnv[IU] = HALF_F*(qleft[IU]+qright[IU]);
+  
+  // Compute conservative variables
+  HydroState uleft, uright;
+  uleft [ID] = qleft [ID];
+  uright[ID] = qright[ID];
+  uleft [IP] = qleft [IP]*entho + HALF_F*qleft [ID]*qleft [IU]*qleft [IU];
+  uright[IP] = qright[IP]*entho + HALF_F*qright[ID]*qright[IU]*qright[IU];
+  uleft [IP] += HALF_F*qleft [ID]*qleft [IV]*qleft [IV];
+  uright[IP] += HALF_F*qright[ID]*qright[IV]*qright[IV];
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    uleft [IP] += HALF_F*qleft [ID]*qleft [IW]*qleft [IW];
+    uright[IP] += HALF_F*qright[ID]*qright[IW]*qright[IW];
+  }
+  uleft [IU] = qleft [ID]*qleft [IU];
+  uright[IU] = qright[ID]*qright[IU];
+  
+  // Other advected quantities
+  uleft [IV] = qleft [ID]*qleft [IV];
+  uright[IV] = qright[ID]*qright[IV];
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    uleft [IW] = qleft [ID]*qleft [IW];
+    uright[IW] = qright[ID]*qright[IW];
+  }
+  
+  // Compute left and right fluxes
+  HydroState fleft, fright;
+  fleft [ID] = uleft [IU];
+  fright[ID] = uright[IU];
+  fleft [IP] = qleft [IU] * ( uleft [IP] + qleft [IP]);
+  fright[IP] = qright[IU] * ( uright[IP] + qright[IP]);
+  fleft [IU] = qleft [IP] +   uleft [IU] * qleft [IU];
+  fright[IU] = qright[IP] +   uright[IU] * qright[IU];
+  
+    // Other advected quantities
+  fleft [IV] = fleft [ID] * qleft [IV];
+  fright[IV] = fright[ID] * qright[IV];
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    fleft [IW] = fleft [ID] * qleft [IW];
+    fright[IW] = fright[ID] * qright[IW];
+  }
+  
+  // Compute HLL fluxes
+  for (int nVar=0; nVar < HYDRO_2D_NBVAR; nVar++) {
+    flux[nVar] = (SR * fleft[nVar] - SL * fright[nVar] +
+		  SR * SL * (uright[nVar] - uleft[nVar]) ) / (SR-SL);
+  }
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    flux[IW] = (SR * fleft[IW] - SL * fright[IW] +
+		SR * SL * (uright[IW] - uleft[IW]) ) / (SR-SL);
+  }
+
+} // riemann_hll
 
 /** 
  * Riemann solver HLLC
@@ -198,11 +313,12 @@ void riemann_approx(const HydroState2d *qleft,
  * @param[out] qgdnv : output Godunov state
  * @param[out] flux  : output flux
  */
+template<class HydroState>
 KOKKOS_INLINE_FUNCTION
-void riemann_hllc(const HydroState2d *qleft,
-		  const HydroState2d *qright,
-		  HydroState2d *qgdnv,
-		  HydroState2d *flux,
+void riemann_hllc(const HydroState& qleft,
+		  const HydroState& qright,
+		  HydroState& qgdnv,
+		  HydroState& flux,
 		  const HydroParams& params)
 {
   
@@ -214,23 +330,27 @@ void riemann_hllc(const HydroState2d *qleft,
   const real_t entho = ONE_F / (gamma0 - ONE_F);
   
   // Left variables
-  real_t rl = fmax(qleft->d, smallr);
-  real_t pl = fmax(qleft->p, rl*smallp);
-  real_t ul =      qleft->u;
+  real_t rl = fmax(qleft[ID], smallr);
+  real_t pl = fmax(qleft[IP], rl*smallp);
+  real_t ul =      qleft[IU];
     
   real_t ecinl = HALF_F*rl*ul*ul;
-  ecinl += HALF_F*rl*qleft->v*qleft->v;
-
+  ecinl += HALF_F*rl*qleft[IV]*qleft[IV];
+  if (std::is_same<HydroState,HydroState3d>::value)
+    ecinl += HALF_F*rl*qleft[IW]*qleft[IW];
+  
   real_t etotl = pl*entho+ecinl;
   real_t ptotl = pl;
 
   // Right variables
-  real_t rr = fmax(qright->d, smallr);
-  real_t pr = fmax(qright->p, rr*smallp);
-  real_t ur =      qright->u;
+  real_t rr = fmax(qright[ID], smallr);
+  real_t pr = fmax(qright[IP], rr*smallp);
+  real_t ur =      qright[IU];
 
   real_t ecinr = HALF_F*rr*ur*ur;
-  ecinr += HALF_F*rr*qright->v*qright->v;
+  ecinr += HALF_F*rr*qright[IV]*qright[IV];
+  if (std::is_same<HydroState,HydroState3d>::value)
+    ecinl += HALF_F*rl*qright[IW]*qright[IW];
   
   real_t etotr = pr*entho+ecinr;
   real_t ptotr = pr;
@@ -284,13 +404,21 @@ void riemann_hllc(const HydroState2d *qleft,
   }
       
   // Compute the Godunov flux
-  flux->d = ro*uo;
-  flux->u = ro*uo*uo+ptoto;
-  flux->p = (etoto+ptoto)*uo;
-  if (flux->d > ZERO_F) {
-    flux->v = flux->d*qleft->v;
+  flux[ID] = ro*uo;
+  flux[IU] = ro*uo*uo+ptoto;
+  flux[IP] = (etoto+ptoto)*uo;
+  if (flux[ID] > ZERO_F) {
+    flux[IV] = flux[ID]*qleft[IV];
   } else {
-    flux->v = flux->d*qright->v;
+    flux[IV] = flux[ID]*qright[IV];
+  }
+
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    if (flux[ID] > ZERO_F) {
+      flux[IW] = flux[ID]*qleft[IW];
+    } else {
+      flux[IW] = flux[ID]*qright[IW];
+    }
   }
   
 } // riemann_hllc
@@ -299,20 +427,43 @@ void riemann_hllc(const HydroState2d *qleft,
  * Wrapper function calling the actual riemann solver.
  */
 KOKKOS_INLINE_FUNCTION
-void riemann_hydro(const HydroState2d *qleft,
-		   const HydroState2d *qright,
-		   HydroState2d *qgdnv, 
-		   HydroState2d *flux,
+void riemann_hydro(const HydroState2d& qleft,
+		   const HydroState2d& qright,
+		   HydroState2d& qgdnv, 
+		   HydroState2d& flux,
 		   const HydroParams& params)
 {
 
   if        (params.riemannSolverType == RIEMANN_APPROX) {
     
-    riemann_approx(qleft,qright,qgdnv,flux,params);
+    riemann_approx<HydroState2d>(qleft,qright,qgdnv,flux,params);
     
   } else if (params.riemannSolverType == RIEMANN_HLLC) {
     
-    riemann_hllc  (qleft,qright,qgdnv,flux,params);
+    riemann_hllc<HydroState2d>  (qleft,qright,qgdnv,flux,params);
+
+  }
+  
+} // riemann_hydro
+
+/**
+ * Wrapper function calling the actual riemann solver.
+ */
+KOKKOS_INLINE_FUNCTION
+void riemann_hydro(const HydroState3d& qleft,
+		   const HydroState3d& qright,
+		   HydroState3d& qgdnv, 
+		   HydroState3d& flux,
+		   const HydroParams& params)
+{
+
+  if        (params.riemannSolverType == RIEMANN_APPROX) {
+    
+    riemann_approx<HydroState3d>(qleft,qright,qgdnv,flux,params);
+    
+  } else if (params.riemannSolverType == RIEMANN_HLLC) {
+    
+    riemann_hllc<HydroState3d>  (qleft,qright,qgdnv,flux,params);
 
   }
   

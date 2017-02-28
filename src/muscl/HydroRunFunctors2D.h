@@ -8,7 +8,7 @@
 
 #include "kokkos_shared.h"
 #include "HydroBaseFunctor2D.h"
-//#include "RiemannSolvers.h"
+#include "RiemannSolvers.h"
 
 // init conditions
 #include "BlastParams.h"
@@ -205,8 +205,8 @@ public:
       qright[IV]  = Qp_x(i  ,j , IV);
       
       // compute hydro flux_x
-      riemann_hllc(qleft,qright,qgdnv,flux_x);
-      //riemann_hydro(qleft,qright,qgdnv,flux_x,params);
+      //riemann_hllc(qleft,qright,qgdnv,flux_x);
+      riemann_hydro(qleft,qright,qgdnv,flux_x,params);
 
       //
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
@@ -222,7 +222,8 @@ public:
       qright[IV]  = Qp_y(i  ,j , IU); // watchout IU, IV permutation
       
       // compute hydro flux_y
-      riemann_hllc(qleft,qright,qgdnv,flux_y);
+      //riemann_hllc(qleft,qright,qgdnv,flux_y);
+      riemann_hydro(qleft,qright,qgdnv,flux_y,params);
             
       //
       // update hydro array
@@ -515,7 +516,7 @@ public:
       
       // Solve Riemann problem at X-interfaces and compute X-fluxes
       //riemann_2d(qleft,qright,qgdnv,flux_x);
-      riemann_hllc(qleft,qright,qgdnv,flux_x);
+      riemann_hydro(qleft,qright,qgdnv,flux_x,params);
 	
       //
       // store fluxes X
@@ -577,7 +578,7 @@ public:
       swapValues(&(qleft[IU]) ,&(qleft[IV]) );
       swapValues(&(qright[IU]),&(qright[IV]));
       //riemann_2d(qleft,qright,qgdnv,flux_y);
-      riemann_hllc(qleft,qright,qgdnv,flux_y);
+      riemann_hydro(qleft,qright,qgdnv,flux_y,params);
 
       //
       // store fluxes Y
@@ -913,7 +914,7 @@ public:
 				     dtdx, dtdy, FACE_XMAX, qleft);
 	  
 	  // Solve Riemann problem at X-interfaces and compute X-fluxes
-	  riemann_hllc(qleft,qright,qgdnv,flux);
+	  riemann_hydro(qleft,qright,qgdnv,flux,params);
 
 	  //
 	  // store fluxes
@@ -954,7 +955,7 @@ public:
 	  // Solve Riemann problem at Y-interfaces and compute Y-fluxes
 	  swapValues(&(qleft[IU]) ,&(qleft[IV]) );
 	  swapValues(&(qright[IU]),&(qright[IV]));
-	  riemann_hllc(qleft,qright,qgdnv,flux);
+	  riemann_hydro(qleft,qright,qgdnv,flux,params);
 	  
 	  //
 	  // update hydro array
