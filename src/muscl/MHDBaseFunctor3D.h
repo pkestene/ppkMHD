@@ -40,63 +40,20 @@ public:
   } // swapValues
   
   /**
-   * max value out of 4
-   */
-  KOKKOS_INLINE_FUNCTION
-  real_t FMAX4(real_t a0, real_t a1, real_t a2, real_t a3) const 
-  {
-    real_t returnVal = a0;
-    returnVal = ( a1 > returnVal) ? a1 : returnVal;
-    returnVal = ( a2 > returnVal) ? a2 : returnVal;
-    returnVal = ( a3 > returnVal) ? a3 : returnVal;
-    
-    return returnVal;
-  } // FMAX4
-  
-  /**
-   * min value out of 4
-   */
-  KOKKOS_INLINE_FUNCTION
-  real_t FMIN4(real_t a0, real_t a1, real_t a2, real_t a3) const 
-  {
-    real_t returnVal = a0;
-    returnVal = ( a1 < returnVal) ? a1 : returnVal;
-    returnVal = ( a2 < returnVal) ? a2 : returnVal;
-    returnVal = ( a3 < returnVal) ? a3 : returnVal;
-    
-    return returnVal;
-  } // FMIN4
-  
-  /**
-   * max value out of 5
-   */
-  KOKKOS_INLINE_FUNCTION
-  real_t FMAX5(real_t a0, real_t a1, real_t a2, real_t a3, real_t a4) const
-  {
-    real_t returnVal = a0;
-    returnVal = ( a1 > returnVal) ? a1 : returnVal;
-    returnVal = ( a2 > returnVal) ? a2 : returnVal;
-    returnVal = ( a3 > returnVal) ? a3 : returnVal;
-    returnVal = ( a4 > returnVal) ? a4 : returnVal;
-    
-    return returnVal;
-  } // FMAX5
-
-  /**
    * Copy data(i,j,k) into q.
    */
   KOKKOS_INLINE_FUNCTION
   void get_state(DataArray data, int i, int j, int k, MHDState& q) const
   {
 
-    q.d  = data(i,j,k, ID);
-    q.p  = data(i,j,k, IP);
-    q.u  = data(i,j,k, IU);
-    q.v  = data(i,j,k, IV);
-    q.w  = data(i,j,k, IW);
-    q.bx = data(i,j,k, IBX);
-    q.by = data(i,j,k, IBY);
-    q.bz = data(i,j,k, IBZ);
+    q[ID]  = data(i,j,k, ID);
+    q[IP]  = data(i,j,k, IP);
+    q[IU]  = data(i,j,k, IU);
+    q[IV]  = data(i,j,k, IV);
+    q[IW]  = data(i,j,k, IW);
+    q[IBX] = data(i,j,k, IBX);
+    q[IBY] = data(i,j,k, IBY);
+    q[IBZ] = data(i,j,k, IBZ);
     
   } // get_state
 
@@ -107,14 +64,14 @@ public:
   void set_state(DataArray data, int i, int j, int k, const MHDState& q) const
   {
 
-    data(i,j,k, ID)  = q.d;
-    data(i,j,k, IP)  = q.p;
-    data(i,j,k, IU)  = q.u;
-    data(i,j,k, IV)  = q.v;
-    data(i,j,k, IW)  = q.w;
-    data(i,j,k, IBX) = q.bx;
-    data(i,j,k, IBY) = q.by;
-    data(i,j,k, IBZ) = q.bz;
+    data(i,j,k, ID)  = q[ID];
+    data(i,j,k, IP)  = q[IP];
+    data(i,j,k, IU)  = q[IU];
+    data(i,j,k, IV)  = q[IV];
+    data(i,j,k, IW)  = q[IW];
+    data(i,j,k, IBX) = q[IBX];
+    data(i,j,k, IBY) = q[IBY];
+    data(i,j,k, IBZ) = q[IBZ];
     
   } // set_state
 
@@ -125,9 +82,9 @@ public:
   void get_magField(const DataArray& data, int i, int j, int k, BField& b) const
   {
 
-    b.bx = data(i,j,k, IBX);
-    b.by = data(i,j,k, IBY);
-    b.bz = data(i,j,k, IBZ);
+    b[IBFX] = data(i,j,k, IBX);
+    b[IBFY] = data(i,j,k, IBY);
+    b[IBFZ] = data(i,j,k, IBZ);
     
   } // get_magField
   
@@ -176,43 +133,43 @@ public:
     real_t smallr = params.settings.smallr;
 
     // compute density
-    q.d = fmax(u.d, smallr);
+    q[ID] = fmax(u[ID], smallr);
 
     // compute velocities
-    q.u = u.u / q.d;
-    q.v = u.v / q.d;
-    q.w = u.w / q.d;
+    q[IU] = u[IU] / q[ID];
+    q[IV] = u[IV] / q[ID];
+    q[IW] = u[IW] / q[ID];
 
     // compute cell-centered magnetic field
-    q.bx = 0.5 * ( u.bx + magFieldNeighbors[0] );
-    q.by = 0.5 * ( u.by + magFieldNeighbors[1] );
-    q.bz = 0.5 * ( u.bz + magFieldNeighbors[2] );
+    q[IBX] = 0.5 * ( u[IBX] + magFieldNeighbors[0] );
+    q[IBY] = 0.5 * ( u[IBY] + magFieldNeighbors[1] );
+    q[IBZ] = 0.5 * ( u[IBZ] + magFieldNeighbors[2] );
 
     // compute specific kinetic energy and magnetic energy
-    real_t eken = 0.5 * (q.u *q.u  + q.v *q.v  + q.w *q.w );
-    real_t emag = 0.5 * (q.bx*q.bx + q.by*q.by + q.bz*q.bz);
+    real_t eken = 0.5 * (q[IU] *q[IU]  + q[IV] *q[IV]  + q[IW] *q[IW] );
+    real_t emag = 0.5 * (q[IBX]*q[IBX] + q[IBY]*q[IBY] + q[IBZ]*q[IBZ]);
 
     // compute pressure
 
     if (params.settings.cIso > 0) { // isothermal
       
-      q.p = q.d * (params.settings.cIso) * (params.settings.cIso);
+      q[IP] = q[ID] * (params.settings.cIso) * (params.settings.cIso);
       c     =  params.settings.cIso;
       
     } else {
       
-      real_t eint = (u.p - emag) / q.d - eken;
+      real_t eint = (u[IP] - emag) / q[ID] - eken;
 
-      q.p = fmax((params.settings.gamma0-1.0) * q.d * eint,
-		 q.d * params.settings.smallp);
+      q[IP] = fmax((params.settings.gamma0-1.0) * q[ID] * eint,
+		 q[ID] * params.settings.smallp);
   
-      // if (q.p < 0) {
+      // if (q[IP] < 0) {
       // 	printf("MHD pressure neg !!!\n");
       // }
 
       // compute speed of sound (should be removed as it is useless, hydro
       // legacy)
-      c = sqrt(params.settings.gamma0 * q.p / q.d);
+      c = sqrt(params.settings.gamma0 * q[IP] / q[ID]);
     }
  
   } // constoprim_mhd
@@ -321,14 +278,14 @@ public:
  
     if (slope_type==0) {
 
-      dqX.d  = ZERO_F; dqY.d  = ZERO_F; dqZ.d  = ZERO_F;
-      dqX.p  = ZERO_F; dqY.p  = ZERO_F; dqZ.p  = ZERO_F;
-      dqX.u  = ZERO_F; dqY.u  = ZERO_F; dqZ.u  = ZERO_F;
-      dqX.v  = ZERO_F; dqY.v  = ZERO_F; dqZ.v  = ZERO_F;
-      dqX.w  = ZERO_F; dqY.w  = ZERO_F; dqZ.w  = ZERO_F;
-      dqX.bx = ZERO_F; dqY.bx = ZERO_F; dqZ.bx = ZERO_F;
-      dqX.by = ZERO_F; dqY.by = ZERO_F; dqZ.by = ZERO_F;
-      dqX.bz = ZERO_F; dqY.bz = ZERO_F; dqZ.bz = ZERO_F;
+      dqX[ID]  = ZERO_F; dqY[ID]  = ZERO_F; dqZ[ID]  = ZERO_F;
+      dqX[IP]  = ZERO_F; dqY[IP]  = ZERO_F; dqZ[IP]  = ZERO_F;
+      dqX[IU]  = ZERO_F; dqY[IU]  = ZERO_F; dqZ[IU]  = ZERO_F;
+      dqX[IV]  = ZERO_F; dqY[IV]  = ZERO_F; dqZ[IV]  = ZERO_F;
+      dqX[IW]  = ZERO_F; dqY[IW]  = ZERO_F; dqZ[IW]  = ZERO_F;
+      dqX[IBX] = ZERO_F; dqY[IBX] = ZERO_F; dqZ[IBX] = ZERO_F;
+      dqX[IBY] = ZERO_F; dqY[IBY] = ZERO_F; dqZ[IBY] = ZERO_F;
+      dqX[IBZ] = ZERO_F; dqY[IBZ] = ZERO_F; dqZ[IBZ] = ZERO_F;
 
       return;
     }
@@ -336,14 +293,14 @@ public:
     if (slope_type==1 or
 	slope_type==2) {  // minmod or average
 
-      slope_unsplit_hydro_3d_scalar(q.d,qPlusX.d,qMinusX.d,qPlusY.d,qMinusY.d,qPlusZ.d,qMinusZ.d, &(dqX.d), &(dqY.d), &(dqZ.d));
-      slope_unsplit_hydro_3d_scalar(q.p,qPlusX.p,qMinusX.p,qPlusY.p,qMinusY.p,qPlusZ.p,qMinusZ.p, &(dqX.p), &(dqY.p), &(dqZ.p));
-      slope_unsplit_hydro_3d_scalar(q.u,qPlusX.u,qMinusX.u,qPlusY.u,qMinusY.u,qPlusZ.u,qMinusZ.u, &(dqX.u), &(dqY.u), &(dqZ.u));
-      slope_unsplit_hydro_3d_scalar(q.v,qPlusX.v,qMinusX.v,qPlusY.v,qMinusY.v,qPlusZ.v,qMinusZ.v, &(dqX.v), &(dqY.v), &(dqZ.v));
-      slope_unsplit_hydro_3d_scalar(q.w,qPlusX.w,qMinusX.w,qPlusY.w,qMinusY.w,qPlusZ.w,qMinusZ.w, &(dqX.w), &(dqY.w), &(dqZ.w));
-      slope_unsplit_hydro_3d_scalar(q.bx,qPlusX.bx,qMinusX.bx,qPlusY.bx,qMinusY.bx,qPlusZ.bx,qMinusZ.bx, &(dqX.bx), &(dqY.bx), &(dqZ.bx));
-      slope_unsplit_hydro_3d_scalar(q.by,qPlusX.by,qMinusX.by,qPlusY.by,qMinusY.by,qPlusZ.by,qMinusZ.by, &(dqX.by), &(dqY.by), &(dqZ.by));
-      slope_unsplit_hydro_3d_scalar(q.bz,qPlusX.bz,qMinusX.bz,qPlusY.bz,qMinusY.bz,qPlusZ.bz,qMinusY.bz, &(dqX.bz), &(dqY.bz), &(dqZ.bz));
+      slope_unsplit_hydro_3d_scalar(q[ID],qPlusX[ID],qMinusX[ID],qPlusY[ID],qMinusY[ID],qPlusZ[ID],qMinusZ[ID], &(dqX[ID]), &(dqY[ID]), &(dqZ[ID]));
+      slope_unsplit_hydro_3d_scalar(q[IP],qPlusX[IP],qMinusX[IP],qPlusY[IP],qMinusY[IP],qPlusZ[IP],qMinusZ[IP], &(dqX[IP]), &(dqY[IP]), &(dqZ[IP]));
+      slope_unsplit_hydro_3d_scalar(q[IU],qPlusX[IU],qMinusX[IU],qPlusY[IU],qMinusY[IU],qPlusZ[IU],qMinusZ[IU], &(dqX[IU]), &(dqY[IU]), &(dqZ[IU]));
+      slope_unsplit_hydro_3d_scalar(q[IV],qPlusX[IV],qMinusX[IV],qPlusY[IV],qMinusY[IV],qPlusZ[IV],qMinusZ[IV], &(dqX[IV]), &(dqY[IV]), &(dqZ[IV]));
+      slope_unsplit_hydro_3d_scalar(q[IW],qPlusX[IW],qMinusX[IW],qPlusY[IW],qMinusY[IW],qPlusZ[IW],qMinusZ[IW], &(dqX[IW]), &(dqY[IW]), &(dqZ[IW]));
+      slope_unsplit_hydro_3d_scalar(q[IBX],qPlusX[IBX],qMinusX[IBX],qPlusY[IBX],qMinusY[IBX],qPlusZ[IBX],qMinusZ[IBX], &(dqX[IBX]), &(dqY[IBX]), &(dqZ[IBX]));
+      slope_unsplit_hydro_3d_scalar(q[IBY],qPlusX[IBY],qMinusX[IBY],qPlusY[IBY],qMinusY[IBY],qPlusZ[IBY],qMinusZ[IBY], &(dqX[IBY]), &(dqY[IBY]), &(dqZ[IBY]));
+      slope_unsplit_hydro_3d_scalar(q[IBZ],qPlusX[IBZ],qMinusX[IBZ],qPlusY[IBZ],qMinusY[IBZ],qPlusZ[IBZ],qMinusY[IBZ], &(dqX[IBZ]), &(dqY[IBZ]), &(dqZ[IBZ]));
       
     }
   
@@ -372,27 +329,27 @@ public:
    * \note This routine is called inside trace_unsplit_mhd_3d
    */
   KOKKOS_INLINE_FUNCTION
-  void slope_unsplit_mhd_3d(real_t bfNeighbors[15],
+  void slope_unsplit_mhd_3d(const real_t (&bfNeighbors)[15],
 			    real_t (&dbf)[3][3]) const
   {			
     /* layout for face centered magnetic field */
-    real_t &bfx        = bfNeighbors[0];
-    real_t &bfx_yplus  = bfNeighbors[1];
-    real_t &bfx_yminus = bfNeighbors[2];
-    real_t &bfx_zplus  = bfNeighbors[3];
-    real_t &bfx_zminus = bfNeighbors[4];
+    const real_t &bfx        = bfNeighbors[0];
+    const real_t &bfx_yplus  = bfNeighbors[1];
+    const real_t &bfx_yminus = bfNeighbors[2];
+    const real_t &bfx_zplus  = bfNeighbors[3];
+    const real_t &bfx_zminus = bfNeighbors[4];
 
-    real_t &bfy        = bfNeighbors[5];
-    real_t &bfy_xplus  = bfNeighbors[6];
-    real_t &bfy_xminus = bfNeighbors[7];
-    real_t &bfy_zplus  = bfNeighbors[8];
-    real_t &bfy_zminus = bfNeighbors[9];
+    const real_t &bfy        = bfNeighbors[5];
+    const real_t &bfy_xplus  = bfNeighbors[6];
+    const real_t &bfy_xminus = bfNeighbors[7];
+    const real_t &bfy_zplus  = bfNeighbors[8];
+    const real_t &bfy_zminus = bfNeighbors[9];
   
-    real_t &bfz        = bfNeighbors[10];
-    real_t &bfz_xplus  = bfNeighbors[11];
-    real_t &bfz_xminus = bfNeighbors[12];
-    real_t &bfz_yplus  = bfNeighbors[13];
-    real_t &bfz_yminus = bfNeighbors[14];
+    const real_t &bfz        = bfNeighbors[10];
+    const real_t &bfz_xplus  = bfNeighbors[11];
+    const real_t &bfz_xminus = bfNeighbors[12];
+    const real_t &bfz_yplus  = bfNeighbors[13];
+    const real_t &bfz_yminus = bfNeighbors[14];
   
 
     real_t (&dbfX)[3] = dbf[IX];
@@ -499,11 +456,11 @@ public:
    *
    */
   KOKKOS_INLINE_FUNCTION
-  void trace_unsplit_mhd_3d_simpler(MHDState q,
-				    MHDState dq[THREE_D],
-				    real_t bfNb[THREE_D*2], /* 2 faces per direction*/
-				    real_t dbf[12],
-				    real_t elecFields[THREE_D][2][2],
+  void trace_unsplit_mhd_3d_simpler(const MHDState q,
+				    MHDState (&dq)[THREE_D],
+				    const real_t (&bfNb)[THREE_D*2], /* 2 faces per direction*/
+				    const real_t (&dbf)[12],
+				    const real_t (&elecFields)[THREE_D][2][2],
 				    real_t dtdx,
 				    real_t dtdy,
 				    real_t dtdz,
@@ -515,9 +472,9 @@ public:
   
     // inputs
     // alias to electric field components
-    real_t (&Ex)[2][2] = elecFields[IX];
-    real_t (&Ey)[2][2] = elecFields[IY];
-    real_t (&Ez)[2][2] = elecFields[IZ];
+    const real_t (&Ex)[2][2] = elecFields[IX];
+    const real_t (&Ey)[2][2] = elecFields[IY];
+    const real_t (&Ez)[2][2] = elecFields[IZ];
 
     // outputs
     // alias for q on cell edge (as defined in DUMSES trace3d routine)
@@ -543,30 +500,30 @@ public:
     real_t dx     = params.dx;
 
     // Edge centered electric field in X, Y and Z directions
-    real_t &ELL = Ex[0][0];
-    real_t &ELR = Ex[0][1];
-    real_t &ERL = Ex[1][0];
-    real_t &ERR = Ex[1][1];
+    const real_t &ELL = Ex[0][0];
+    const real_t &ELR = Ex[0][1];
+    const real_t &ERL = Ex[1][0];
+    const real_t &ERR = Ex[1][1];
 
-    real_t &FLL = Ey[0][0];
-    real_t &FLR = Ey[0][1];
-    real_t &FRL = Ey[1][0];
-    real_t &FRR = Ey[1][1];
+    const real_t &FLL = Ey[0][0];
+    const real_t &FLR = Ey[0][1];
+    const real_t &FRL = Ey[1][0];
+    const real_t &FRR = Ey[1][1];
   
-    real_t &GLL = Ez[0][0];
-    real_t &GLR = Ez[0][1];
-    real_t &GRL = Ez[1][0];
-    real_t &GRR = Ez[1][1];
+    const real_t &GLL = Ez[0][0];
+    const real_t &GLR = Ez[0][1];
+    const real_t &GRL = Ez[1][0];
+    const real_t &GRR = Ez[1][1];
   
     // Cell centered values
-    real_t r = q.d;
-    real_t p = q.p;
-    real_t u = q.u;
-    real_t v = q.v;
-    real_t w = q.w;            
-    real_t A = q.bx;
-    real_t B = q.by;
-    real_t C = q.bz;            
+    real_t r = q[ID];
+    real_t p = q[IP];
+    real_t u = q[IU];
+    real_t v = q[IV];
+    real_t w = q[IW];            
+    real_t A = q[IBX];
+    real_t B = q[IBY];
+    real_t C = q[IBZ];            
 
     // Face centered variables
     real_t AL =  bfNb[0];
@@ -577,31 +534,31 @@ public:
     real_t CR =  bfNb[5];
 
     // Cell centered TVD slopes in X direction
-    real_t& drx = dq[IX].d;  drx *= HALF_F;
-    real_t& dpx = dq[IX].p;  dpx *= HALF_F;
-    real_t& dux = dq[IX].u;  dux *= HALF_F;
-    real_t& dvx = dq[IX].v;  dvx *= HALF_F;
-    real_t& dwx = dq[IX].w;  dwx *= HALF_F;
-    real_t& dCx = dq[IX].bz;  dCx *= HALF_F;
-    real_t& dBx = dq[IX].by;  dBx *= HALF_F;
+    real_t& drx = dq[IX][ID];  drx *= HALF_F;
+    real_t& dpx = dq[IX][IP];  dpx *= HALF_F;
+    real_t& dux = dq[IX][IU];  dux *= HALF_F;
+    real_t& dvx = dq[IX][IV];  dvx *= HALF_F;
+    real_t& dwx = dq[IX][IW];  dwx *= HALF_F;
+    real_t& dCx = dq[IX][IBZ];  dCx *= HALF_F;
+    real_t& dBx = dq[IX][IBY];  dBx *= HALF_F;
   
     // Cell centered TVD slopes in Y direction
-    real_t& dry = dq[IY].d;  dry *= HALF_F;
-    real_t& dpy = dq[IY].p;  dpy *= HALF_F;
-    real_t& duy = dq[IY].u;  duy *= HALF_F;
-    real_t& dvy = dq[IY].v;  dvy *= HALF_F;
-    real_t& dwy = dq[IY].w;  dwy *= HALF_F;
-    real_t& dCy = dq[IY].bz;  dCy *= HALF_F;
-    real_t& dAy = dq[IY].bx;  dAy *= HALF_F;
+    real_t& dry = dq[IY][ID];  dry *= HALF_F;
+    real_t& dpy = dq[IY][IP];  dpy *= HALF_F;
+    real_t& duy = dq[IY][IU];  duy *= HALF_F;
+    real_t& dvy = dq[IY][IV];  dvy *= HALF_F;
+    real_t& dwy = dq[IY][IW];  dwy *= HALF_F;
+    real_t& dCy = dq[IY][IBZ];  dCy *= HALF_F;
+    real_t& dAy = dq[IY][IBX];  dAy *= HALF_F;
 
     // Cell centered TVD slopes in Z direction
-    real_t& drz = dq[IZ].d;  drz *= HALF_F;
-    real_t& dpz = dq[IZ].p;  dpz *= HALF_F;
-    real_t& duz = dq[IZ].u;  duz *= HALF_F;
-    real_t& dvz = dq[IZ].v;  dvz *= HALF_F;
-    real_t& dwz = dq[IZ].w;  dwz *= HALF_F;
-    real_t& dAz = dq[IZ].bx;  dAz *= HALF_F;
-    real_t& dBz = dq[IZ].by;  dBz *= HALF_F;
+    real_t& drz = dq[IZ][ID];  drz *= HALF_F;
+    real_t& dpz = dq[IZ][IP];  dpz *= HALF_F;
+    real_t& duz = dq[IZ][IU];  duz *= HALF_F;
+    real_t& dvz = dq[IZ][IV];  dvz *= HALF_F;
+    real_t& dwz = dq[IZ][IW];  dwz *= HALF_F;
+    real_t& dAz = dq[IZ][IBX];  dAz *= HALF_F;
+    real_t& dBz = dq[IZ][IBY];  dBz *= HALF_F;
 
 
     // Face centered TVD slopes in transverse direction
@@ -678,1153 +635,222 @@ public:
     CR = CR + sCR0;
 
     // Face averaged right state at left interface
-    qp[0].d = r - drx;
-    qp[0].u = u - dux;
-    qp[0].v = v - dvx;
-    qp[0].w = w - dwx;
-    qp[0].p = p - dpx;
-    qp[0].bx = AL;
-    qp[0].by = B - dBx;
-    qp[0].bz = C - dCx;
-    qp[0].d = FMAX(smallR,  qp[0].d);
-    qp[0].p = FMAX(smallp /** qp[0].d*/, qp[0].p);
+    qp[0][ID] = r - drx;
+    qp[0][IU] = u - dux;
+    qp[0][IV] = v - dvx;
+    qp[0][IW] = w - dwx;
+    qp[0][IP] = p - dpx;
+    qp[0][IBX] = AL;
+    qp[0][IBY] = B - dBx;
+    qp[0][IBZ] = C - dCx;
+    qp[0][ID] = FMAX(smallR,  qp[0][ID]);
+    qp[0][IP] = FMAX(smallp /** qp[0][ID]*/, qp[0][IP]);
   
     // Face averaged left state at right interface
-    qm[0].d = r + drx;
-    qm[0].u = u + dux;
-    qm[0].v = v + dvx;
-    qm[0].w = w + dwx;
-    qm[0].p = p + dpx;
-    qm[0].bx = AR;
-    qm[0].by = B + dBx;
-    qm[0].bz = C + dCx;
-    qm[0].d = FMAX(smallR,  qm[0].d);
-    qm[0].p = FMAX(smallp /** qm[0].d*/, qm[0].p);
+    qm[0][ID] = r + drx;
+    qm[0][IU] = u + dux;
+    qm[0][IV] = v + dvx;
+    qm[0][IW] = w + dwx;
+    qm[0][IP] = p + dpx;
+    qm[0][IBX] = AR;
+    qm[0][IBY] = B + dBx;
+    qm[0][IBZ] = C + dCx;
+    qm[0][ID] = FMAX(smallR,  qm[0][ID]);
+    qm[0][IP] = FMAX(smallp /** qm[0][ID]*/, qm[0][IP]);
 
     // Face averaged top state at bottom interface
-    qp[1].d = r - dry;
-    qp[1].u = u - duy;
-    qp[1].v = v - dvy;
-    qp[1].w = w - dwy;
-    qp[1].p = p - dpy;
-    qp[1].bx = A - dAy;
-    qp[1].by = BL;
-    qp[1].bz = C - dCy;
-    qp[1].d = FMAX(smallR,  qp[1].d);
-    qp[1].p = FMAX(smallp /** qp[1].d*/, qp[1].p);
+    qp[1][ID] = r - dry;
+    qp[1][IU] = u - duy;
+    qp[1][IV] = v - dvy;
+    qp[1][IW] = w - dwy;
+    qp[1][IP] = p - dpy;
+    qp[1][IBX] = A - dAy;
+    qp[1][IBY] = BL;
+    qp[1][IBZ] = C - dCy;
+    qp[1][ID] = FMAX(smallR,  qp[1][ID]);
+    qp[1][IP] = FMAX(smallp /** qp[1][ID]*/, qp[1][IP]);
   
     // Face averaged bottom state at top interface
-    qm[1].d = r + dry;
-    qm[1].u = u + duy;
-    qm[1].v = v + dvy;
-    qm[1].w = w + dwy;
-    qm[1].p = p + dpy;
-    qm[1].bx = A + dAy;
-    qm[1].by = BR;
-    qm[1].bz = C + dCy;
-    qm[1].d = FMAX(smallR,  qm[1].d);
-    qm[1].p = FMAX(smallp /** qm[1].d*/, qm[1].p);
+    qm[1][ID] = r + dry;
+    qm[1][IU] = u + duy;
+    qm[1][IV] = v + dvy;
+    qm[1][IW] = w + dwy;
+    qm[1][IP] = p + dpy;
+    qm[1][IBX] = A + dAy;
+    qm[1][IBY] = BR;
+    qm[1][IBZ] = C + dCy;
+    qm[1][ID] = FMAX(smallR,  qm[1][ID]);
+    qm[1][IP] = FMAX(smallp /** qm[1][ID]*/, qm[1][IP]);
   
     // Face averaged front state at back interface
-    qp[2].d = r - drz;
-    qp[2].u = u - duz;
-    qp[2].v = v - dvz;
-    qp[2].w = w - dwz;
-    qp[2].p = p - dpz;
-    qp[2].bx = A - dAz;
-    qp[2].by = B - dBz;
-    qp[2].bz = CL;
-    qp[2].d = FMAX(smallR,  qp[2].d);
-    qp[2].p = FMAX(smallp /** qp[2].d*/, qp[2].p);
+    qp[2][ID] = r - drz;
+    qp[2][IU] = u - duz;
+    qp[2][IV] = v - dvz;
+    qp[2][IW] = w - dwz;
+    qp[2][IP] = p - dpz;
+    qp[2][IBX] = A - dAz;
+    qp[2][IBY] = B - dBz;
+    qp[2][IBZ] = CL;
+    qp[2][ID] = FMAX(smallR,  qp[2][ID]);
+    qp[2][IP] = FMAX(smallp /** qp[2][ID]*/, qp[2][IP]);
   
     // Face averaged back state at front interface
-    qm[2].d = r + drz;
-    qm[2].u = u + duz;
-    qm[2].v = v + dvz;
-    qm[2].w = w + dwz;
-    qm[2].p = p + dpz;
-    qm[2].bx = A + dAz;
-    qm[2].by = B + dBz;
-    qm[2].bz = CR;
-    qm[2].d = FMAX(smallR,  qm[2].d);
-    qm[2].p = FMAX(smallp /** qm[2].d*/, qm[2].p);
+    qm[2][ID] = r + drz;
+    qm[2][IU] = u + duz;
+    qm[2][IV] = v + dvz;
+    qm[2][IW] = w + dwz;
+    qm[2][IP] = p + dpz;
+    qm[2][IBX] = A + dAz;
+    qm[2][IBY] = B + dBz;
+    qm[2][IBZ] = CR;
+    qm[2][ID] = FMAX(smallR,  qm[2][ID]);
+    qm[2][IP] = FMAX(smallp /** qm[2][ID]*/, qm[2][IP]);
 
     // X-edge averaged right-top corner state (RT->LL)
-    qRT_X.d = r + (+dry+drz);
-    qRT_X.u = u + (+duy+duz);
-    qRT_X.v = v + (+dvy+dvz);
-    qRT_X.w = w + (+dwy+dwz);
-    qRT_X.p = p + (+dpy+dpz);
-    qRT_X.bx = A + (+dAy+dAz);
-    qRT_X.by = BR+ (   +dBRz);
-    qRT_X.bz = CR+ (+dCRy   );
-    qRT_X.d = FMAX(smallR,  qRT_X.d);
-    qRT_X.p = FMAX(smallp /** qRT_X.d*/, qRT_X.p);
+    qRT_X[ID] = r + (+dry+drz);
+    qRT_X[IU] = u + (+duy+duz);
+    qRT_X[IV] = v + (+dvy+dvz);
+    qRT_X[IW] = w + (+dwy+dwz);
+    qRT_X[IP] = p + (+dpy+dpz);
+    qRT_X[IBX] = A + (+dAy+dAz);
+    qRT_X[IBY] = BR+ (   +dBRz);
+    qRT_X[IBZ] = CR+ (+dCRy   );
+    qRT_X[ID] = FMAX(smallR,  qRT_X[ID]);
+    qRT_X[IP] = FMAX(smallp /** qRT_X[ID]*/, qRT_X[IP]);
   
     // X-edge averaged right-bottom corner state (RB->LR)
-    qRB_X.d = r + (+dry-drz);
-    qRB_X.u = u + (+duy-duz);
-    qRB_X.v = v + (+dvy-dvz);
-    qRB_X.w = w + (+dwy-dwz);
-    qRB_X.p = p + (+dpy-dpz);
-    qRB_X.bx = A + (+dAy-dAz);
-    qRB_X.by = BR+ (   -dBRz);
-    qRB_X.bz = CL+ (+dCLy   );
-    qRB_X.d = FMAX(smallR,  qRB_X.d);
-    qRB_X.p = FMAX(smallp /** qRB_X.d*/, qRB_X.p);
+    qRB_X[ID] = r + (+dry-drz);
+    qRB_X[IU] = u + (+duy-duz);
+    qRB_X[IV] = v + (+dvy-dvz);
+    qRB_X[IW] = w + (+dwy-dwz);
+    qRB_X[IP] = p + (+dpy-dpz);
+    qRB_X[IBX] = A + (+dAy-dAz);
+    qRB_X[IBY] = BR+ (   -dBRz);
+    qRB_X[IBZ] = CL+ (+dCLy   );
+    qRB_X[ID] = FMAX(smallR,  qRB_X[ID]);
+    qRB_X[IP] = FMAX(smallp /** qRB_X[ID]*/, qRB_X[IP]);
   
     // X-edge averaged left-top corner state (LT->RL)
-    qLT_X.d = r + (-dry+drz);
-    qLT_X.u = u + (-duy+duz);
-    qLT_X.v = v + (-dvy+dvz);
-    qLT_X.w = w + (-dwy+dwz);
-    qLT_X.p = p + (-dpy+dpz);
-    qLT_X.bx = A + (-dAy+dAz);
-    qLT_X.by = BL+ (   +dBLz);
-    qLT_X.bz = CR+ (-dCRy   );
-    qLT_X.d = FMAX(smallR,  qLT_X.d);
-    qLT_X.p = FMAX(smallp /** qLT_X.d*/, qLT_X.p);
+    qLT_X[ID] = r + (-dry+drz);
+    qLT_X[IU] = u + (-duy+duz);
+    qLT_X[IV] = v + (-dvy+dvz);
+    qLT_X[IW] = w + (-dwy+dwz);
+    qLT_X[IP] = p + (-dpy+dpz);
+    qLT_X[IBX] = A + (-dAy+dAz);
+    qLT_X[IBY] = BL+ (   +dBLz);
+    qLT_X[IBZ] = CR+ (-dCRy   );
+    qLT_X[ID] = FMAX(smallR,  qLT_X[ID]);
+    qLT_X[IP] = FMAX(smallp /** qLT_X[ID]*/, qLT_X[IP]);
   
     // X-edge averaged left-bottom corner state (LB->RR)
-    qLB_X.d = r + (-dry-drz);
-    qLB_X.u = u + (-duy-duz);
-    qLB_X.v = v + (-dvy-dvz);
-    qLB_X.w = w + (-dwy-dwz);
-    qLB_X.p = p + (-dpy-dpz);
-    qLB_X.bx = A + (-dAy-dAz);
-    qLB_X.by = BL+ (   -dBLz);
-    qLB_X.bz = CL+ (-dCLy   );
-    qLB_X.d = FMAX(smallR,  qLB_X.d);
-    qLB_X.p = FMAX(smallp /** qLB_X.d*/, qLB_X.p);
+    qLB_X[ID] = r + (-dry-drz);
+    qLB_X[IU] = u + (-duy-duz);
+    qLB_X[IV] = v + (-dvy-dvz);
+    qLB_X[IW] = w + (-dwy-dwz);
+    qLB_X[IP] = p + (-dpy-dpz);
+    qLB_X[IBX] = A + (-dAy-dAz);
+    qLB_X[IBY] = BL+ (   -dBLz);
+    qLB_X[IBZ] = CL+ (-dCLy   );
+    qLB_X[ID] = FMAX(smallR,  qLB_X[ID]);
+    qLB_X[IP] = FMAX(smallp /** qLB_X[ID]*/, qLB_X[IP]);
   
     // Y-edge averaged right-top corner state (RT->LL)
-    qRT_Y.d = r + (+drx+drz);
-    qRT_Y.u = u + (+dux+duz);
-    qRT_Y.v = v + (+dvx+dvz);
-    qRT_Y.w = w + (+dwx+dwz);
-    qRT_Y.p = p + (+dpx+dpz);
-    qRT_Y.bx = AR+ (   +dARz);
-    qRT_Y.by = B + (+dBx+dBz);
-    qRT_Y.bz = CR+ (+dCRx   );
-    qRT_Y.d = FMAX(smallR,  qRT_Y.d);
-    qRT_Y.p = FMAX(smallp /** qRT_Y.d*/, qRT_Y.p);
+    qRT_Y[ID] = r + (+drx+drz);
+    qRT_Y[IU] = u + (+dux+duz);
+    qRT_Y[IV] = v + (+dvx+dvz);
+    qRT_Y[IW] = w + (+dwx+dwz);
+    qRT_Y[IP] = p + (+dpx+dpz);
+    qRT_Y[IBX] = AR+ (   +dARz);
+    qRT_Y[IBY] = B + (+dBx+dBz);
+    qRT_Y[IBZ] = CR+ (+dCRx   );
+    qRT_Y[ID] = FMAX(smallR,  qRT_Y[ID]);
+    qRT_Y[IP] = FMAX(smallp /** qRT_Y[ID]*/, qRT_Y[IP]);
   
     // Y-edge averaged right-bottom corner state (RB->LR)
-    qRB_Y.d = r + (+drx-drz);
-    qRB_Y.u = u + (+dux-duz);
-    qRB_Y.v = v + (+dvx-dvz);
-    qRB_Y.w = w + (+dwx-dwz);
-    qRB_Y.p = p + (+dpx-dpz);
-    qRB_Y.bx = AR+ (   -dARz);
-    qRB_Y.by = B + (+dBx-dBz);
-    qRB_Y.bz = CL+ (+dCLx   );
-    qRB_Y.d = FMAX(smallR,  qRB_Y.d);
-    qRB_Y.p = FMAX(smallp /** qRB_Y.d*/, qRB_Y.p);
+    qRB_Y[ID] = r + (+drx-drz);
+    qRB_Y[IU] = u + (+dux-duz);
+    qRB_Y[IV] = v + (+dvx-dvz);
+    qRB_Y[IW] = w + (+dwx-dwz);
+    qRB_Y[IP] = p + (+dpx-dpz);
+    qRB_Y[IBX] = AR+ (   -dARz);
+    qRB_Y[IBY] = B + (+dBx-dBz);
+    qRB_Y[IBZ] = CL+ (+dCLx   );
+    qRB_Y[ID] = FMAX(smallR,  qRB_Y[ID]);
+    qRB_Y[IP] = FMAX(smallp /** qRB_Y[ID]*/, qRB_Y[IP]);
   
     // Y-edge averaged left-top corner state (LT->RL)
-    qLT_Y.d = r + (-drx+drz);
-    qLT_Y.u = u + (-dux+duz);
-    qLT_Y.v = v + (-dvx+dvz);
-    qLT_Y.w = w + (-dwx+dwz);
-    qLT_Y.p = p + (-dpx+dpz);
-    qLT_Y.bx = AL+ (   +dALz);
-    qLT_Y.by = B + (-dBx+dBz);
-    qLT_Y.bz = CR+ (-dCRx   );
-    qLT_Y.d = FMAX(smallR,  qLT_Y.d);
-    qLT_Y.p = FMAX(smallp /** qLT_Y.d*/, qLT_Y.p);
+    qLT_Y[ID] = r + (-drx+drz);
+    qLT_Y[IU] = u + (-dux+duz);
+    qLT_Y[IV] = v + (-dvx+dvz);
+    qLT_Y[IW] = w + (-dwx+dwz);
+    qLT_Y[IP] = p + (-dpx+dpz);
+    qLT_Y[IBX] = AL+ (   +dALz);
+    qLT_Y[IBY] = B + (-dBx+dBz);
+    qLT_Y[IBZ] = CR+ (-dCRx   );
+    qLT_Y[ID] = FMAX(smallR,  qLT_Y[ID]);
+    qLT_Y[IP] = FMAX(smallp /** qLT_Y[ID]*/, qLT_Y[IP]);
   
     // Y-edge averaged left-bottom corner state (LB->RR)
-    qLB_Y.d = r + (-drx-drz);
-    qLB_Y.u = u + (-dux-duz);
-    qLB_Y.v = v + (-dvx-dvz);
-    qLB_Y.w = w + (-dwx-dwz);
-    qLB_Y.p = p + (-dpx-dpz);
-    qLB_Y.bx = AL+ (   -dALz);
-    qLB_Y.by = B + (-dBx-dBz);
-    qLB_Y.bz = CL+ (-dCLx   );
-    qLB_Y.d = FMAX(smallR,  qLB_Y.d);
-    qLB_Y.p = FMAX(smallp /** qLB_Y.d*/, qLB_Y.p);
+    qLB_Y[ID] = r + (-drx-drz);
+    qLB_Y[IU] = u + (-dux-duz);
+    qLB_Y[IV] = v + (-dvx-dvz);
+    qLB_Y[IW] = w + (-dwx-dwz);
+    qLB_Y[IP] = p + (-dpx-dpz);
+    qLB_Y[IBX] = AL+ (   -dALz);
+    qLB_Y[IBY] = B + (-dBx-dBz);
+    qLB_Y[IBZ] = CL+ (-dCLx   );
+    qLB_Y[ID] = FMAX(smallR,  qLB_Y[ID]);
+    qLB_Y[IP] = FMAX(smallp /** qLB_Y[ID]*/, qLB_Y[IP]);
   
     // Z-edge averaged right-top corner state (RT->LL)
-    qRT_Z.d = r + (+drx+dry);
-    qRT_Z.u = u + (+dux+duy);
-    qRT_Z.v = v + (+dvx+dvy);
-    qRT_Z.w = w + (+dwx+dwy);
-    qRT_Z.p = p + (+dpx+dpy);
-    qRT_Z.bx = AR+ (   +dARy);
-    qRT_Z.by = BR+ (+dBRx   );
-    qRT_Z.bz = C + (+dCx+dCy);
-    qRT_Z.d = FMAX(smallR,  qRT_Z.d);
-    qRT_Z.p = FMAX(smallp /** qRT_Z.d*/, qRT_Z.p);
+    qRT_Z[ID] = r + (+drx+dry);
+    qRT_Z[IU] = u + (+dux+duy);
+    qRT_Z[IV] = v + (+dvx+dvy);
+    qRT_Z[IW] = w + (+dwx+dwy);
+    qRT_Z[IP] = p + (+dpx+dpy);
+    qRT_Z[IBX] = AR+ (   +dARy);
+    qRT_Z[IBY] = BR+ (+dBRx   );
+    qRT_Z[IBZ] = C + (+dCx+dCy);
+    qRT_Z[ID] = FMAX(smallR,  qRT_Z[ID]);
+    qRT_Z[IP] = FMAX(smallp /** qRT_Z[ID]*/, qRT_Z[IP]);
   
     // Z-edge averaged right-bottom corner state (RB->LR)
-    qRB_Z.d = r + (+drx-dry);
-    qRB_Z.u = u + (+dux-duy);
-    qRB_Z.v = v + (+dvx-dvy);
-    qRB_Z.w = w + (+dwx-dwy);
-    qRB_Z.p = p + (+dpx-dpy);
-    qRB_Z.bx = AR+ (   -dARy);
-    qRB_Z.by = BL+ (+dBLx   );
-    qRB_Z.bz = C + (+dCx-dCy);
-    qRB_Z.d = FMAX(smallR,  qRB_Z.d);
-    qRB_Z.p = FMAX(smallp /** qRB_Z.d*/, qRB_Z.p);
+    qRB_Z[ID] = r + (+drx-dry);
+    qRB_Z[IU] = u + (+dux-duy);
+    qRB_Z[IV] = v + (+dvx-dvy);
+    qRB_Z[IW] = w + (+dwx-dwy);
+    qRB_Z[IP] = p + (+dpx-dpy);
+    qRB_Z[IBX] = AR+ (   -dARy);
+    qRB_Z[IBY] = BL+ (+dBLx   );
+    qRB_Z[IBZ] = C + (+dCx-dCy);
+    qRB_Z[ID] = FMAX(smallR,  qRB_Z[ID]);
+    qRB_Z[IP] = FMAX(smallp /** qRB_Z[ID]*/, qRB_Z[IP]);
   
     // Z-edge averaged left-top corner state (LT->RL)
-    qLT_Z.d = r + (-drx+dry);
-    qLT_Z.u = u + (-dux+duy);
-    qLT_Z.v = v + (-dvx+dvy);
-    qLT_Z.w = w + (-dwx+dwy);
-    qLT_Z.p = p + (-dpx+dpy);
-    qLT_Z.bx = AL+ (   +dALy);
-    qLT_Z.by = BR+ (-dBRx   );
-    qLT_Z.bz = C + (-dCx+dCy);
-    qLT_Z.d = FMAX(smallR,  qLT_Z.d);
-    qLT_Z.p = FMAX(smallp /** qLT_Z.d*/, qLT_Z.p);
+    qLT_Z[ID] = r + (-drx+dry);
+    qLT_Z[IU] = u + (-dux+duy);
+    qLT_Z[IV] = v + (-dvx+dvy);
+    qLT_Z[IW] = w + (-dwx+dwy);
+    qLT_Z[IP] = p + (-dpx+dpy);
+    qLT_Z[IBX] = AL+ (   +dALy);
+    qLT_Z[IBY] = BR+ (-dBRx   );
+    qLT_Z[IBZ] = C + (-dCx+dCy);
+    qLT_Z[ID] = FMAX(smallR,  qLT_Z[ID]);
+    qLT_Z[IP] = FMAX(smallp /** qLT_Z[ID]*/, qLT_Z[IP]);
   
     // Z-edge averaged left-bottom corner state (LB->RR)
-    qLB_Z.d = r + (-drx-dry);
-    qLB_Z.u = u + (-dux-duy);
-    qLB_Z.v = v + (-dvx-dvy);
-    qLB_Z.w = w + (-dwx-dwy);
-    qLB_Z.p = p + (-dpx-dpy);
-    qLB_Z.bx = AL+ (   -dALy);
-    qLB_Z.by = BL+ (-dBLx   );
-    qLB_Z.bz = C + (-dCx-dCy);
-    qLB_Z.d = FMAX(smallR,  qLB_Z.d);
-    qLB_Z.p = FMAX(smallp /** qLB_Z.d*/, qLB_Z.p);
+    qLB_Z[ID] = r + (-drx-dry);
+    qLB_Z[IU] = u + (-dux-duy);
+    qLB_Z[IV] = v + (-dvx-dvy);
+    qLB_Z[IW] = w + (-dwx-dwy);
+    qLB_Z[IP] = p + (-dpx-dpy);
+    qLB_Z[IBX] = AL+ (   -dALy);
+    qLB_Z[IBY] = BL+ (-dBLx   );
+    qLB_Z[IBZ] = C + (-dCx-dCy);
+    qLB_Z[ID] = FMAX(smallR,  qLB_Z[ID]);
+    qLB_Z[IP] = FMAX(smallp /** qLB_Z[ID]*/, qLB_Z[IP]);
 
   } // trace_unsplit_mhd_3d_simpler
-
-  /**
-   * Compute cell fluxes from the Godunov state
-   * \param[in]  qgdnv input Godunov state
-   * \param[out] flux  output flux vector
-   */
-  KOKKOS_INLINE_FUNCTION
-  void cmpflx(const MHDState *qgdnv, 
-	      MHDState *flux) const
-  {
-    real_t gamma0 = params.settings.gamma0;
-
-    // Compute fluxes
-    // Mass density
-    flux->d = qgdnv->d * qgdnv->u;
-  
-    // Normal momentum
-    flux->u = flux->d * qgdnv->u + qgdnv->p;
-  
-    // Transverse momentum
-    flux->v = flux->d * qgdnv->v;
-
-    // Total energy
-    real_t entho = ONE_F / (gamma0 - ONE_F);
-    real_t ekin;
-    ekin = 0.5 * qgdnv->d * (qgdnv->u*qgdnv->u + qgdnv->v*qgdnv->v);
-  
-    real_t etot = qgdnv->p * entho + ekin;
-    flux->p = qgdnv->u * (etot + qgdnv->p);
-
-  } // cmpflx
-  
-  /**
-   * Computes fastest signal speed for each direction.
-   *
-   * \param[in]  qState       primitive variables state vector
-   * \param[out] fastInfoSpeed array containing fastest information speed along
-   * x, y, and z direction.
-   *
-   * Directionnal information speed being defined as :
-   * directionnal fast magneto speed + FABS(velocity component)
-   *
-   * \warning This routine uses gamma ! You need to set gamma to something very near to 1
-   *
-   * \tparam nDim if nDim==2, only computes information speed along x
-   * and y.
-   */
-  template<DimensionType nDim>
-  KOKKOS_INLINE_FUNCTION
-  void find_speed_info(const MHDState& qState, 
-		       real_t (&fastInfoSpeed)[3]) const
-  {
-    
-    real_t gamma0  = params.settings.gamma0;
-    double d,p,a,b,c,b2,c2,d2,cf;
-    double u = qState.u;
-    double v = qState.v;
-    double w = qState.w;
-    
-    d=qState.d;  p=qState.p; 
-    a=qState.bx; b=qState.by; c=qState.bz;
-    
-    /*
-     * compute fastest info speed along X
-     */
-    
-    // square norm of magnetic field
-    b2 = a*a + b*b + c*c;
-    
-    // square speed of sound
-    c2 = gamma0 * p / d;
-    
-    d2 = 0.5 * (b2/d + c2);
-    
-    cf = SQRT( d2 + SQRT(d2*d2 - c2*a*a/d) );
-    
-    fastInfoSpeed[IX] = cf+fabs(u);
-    
-    // compute fastest info speed along Y
-    cf = SQRT( d2 + sqrt(d2*d2 - c2*b*b/d) );
-    
-    fastInfoSpeed[IY] = cf+fabs(v);
-    
-    
-    // compute fastest info speed along Z
-    if (nDim == THREE_D) {
-      cf = sqrt( d2 + SQRT(d2*d2 - c2*c*c/d) );
-      
-      fastInfoSpeed[IZ] = cf+fabs(w);
-    } // end THREE_D
-    
-  } // find_speed_info
-  
-  /**
-   * Compute the fast magnetosonic velocity.
-   * 
-   * IU is index to Vnormal
-   * IA is index to Bnormal
-   * 
-   * IV, IW are indexes to Vtransverse1, Vtransverse2,
-   * IB, IC are indexes to Btransverse1, Btransverse2
-   *
-   */
-  template <ComponentIndex3D dir>
-  KOKKOS_INLINE_FUNCTION
-  real_t find_speed_fast(const MHDState& qvar) const
-  {
-    
-    real_t gamma0  = params.settings.gamma0;
-    real_t d,p,a,b,c,b2,c2,d2,cf;
-    
-    d=qvar.d;  p=qvar.p; 
-    a=qvar.bx; b=qvar.by; c=qvar.bz;
-    
-    b2 = a*a + b*b + c*c;
-    c2 = gamma0 * p / d;
-    d2 = 0.5 * (b2/d + c2);
-    if (dir==IX)
-      cf = sqrt( d2 + sqrt(d2*d2 - c2*a*a/d) );
-    
-    if (dir==IY)
-      cf = sqrt( d2 + sqrt(d2*d2 - c2*b*b/d) );
-    
-    if (dir==IZ)
-      cf = sqrt( d2 + sqrt(d2*d2 - c2*c*c/d) );
-    
-    return cf;
-    
-  } // find_speed_fast
-      
-  /**
-   * Compute the 1d mhd fluxes from the conservative.
-   *
-   * Only used in Riemann solver HLL (probably cartesian only
-   * compatible, since gas pressure is included).
-   *
-   * variables. The structure of qvar is : 
-   * rho, pressure,
-   * vnormal, vtransverse1, vtransverse2, 
-   * bnormal, btransverse1, btransverse2.
-   *
-   * @param[in]  qvar state vector (primitive variables)
-   * @param[out] cvar state vector (conservative variables)
-   * @param[out] ff flux vector
-   *
-   */
-  KOKKOS_INLINE_FUNCTION
-  void find_mhd_flux(MHDState qvar, 
-		     MHDState &cvar,
-		     MHDState &ff) const
-  {
-    
-    // ISOTHERMAL
-    real_t cIso = params.settings.cIso;
-    real_t p;
-    if (cIso>0) {
-      // recompute pressure
-      p = qvar.d*cIso*cIso;
-    } else {
-      p = qvar.p;
-    }
-    // end ISOTHERMAL
-    
-    // local variables
-    const real_t entho = ONE_F / (params.settings.gamma0 - ONE_F);
-    
-    real_t d, u, v, w, a, b, c;
-    d=qvar.d; 
-    u=qvar.u; v=qvar.v; w=qvar.w;
-    a=qvar.bx; b=qvar.by; c=qvar.bz;
-    
-    real_t ecin = 0.5*(u*u+v*v+w*w)*d;
-    real_t emag = 0.5*(a*a+b*b+c*c);
-    real_t etot = p*entho+ecin+emag;
-    real_t ptot = p + emag;
-    
-    // compute conservative variables
-    cvar.d  = d;
-    cvar.p  = etot;
-    cvar.u  = d*u;
-    cvar.v  = d*v;
-    cvar.w  = d*w;
-    cvar.bx = a;
-    cvar.by = b;
-    cvar.bz = c;
-    
-    // compute fluxes
-    ff.d  = d*u;
-    ff.p  = (etot+ptot)*u-a*(a*u+b*v+c*w);
-    ff.u  = d*u*u-a*a+ptot; /* *** WARNING pressure included *** */
-    ff.v  = d*u*v-a*b;
-    ff.w  = d*u*w-a*c;
-    ff.bx = 0.0;
-    ff.by = b*u-a*v;
-    ff.bz = c*u-a*w;
-    
-  } // find_mhd_flux
-
-  /**
-   * MHD HLL Riemann solver
-   *
-   * qleft, qright and flux have now NVAR_MHD=8 components.
-   *
-   * The following code is adapted from Dumses.
-   *
-   * @param[in] qleft  : input left state
-   * @param[in] qright : input right state
-   * @param[out] flux  : output flux
-   *
-   */
-  KOKKOS_INLINE_FUNCTION
-  void riemann_hll(MHDState &qleft,
-		   MHDState &qright,
-		   MHDState &flux) const
-  {
-    
-    // enforce continuity of normal component
-    real_t bx_mean = 0.5 * ( qleft.bx + qright.bx );
-    qleft.bx  = bx_mean;
-    qright.bx = bx_mean;
-    
-    MHDState uleft,  fleft;
-    MHDState uright, fright;
-    
-    find_mhd_flux(qleft ,uleft ,fleft );
-    find_mhd_flux(qright,uright,fright);
-    
-    // find the largest eigenvalue in the normal direction to the interface
-    real_t cfleft  = find_speed_fast<IX>(qleft);
-    real_t cfright = find_speed_fast<IX>(qright);
-    
-    real_t vleft =qleft.u;
-    real_t vright=qright.u;
-    real_t sl=fmin ( fmin (vleft,vright) - fmax (cfleft,cfright) , 0.0);
-    real_t sr=fmax ( fmax (vleft,vright) + fmax (cfleft,cfright) , 0.0);
-    
-    // the hll flux
-    flux.d = (sr*fleft.d-sl*fright.d+
-	      sr*sl*(uright.d-uleft.d))/(sr-sl);
-    flux.p = (sr*fleft.p-sl*fright.p+
-	      sr*sl*(uright.p-uleft.p))/(sr-sl);
-    flux.u = (sr*fleft.u-sl*fright.u+
-	      sr*sl*(uright.u-uleft.u))/(sr-sl);
-    flux.v = (sr*fleft.v-sl*fright.v+
-	      sr*sl*(uright.v-uleft.v))/(sr-sl);
-    flux.w = (sr*fleft.w-sl*fright.w+
-	      sr*sl*(uright.w-uleft.w))/(sr-sl);
-    flux.bx = (sr*fleft.bx-sl*fright.bx+
-	       sr*sl*(uright.bx-uleft.bx))/(sr-sl);
-    flux.by = (sr*fleft.by-sl*fright.by+
-	       sr*sl*(uright.by-uleft.by))/(sr-sl);
-    flux.bz = (sr*fleft.bz-sl*fright.bz+
-	       sr*sl*(uright.bz-uleft.bz))/(sr-sl);
-
-    
-  } // riemann_hll
-
-  /** 
-   * Riemann solver, equivalent to riemann_hlld in RAMSES/DUMSES (see file
-   * godunov_utils.f90 in RAMSES/DUMSES).
-   *
-   * Reference :
-   * <A HREF="http://www.sciencedirect.com/science/article/B6WHY-4FY3P80-7/2/426234268c96dcca8a828d098b75fe4e">
-   * Miyoshi & Kusano, 2005, JCP, 208, 315 </A>
-   *
-   * \warning This version of HLLD integrates the pressure term in
-   * flux.u (as in RAMSES). This will need to be modified in the
-   * future (as it is done in DUMSES) to handle cylindrical / spherical
-   * coordinate systems. For example, one could add a new ouput named qStar
-   * to store star state, and that could be used to compute geometrical terms
-   * outside this routine.
-   *
-   * @param[in] qleft : input left state
-   * @param[in] qright : input right state
-   * @param[out] flux  : output flux
-   */
-  KOKKOS_INLINE_FUNCTION
-  void riemann_hlld(MHDState &qleft,
-		    MHDState &qright,
-		    MHDState &flux) const
-  {
-    
-    // Constants
-    const real_t gamma0 = params.settings.gamma0;
-    const real_t entho = 1.0 / (gamma0 - 1.0);
-    
-    // Enforce continuity of normal component of magnetic field
-    real_t a    = 0.5 * ( qleft.bx + qright.bx );
-    real_t sgnm = (a >= 0) ? ONE_F : -ONE_F;
-    qleft .bx  = a; 
-    qright.bx  = a;
-    
-    // ISOTHERMAL
-    real_t cIso = params.settings.cIso;
-    if (cIso > 0) {
-      // recompute pressure
-      qleft .p = qleft .d*cIso*cIso;
-      qright.p = qright.d*cIso*cIso;
-    } // end ISOTHERMAL
-    
-    // left variables
-    real_t rl, pl, ul, vl, wl, bl, cl;
-    rl = qleft.d; //rl = fmax(qleft.d, static_cast<real_t>(gParams.smallr)    );  
-    pl = qleft.p; //pl = fmax(qleft.p, static_cast<real_t>(rl*gParams.smallp) ); 
-    ul = qleft.u;  vl = qleft.v;  wl = qleft.w; 
-    bl = qleft.by;  cl = qleft.bz;
-    real_t ecinl = 0.5 * (ul*ul + vl*vl + wl*wl) * rl;
-    real_t emagl = 0.5 * ( a*a  + bl*bl + cl*cl);
-    real_t etotl = pl*entho + ecinl + emagl;
-    real_t ptotl = pl + emagl;
-    real_t vdotbl= ul*a + vl*bl + wl*cl;
-    
-    // right variables
-    real_t rr, pr, ur, vr, wr, br, cr;
-    rr = qright.d; //rr = fmax(qright.d, static_cast<real_t>( gParams.smallr) );
-    pr = qright.p; //pr = fmax(qright.p, static_cast<real_t>( rr*gParams.smallp) ); 
-    ur = qright.u;  vr=qright.v;  wr = qright.w; 
-    br = qright.by;  cr=qright.bz;
-    real_t ecinr = 0.5 * (ur*ur + vr*vr + wr*wr) * rr;
-    real_t emagr = 0.5 * ( a*a  + br*br + cr*cr);
-    real_t etotr = pr*entho + ecinr + emagr;
-    real_t ptotr = pr + emagr;
-    real_t vdotbr= ur*a + vr*br + wr*cr;
-    
-    // find the largest eigenvalues in the normal direction to the interface
-    real_t cfastl = find_speed_fast<IX>(qleft);
-    real_t cfastr = find_speed_fast<IX>(qright);
-    
-    // compute hll wave speed
-    real_t sl = fmin(ul,ur) - fmax(cfastl,cfastr);
-    real_t sr = fmax(ul,ur) + fmax(cfastl,cfastr);
-    
-    // compute lagrangian sound speed
-    real_t rcl = rl * (ul-sl);
-    real_t rcr = rr * (sr-ur);
-    
-    // compute acoustic star state
-    real_t ustar   = (rcr*ur   +rcl*ul   +  (ptotl-ptotr))/(rcr+rcl);
-    real_t ptotstar= (rcr*ptotl+rcl*ptotr+rcl*rcr*(ul-ur))/(rcr+rcl);
-    
-    // left star region variables
-    real_t estar;
-    real_t rstarl, el;
-    rstarl = rl*(sl-ul)/(sl-ustar);
-    estar  = rl*(sl-ul)*(sl-ustar)-a*a;
-    el     = rl*(sl-ul)*(sl-ul   )-a*a;
-    real_t vstarl, wstarl;
-    real_t bstarl, cstarl;
-    // not very good (should use a small energy cut-off !!!)
-    if(a*a>0 and fabs(estar/(a*a)-ONE_F)<=1e-8) {
-      vstarl=vl;
-      bstarl=bl;
-      wstarl=wl;
-      cstarl=cl;
-    } else {
-      vstarl=vl-a*bl*(ustar-ul)/estar;
-      bstarl=bl*el/estar;
-      wstarl=wl-a*cl*(ustar-ul)/estar;
-      cstarl=cl*el/estar;
-    }
-    real_t vdotbstarl = ustar*a+vstarl*bstarl+wstarl*cstarl;
-    real_t etotstarl  = ((sl-ul)*etotl-ptotl*ul+ptotstar*ustar+a*(vdotbl-vdotbstarl))/(sl-ustar);
-    real_t sqrrstarl  = sqrt(rstarl);
-    real_t calfvenl   = fabs(a)/sqrrstarl; /* sqrrstarl should never be zero, but it might happen if border conditions are not OK !!!!!! */
-    real_t sal        = ustar-calfvenl;
-    
-    // right star region variables
-    real_t rstarr, er;
-    rstarr = rr*(sr-ur)/(sr-ustar);
-    estar  = rr*(sr-ur)*(sr-ustar)-a*a;
-    er     = rr*(sr-ur)*(sr-ur   )-a*a;
-    real_t vstarr, wstarr;
-    real_t bstarr, cstarr;
-    // not very good (should use a small energy cut-off !!!)
-    if(a*a>0 and FABS(estar/(a*a)-ONE_F)<=1e-8) {
-      vstarr=vr;
-      bstarr=br;
-      wstarr=wr;
-      cstarr=cr;
-    } else {
-      vstarr=vr-a*br*(ustar-ur)/estar;
-      bstarr=br*er/estar;
-      wstarr=wr-a*cr*(ustar-ur)/estar;
-      cstarr=cr*er/estar;
-    }
-    real_t vdotbstarr = ustar*a+vstarr*bstarr+wstarr*cstarr;
-    real_t etotstarr  = ((sr-ur)*etotr-ptotr*ur+ptotstar*ustar+a*(vdotbr-vdotbstarr))/(sr-ustar);
-    real_t sqrrstarr  = sqrt(rstarr);
-    real_t calfvenr   = fabs(a)/sqrrstarr; /* sqrrstarr should never be zero, but it might happen if border conditions are not OK !!!!!! */
-    real_t sar        = ustar+calfvenr;
-    
-    // double star region variables
-    real_t vstarstar     = (sqrrstarl*vstarl+sqrrstarr*vstarr+
-			    sgnm*(bstarr-bstarl)) / (sqrrstarl+sqrrstarr);
-    real_t wstarstar     = (sqrrstarl*wstarl+sqrrstarr*wstarr+
-			    sgnm*(cstarr-cstarl)) / (sqrrstarl+sqrrstarr);
-    real_t bstarstar     = (sqrrstarl*bstarr+sqrrstarr*bstarl+
-			    sgnm*sqrrstarl*sqrrstarr*(vstarr-vstarl)) / 
-      (sqrrstarl+sqrrstarr);
-    real_t cstarstar     = (sqrrstarl*cstarr+sqrrstarr*cstarl+
-			    sgnm*sqrrstarl*sqrrstarr*(wstarr-wstarl)) /
-      (sqrrstarl+sqrrstarr);
-    real_t vdotbstarstar = ustar*a+vstarstar*bstarstar+wstarstar*cstarstar;
-    real_t etotstarstarl = etotstarl-sgnm*sqrrstarl*(vdotbstarl-vdotbstarstar);
-    real_t etotstarstarr = etotstarr+sgnm*sqrrstarr*(vdotbstarr-vdotbstarstar);
-    
-    // sample the solution at x/t=0
-    real_t ro, uo, vo, wo, bo, co, ptoto, etoto, vdotbo;
-    if(sl>0) { // flow is supersonic, return upwind variables
-      ro=rl;
-      uo=ul;
-      vo=vl;
-      wo=wl;
-      bo=bl;
-      co=cl;
-      ptoto=ptotl;
-      etoto=etotl;
-      vdotbo=vdotbl;
-    } else if (sal>0) {
-      ro=rstarl;
-      uo=ustar;
-      vo=vstarl;
-      wo=wstarl;
-      bo=bstarl;
-      co=cstarl;
-      ptoto=ptotstar;
-      etoto=etotstarl;
-      vdotbo=vdotbstarl;
-    } else if (ustar>0) {
-      ro=rstarl;
-      uo=ustar;
-      vo=vstarstar;
-      wo=wstarstar;
-      bo=bstarstar;
-      co=cstarstar;
-      ptoto=ptotstar;
-      etoto=etotstarstarl;
-      vdotbo=vdotbstarstar;
-    } else if (sar>0) {
-      ro=rstarr;
-      uo=ustar;
-      vo=vstarstar;
-      wo=wstarstar;
-      bo=bstarstar;
-      co=cstarstar;
-      ptoto=ptotstar;
-      etoto=etotstarstarr;
-      vdotbo=vdotbstarstar;
-    } else if (sr>0) {
-      ro=rstarr;
-      uo=ustar;
-      vo=vstarr;
-      wo=wstarr;
-      bo=bstarr;
-      co=cstarr;
-      ptoto=ptotstar;
-      etoto=etotstarr;
-      vdotbo=vdotbstarr;
-    } else { // flow is supersonic, return upwind variables
-      ro=rr;
-      uo=ur;
-      vo=vr;
-      wo=wr;
-      bo=br;
-      co=cr;
-      ptoto=ptotr;
-      etoto=etotr;
-      vdotbo=vdotbr;
-    }
-    
-    // compute the godunov flux
-    flux.d = ro*uo;
-    flux.p = (etoto+ptoto)*uo-a*vdotbo;
-    flux.u = ro*uo*uo-a*a+ptoto; /* *** WARNING *** : ptoto used here (this is only valid for cartesian geometry) ! */
-    flux.v = ro*uo*vo-a*bo;
-    flux.w = ro*uo*wo-a*co;
-    flux.bx = 0.0;
-    flux.by = bo*uo-a*vo;
-    flux.bz = co*uo-a*wo;
-    
-  } // riemann_hlld
-      
-  /**
-   * Compute emf from qEdge state vector via a 2D magnetic Riemann
-   * solver (see routine cmp_mag_flux in DUMSES).
-   *
-   * @param[in] qEdge array containing input states qRT, qLT, qRB, qLB
-   * @param[in] xPos x position in space (only needed for shearing box correction terms).
-   * @return emf 
-   *
-   * template parameters:
-   *
-   * @tparam emfDir plays the role of xdim/lor in DUMSES routine
-   * cmp_mag_flx, i.e. define which EMF will be computed (how to define
-   * parallel/orthogonal velocity). emfDir identifies the orthogonal direction.
-   *
-   * \note the global parameter magRiemannSolver is used to choose the
-   * 2D magnetic Riemann solver.
-   *
-   * TODO: make xPos parameter non-optional
-   */
-  template <EmfDir emfDir>
-  KOKKOS_INLINE_FUNCTION
-  real_t compute_emf(MHDState qEdge [4], real_t xPos=0) const
-  {
-  
-    // define alias reference to input arrays
-    MHDState &qRT = qEdge[IRT];
-    MHDState &qLT = qEdge[ILT];
-    MHDState &qRB = qEdge[IRB];
-    MHDState &qLB = qEdge[ILB];
-
-    // defines alias reference to intermediate state before applying a
-    // magnetic Riemann solver
-    MHDState qLLRR[4];
-    MHDState &qLL = qLLRR[ILL];
-    MHDState &qRL = qLLRR[IRL];
-    MHDState &qLR = qLLRR[ILR];
-    MHDState &qRR = qLLRR[IRR];
-  
-    // density
-    qLL.d = qRT.d;
-    qRL.d = qLT.d;
-    qLR.d = qRB.d;
-    qRR.d = qLB.d;
-
-    // pressure
-    // ISOTHERMAL
-    real_t cIso = params.settings.cIso;
-    if (cIso > 0) {
-      qLL.p = qLL.d*cIso*cIso;
-      qRL.p = qRL.d*cIso*cIso;
-      qLR.p = qLR.d*cIso*cIso;
-      qRR.p = qRR.d*cIso*cIso;
-    } else {
-      qLL.p = qRT.p;
-      qRL.p = qLT.p;
-      qLR.p = qRB.p;
-      qRR.p = qLB.p;
-    }
-
-    // iu, iv : parallel velocity indexes
-    // iw     : orthogonal velocity index
-    // ia, ib, ic : idem for magnetic field
-    //int iu, iv, iw, ia, ib, ic;
-    if (emfDir == EMFZ) {
-
-      //iu = IU; iv = IV; iw = IW;
-      //ia = IA; ib = IB, ic = IC;
-      
-      // First parallel velocity 
-      qLL.u = qRT.u;
-      qRL.u = qLT.u;
-      qLR.u = qRB.u;
-      qRR.u = qLB.u;
-      
-      // Second parallel velocity 
-      qLL.v = qRT.v;
-      qRL.v = qLT.v;
-      qLR.v = qRB.v;
-      qRR.v = qLB.v;
-      
-      // First parallel magnetic field (enforce continuity)
-      qLL.bx = HALF_F * ( qRT.bx + qLT.bx );
-      qRL.bx = HALF_F * ( qRT.bx + qLT.bx );
-      qLR.bx = HALF_F * ( qRB.bx + qLB.bx );
-      qRR.bx = HALF_F * ( qRB.bx + qLB.bx );
-      
-      // Second parallel magnetic field (enforce continuity)
-      qLL.by = HALF_F * ( qRT.by + qRB.by );
-      qRL.by = HALF_F * ( qLT.by + qLB.by );
-      qLR.by = HALF_F * ( qRT.by + qRB.by );
-      qRR.by = HALF_F * ( qLT.by + qLB.by );
-      
-      // Orthogonal velocity 
-      qLL.w = qRT.w;
-      qRL.w = qLT.w;
-      qLR.w = qRB.w;
-      qRR.w = qLB.w;
-      
-      // Orthogonal magnetic Field
-      qLL.bz = qRT.bz;
-      qRL.bz = qLT.bz;
-      qLR.bz = qRB.bz;
-      qRR.bz = qLB.bz;
-
-    } else if (emfDir == EMFY) {
-
-      //iu = IW; iv = IU; iw = IV;
-      //ia = IC; ib = IA, ic = IB;
-      
-      // First parallel velocity 
-      qLL.u = qRT.w;
-      qRL.u = qLT.w;
-      qLR.u = qRB.w;
-      qRR.u = qLB.w;
-      
-      // Second parallel velocity 
-      qLL.v = qRT.u;
-      qRL.v = qLT.u;
-      qLR.v = qRB.u;
-      qRR.v = qLB.u;
-      
-      // First parallel magnetic field (enforce continuity)
-      qLL.bx = HALF_F * ( qRT.bz + qLT.bz );
-      qRL.bx = HALF_F * ( qRT.bz + qLT.bz );
-      qLR.bx = HALF_F * ( qRB.bz + qLB.bz );
-      qRR.bx = HALF_F * ( qRB.bz + qLB.bz );
-      
-      // Second parallel magnetic field (enforce continuity)
-      qLL.by = HALF_F * ( qRT.bx + qRB.bx );
-      qRL.by = HALF_F * ( qLT.bx + qLB.bx );
-      qLR.by = HALF_F * ( qRT.bx + qRB.bx );
-      qRR.by = HALF_F * ( qLT.bx + qLB.bx );
-      
-      // Orthogonal velocity 
-      qLL.w = qRT.v;
-      qRL.w = qLT.v;
-      qLR.w = qRB.v;
-      qRR.w = qLB.v;
-      
-      // Orthogonal magnetic Field
-      qLL.bz = qRT.by;
-      qRL.bz = qLT.by;
-      qLR.bz = qRB.by;
-      qRR.bz = qLB.by;
-      
-    } else { // emfDir == EMFX
-
-      //iu = IV; iv = IW; iw = IU;
-      //ia = IB; ib = IC, ic = IA;
-
-      // First parallel velocity 
-      qLL.u = qRT.v;
-      qRL.u = qLT.v;
-      qLR.u = qRB.v;
-      qRR.u = qLB.v;
-      
-      // Second parallel velocity 
-      qLL.v = qRT.w;
-      qRL.v = qLT.w;
-      qLR.v = qRB.w;
-      qRR.v = qLB.w;
-      
-      // First parallel magnetic field (enforce continuity)
-      qLL.bx = HALF_F * ( qRT.by + qLT.by );
-      qRL.bx = HALF_F * ( qRT.by + qLT.by );
-      qLR.bx = HALF_F * ( qRB.by + qLB.by );
-      qRR.bx = HALF_F * ( qRB.by + qLB.by );
-      
-      // Second parallel magnetic field (enforce continuity)
-      qLL.by = HALF_F * ( qRT.bz + qRB.bz );
-      qRL.by = HALF_F * ( qLT.bz + qLB.bz );
-      qLR.by = HALF_F * ( qRT.bz + qRB.bz );
-      qRR.by = HALF_F * ( qLT.bz + qLB.bz );
-      
-      // Orthogonal velocity 
-      qLL.w = qRT.u;
-      qRL.w = qLT.u;
-      qLR.w = qRB.u;
-      qRR.w = qLB.u;
-      
-      // Orthogonal magnetic Field
-      qLL.bz = qRT.bx;
-      qRL.bz = qLT.bx;
-      qLR.bz = qRB.bx;
-      qRR.bz = qLB.bx;
-    }
-
-  
-    // Compute final fluxes
-  
-    // vx*by - vy*bx at the four edge centers
-    real_t eLLRR[4];
-    real_t &ELL = eLLRR[ILL];
-    real_t &ERL = eLLRR[IRL];
-    real_t &ELR = eLLRR[ILR];
-    real_t &ERR = eLLRR[IRR];
-
-    ELL = qLL.u*qLL.by - qLL.v*qLL.bx;
-    ERL = qRL.u*qRL.by - qRL.v*qRL.bx;
-    ELR = qLR.u*qLR.by - qLR.v*qLR.bx;
-    ERR = qRR.u*qRR.by - qRR.v*qRR.bx;
-
-    real_t emf=0;
-    // mag_riemann2d<>
-    //if (params.magRiemannSolver == MAG_HLLD) {
-    emf = mag_riemann2d_hlld(qLLRR, eLLRR);
-    // } else if (params.magRiemannSolver == MAG_HLLA) {
-    //   emf = mag_riemann2d_hlla(qLLRR, eLLRR);
-    // } else if (params.magRiemannSolver == MAG_HLLF) {
-    //   emf = mag_riemann2d_hllf(qLLRR, eLLRR);
-    // } else if (params.magRiemannSolver == MAG_LLF) {
-    //   emf = mag_riemann2d_llf(qLLRR, eLLRR);
-    // }
-
-    /* upwind solver in case of the shearing box */
-    // if ( /* cartesian */ (params.settings.Omega0>0) /* and not fargo */ ) {
-    //   if (emfDir==EMFX) {
-    // 	real_t shear = -1.5 * params.Omega0 * xPos;
-    // 	if (shear>0) {
-    // 	  emf += shear * qLL.by;
-    // 	} else {
-    // 	  emf += shear * qRR.by;
-    // 	}
-    //   }
-    //   if (emfDir==EMFZ) {
-    // 	real_t shear = -1.5 * params.Omega0 * (xPos - params.dx/2);
-    // 	if (shear>0) {
-    // 	  emf -= shear * qLL.bx;
-    // 	} else {
-    // 	  emf -= shear * qRR.bx;
-    // 	}
-    //   }
-    // }
-
-    return emf;
-
-  } // compute_emf
-
-  /**
-   * 2D magnetic riemann solver of type HLLD
-   *
-   */
-  KOKKOS_INLINE_FUNCTION
-  real_t mag_riemann2d_hlld(MHDState qLLRR[4],
-			    real_t eLLRR[4]) const
-  {
-
-    // alias reference to input arrays
-    MHDState &qLL = qLLRR[ILL];
-    MHDState &qRL = qLLRR[IRL];
-    MHDState &qLR = qLLRR[ILR];
-    MHDState &qRR = qLLRR[IRR];
-
-    real_t &ELL = eLLRR[ILL];
-    real_t &ERL = eLLRR[IRL];
-    real_t &ELR = eLLRR[ILR];
-    real_t &ERR = eLLRR[IRR];
-    //real_t ELL,ERL,ELR,ERR;
-
-    real_t &rLL=qLL.d; real_t &pLL=qLL.p; 
-    real_t &uLL=qLL.u; real_t &vLL=qLL.v; 
-    real_t &aLL=qLL.bx; real_t &bLL=qLL.by ; real_t &cLL=qLL.bz;
-  
-    real_t &rLR=qLR.d; real_t &pLR=qLR.p; 
-    real_t &uLR=qLR.u; real_t &vLR=qLR.v; 
-    real_t &aLR=qLR.bx; real_t &bLR=qLR.by ; real_t &cLR=qLR.bz;
-  
-    real_t &rRL=qRL.d; real_t &pRL=qRL.p; 
-    real_t &uRL=qRL.u; real_t &vRL=qRL.v; 
-    real_t &aRL=qRL.bx; real_t &bRL=qRL.by ; real_t &cRL=qRL.bz;
-
-    real_t &rRR=qRR.d; real_t &pRR=qRR.p; 
-    real_t &uRR=qRR.u; real_t &vRR=qRR.v; 
-    real_t &aRR=qRR.bx; real_t &bRR=qRR.by ; real_t &cRR=qRR.bz;
-  
-    // Compute 4 fast magnetosonic velocity relative to x direction
-    real_t cFastLLx = find_speed_fast<IX>(qLL);
-    real_t cFastLRx = find_speed_fast<IX>(qLR);
-    real_t cFastRLx = find_speed_fast<IX>(qRL);
-    real_t cFastRRx = find_speed_fast<IX>(qRR);
-
-    // Compute 4 fast magnetosonic velocity relative to y direction 
-    real_t cFastLLy = find_speed_fast<IY>(qLL);
-    real_t cFastLRy = find_speed_fast<IY>(qLR);
-    real_t cFastRLy = find_speed_fast<IY>(qRL);
-    real_t cFastRRy = find_speed_fast<IY>(qRR);
-  
-    // TODO : write a find_speed that computes the 2 speeds together (in
-    // a single routine -> factorize computation of cFastLLx and cFastLLy
-
-    real_t SL = FMIN4(uLL,uLR,uRL,uRR) - FMAX4(cFastLLx,cFastLRx,cFastRLx,cFastRRx);
-    real_t SR = FMAX4(uLL,uLR,uRL,uRR) + FMAX4(cFastLLx,cFastLRx,cFastRLx,cFastRRx);
-    real_t SB = FMIN4(vLL,vLR,vRL,vRR) - FMAX4(cFastLLy,cFastLRy,cFastRLy,cFastRRy);
-    real_t ST = FMAX4(vLL,vLR,vRL,vRR) + FMAX4(cFastLLy,cFastLRy,cFastRLy,cFastRRy);
-
-    /*ELL = uLL*bLL - vLL*aLL;
-      ELR = uLR*bLR - vLR*aLR;
-      ERL = uRL*bRL - vRL*aRL;
-      ERR = uRR*bRR - vRR*aRR;*/
-  
-    real_t PtotLL = pLL + HALF_F * (aLL*aLL + bLL*bLL + cLL*cLL);
-    real_t PtotLR = pLR + HALF_F * (aLR*aLR + bLR*bLR + cLR*cLR);
-    real_t PtotRL = pRL + HALF_F * (aRL*aRL + bRL*bRL + cRL*cRL);
-    real_t PtotRR = pRR + HALF_F * (aRR*aRR + bRR*bRR + cRR*cRR);
-  
-    real_t rcLLx = rLL * (uLL-SL); real_t rcRLx = rRL *(SR-uRL);
-    real_t rcLRx = rLR * (uLR-SL); real_t rcRRx = rRR *(SR-uRR);
-    real_t rcLLy = rLL * (vLL-SB); real_t rcLRy = rLR *(ST-vLR);
-    real_t rcRLy = rRL * (vRL-SB); real_t rcRRy = rRR *(ST-vRR);
-
-    real_t ustar = (rcLLx*uLL + rcLRx*uLR + rcRLx*uRL + rcRRx*uRR +
-		    (PtotLL - PtotRL + PtotLR - PtotRR) ) / (rcLLx + rcLRx + 
-							     rcRLx + rcRRx);
-    real_t vstar = (rcLLy*vLL + rcLRy*vLR + rcRLy*vRL + rcRRy*vRR +
-		    (PtotLL - PtotLR + PtotRL - PtotRR) ) / (rcLLy + rcLRy + 
-							     rcRLy + rcRRy);
-  
-    real_t rstarLLx = rLL * (SL-uLL) / (SL-ustar);
-    real_t BstarLL  = bLL * (SL-uLL) / (SL-ustar);
-    real_t rstarLLy = rLL * (SB-vLL) / (SB-vstar); 
-    real_t AstarLL  = aLL * (SB-vLL) / (SB-vstar);
-    real_t rstarLL  = rLL * (SL-uLL) / (SL-ustar) 
-      *                     (SB-vLL) / (SB-vstar);
-    real_t EstarLLx = ustar * BstarLL - vLL   * aLL;
-    real_t EstarLLy = uLL   * bLL     - vstar * AstarLL;
-    real_t EstarLL  = ustar * BstarLL - vstar * AstarLL;
-  
-    real_t rstarLRx = rLR * (SL-uLR) / (SL-ustar); 
-    real_t BstarLR  = bLR * (SL-uLR) / (SL-ustar);
-    real_t rstarLRy = rLR * (ST-vLR) / (ST-vstar); 
-    real_t AstarLR  = aLR * (ST-vLR) / (ST-vstar);
-    real_t rstarLR  = rLR * (SL-uLR) / (SL-ustar) * (ST-vLR) / (ST-vstar);
-    real_t EstarLRx = ustar * BstarLR - vLR   * aLR;
-    real_t EstarLRy = uLR   * bLR     - vstar * AstarLR;
-    real_t EstarLR  = ustar * BstarLR - vstar * AstarLR;
-
-    real_t rstarRLx = rRL * (SR-uRL) / (SR-ustar); 
-    real_t BstarRL  = bRL * (SR-uRL) / (SR-ustar);
-    real_t rstarRLy = rRL * (SB-vRL) / (SB-vstar); 
-    real_t AstarRL  = aRL * (SB-vRL) / (SB-vstar);
-    real_t rstarRL  = rRL * (SR-uRL) / (SR-ustar) * (SB-vRL) / (SB-vstar);
-    real_t EstarRLx = ustar * BstarRL - vRL   * aRL;
-    real_t EstarRLy = uRL   * bRL     - vstar * AstarRL;
-    real_t EstarRL  = ustar * BstarRL - vstar * AstarRL;
-  
-    real_t rstarRRx = rRR * (SR-uRR) / (SR-ustar); 
-    real_t BstarRR  = bRR * (SR-uRR) / (SR-ustar);
-    real_t rstarRRy = rRR * (ST-vRR) / (ST-vstar); 
-    real_t AstarRR  = aRR * (ST-vRR) / (ST-vstar);
-    real_t rstarRR  = rRR * (SR-uRR) / (SR-ustar) * (ST-vRR) / (ST-vstar);
-    real_t EstarRRx = ustar * BstarRR - vRR   * aRR;
-    real_t EstarRRy = uRR   * bRR     - vstar * AstarRR;
-    real_t EstarRR  = ustar * BstarRR - vstar * AstarRR;
-
-    real_t calfvenL = FMAX5(FABS(aLR)/SQRT(rstarLRx), FABS(AstarLR)/SQRT(rstarLR), 
-			    FABS(aLL)/SQRT(rstarLLx), FABS(AstarLL)/SQRT(rstarLL), 
-			    params.settings.smallc);
-    real_t calfvenR = FMAX5(FABS(aRR)/SQRT(rstarRRx), FABS(AstarRR)/SQRT(rstarRR),
-			    FABS(aRL)/SQRT(rstarRLx), FABS(AstarRL)/SQRT(rstarRL), 
-			    params.settings.smallc);
-    real_t calfvenB = FMAX5(FABS(bLL)/SQRT(rstarLLy), FABS(BstarLL)/SQRT(rstarLL), 
-			    FABS(bRL)/SQRT(rstarRLy), FABS(BstarRL)/SQRT(rstarRL), 
-			    params.settings.smallc);
-    real_t calfvenT = FMAX5(FABS(bLR)/SQRT(rstarLRy), FABS(BstarLR)/SQRT(rstarLR), 
-			    FABS(bRR)/SQRT(rstarRRy), FABS(BstarRR)/SQRT(rstarRR), 
-			    params.settings.smallc);
-
-    real_t SAL = FMIN(ustar - calfvenL, (real_t) ZERO_F); 
-    real_t SAR = FMAX(ustar + calfvenR, (real_t) ZERO_F);
-    real_t SAB = FMIN(vstar - calfvenB, (real_t) ZERO_F); 
-    real_t SAT = FMAX(vstar + calfvenT, (real_t) ZERO_F);
-
-    real_t AstarT = (SAR*AstarRR - SAL*AstarLR) / (SAR-SAL); 
-    real_t AstarB = (SAR*AstarRL - SAL*AstarLL) / (SAR-SAL);
-  
-    real_t BstarR = (SAT*BstarRR - SAB*BstarRL) / (SAT-SAB); 
-    real_t BstarL = (SAT*BstarLR - SAB*BstarLL) / (SAT-SAB);
-
-    // finally get emf E
-    real_t E=0, tmpE=0;
-
-    // the following part is slightly different from the original fortran
-    // code since it has to much different branches
-    // which generate to much branch divergence in CUDA !!!
-
-    // compute sort of boolean (don't know if signbit is available)
-    int SB_pos = (int) (1+COPYSIGN(ONE_F,SB))/2, SB_neg = 1-SB_pos;
-    int ST_pos = (int) (1+COPYSIGN(ONE_F,ST))/2, ST_neg = 1-ST_pos;
-    int SL_pos = (int) (1+COPYSIGN(ONE_F,SL))/2, SL_neg = 1-SL_pos;
-    int SR_pos = (int) (1+COPYSIGN(ONE_F,SR))/2, SR_neg = 1-SR_pos;
-
-    // else
-    tmpE = (SAL*SAB*EstarRR-SAL*SAT*EstarRL - 
-	    SAR*SAB*EstarLR+SAR*SAT*EstarLL)/(SAR-SAL)/(SAT-SAB) - 
-      SAT*SAB/(SAT-SAB)*(AstarT-AstarB) + 
-      SAR*SAL/(SAR-SAL)*(BstarR-BstarL);
-    E += (SB_neg * ST_pos * SL_neg * SR_pos) * tmpE;
-
-    // SB>0
-    tmpE = (SAR*EstarLLx-SAL*EstarRLx+SAR*SAL*(bRL-bLL))/(SAR-SAL);
-    tmpE = SL_pos*ELL + SL_neg*SR_neg*ERL + SL_neg*SR_pos*tmpE;
-    E += SB_pos * tmpE;
-
-    // ST<0
-    tmpE = (SAR*EstarLRx-SAL*EstarRRx+SAR*SAL*(bRR-bLR))/(SAR-SAL);
-    tmpE = SL_pos*ELR + SL_neg*SR_neg*ERR + SL_neg*SR_pos*tmpE;
-    E += (SB_neg * ST_neg) * tmpE;
-
-    // SL>0
-    tmpE = (SAT*EstarLLy-SAB*EstarLRy-SAT*SAB*(aLR-aLL))/(SAT-SAB);
-    E += (SB_neg * ST_pos * SL_pos) * tmpE;
-
-    // SR<0
-    tmpE = (SAT*EstarRLy-SAB*EstarRRy-SAT*SAB*(aRR-aRL))/(SAT-SAB);
-    E += (SB_neg * ST_pos * SL_neg * SR_neg) * tmpE;
-
-
-    /*
-      if(SB>ZERO_F) {
-      if(SL>ZERO_F) {
-      E=ELL;
-      } else if(SR<ZERO_F) {
-      E=ERL;
-      } else {
-      E=(SAR*EstarLLx-SAL*EstarRLx+SAR*SAL*(bRL-bLL))/(SAR-SAL);
-      }
-      } else if (ST<ZERO_F) {
-      if(SL>ZERO_F) {
-      E=ELR;
-      } else if(SR<ZERO_F) {
-      E=ERR;
-      } else {
-      E=(SAR*EstarLRx-SAL*EstarRRx+SAR*SAL*(bRR-bLR))/(SAR-SAL);
-      }
-      } else if (SL>ZERO_F) {
-      E=(SAT*EstarLLy-SAB*EstarLRy-SAT*SAB*(aLR-aLL))/(SAT-SAB);
-      } else if (SR<ZERO_F) {
-      E=(SAT*EstarRLy-SAB*EstarRRy-SAT*SAB*(aRR-aRL))/(SAT-SAB);
-      } else {
-      E = (SAL*SAB*EstarRR-SAL*SAT*EstarRL - 
-      SAR*SAB*EstarLR+SAR*SAT*EstarLL)/(SAR-SAL)/(SAT-SAB) - 
-      SAT*SAB/(SAT-SAB)*(AstarT-AstarB) + 
-      SAR*SAL/(SAR-SAL)*(BstarR-BstarL);
-      }
-    */
-
-    return E;
-
-  } // mag_riemann2d_hlld
 
 }; // class MHDBaseFunctor3D
 

@@ -6,8 +6,11 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
+#include "kokkos_shared.h"
 #include "MHDBaseFunctor3D.h"
+#include "RiemannSolvers_MHD.h"
 
+// init conditions
 #include "BlastParams.h"
 
 #ifndef SQR
@@ -64,18 +67,18 @@ public:
       MHDState qLoc; // primitive    variables in current cell
       
       // get primitive variables in current cell
-      qLoc.d  = Qdata(i,j,k,ID);
-      qLoc.p  = Qdata(i,j,k,IP);
-      qLoc.u  = Qdata(i,j,k,IU);
-      qLoc.v  = Qdata(i,j,k,IV);
-      qLoc.w  = Qdata(i,j,k,IW);
-      qLoc.bx = Qdata(i,j,k,IBX);
-      qLoc.by = Qdata(i,j,k,IBY);
-      qLoc.bz = Qdata(i,j,k,IBZ);
+      qLoc[ID]  = Qdata(i,j,k,ID);
+      qLoc[IP]  = Qdata(i,j,k,IP);
+      qLoc[IU]  = Qdata(i,j,k,IU);
+      qLoc[IV]  = Qdata(i,j,k,IV);
+      qLoc[IW]  = Qdata(i,j,k,IW);
+      qLoc[IBX] = Qdata(i,j,k,IBX);
+      qLoc[IBY] = Qdata(i,j,k,IBY);
+      qLoc[IBZ] = Qdata(i,j,k,IBZ);
 
       // compute fastest information speeds
       real_t fastInfoSpeed[3];
-      find_speed_info<THREE_D>(qLoc, fastInfoSpeed);
+      find_speed_info<THREE_D>(qLoc, fastInfoSpeed, params);
       
       real_t vx = fastInfoSpeed[IX];
       real_t vy = fastInfoSpeed[IY];
@@ -141,14 +144,14 @@ public:
       real_t c;
       
       // get local conservative variable
-      uLoc.d  = Udata(i,j,k,ID);
-      uLoc.p  = Udata(i,j,k,IP);
-      uLoc.u  = Udata(i,j,k,IU);
-      uLoc.v  = Udata(i,j,k,IV);
-      uLoc.w  = Udata(i,j,k,IW);
-      uLoc.bx = Udata(i,j,k,IBX);
-      uLoc.by = Udata(i,j,k,IBY);
-      uLoc.bz = Udata(i,j,k,IBZ);
+      uLoc[ID]  = Udata(i,j,k,ID);
+      uLoc[IP]  = Udata(i,j,k,IP);
+      uLoc[IU]  = Udata(i,j,k,IU);
+      uLoc[IV]  = Udata(i,j,k,IV);
+      uLoc[IW]  = Udata(i,j,k,IW);
+      uLoc[IBX] = Udata(i,j,k,IBX);
+      uLoc[IBY] = Udata(i,j,k,IBY);
+      uLoc[IBZ] = Udata(i,j,k,IBZ);
 
       // get mag field in neighbor cells
       magFieldNeighbors[IX] = Udata(i+1,j  ,k  ,IBX);
@@ -159,14 +162,14 @@ public:
       constoprim_mhd(uLoc, magFieldNeighbors, c, qLoc);
 
       // copy q state in q global
-      Qdata(i,j,k,ID)  = qLoc.d;
-      Qdata(i,j,k,IP)  = qLoc.p;
-      Qdata(i,j,k,IU)  = qLoc.u;
-      Qdata(i,j,k,IV)  = qLoc.v;
-      Qdata(i,j,k,IW)  = qLoc.w;
-      Qdata(i,j,k,IBX) = qLoc.bx;
-      Qdata(i,j,k,IBY) = qLoc.by;
-      Qdata(i,j,k,IBZ) = qLoc.bz;
+      Qdata(i,j,k,ID)  = qLoc[ID];
+      Qdata(i,j,k,IP)  = qLoc[IP];
+      Qdata(i,j,k,IU)  = qLoc[IU];
+      Qdata(i,j,k,IV)  = qLoc[IV];
+      Qdata(i,j,k,IW)  = qLoc[IW];
+      Qdata(i,j,k,IBX) = qLoc[IBX];
+      Qdata(i,j,k,IBY) = qLoc[IBY];
+      Qdata(i,j,k,IBZ) = qLoc[IBZ];
       
     }
     
@@ -642,7 +645,7 @@ public:
       get_state(Qp_x, i  ,j  ,k, qright);
       
       // compute hydro flux along X
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
 
       // store fluxes
       set_state(Fluxes_x, i, j, k, flux);
@@ -651,15 +654,15 @@ public:
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       //
       get_state(Qm_y, i,j-1,k, qleft);
-      swapValues(&(qleft.u)  ,&(qleft.v) );
-      swapValues(&(qleft.bx) ,&(qleft.by) );
+      swapValues(&(qleft[IU])  ,&(qleft[IV]) );
+      swapValues(&(qleft[IBX]) ,&(qleft[IBY]) );
 
       get_state(Qp_y, i,j,k, qright);
-      swapValues(&(qright.u)  ,&(qright.v) );
-      swapValues(&(qright.bx) ,&(qright.by) );
+      swapValues(&(qright[IU])  ,&(qright[IV]) );
+      swapValues(&(qright[IBX]) ,&(qright[IBY]) );
       
       // compute hydro flux along Y
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
             
       // store fluxes
       set_state(Fluxes_y, i,j,k, flux);
@@ -668,15 +671,15 @@ public:
       // Solve Riemann problem at Z-interfaces and compute Z-fluxes
       //
       get_state(Qm_z, i,j,k-1, qleft);
-      swapValues(&(qleft.u)  ,&(qleft.w) );
-      swapValues(&(qleft.bx) ,&(qleft.bz) );
+      swapValues(&(qleft[IU])  ,&(qleft[IW]) );
+      swapValues(&(qleft[IBX]) ,&(qleft[IBZ]) );
 
       get_state(Qp_z, i,j,k, qright);
-      swapValues(&(qright.u)  ,&(qright.w) );
-      swapValues(&(qright.bx) ,&(qright.bz) );
+      swapValues(&(qright[IU])  ,&(qright[IW]) );
+      swapValues(&(qright[IBX]) ,&(qright[IBZ]) );
       
       // compute hydro flux along Z
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
             
       // store fluxes
       set_state(Fluxes_z, i,j,k, flux);
@@ -752,7 +755,7 @@ public:
       get_state(QEdge_LT3, i  ,j-1,k  , qEdge_emf[ILT]);
       get_state(QEdge_LB3, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(i,j,k,I_EMFZ) = compute_emf<EMFZ>(qEdge_emf);
+      Emf(i,j,k,I_EMFZ) = compute_emf<EMFZ>(qEdge_emf,params);
       
       // actually compute emfY (take care that RB and LT are
       // swapped !!!)
@@ -761,7 +764,7 @@ public:
       get_state(QEdge_RB2, i-1,j  ,k  , qEdge_emf[ILT]);
       get_state(QEdge_LB2, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(i,j,k,I_EMFY) = compute_emf<EMFY>(qEdge_emf);
+      Emf(i,j,k,I_EMFY) = compute_emf<EMFY>(qEdge_emf,params);
       
       // actually compute emfX
       get_state(QEdge_RT, i  ,j-1,k-1, qEdge_emf[IRT]);
@@ -769,7 +772,7 @@ public:
       get_state(QEdge_LT, i  ,j  ,k-1, qEdge_emf[ILT]);
       get_state(QEdge_LB, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(i,j,k,I_EMFX) = compute_emf<EMFX>(qEdge_emf);
+      Emf(i,j,k,I_EMFX) = compute_emf<EMFX>(qEdge_emf,params);
     }
   }
 
@@ -828,46 +831,46 @@ public:
       // add up contributions from all 6 faces
       
       get_state(FluxData_x, i  ,j  ,k  , flux);      
-      udata.d  +=  flux.d*dtdx;
-      udata.p  +=  flux.p*dtdx;
-      udata.u  +=  flux.u*dtdx;
-      udata.v  +=  flux.v*dtdx;
-      udata.w  +=  flux.w*dtdx;
+      udata[ID]  +=  flux[ID]*dtdx;
+      udata[IP]  +=  flux[IP]*dtdx;
+      udata[IU]  +=  flux[IU]*dtdx;
+      udata[IV]  +=  flux[IV]*dtdx;
+      udata[IW]  +=  flux[IW]*dtdx;
       
       get_state(FluxData_x, i+1,j  ,k  , flux);
-      udata.d  -=  flux.d*dtdx;
-      udata.p  -=  flux.p*dtdx;
-      udata.u  -=  flux.u*dtdx;
-      udata.v  -=  flux.v*dtdx;
-      udata.w  -=  flux.w*dtdx;
+      udata[ID]  -=  flux[ID]*dtdx;
+      udata[IP]  -=  flux[IP]*dtdx;
+      udata[IU]  -=  flux[IU]*dtdx;
+      udata[IV]  -=  flux[IV]*dtdx;
+      udata[IW]  -=  flux[IW]*dtdx;
       
       get_state(FluxData_y, i  ,j  ,k  , flux);
-      udata.d  +=  flux.d*dtdy;
-      udata.p  +=  flux.p*dtdy;
-      udata.u  +=  flux.v*dtdy; //
-      udata.v  +=  flux.u*dtdy; //
-      udata.w  +=  flux.w*dtdy;
+      udata[ID]  +=  flux[ID]*dtdy;
+      udata[IP]  +=  flux[IP]*dtdy;
+      udata[IU]  +=  flux[IV]*dtdy; //
+      udata[IV]  +=  flux[IU]*dtdy; //
+      udata[IW]  +=  flux[IW]*dtdy;
       
       get_state(FluxData_y, i  ,j+1,k  , flux);
-      udata.d  -=  flux.d*dtdy;
-      udata.p  -=  flux.p*dtdy;
-      udata.u  -=  flux.v*dtdy; //
-      udata.v  -=  flux.u*dtdy; //
-      udata.w  -=  flux.w*dtdy;
+      udata[ID]  -=  flux[ID]*dtdy;
+      udata[IP]  -=  flux[IP]*dtdy;
+      udata[IU]  -=  flux[IV]*dtdy; //
+      udata[IV]  -=  flux[IU]*dtdy; //
+      udata[IW]  -=  flux[IW]*dtdy;
 
       get_state(FluxData_z, i  ,j  ,k  , flux);
-      udata.d  +=  flux.d*dtdy;
-      udata.p  +=  flux.p*dtdy;
-      udata.u  +=  flux.w*dtdy; //
-      udata.v  +=  flux.v*dtdy;
-      udata.w  +=  flux.u*dtdy; //
+      udata[ID]  +=  flux[ID]*dtdy;
+      udata[IP]  +=  flux[IP]*dtdy;
+      udata[IU]  +=  flux[IW]*dtdy; //
+      udata[IV]  +=  flux[IV]*dtdy;
+      udata[IW]  +=  flux[IU]*dtdy; //
 
       get_state(FluxData_z, i  ,j  ,k+1, flux);
-      udata.d  -=  flux.d*dtdz;
-      udata.p  -=  flux.p*dtdz;
-      udata.u  -=  flux.w*dtdz; //
-      udata.v  -=  flux.v*dtdz;
-      udata.w  -=  flux.u*dtdz; //
+      udata[ID]  -=  flux[ID]*dtdz;
+      udata[IP]  -=  flux[IP]*dtdz;
+      udata[IU]  -=  flux[IW]*dtdz; //
+      udata[IV]  -=  flux[IV]*dtdz;
+      udata[IW]  -=  flux[IU]*dtdz; //
       
       // write back result in Udata
       set_state(Udata, i  ,j  ,k  , udata);
@@ -919,34 +922,34 @@ public:
 
       MHDState udata;
       get_state(Udata, i,j,k, udata);
-
+      
       if (k<ksize-ghostWidth) {
-	udata.bx += ( Emf(i  ,j+1, k,  I_EMFZ) - 
-		      Emf(i,  j  , k,  I_EMFZ) ) * dtdy;
+	udata[IBX] += ( Emf(i  ,j+1, k,  I_EMFZ) - 
+			Emf(i,  j  , k,  I_EMFZ) ) * dtdy;
 	
-	udata.by -= ( Emf(i+1,j  , k,  I_EMFZ) - 
-		      Emf(i  ,j  , k,  I_EMFZ) ) * dtdx;
+	udata[IBY] -= ( Emf(i+1,j  , k,  I_EMFZ) - 
+			Emf(i  ,j  , k,  I_EMFZ) ) * dtdx;
 	
       }
       
       // update BX
-      udata.bx -= ( Emf(i  ,j  ,k+1,  I_EMFY) -
-		    Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdz;
+      udata[IBX] -= ( Emf(i  ,j  ,k+1,  I_EMFY) -
+		      Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdz;
       
       // update BY
-      udata.by += ( Emf(i  ,j  ,k+1,  I_EMFX) -
-		    Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdz;
+      udata[IBY] += ( Emf(i  ,j  ,k+1,  I_EMFX) -
+		      Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdz;
       
       // update BZ
-      udata.bz += ( Emf(i+1,j  ,k  ,  I_EMFY) -
-		    Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdx;
+      udata[IBZ] += ( Emf(i+1,j  ,k  ,  I_EMFY) -
+		      Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdx;
       
-      udata.bz -= ( Emf(i  ,j+1,k  ,  I_EMFX) -
-		    Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdy;
-
-      Udata(i,j,k, IA) = udata.bx;
-      Udata(i,j,k, IB) = udata.by;
-      Udata(i,j,k, IC) = udata.bz;
+      udata[IBZ] -= ( Emf(i  ,j+1,k  ,  I_EMFX) -
+		      Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdy;
+      
+      Udata(i,j,k, IA) = udata[IBX];
+      Udata(i,j,k, IB) = udata[IBY];
+      Udata(i,j,k, IC) = udata[IBZ];
       
     }
   } // operator()
