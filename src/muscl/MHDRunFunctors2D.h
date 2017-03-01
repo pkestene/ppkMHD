@@ -6,8 +6,11 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
+#include "kokkos_shared.h"
 #include "MHDBaseFunctor2D.h"
+#include "RiemannSolvers_MHD.h"
 
+// init conditions
 #include "BlastParams.h"
 
 #ifndef SQR
@@ -72,7 +75,7 @@ public:
 
       // compute fastest information speeds
       real_t fastInfoSpeed[3];
-      find_speed_info<TWO_D>(qLoc, fastInfoSpeed);
+      find_speed_info<TWO_D>(qLoc, fastInfoSpeed, params);
       
       real_t vx = fastInfoSpeed[IX];
       real_t vy = fastInfoSpeed[IY];
@@ -216,7 +219,7 @@ public:
       get_state(Qp_x, i  , j  , qright);
       
       // compute hydro flux along X
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
 
       // store fluxes
       set_state(Fluxes_x, i  , j  , flux);
@@ -233,7 +236,7 @@ public:
       swapValues(&(qright[IBX]) ,&(qright[IBY]) );
       
       // compute hydro flux along Y
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
             
       // store fluxes
       set_state(Fluxes_y, i  ,j  , flux);
@@ -296,7 +299,7 @@ public:
       get_state(QEdge_LB, i  ,j  , qEdge_emfZ[ILB]);
 
       // actually compute emfZ
-      real_t emfZ = compute_emf<EMFZ>(qEdge_emfZ);
+      real_t emfZ = compute_emf<EMFZ>(qEdge_emfZ,params);
       Emf(i,j) = emfZ;
       
     }
@@ -641,7 +644,7 @@ public:
 				     dtdx, dtdy, FACE_XMAX, qleft);
 	  
 	  // Solve Riemann problem at X-interfaces and compute X-fluxes
-	  riemann_hlld(qleft,qright,flux);
+	  riemann_hlld(qleft,qright,flux,params);
 
 	  //
 	  // store fluxes
@@ -682,7 +685,7 @@ public:
 	  // Solve Riemann problem at Y-interfaces and compute Y-fluxes
 	  swapValues(&(qleft[IU]) ,&(qleft[IV]) );
 	  swapValues(&(qright[IU]),&(qright[IV]));
-	  riemann_hll(qleft,qright,flux);
+	  riemann_hlld(qleft,qright,flux,params);
 	  
 	  //
 	  // update hydro array

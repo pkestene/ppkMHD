@@ -6,8 +6,11 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
+#include "kokkos_shared.h"
 #include "MHDBaseFunctor3D.h"
+#include "RiemannSolvers_MHD.h"
 
+// init conditions
 #include "BlastParams.h"
 
 #ifndef SQR
@@ -75,7 +78,7 @@ public:
 
       // compute fastest information speeds
       real_t fastInfoSpeed[3];
-      find_speed_info<THREE_D>(qLoc, fastInfoSpeed);
+      find_speed_info<THREE_D>(qLoc, fastInfoSpeed, params);
       
       real_t vx = fastInfoSpeed[IX];
       real_t vy = fastInfoSpeed[IY];
@@ -642,7 +645,7 @@ public:
       get_state(Qp_x, i  ,j  ,k, qright);
       
       // compute hydro flux along X
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
 
       // store fluxes
       set_state(Fluxes_x, i, j, k, flux);
@@ -659,7 +662,7 @@ public:
       swapValues(&(qright[IBX]) ,&(qright[IBY]) );
       
       // compute hydro flux along Y
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
             
       // store fluxes
       set_state(Fluxes_y, i,j,k, flux);
@@ -676,7 +679,7 @@ public:
       swapValues(&(qright[IBX]) ,&(qright[IBZ]) );
       
       // compute hydro flux along Z
-      riemann_hlld(qleft,qright,flux);
+      riemann_hlld(qleft,qright,flux,params);
             
       // store fluxes
       set_state(Fluxes_z, i,j,k, flux);
@@ -752,7 +755,7 @@ public:
       get_state(QEdge_LT3, i  ,j-1,k  , qEdge_emf[ILT]);
       get_state(QEdge_LB3, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(i,j,k,I_EMFZ) = compute_emf<EMFZ>(qEdge_emf);
+      Emf(i,j,k,I_EMFZ) = compute_emf<EMFZ>(qEdge_emf,params);
       
       // actually compute emfY (take care that RB and LT are
       // swapped !!!)
@@ -761,7 +764,7 @@ public:
       get_state(QEdge_RB2, i-1,j  ,k  , qEdge_emf[ILT]);
       get_state(QEdge_LB2, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(i,j,k,I_EMFY) = compute_emf<EMFY>(qEdge_emf);
+      Emf(i,j,k,I_EMFY) = compute_emf<EMFY>(qEdge_emf,params);
       
       // actually compute emfX
       get_state(QEdge_RT, i  ,j-1,k-1, qEdge_emf[IRT]);
@@ -769,7 +772,7 @@ public:
       get_state(QEdge_LT, i  ,j  ,k-1, qEdge_emf[ILT]);
       get_state(QEdge_LB, i  ,j  ,k  , qEdge_emf[ILB]);
 
-      Emf(i,j,k,I_EMFX) = compute_emf<EMFX>(qEdge_emf);
+      Emf(i,j,k,I_EMFX) = compute_emf<EMFX>(qEdge_emf,params);
     }
   }
 
@@ -919,31 +922,31 @@ public:
 
       MHDState udata;
       get_state(Udata, i,j,k, udata);
-
+      
       if (k<ksize-ghostWidth) {
 	udata[IBX] += ( Emf(i  ,j+1, k,  I_EMFZ) - 
-		      Emf(i,  j  , k,  I_EMFZ) ) * dtdy;
+			Emf(i,  j  , k,  I_EMFZ) ) * dtdy;
 	
 	udata[IBY] -= ( Emf(i+1,j  , k,  I_EMFZ) - 
-		      Emf(i  ,j  , k,  I_EMFZ) ) * dtdx;
+			Emf(i  ,j  , k,  I_EMFZ) ) * dtdx;
 	
       }
       
       // update BX
       udata[IBX] -= ( Emf(i  ,j  ,k+1,  I_EMFY) -
-		    Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdz;
+		      Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdz;
       
       // update BY
       udata[IBY] += ( Emf(i  ,j  ,k+1,  I_EMFX) -
-		    Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdz;
+		      Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdz;
       
       // update BZ
       udata[IBZ] += ( Emf(i+1,j  ,k  ,  I_EMFY) -
-		    Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdx;
+		      Emf(i  ,j  ,k  ,  I_EMFY) ) * dtdx;
       
       udata[IBZ] -= ( Emf(i  ,j+1,k  ,  I_EMFX) -
-		    Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdy;
-
+		      Emf(i  ,j  ,k  ,  I_EMFX) ) * dtdy;
+      
       Udata(i,j,k, IA) = udata[IBX];
       Udata(i,j,k, IB) = udata[IBY];
       Udata(i,j,k, IC) = udata[IBZ];
