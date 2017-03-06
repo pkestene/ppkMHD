@@ -11,6 +11,9 @@ add_subdirectory(shared)
 # Hydro solver using 2nd order Muscl-Hancock solver
 add_subdirectory(muscl)
 
+# Hydro solver using high order MOOD solver
+add_subdirectory(mood)
+
 # include header for main application
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/shared)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/muscl)

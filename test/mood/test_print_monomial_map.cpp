@@ -11,6 +11,8 @@
 #include "mood/monomials_ordering.h"
 #include "mood/monomials_print_utils.h"
 
+#include "mood/Polynomial.h"
+
 int main(int argc, char* argv[])
 {
 
@@ -36,6 +38,29 @@ int main(int argc, char* argv[])
     std::cerr << "Not implemented or not tested !\n";
   }
 
+
+  /*
+   * test MonomialMap structure
+   */
+  std::cout << "############################\n";
+  std::cout << "Testing MonomialMap Struct\n";
+  std::cout << "############################\n";
+  
+  using aMonomialMap_t = mood::MonomialMap<3,4>;
+  aMonomialMap_t monomialMap;
+
+  //for (int i = 0; i<mood::MonomialMap<3,5>::Ncoefs; ++i) {}
+  for (int i = 0; i<aMonomialMap_t::Ncoefs; ++i) {
+    int e[3] = {monomialMap.data[i][0],
+		monomialMap.data[i][1],
+		monomialMap.data[i][2]};
+
+    std::cout << "    {";
+    std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
+    std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2] << "\n";
+
+  }
+  
   return 0;
   
 }

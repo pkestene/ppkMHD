@@ -1,10 +1,7 @@
-#include "Polynomial.h"
+#include "mood/Polynomial.h"
 
-namespace ppkMHD {
+namespace mood {
 
 
-// void print_polynomial (const Polynomial& poly) {
-  
-// } // print_polynomial
 
-} // namespace ppkMHD
+} // namespace mood

@@ -5,6 +5,8 @@
 #ifndef POLYNOMIALS_UTILS_H_
 #define POLYNOMIALS_UTILS_H_
 
+#include "mood/Binomial.h"
+
 namespace mood {
 
 /**
@@ -50,6 +52,18 @@ template<>
 int get_number_of_coefficients<3>(unsigned int order) {
   return (order+1)*(order+2)*(order+3)/6;
 } // get_number_of_coefficients<3>
+
+
+/**
+ * The general formula is (dim+order)! / dim! / order! (Binomial coefficient).
+ */
+template<unsigned int dim, unsigned int order>
+int get_number_of_coefficients() {
+
+  // default value for univariate polynomial
+  return binomial<dim+order,dim>();
+
+} // get_number_of_coefficients
 
 } // namespace mood
 
