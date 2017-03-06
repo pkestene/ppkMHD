@@ -45,11 +45,10 @@ int main(int argc, char* argv[])
   std::cout << "############################\n";
   std::cout << "Testing MonomialMap Struct\n";
   std::cout << "############################\n";
-  
+
   using aMonomialMap_t = mood::MonomialMap<3,4>;
   aMonomialMap_t monomialMap;
 
-  //for (int i = 0; i<mood::MonomialMap<3,5>::Ncoefs; ++i) {}
   for (int i = 0; i<aMonomialMap_t::Ncoefs; ++i) {
     int e[3] = {monomialMap.data[i][0],
 		monomialMap.data[i][1],

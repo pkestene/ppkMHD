@@ -16,4 +16,11 @@ target_include_directories(test_print_monomial_map
   ${CMAKE_SOURCE_DIR}/src
   )
 
+add_executable(test_polynomial
+  test_polynomial.cpp)
+target_include_directories(test_polynomial
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+
 

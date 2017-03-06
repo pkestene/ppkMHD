@@ -33,8 +33,10 @@ inline constexpr T power(const T base, unsigned int const exponent)
 template<unsigned int dim, unsigned int order>
 struct MonomialMap {
 
-  //static const int Ncoefs = get_number_of_coefficients<dim>(order);
+  /// totla number of dim-variate monomials of order less than order.
   static const int Ncoefs = binomial<dim+order,dim>();
+
+  // store the exponent of each variable in a monomials, for all monomials.
   int data[Ncoefs][dim];
 
   /**
@@ -90,9 +92,11 @@ struct MonomialMap {
  */
 template<unsigned int dim, unsigned int order>
 class Polynomial {
-  
+
+public:
+  static const int Ncoefs =  binomial<dim+order,dim>();//get_number_of_coefficients<dim>(order);
+
 private:
-  static const int Ncoefs = get_number_of_coefficients<dim>(order);
   std::array<real_t,Ncoefs> coefs;
 
 public:
@@ -106,10 +110,7 @@ public:
 public:
   Polynomial(const std::array<real_t,Ncoefs>& coefs) : coefs(coefs) {};
 
-  /** evaluate polynomial at a given point */
-  real_t eval(real_t x, real_t y, real_t z);
-
-  /** evaluate polynomial at a given point */
+  /** evaluate polynomial at a given point (2D) */
   real_t eval(real_t x, real_t y) {
 
     real_t result;
@@ -125,32 +126,56 @@ public:
 
 	  // result += coefs[c] * x^d-i * y^i
 	  result += coefs[c] * power(x,d-i) * power(y,i);
-	  
+	  c++;
 	}
 	
       }
 
-    } else if (dim == 3) {
+    } // end dim == 2
 
-      
+    return result;
+
+  }; // eval 2D
+
+  /** evaluate polynomial at a given point (3D) */
+  real_t eval(real_t x, real_t y, real_t z) {
+
+    real_t result;
+    int c = 0;
+
+    if (dim == 3) {
+
+      // span all monomials in Graded Reverse Lexicographical order
+      for(int i = 0; i<Ncoefs; ++i) {
+
+	int e[3] = {monomialMap.data[i][0],
+		    monomialMap.data[i][1],
+		    monomialMap.data[i][2]};
+	result += coefs[i] * power(x,e[0]) * power(y,e[1]) * power(z,e[2]);
+	
+      }
       
     }
+
+    return result;
     
-  };
+  }; // eval 3D
 
   real_t getCoefs(int i) {
-    return coefs[i];
-  }
+
+    real_t tmp = 0.0;
+    if (i>=0 and i<Ncoefs)
+      tmp = coefs[i];
+    
+    return tmp;
+    
+  } // getCoefs
     
 }; // class Polynomial
 
-// static member
-// template<unsigned int dim, unsigned int order>
-// const int Polynomial<dim,order>::monomials_map[Polynomial<dim,order>::Ncoefs][dim] = {
-  
-// };
-
-
+// initialize static member
+template<unsigned int dim, unsigned int order>
+const MonomialMap<dim,order> Polynomial<dim,order>::monomialMap;
 
 // /**
 //  * Just print a polynomial for checking.
