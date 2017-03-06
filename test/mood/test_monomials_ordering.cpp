@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "mood/monomials_ordering.h"
+#include "mood/monomials_print_utils.h"
 
 int main(int argc, char* argv[])
 {
@@ -12,13 +13,13 @@ int main(int argc, char* argv[])
     order = atoi(argv[1]);
 
   // print all multivariate monomials up to order in dimension 2
-  //print_all_monomials<2>(order);
+  //mood::print_all_monomials<2>(order);
 
   // print all multivariate monomials up to order in dimension 3
-  print_all_monomials<3>(order);
+  mood::print_all_monomials<3>(order);
 
   // print all multivariate monomials up to order in dimension 4
-  //print_all_monomials<4>(order);
+  //mood::print_all_monomials<4>(order);
     
   return 0;
   

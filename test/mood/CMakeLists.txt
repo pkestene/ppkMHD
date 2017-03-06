@@ -9,4 +9,11 @@ target_include_directories(test_monomials_ordering
   ${CMAKE_SOURCE_DIR}/src
   )
 
+add_executable(test_print_monomial_map
+  test_print_monomial_map.cpp)
+target_include_directories(test_print_monomial_map
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+
 

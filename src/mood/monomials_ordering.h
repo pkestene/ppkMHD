@@ -16,6 +16,8 @@
 #include <cstdlib>
 #include <iostream>
 
+namespace mood {
+
 /**
  * This routine compute the vector of exponents of the next monomial using
  * the graded reverse lexical order (grlex).
@@ -153,64 +155,6 @@ void mono_next_grlex_orig (int e[dim] )
   
 } // mono_next_grlex
 
-/**
- * Print all monomials (ordered using Graded Reverse Lexicographic order)
- * up to a given order.
- *
- * \param order is the maximum order of a monomial.
- *
- * Let's remember that the monomial order is the sum of exponents.
- * If monomial is X^3 Y^2 Z^5, order is 3+2+5=10
- *
- * Exponent ordering
- * e = {e[2], e[1], e[0]}
- * e[0] is the least significant exponent (X_0 = X)
- * e[1] is                                (X_1 = Y)
- * e[2] is the most  significant exponent (X_2 = Z)
- */
-template<unsigned int dim>
-void print_all_monomials(int order)  {
-
-  std::cout << "#################################################\n";
-  std::cout << "Multivariate monomials in dim = " << dim << " up to order " << order << "\n";
-  std::cout << "#################################################\n";
-  
-  // exponent vector
-  int e[dim];
-  for (int i=0; i<dim; ++i) e[i] = 0;
-
-  // d is the order, it will increase up to order
-  int d = -1;
-
-  int sum_e = 0;
-  for (int i=0; i<dim; ++i) sum_e += e[i];
-
-  while ( sum_e <= order) {
-
-    // check if monomial order has been incremented
-    if ( sum_e > d ) {
-      d++;
-      std::cout << "-- order " << d << "\n";
-    }
-
-    // print current monomial exponents, most significant exponent first
-    if (dim == 2) {
-      std::cout << " mono_next_grlex(dim=" << dim << ",e) = " << "(" << e[1] << "," << e[0] << ")\n";
-    } else if (dim == 3) {
-      std::cout << " mono_next_grlex(dim=" << dim << ",e) = " << "(" << e[2] << "," << e[1] << "," << e[0] << ")\n";
-    } else if (dim == 4) {
-      std::cout << " mono_next_grlex(dim=" << dim << ",e) = " << "(" << e[3] << "," << e[2] << "," << e[1] << "," << e[0] << ")\n";
-    }
-
-    // increment (in the sens of graded reverse lexicographic order)
-    // the exponents vector representing a monomial x^e[0] * y^e[1] * z^[2]
-    mono_next_grlex<dim>(e);
-
-    // update sum of exponents
-    sum_e = 0;
-    for (int i=0; i<dim; ++i) sum_e += e[i];
-  }
-  
-} // print_all_monomials
+} // namespace mood
 
 #endif // MONOMIALS_ORDERING_H_

@@ -37,35 +37,6 @@ inline constexpr real_t power(const real_t x)
 }
 
 
-/**
- * Return number of coefficients in a n-dimensional polynomial.
- *
- * When template parameter is 1, we consider a regular polynomial.
- * When template parameter is 2, we consider a bivariate polynomial.
- * When template parameter is 3, we consider a trivariate polynomial.
- *
- * \param[in] order of polynomial
- */
-template<unsigned int dim>
-int get_number_of_coefficients(unsigned int order) {
-  return order+1;
-}
-
-/**
- * Number of coefficients of a bivariate polynomial.
- */
-template<>
-int get_number_of_coefficients<2>(unsigned int order) {
-  return (order+1)*(order+2)/2;
-}
-
-/**
- * Number of coefficients of a trivariate polynomial.
- */
-template<>
-int get_number_of_coefficients<3>(unsigned int order) {
-  return (order+1)*(order+2)*(order+3)/6;
-}
 
 /**
  * A minimal data structure representing a bi-or-tri variate polynomial.
