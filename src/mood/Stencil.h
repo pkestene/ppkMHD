@@ -95,61 +95,55 @@ enum STENCIL_ID {
 
 /**
  * Return how many cell is made the stencil.
+ *
+ * \param[in] stencilId a valid value from enum STENCIL_ID
+ *
+ * \return number of cells contained in stencil.
  */
-unsigned int get_stencil_size(STENCIL_ID stencilId) {
-
-  if (stencilId == STENCIL_2D_ORDER1)
-    return 5;
-  if (stencilId == STENCIL_2D_ORDER2)
-    return 9;
-  if (stencilId == STENCIL_2D_ORDER3)
-    return 13;
-  if (stencilId == STENCIL_2D_ORDER3_V2)
-    return 16;
-  if (stencilId == STENCIL_2D_ORDER4)
-    return 25;
-  if (stencilId == STENCIL_2D_ORDER5)
-    return 36;
-
-  if (stencilId == STENCIL_3D_ORDER1)
-    return 7;
-  if (stencilId == STENCIL_3D_ORDER2)
-    return 27;
-  if (stencilId == STENCIL_3D_ORDER3)
-    return 27;
-  if (stencilId == STENCIL_3D_ORDER3_V2)
-    return 33;
-  if (stencilId == STENCIL_3D_ORDER4)
-    return 64;
-  if (stencilId == STENCIL_3D_ORDER5)
-    return 125;
-  if (stencilId == STENCIL_3D_ORDER5_V2)
-    return 88;
-
-}
+unsigned int get_stencil_size(STENCIL_ID stencilId);
 
 /**
  *
  */
-struct StencilBase {
+struct Stencil {
 
-  using StencilArray     = Kokkos::View<real_t*, DEVICE>;
+  using StencilArray     = Kokkos::View<int*[3], DEVICE>;
   using StencilArrayHost = StencilArray::HostMirror;
-
+  
   //! number identify stencil (values from enum STENCIL_ID)
   STENCIL_ID stencilId;
 
   //! stencil size, is usefull for allocating offsets arrays
   unsigned int stencilSize;
 
+  StencilArray offsets;
+
+  StencilArrayHost offsets_h;
+
+  bool is3dStencil;
+  
   //! default constructor
-  StencilBase(STENCIL_ID stencilId) : stencilId(stencilId) {
+  Stencil(STENCIL_ID stencilId) : stencilId(stencilId) {
+
     stencilSize = get_stencil_size(stencilId);
-  };
+
+    is3dStencil = (stencilId >= STENCIL_3D_ORDER1) ? true : false;
+    
+    offsets   = StencilArray    ("offsets",   stencilSize);
+
+    offsets_h = StencilArrayHost("offsets_h", stencilSize);
+
+    init_stencil();
+    
+  }; // Stencil
 
   void init_stencil();
+
+  void print_stencil();
+
+  static STENCIL_ID select_stencil(unsigned int dim, unsigned int order);
   
-}; // StencilBase
+}; // Stencil
 
 
 } // namespace mood

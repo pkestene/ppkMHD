@@ -23,4 +23,15 @@ target_include_directories(test_polynomial
   ${CMAKE_SOURCE_DIR}/src
   )
 
+add_executable(test_stencil
+  $<TARGET_OBJECTS:mood>
+  test_stencil.cpp)
+target_include_directories(test_stencil
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+#set_target_properties(test_stencil PROPERTIES
+#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
+target_link_libraries(test_stencil kokkos hwloc dl)
+
 
