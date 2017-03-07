@@ -1,0 +1,4 @@
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/pkestene/spdlog.git
+	branch = fix_nvcc
