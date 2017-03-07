@@ -4,11 +4,11 @@
 #include <map>
 #include <string>
 
-#include <kokkos_shared.h>
+#include <shared/kokkos_shared.h>
 //class HydroParams;
 //class ConfigMap;
-#include <HydroParams.h>
-#include <config/ConfigMap.h>
+#include <shared/HydroParams.h>
+#include <utils/config/ConfigMap.h>
 
 #include "IO_WriterBase.h"
 

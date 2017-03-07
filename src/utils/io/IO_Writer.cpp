@@ -1,7 +1,7 @@
 #include "IO_Writer.h"
 
-#include <HydroParams.h>
-#include <config/ConfigMap.h>
+#include <shared/HydroParams.h>
+#include <utils/config/ConfigMap.h>
 
 namespace ppkMHD { namespace io {
 

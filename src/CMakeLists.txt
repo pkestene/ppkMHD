@@ -15,10 +15,11 @@ add_subdirectory(muscl)
 add_subdirectory(mood)
 
 # include header for main application
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/shared)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/muscl)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/shared)
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/muscl)
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils)
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
 
 #
 # ppkMHD executable
@@ -37,9 +38,7 @@ add_executable(${EXE_NAME}
 #   COMPILE_FLAGS "${KOKKOS_CPPFLAGS} ${KOKKOS_CXXFLAGS}")
 target_include_directories(${EXE_NAME}
   PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/muscl
-  ${CMAKE_CURRENT_SOURCE_DIR}/utils/time
-  ${CMAKE_CURRENT_SOURCE_DIR}/utils/config
+  ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
 set_target_properties(${EXE_NAME} PROPERTIES

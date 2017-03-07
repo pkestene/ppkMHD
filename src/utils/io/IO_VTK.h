@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-#include <kokkos_shared.h>
+#include <shared/kokkos_shared.h>
 class HydroParams;
 class ConfigMap;
 

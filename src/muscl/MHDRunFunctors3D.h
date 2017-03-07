@@ -6,12 +6,12 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
-#include "kokkos_shared.h"
+#include "shared/kokkos_shared.h"
 #include "MHDBaseFunctor3D.h"
-#include "RiemannSolvers_MHD.h"
+#include "shared/RiemannSolvers_MHD.h"
 
 // init conditions
-#include "BlastParams.h"
+#include "shared/BlastParams.h"
 
 #ifndef SQR
 #define SQR(x) ((x)*(x))

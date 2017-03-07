@@ -6,20 +6,20 @@
 #include <algorithm>
 
 #include "SolverMHDMuscl3D.h"
-#include "HydroParams.h"
+#include "shared/HydroParams.h"
 
 // the actual computational functors called in SolverMHDMuscl3D
 #include "MHDRunFunctors3D.h"
-#include "BoundariesFunctors.h"
+#include "shared/BoundariesFunctors.h"
 
 // Kokkos
-#include "kokkos_shared.h"
+#include "shared/kokkos_shared.h"
 
 // for IO
-#include <io/IO_Writer.h>
+#include <utils/io/IO_Writer.h>
 
 // for init condition
-#include "BlastParams.h"
+#include "shared/BlastParams.h"
 
 namespace ppkMHD {
 

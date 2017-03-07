@@ -6,13 +6,13 @@
 #include <math_constants.h>
 #endif // __CUDA_ARCH__
 
-#include "kokkos_shared.h"
+#include "shared/kokkos_shared.h"
 #include "HydroBaseFunctor2D.h"
-#include "RiemannSolvers.h"
+#include "shared/RiemannSolvers.h"
 
 // init conditions
-#include "BlastParams.h"
-#include "initRiemannConfig2d.h"
+#include "shared/BlastParams.h"
+#include "shared/initRiemannConfig2d.h"
 
 namespace ppkMHD { namespace muscl {
 

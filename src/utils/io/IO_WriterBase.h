@@ -1,7 +1,7 @@
 #ifndef IO_WRITER_BASE_H_
 #define IO_WRITER_BASE_H_
 
-#include <kokkos_shared.h>
+#include <shared/kokkos_shared.h>
 
 namespace ppkMHD { namespace io {
 

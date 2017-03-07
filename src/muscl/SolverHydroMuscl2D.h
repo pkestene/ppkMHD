@@ -4,9 +4,9 @@
 #ifndef SOLVER_HYDRO_MUSCL_2D_H_
 #define SOLVER_HYDRO_MUSCL_2D_H_
 
-#include "SolverBase.h"
-#include "HydroParams.h"
-#include "kokkos_shared.h"
+#include "shared/SolverBase.h"
+#include "shared/HydroParams.h"
+#include "shared/kokkos_shared.h"
 
 namespace ppkMHD {
 

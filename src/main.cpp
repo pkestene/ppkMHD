@@ -8,13 +8,13 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include "kokkos_shared.h"
+#include "shared/kokkos_shared.h"
 
-#include "real_type.h"   // choose between single and double precision
-#include "HydroParams.h" // read parameter file
+#include "shared/real_type.h"   // choose between single and double precision
+#include "shared/HydroParams.h" // read parameter file
 
 // solver
-#include "SolverFactory.h"
+#include "shared/SolverFactory.h"
 
 
 int main(int argc, char *argv[])
