@@ -65,11 +65,25 @@ public:
 		     int l);
 
   /**
-   * returns \f$ \widehat\f$
+   * In 2D, this is formula from Ollivier-Gooch, 1997
+   *
+   * returns \f$ \widehat{x^n y^m}_{i,j} =\frac{1}{V_j} \int_{\mathcal{V}_j} \left( (x-x_j)+(x_j-x_i) \right)^n \left( (y-y_j)+(y_j-y_i) \right)^m  \dif v  - \overline{x^n y^m}_i \f$
+   *
+   * Its can be developped into
+   *
+   * \f$  \widehat{x^n y^m}_{i,j} = \sum_{a=0}^{n} \sum_{b=0}^{m} \binom{n}{a} \binom{m}{b} (x_j-x_i)^a (y_j-y_i)^b \overline{x^{n-a} y^{m-b}}_j \; - \; \overline{x^n y^m}_i
+\f$
    */
   real_t eval_hat(const std::array<real_t,2>& xi,
 		  const std::array<real_t,2>& xj,
 		  int n, int m);
+
+  /**
+   * returns \f$ \widehat \f$
+   */
+  real_t eval_hat(const std::array<real_t,3>& xi,
+		  const std::array<real_t,3>& xj,
+		  int n, int m, int l);
 
   
 }; // class GeometricTerms

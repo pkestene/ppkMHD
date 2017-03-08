@@ -44,9 +44,19 @@ inline constexpr int binomial()
 inline int binom(int n, int k)
 {
 
+  if (n < k) return 0;
+  if (k == 0 || n == 1) return 1;
+  if (n == 2 && k == 1) return 2;
+  if (n == 2 && k == 2) return 1;
+  if (n == k) return 1;
+
   int res = 1;
-  
-  
+
+  if ( k > n - k ) k = n - k;
+  for( int i = 0; i < k; ++i ) {
+    res *= ( n - i );
+    res /= ( i + 1 );
+  }
   return res;
   
 } // binom
