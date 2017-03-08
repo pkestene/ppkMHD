@@ -38,6 +38,19 @@ inline constexpr int binomial()
   return Binomial<n,k>::value;
 }
 
+/**
+ * binomial coefficients without templates.
+ */
+inline int binom(int n, int k)
+{
+
+  int res = 1;
+  
+  
+  return res;
+  
+} // binom
+
 } // namespace mood
 
 #endif // BINOMIAL_H_
