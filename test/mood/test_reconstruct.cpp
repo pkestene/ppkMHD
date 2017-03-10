@@ -95,15 +95,22 @@ int main(int argc, char* argv[])
     // print QR
     Eigen::ColPivHouseholderQR<matrix_t> A_qr = A.colPivHouseholderQr();
 
-    std::cout << " qr rows,cols = " << A_qr.rows() << "," << A_qr.cols() << "\n";
+    matrix_t pseudo_inv = A_qr.inverse();
     
-    vector_t sol2 = A.colPivHouseholderQr().solve(b);
-    std::cout << "The QR solution is:\n"
-    	      << sol2 << "\n";
+    // std::cout << "Pseudo inverse is\n";
+    // std::cout << pseudo_inv << "\n";
+    
+    // vector_t sol2 = pseudo_inv*b;
+    // std::cout << "The QR pseudo-inv x b is:\n"
+    // 	      << sol2 << "\n";
+    
+    vector_t sol3 = A.colPivHouseholderQr().solve(b);
+    std::cout << "The QR solve solution is:\n"
+    	      << sol3 << "\n";
 
     // diff
     std::cout << "The difference between the 2 solutions is:\n"
-    	      << sol2 - sol << "\n";
+    	      << sol3 - sol << "\n";
     
     
     
