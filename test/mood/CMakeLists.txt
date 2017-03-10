@@ -34,4 +34,16 @@ target_include_directories(test_stencil
 #  LINK_FLAGS "${KOKKOS_LDFLAGS}")
 target_link_libraries(test_stencil kokkos hwloc dl)
 
+add_executable(test_reconstruct
+  $<TARGET_OBJECTS:mood>
+  test_reconstruct.cpp)
+target_include_directories(test_reconstruct
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  ${EIGEN3_INCLUDE_DIRS}
+  )
+#set_target_properties(test_reconstruct PROPERTIES
+#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
+target_link_libraries(test_reconstruct kokkos hwloc dl)
+
 
