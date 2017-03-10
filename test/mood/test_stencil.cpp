@@ -59,9 +59,23 @@ int main(int argc, char* argv[])
   std::cout << "Testing class Stencil    \n";
   std::cout << "############################\n";
 
-  mood::Stencil stencil(stencilId);
+  mood::Stencil stencil = mood::Stencil(stencilId);
 
   mood::StencilUtils::print_stencil(stencil);
+
+  std::cout << "############################\n";
+  std::cout << "Testing class StencilUtils  \n";
+  std::cout << "############################\n";
+
+  std::cout << "Invalid test :\n";
+  std::cout << mood::StencilUtils::get_stencilId_from_string("Don't know") << "\n";
+  std::cout << "A valid test :\n";
+  std::string test_str = "STENCIL_2D_DEGREE3";
+  stencilId = mood::StencilUtils::get_stencilId_from_string(test_str);
+  std::cout << "StencilId " << stencilId << " (" << test_str << ")"
+	    << " is the same as "
+	    << mood::StencilUtils::get_stencil_name(stencilId) << "\n";
+  
   
   Kokkos::finalize();
 

@@ -39,6 +39,27 @@ std::string StencilUtils::get_stencil_name(STENCIL_ID id)
 
 // =======================================================
 // =======================================================
+STENCIL_ID StencilUtils::get_stencilId_from_string(const std::string& name)
+{
+
+  // initialize to unvalid value
+  STENCIL_ID result = STENCIL_TOTAL_NUMBER;
+
+  // look into valid names
+  for (int i = 0; i<STENCIL_TOTAL_NUMBER; ++i) {
+    
+    if (!name.compare( names[i] ) ) {
+      result = (STENCIL_ID) i;
+      break;
+    }
+    
+  }
+  return result;
+  
+} // StencilUtils::get_stencilId_from_string
+
+// =======================================================
+// =======================================================
 void StencilUtils::print_stencil(const Stencil& stencil)
 {
 
