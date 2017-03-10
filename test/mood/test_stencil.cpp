@@ -8,6 +8,7 @@
 #include <array>
 
 #include "mood/Stencil.h"
+#include "mood/StencilUtils.h"
 #include "shared/real_type.h"
 
 int main(int argc, char* argv[])
@@ -60,7 +61,7 @@ int main(int argc, char* argv[])
 
   mood::Stencil stencil(stencilId);
 
-  stencil.print_stencil();
+  mood::StencilUtils::print_stencil(stencil);
   
   Kokkos::finalize();
 

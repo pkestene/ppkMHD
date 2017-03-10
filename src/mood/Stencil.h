@@ -5,49 +5,45 @@
 
 namespace mood {
 
-#ifndef STRINGIFY
-#define STRINGIFY( value ) # value
-#endif
-
 /**
- * List of implemented stencil for MOOD numerical schemes, order is the order of
+ * List of implemented stencil for MOOD numerical schemes, degree is the degree of
  * the multivariate polynomial used to interpolate value in the given stencil.
  *
- * Please note that, for a given order, the miminal stencil points need to compute
+ * Please note that, for a given degree, the miminal stencil points need to compute
  * the polynomial coefficient (using least squares minimization) is the binomial 
- * number: (dim+order)! / dim! / order!
+ * number: (dim+degree)! / dim! / degree!
  * 
  * So the stencil size must be "significantly" larger than this number to estimate
  * the polynomial coefficients in a robust manner.
  * 
- * In 2D, the binomial coefficient (2+order)! / 2! / order! reduces to
- * (order+1)(order+2)/2
+ * In 2D, the binomial coefficient (2+degree)! / 2! / degree! reduces to
+ * (degree+1)(degree+2)/2
  *
- * - 2D - order 1 (minimum number of points is 2*3/2 = 3 )
+ * - 2D - degree 1 (minimum number of points is 2*3/2 = 3 )
  *  x
  * xox
  *  x
  *
- * - 2D - order 2 (minimum number of points is 3*4/2 = 6)
+ * - 2D - degree 2 (minimum number of points is 3*4/2 = 6)
  * xxx
  * xox
  * xxx
  *
- * - 2D - order 3 (minimum number of points is 4*5/2 = 10)
+ * - 2D - degree 3 (minimum number of points is 4*5/2 = 10)
  *   x
  *  xxx
  * xxoxx
  *  xxx
  *   x
  *
- * - 2D - order 3 v2 (minimum number of points is 4*5/2 = 10)
+ * - 2D - degree 3 v2 (minimum number of points is 4*5/2 = 10)
  *   
  * xxxx
  * xxox
  * xxxx
  * xxxx
  *
- * - 2D - order 4 (minimum number of points is 5*6/2 = 15)
+ * - 2D - degree 4 (minimum number of points is 5*6/2 = 15)
  *   
  * xxxxx
  * xxxxx
@@ -55,7 +51,7 @@ namespace mood {
  * xxxxx
  * xxxxx
  *
- * - 2D - order 5 (minimum number of points is 6*7/2 = 21)
+ * - 2D - degree 5 (minimum number of points is 6*7/2 = 21)
  *   
  * xxxxxx
  * xxxxxx
@@ -66,32 +62,34 @@ namespace mood {
  *
  * ---------------------------------------------------------
  *
- * In 3D, the binomial coefficient (3+order)! / 3! / order! reduces to
- * (order+1)(order+2)(order+3)/6
+ * In 3D, the binomial coefficient (3+degree)! / 3! / degree! reduces to
+ * (degree+1)(degree+2)(degree+3)/6
  *
- * - 3D - order 1 (minimum number of points is 2*3*4/6 =  4)
- * - 3D - order 2 (minimum number of points is 3*4*5/6 = 10)
- * - 3D - order 3 (minimum number of points is 4*5*6/6 = 20)
- * - 3D - order 4 (minimum number of points is 5*6*7/6 = 35)
- * - 3D - order 5 (minimum number of points is 6*7*8/6 = 56)
- *
- *
+ * - 3D - degree 1 (minimum number of points is 2*3*4/6 =  4)
+ * - 3D - degree 2 (minimum number of points is 3*4*5/6 = 10)
+ * - 3D - degree 3 (minimum number of points is 4*5*6/6 = 20)
+ * - 3D - degree 4 (minimum number of points is 5*6*7/6 = 35)
+ * - 3D - degree 5 (minimum number of points is 6*7*8/6 = 56)
+ * 
+ * Last item is not a stencil, just a trick to get the number of stencils.
  */
 enum STENCIL_ID {
-  STENCIL_2D_ORDER1,
-  STENCIL_2D_ORDER2,
-  STENCIL_2D_ORDER3,
-  STENCIL_2D_ORDER3_V2,
-  STENCIL_2D_ORDER4,
-  STENCIL_2D_ORDER5,
-  STENCIL_3D_ORDER1,
-  STENCIL_3D_ORDER2,
-  STENCIL_3D_ORDER3,
-  STENCIL_3D_ORDER3_V2,
-  STENCIL_3D_ORDER4,
-  STENCIL_3D_ORDER5,
-  STENCIL_3D_ORDER5_V2,
+  STENCIL_2D_DEGREE1,       /*  0 */
+  STENCIL_2D_DEGREE2,       /*  1 */
+  STENCIL_2D_DEGREE3,       /*  2 */
+  STENCIL_2D_DEGREE3_V2,    /*  3 */
+  STENCIL_2D_DEGREE4,       /*  4 */
+  STENCIL_2D_DEGREE5,       /*  5 */
+  STENCIL_3D_DEGREE1,       /*  6 */
+  STENCIL_3D_DEGREE2,       /*  7 */
+  STENCIL_3D_DEGREE3,       /*  8 */
+  STENCIL_3D_DEGREE3_V2,    /*  9 */
+  STENCIL_3D_DEGREE4,       /* 10 */
+  STENCIL_3D_DEGREE5,       /* 11 */
+  STENCIL_3D_DEGREE5_V2,    /* 12 */
+  STENCIL_TOTAL_NUMBER /* This is not a stencil ! */
 };
+
 
 /**
  * Return how many cell is made the stencil.
@@ -125,9 +123,12 @@ struct Stencil {
   //! default constructor
   Stencil(STENCIL_ID stencilId) : stencilId(stencilId) {
 
+    // we should check for stencilId here;
+    // valid value is in range [0, STENCIL_TOTAL_NUMBER-1]
+    
     stencilSize = get_stencil_size(stencilId);
 
-    is3dStencil = (stencilId >= STENCIL_3D_ORDER1) ? true : false;
+    is3dStencil = (stencilId >= STENCIL_3D_DEGREE1) ? true : false;
     
     offsets   = StencilArray    ("offsets",   stencilSize);
 
@@ -139,9 +140,7 @@ struct Stencil {
 
   void init_stencil();
 
-  void print_stencil();
-
-  static STENCIL_ID select_stencil(unsigned int dim, unsigned int order);
+  static STENCIL_ID select_stencil(unsigned int dim, unsigned int degree);
   
 }; // Stencil
 

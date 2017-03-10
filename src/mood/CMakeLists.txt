@@ -6,6 +6,8 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/polynomials_utils.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Stencil.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Stencil.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/StencilUtils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/StencilUtils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometricTerms.h
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometricTerms.cpp
   )

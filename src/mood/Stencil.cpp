@@ -10,32 +10,32 @@ namespace mood {
 // =======================================================
 unsigned int get_stencil_size(STENCIL_ID stencilId) {
 
-  if (stencilId == STENCIL_2D_ORDER1)
+  if (stencilId == STENCIL_2D_DEGREE1)
     return 5;
-  if (stencilId == STENCIL_2D_ORDER2)
+  if (stencilId == STENCIL_2D_DEGREE2)
     return 9;
-  if (stencilId == STENCIL_2D_ORDER3)
+  if (stencilId == STENCIL_2D_DEGREE3)
     return 13;
-  if (stencilId == STENCIL_2D_ORDER3_V2)
+  if (stencilId == STENCIL_2D_DEGREE3_V2)
     return 16;
-  if (stencilId == STENCIL_2D_ORDER4)
+  if (stencilId == STENCIL_2D_DEGREE4)
     return 25;
-  if (stencilId == STENCIL_2D_ORDER5)
+  if (stencilId == STENCIL_2D_DEGREE5)
     return 36;
 
-  if (stencilId == STENCIL_3D_ORDER1)
+  if (stencilId == STENCIL_3D_DEGREE1)
     return 7;
-  if (stencilId == STENCIL_3D_ORDER2)
+  if (stencilId == STENCIL_3D_DEGREE2)
     return 27;
-  if (stencilId == STENCIL_3D_ORDER3)
+  if (stencilId == STENCIL_3D_DEGREE3)
     return 27;
-  if (stencilId == STENCIL_3D_ORDER3_V2)
+  if (stencilId == STENCIL_3D_DEGREE3_V2)
     return 33;
-  if (stencilId == STENCIL_3D_ORDER4)
+  if (stencilId == STENCIL_3D_DEGREE4)
     return 64;
-  if (stencilId == STENCIL_3D_ORDER5)
+  if (stencilId == STENCIL_3D_DEGREE5)
     return 125;
-  if (stencilId == STENCIL_3D_ORDER5_V2)
+  if (stencilId == STENCIL_3D_DEGREE5_V2)
     return 88;
 
 }
@@ -49,11 +49,11 @@ unsigned int get_stencil_size(STENCIL_ID stencilId) {
 void Stencil::init_stencil()
 {
 
-  std::cout << "Initializing stencil " << STRINGIFY(stencilId) << "\n";
+  std::cout << "Initializing stencil " << stencilId << "\n";
 
   // ------------------------------------
   // ------------------------------------
-  if (stencilId == STENCIL_2D_ORDER1) {
+  if (stencilId == STENCIL_2D_DEGREE1) {
 
     offsets_h(0,IX) = 0;
     offsets_h(0,IY) = 0;
@@ -75,11 +75,11 @@ void Stencil::init_stencil()
     offsets_h(4,IY) = -1;
     offsets_h(4,IZ) = 0;
 
-  } // STENCIL_2D_ORDER1
+  } // STENCIL_2D_DEGREE1
   
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_2D_ORDER2) {
+  else if (stencilId == STENCIL_2D_DEGREE2) {
 
     // 3-by-3 = 9 points
     
@@ -93,13 +93,13 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_2D_ORDER2
+  } // STENCIL_2D_DEGREE2
     
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_2D_ORDER3) {
+  else if (stencilId == STENCIL_2D_DEGREE3) {
 
-    // same as order2 + add "external" points
+    // same as degree2 + add "external" points
     // 9+4=13 points
     
     int index = 0;
@@ -128,11 +128,11 @@ void Stencil::init_stencil()
     offsets_h(index,IY) = -2;
     offsets_h(index,IZ) = 0; index++;
     
-  } // STENCIL_2D_ORDER3
+  } // STENCIL_2D_DEGREE3
     
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_2D_ORDER3_V2) {
+  else if (stencilId == STENCIL_2D_DEGREE3_V2) {
 
     // 4-by-4 = 16 points
     
@@ -146,11 +146,11 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_2D_ORDER3_V2
+  } // STENCIL_2D_DEGREE3_V2
 
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_2D_ORDER4) {
+  else if (stencilId == STENCIL_2D_DEGREE4) {
 
     // 5-by-5 = 25 points
     
@@ -164,11 +164,11 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_2D_ORDER4
+  } // STENCIL_2D_DEGREE4
 
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_2D_ORDER5) {
+  else if (stencilId == STENCIL_2D_DEGREE5) {
 
     // 6-by-6 = 36 points
     
@@ -182,7 +182,7 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_2D_ORDER5
+  } // STENCIL_2D_DEGREE5
 
 
   // ------------------------------------
@@ -193,7 +193,7 @@ void Stencil::init_stencil()
 
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_ORDER1) {
+  else if (stencilId == STENCIL_3D_DEGREE1) {
 
     offsets_h(0,IX) = 0;
     offsets_h(0,IY) = 0;
@@ -223,11 +223,11 @@ void Stencil::init_stencil()
     offsets_h(6,IY) = 0;
     offsets_h(6,IZ) = -1;
 
-  } // STENCIL_3D_ORDER1
+  } // STENCIL_3D_DEGREE1
   
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_ORDER2 || stencilId == STENCIL_3D_ORDER3) {
+  else if (stencilId == STENCIL_3D_DEGREE2 || stencilId == STENCIL_3D_DEGREE3) {
 
     // 3-by-3-by-3 = 27 points
     
@@ -243,11 +243,11 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_3D_ORDER2 || STENCIL_3D_ORDER3
+  } // STENCIL_3D_DEGREE2 || STENCIL_3D_DEGREE3
   
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_ORDER3_V2) {
+  else if (stencilId == STENCIL_3D_DEGREE3_V2) {
 
     // 3-by-3-by-3 + 6 = 33 points
     
@@ -284,11 +284,11 @@ void Stencil::init_stencil()
     offsets_h(index,IY) = 0;
     offsets_h(index,IZ) = -2; index++;
 
-  } // STENCIL_3D_ORDER3_V2
+  } // STENCIL_3D_DEGREE3_V2
 
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_ORDER4) {
+  else if (stencilId == STENCIL_3D_DEGREE4) {
 
     // 4-by-4-by-4 = 64 points
     
@@ -304,11 +304,11 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_3D_ORDER4
+  } // STENCIL_3D_DEGREE4
 
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_ORDER5) {
+  else if (stencilId == STENCIL_3D_DEGREE5) {
 
     // 5-by-5-by-5 = 125 points
     
@@ -324,11 +324,11 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_3D_ORDER5
+  } // STENCIL_3D_DEGREE5
 
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_ORDER5_V2) {
+  else if (stencilId == STENCIL_3D_DEGREE5_V2) {
 
     // 4-by-4-by-4 = 64 points + 6*4 = 88 points
     
@@ -446,7 +446,7 @@ void Stencil::init_stencil()
     offsets_h(index,IY) = 0;
     offsets_h(index,IZ) = -3; index++;
     
-  } // STENCIL_3D_ORDER5
+  } // STENCIL_3D_DEGREE5
 
   // upload data to DEVICE
   Kokkos::deep_copy(offsets, offsets_h);
@@ -455,67 +455,48 @@ void Stencil::init_stencil()
 
 // =======================================================
 // =======================================================
-void Stencil::print_stencil()
+STENCIL_ID Stencil::select_stencil(unsigned int dim, unsigned int degree)
 {
 
-  std::cout << "############################\n";
-  std::cout << "Print stencil " << STRINGIFY(stencilId) << "\n";
-  std::cout << "############################\n";
-
-  for(int i=0; i<stencilSize; ++i) {
-
-    std::cout << offsets_h(i,IX) << " "
-	      << offsets_h(i,IY) << " "
-	      << offsets_h(i,IZ) << "\n"; 
-    
-  }
-  
-} // Stencil::print
-
-// =======================================================
-// =======================================================
-STENCIL_ID Stencil::select_stencil(unsigned int dim, unsigned int order)
-{
-
-  int res=STENCIL_2D_ORDER1;
+  int res=STENCIL_2D_DEGREE1;
 
   if (dim < 2 or dim > 3) {
     std::cerr << "Only 2D / 3D are allowed\n";
-    std::cerr << "Returning default value, i.e. STENCIL_2D_ORDER1\n";
+    std::cerr << "Returning default value, i.e. STENCIL_2D_DEGREE1\n";
   }
 
-  if (order<1 or order>6) {
+  if (degree<1 or degree>6) {
     std::cerr << "Not implemented !\n";
-    std::cerr << "polynomial order must be >=1 or <=5.\n";
-    std::cerr << "Returning default value, i.e. STENCIL_2D_ORDER1\n";
+    std::cerr << "polynomial degree must be >=1 or <=5.\n";
+    std::cerr << "Returning default value, i.e. STENCIL_2D_DEGREE1\n";
   }
 
   if (dim==2) {
     
-    if        (order==1) {
-      return STENCIL_2D_ORDER1;
-    } else if (order==2) {
-      return STENCIL_2D_ORDER2;
-    } else if (order==3) {
-      return STENCIL_2D_ORDER3;
-    } else if (order==4) {
-      return STENCIL_2D_ORDER4;
-    } else if (order==5) {
-      return STENCIL_2D_ORDER5;
+    if        (degree==1) {
+      return STENCIL_2D_DEGREE1;
+    } else if (degree==2) {
+      return STENCIL_2D_DEGREE2;
+    } else if (degree==3) {
+      return STENCIL_2D_DEGREE3;
+    } else if (degree==4) {
+      return STENCIL_2D_DEGREE4;
+    } else if (degree==5) {
+      return STENCIL_2D_DEGREE5;
     }
     
   } else if (dim==3) {
 
-    if        (order==1) {
-      return STENCIL_3D_ORDER1;
-    } else if (order==2) {
-      return STENCIL_3D_ORDER2;
-    } else if (order==3) {
-      return STENCIL_3D_ORDER3;
-    } else if (order==4) {
-      return STENCIL_3D_ORDER4;
-    } else if (order==5) {
-      return STENCIL_3D_ORDER5;
+    if        (degree==1) {
+      return STENCIL_3D_DEGREE1;
+    } else if (degree==2) {
+      return STENCIL_3D_DEGREE2;
+    } else if (degree==3) {
+      return STENCIL_3D_DEGREE3;
+    } else if (degree==4) {
+      return STENCIL_3D_DEGREE4;
+    } else if (degree==5) {
+      return STENCIL_3D_DEGREE5;
     }
 
   }
