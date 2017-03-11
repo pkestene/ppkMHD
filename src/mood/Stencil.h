@@ -101,10 +101,16 @@ enum STENCIL_ID {
 unsigned int get_stencil_size(STENCIL_ID stencilId);
 
 /**
- *
+ * \struct Stencil
+ * Just store the coordinates (x,y,z) of the neighbor cells contained in the stencil.
  */
 struct Stencil {
 
+  /**
+   * a 2D array data type;
+   * first dimension is the neighbor index
+   * second dimension is the coordinate index
+   */
   using StencilArray     = Kokkos::View<int*[3], DEVICE>;
   using StencilArrayHost = StencilArray::HostMirror;
   
@@ -114,10 +120,13 @@ struct Stencil {
   //! stencil size, is usefull for allocating offsets arrays
   unsigned int stencilSize;
 
+  //! coordinates of the neighbors on DEVICE
   StencilArray offsets;
 
+  //! coordinates of the neighbors on HOST
   StencilArrayHost offsets_h;
 
+  //! is it a 3D stencil ?
   bool is3dStencil;
   
   //! default constructor
@@ -143,7 +152,6 @@ struct Stencil {
   static STENCIL_ID select_stencil(unsigned int dim, unsigned int degree);
   
 }; // Stencil
-
 
 } // namespace mood
 
