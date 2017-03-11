@@ -77,6 +77,10 @@ if (USE_VTK)
   endIF()
 endif(USE_VTK)
 
+
+# Eigen3 (for MOOD)
+find_package(Eigen3)
+
 #
 # common flags
 #
