@@ -1,5 +1,5 @@
 /**
- * This executable is used to test polynomila reconstruction.
+ * This executable is used to test polynomial reconstruction.
  */
 
 #include <cstdio>
@@ -95,24 +95,18 @@ int main(int argc, char* argv[])
     // print QR
     Eigen::ColPivHouseholderQR<matrix_t> A_qr = A.colPivHouseholderQr();
 
-    matrix_t pseudo_inv = A_qr.inverse();
-    
-    // std::cout << "Pseudo inverse is\n";
-    // std::cout << pseudo_inv << "\n";
-    
-    // vector_t sol2 = pseudo_inv*b;
-    // std::cout << "The QR pseudo-inv x b is:\n"
-    // 	      << sol2 << "\n";
-    
-    vector_t sol3 = A.colPivHouseholderQr().solve(b);
+    vector_t sol2 = A_qr.solve(b);
     std::cout << "The QR solve solution is:\n"
-    	      << sol3 << "\n";
+    	      << sol2 << "\n";
 
     // diff
     std::cout << "The difference between the 2 solutions is:\n"
-    	      << sol3 - sol << "\n";
+    	      << sol2 - sol << "\n";
     
-    
+
+    // info
+    std::cout << std::boolalpha;
+    std::cout << "Is QR decomposition class POD ? " << std::is_pod<Eigen::ColPivHouseholderQR<matrix_t>>::value << '\n';
     
   }
     
