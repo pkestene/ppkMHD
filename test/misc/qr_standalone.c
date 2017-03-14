@@ -1,7 +1,7 @@
 /*
  * https://rosettacode.org/wiki/QR_decomposition#C
  *
- * gcc -O3 -Wall qr_standalone.c -o qr_standalone -lm
+ * gcc -O3 -Wall qr_standalone.c -o qr_standalone_c -lm
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,8 +117,9 @@ double* mcol(mat m, double *v, int c)
   return v;
 }
 
-void matrix_show(mat m)
+void matrix_show(mat m, const char* str)
 {
+  printf("%s\n",str);
   for(int i = 0; i < m->m; i++) {
     for (int j = 0; j < m->n; j++) {
       printf(" %8.3f", m->v[i][j]);
@@ -135,6 +136,7 @@ void householder(mat m, mat *R, mat *Q)
   for (int k = 0; k < m->n && k < m->m - 1; k++) {
     double e[m->m], x[m->m], a;
     z1 = matrix_minor(z, k);
+
     if (z != m) matrix_delete(z);
     z = z1;
     
@@ -149,6 +151,7 @@ void householder(mat m, mat *R, mat *Q)
     vdiv(e, vnorm(e, m->m), e, m->m);
     q[k] = vmul(e, m->m);
     z1 = matrix_mul(q[k], z);
+
     if (z != m) matrix_delete(z);
     z = z1;
   }
@@ -182,12 +185,12 @@ int main()
   mat x = matrix_copy(3, in, 5);
   householder(x, &R, &Q);
  
-  puts("Q"); matrix_show(Q);
-  puts("R"); matrix_show(R);
+  matrix_show(Q,"Q");
+  matrix_show(R,"R");
  
   // to show their product is the input matrix
   mat m = matrix_mul(Q, R);
-  puts("Q * R"); matrix_show(m);
+  matrix_show(m,"Q * R");
  
   matrix_delete(x);
   matrix_delete(R);
