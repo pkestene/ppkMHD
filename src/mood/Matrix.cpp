@@ -18,7 +18,7 @@ void Matrix::compute_qr()
   double* tau = (double*) malloc(min_mn*sizeof(double));
 
   // this->_data is modified here by the QR decomposition
-  //info = LAPACKE_dgeqrf( LAPACK_ROW_MAJOR, m, n, data(), lda, tau );
+  info = LAPACKE_dgeqrf( LAPACK_ROW_MAJOR, m, n, data(), lda, tau );
 
   free(tau);
   
@@ -50,7 +50,7 @@ void compute_pseudo_inverse(const Matrix& A, Matrix& A_PI)
     
   // R will contain the upper triangular factor of QR decomposition
   R.compute_qr();
-
+  
   // transpose A
   Matrix AT(A); AT.transpose();
   

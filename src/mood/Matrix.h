@@ -125,14 +125,25 @@ public:
     
   } // mult
 
-  //! Perform matrix transposition in-place.
+  //! Perform matrix transposition in-place (for square matrices only).
   void transpose() {
-    for (int i = 0; i < m; i++) {
-      for (int j = 0; j < i; j++) {
-	double t = (*this)(i,j);
-	(*this)(i,j) = (*this)(j,i);
-	(*this)(j,i) = t;
+    if (m==n) {
+      for (int i = 0; i < m; i++) {
+	for (int j = 0; j < i; j++) {
+	  double t = (*this)(i,j);
+	  (*this)(i,j) = (*this)(j,i);
+	  (*this)(j,i) = t;
+	}
       }
+    } else {
+      double* tmp = (double *) malloc(m*n*sizeof(double));
+      memcpy(tmp,_data,m*n*sizeof(double));
+      for (int i = 0; i < m; i++) {
+	for (int j = 0; j < n; j++) {
+	  _data[j*m+i] = tmp[i*n+j];
+	}
+      }
+      std::swap(m,n);
     }
   } // transpose
 

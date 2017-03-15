@@ -41,6 +41,19 @@ target_include_directories(test_stencil
 target_link_libraries(test_stencil kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
+add_executable(test_matrix_qr
+  $<TARGET_OBJECTS:mood>
+  test_matrix_qr.cpp)
+target_include_directories(test_matrix_qr
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  ${OpenBLAS_INCLUDE_DIR}
+  )
+#set_target_properties(test_matrix_qr PROPERTIES
+#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
+target_link_libraries(test_matrix_qr kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+
+##############################################
 # add_executable(test_reconstruct
 #   $<TARGET_OBJECTS:mood>
 #   test_reconstruct.cpp)
