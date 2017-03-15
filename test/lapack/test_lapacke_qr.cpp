@@ -1,5 +1,5 @@
 /*
- * g++ -Wall test_lapacke_qr.cpp -o test_lapacke_qr -llapacke
+ * g++ -Wall test_lapacke_qr.cpp -o test_lapacke_qr -llapacke -lblas
  */
 
 #include <stdlib.h>
