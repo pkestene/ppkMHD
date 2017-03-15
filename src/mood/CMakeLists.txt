@@ -10,6 +10,8 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/StencilUtils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometricTerms.h
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometricTerms.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.cpp
   )
 
 add_library(mood OBJECT
