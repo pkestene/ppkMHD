@@ -33,10 +33,12 @@ add_executable(test_stencil
 target_include_directories(test_stencil
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
+  ${OpenBLAS_INCLUDE_DIR}
   )
 #set_target_properties(test_stencil PROPERTIES
 #  LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(test_stencil kokkos hwloc dl ${LAPACKE_LIBRARIES} ${BLAS_LIBRARIES})
+#target_link_libraries(test_stencil kokkos hwloc dl ${LAPACKE_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(test_stencil kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
 # add_executable(test_reconstruct
