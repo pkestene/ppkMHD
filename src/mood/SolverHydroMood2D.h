@@ -53,6 +53,7 @@ public:
   int polynomial_degree;
   STENCIL_ID stencilID;
   Stencil stencil;
+  Matrix geomMatrix;
   
   /*
    * methods

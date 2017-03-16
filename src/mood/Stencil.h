@@ -101,6 +101,15 @@ enum STENCIL_ID {
 unsigned int get_stencil_size(STENCIL_ID stencilId);
 
 /**
+ * Return the polynomial degree used with input stencil.
+ *
+ * \param[in] stencilId a valid value from enum STENCIL_ID
+ *
+ * \return polynomial degree.
+ */
+unsigned int get_stencil_degree(STENCIL_ID stencilId);
+
+/**
  * \struct Stencil
  * Just store the coordinates (x,y,z) of the neighbor cells contained in the stencil.
  */

@@ -13,9 +13,17 @@
 #include "mood/Stencil.h"
 #include "mood/StencilUtils.h"
 #include "mood/GeometricTerms.h"
+#include "mood/Matrix.h"
 
-// eigen3
-#include <Eigen/Dense>
+/**
+ * a simple polynomial test function.
+ */
+double test_function_2d(double x, double y)
+{
+
+  return x*x+2.2*x*y+4.1*y*y-5.0+x;
+  
+}
 
 int main(int argc, char* argv[])
 {
@@ -46,10 +54,10 @@ int main(int argc, char* argv[])
   }
 
   // dim is the number of variable in the multivariate polynomial representation
-  unsigned int dim=3;
+  unsigned int dim=2;
 
   // highest degree / order of the polynomial
-  int order = 4;
+  int order = 2;
   
   if (argc>1)
     dim = atoi(argv[1]);
@@ -63,52 +71,20 @@ int main(int argc, char* argv[])
    */
   std::cout << "############################\n";
   std::cout << "Testing class Stencil    \n";
+
   std::cout << "############################\n";
 
   mood::Stencil stencil = mood::Stencil(stencilId);
 
-  //mood::StencilUtils::print_stencil(stencil);
+  mood::StencilUtils::print_stencil(stencil);
 
   real_t dx, dy, dz;
   dx = dy = dz = 0.1;
   mood::GeometricTerms geomTerms(dx,dy,dz);
 
-
-  // Eigen linear solver example
-  {
-
-    using matrix_t = Eigen::MatrixXd;
-    using vector_t = Eigen::VectorXd;
-    
-    matrix_t A = matrix_t::Random(4, 3);
-    std::cout << "Here is the matrix A:\n" << A << "\n";
-    vector_t b = vector_t::Random(4);
-    std::cout << "Here is the right hand side b:\n" << b << "\n";
-
-    // JacobiSVD
-    vector_t sol = A.jacobiSvd(Eigen::ComputeThinU |
-    			       Eigen::ComputeThinV).solve(b);
-    std::cout << "The least-squares (SVD) solution is:\n"
-    	      << sol << "\n";
-
-    // QR solve
-    // print QR
-    Eigen::ColPivHouseholderQR<matrix_t> A_qr = A.colPivHouseholderQr();
-
-    vector_t sol2 = A_qr.solve(b);
-    std::cout << "The QR solve solution is:\n"
-    	      << sol2 << "\n";
-
-    // diff
-    std::cout << "The difference between the 2 solutions is:\n"
-    	      << sol2 - sol << "\n";
-    
-
-    // info
-    std::cout << std::boolalpha;
-    std::cout << "Is QR decomposition class POD ? " << std::is_pod<Eigen::ColPivHouseholderQR<matrix_t>>::value << '\n';
-    
-  }
+  int stencil_size   = mood::get_stencil_size(stencilId);
+  int stencil_degree = mood::get_stencil_degree(stencilId);
+  mood::Matrix geomMatrix(stencil_size,stencil_degree);
     
   Kokkos::finalize();
 

@@ -1,7 +1,8 @@
 /**
  * Compute binomial coefficients C_n^k = n! / k! / (n-k)!
  *
- * Adapted from http://go-lambda.blogspot.fr/2012/02/template-for-binomial-coefficients-in-c.html
+ * Adapted from 
+ * http://go-lambda.blogspot.fr/2012/02/template-for-binomial-coefficients-in-c.html
  */
 #ifndef BINOMIAL_H_
 #define BINOMIAL_H_
