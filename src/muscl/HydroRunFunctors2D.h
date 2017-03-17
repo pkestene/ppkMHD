@@ -3,7 +3,7 @@
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
-#include <math_constants.h>
+#include <math_constants.h> // for cuda math constants, e.g. CUDART_INF
 #endif // __CUDA_ARCH__
 
 #include "shared/kokkos_shared.h"
