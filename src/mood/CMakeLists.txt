@@ -4,6 +4,7 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/Polynomial.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Polynomial.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/polynomials_utils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/MonomialMap.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Stencil.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Stencil.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/StencilUtils.h
