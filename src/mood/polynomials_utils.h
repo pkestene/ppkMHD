@@ -2,8 +2,8 @@
  * Some utilities for multivariate polynomials.
  * 
  */
-#ifndef POLYNOMIALS_UTILS_H_
-#define POLYNOMIALS_UTILS_H_
+#ifndef MOOD_POLYNOMIALS_UTILS_H_
+#define MOOD_POLYNOMIALS_UTILS_H_
 
 #include "mood/Binomial.h"
 
@@ -67,4 +67,4 @@ int get_number_of_coefficients() {
 
 } // namespace mood
 
-#endif // POLYNOMIALS_UTILS_H_
+#endif // MOOD_POLYNOMIALS_UTILS_H_

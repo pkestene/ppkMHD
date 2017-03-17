@@ -1,5 +1,5 @@
-#ifndef STENCIL_UTILS_H_
-#define STENCIL_UTILS_H_
+#ifndef MOOD_STENCIL_UTILS_H_
+#define MOOD_STENCIL_UTILS_H_
 
 #include "mood/Stencil.h"
 
@@ -29,4 +29,4 @@ std::array<std::string,STENCIL_TOTAL_NUMBER> make_stencil_names();
 
 } // namespace mood
 
-#endif // STENCIL_UTILS_H_
+#endif // MOOD_STENCIL_UTILS_H_
