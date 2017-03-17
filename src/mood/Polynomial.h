@@ -177,6 +177,53 @@ public:
     return tmp;
     
   } // getCoefs
+
+  /**
+   * set i-th coefficients
+   */
+  KOKKOS_INLINE_FUNCTION
+  void setCoefs(int i, real_t value) const {
+
+    if (i>=0 and i<Ncoefs)
+      coefs[i] = value;
+    
+    return;
+    
+  } // setCoefs
+
+  /**
+   * set polynomial coefficients based on monomial exponents :
+   * 
+   * \param[in] e exponent array (identifying a given monomial)
+   * \param[in] value is the specified monomial coefficient.
+   */
+  KOKKOS_INLINE_FUNCTION
+  void setCoefs(Kokkos::Array<int,3> e, real_t value) const {
+
+    if (dim == 2) {
+
+      for (int i = 0; i<Ncoefs; ++i) {
+	if (monomialMap.data(i,0) == e[0] and
+	    monomialMap.data(i,1) == e[1]) {
+	  coefs[i] = value;
+	}
+      }
+      
+    } else if (dim == 3) {
+
+      for (int i = 0; i<Ncoefs; ++i) {
+	if (monomialMap.data(i,0) == e[0] and
+	    monomialMap.data(i,1) == e[1] and
+	    monomialMap.data(i,2) == e[2]) {
+	  coefs[i] = value;
+	}
+      }
+
+    }
+
+    return;
+    
+  } // setCoefs
     
 }; // class Polynomial
 

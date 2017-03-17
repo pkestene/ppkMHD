@@ -12,6 +12,8 @@ target_include_directories(test_monomials_ordering
 
 ##############################################
 add_executable(test_print_monomial_map
+  ${CMAKE_SOURCE_DIR}/src/mood/polynomials_utils.h
+  ${CMAKE_SOURCE_DIR}/src/mood/polynomials_utils.cpp
   test_print_monomial_map.cpp)
 target_include_directories(test_print_monomial_map
   PUBLIC

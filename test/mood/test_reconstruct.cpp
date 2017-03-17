@@ -7,14 +7,79 @@
 #include <iostream>
 #include <array>
 
-#include "shared/real_type.h"
 
 // mood
+#include "mood/monomials_ordering.h"
+#include "mood/monomials_print_utils.h"
+
+#include "mood/Polynomial.h"
+
+// kokkos
+#include "shared/real_type.h"
+
 #include "mood/Stencil.h"
 #include "mood/StencilUtils.h"
 #include "mood/GeometricTerms.h"
 #include "mood/Matrix.h"
 
+// dim is the number of variable in the multivariate polynomial representation
+constexpr int dim = 2;
+
+// highest degree / order of the polynomial
+constexpr int order = 2;
+
+// use to initialize data for polynomial
+constexpr int ncoefs = mood::binomial<order+dim,order>();
+
+// to be removed ...
+using scalar_t = Kokkos::View<double[1]>;
+using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
+
+using coefs_t = Kokkos::Array<real_t,ncoefs>;
+using Polynomial_t = mood::Polynomial<dim,order>;
+
+// ====================================================
+// ====================================================
+// ====================================================
+/**
+ * A dummy functor to test computation on device with class polynomial.
+ */
+class TestPolynomialFunctor {
+
+public:
+
+  scalar_t data;
+  mood::MonomialMap& monomialMap;
+  Kokkos::Array<real_t,dim> eval_point;
+  
+  TestPolynomialFunctor(scalar_t data,
+			mood::MonomialMap& monomialMap,
+			Kokkos::Array<real_t,dim> eval_point) :
+    data(data),
+    monomialMap(monomialMap),
+    eval_point(eval_point) {};
+  ~TestPolynomialFunctor() {};
+
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& i) const
+  {
+
+    coefs_t coefs;
+    for (int i=0; i<ncoefs; ++i)
+      coefs[i] = 1.0*i;
+
+    Polynomial_t polynomial(monomialMap, coefs);
+
+    data(0) = polynomial.eval(eval_point);
+    
+  }
+  
+};
+
+// ====================================================
+// ====================================================
+// ====================================================
 /**
  * a simple polynomial test function.
  */
@@ -25,6 +90,13 @@ double test_function_2d(double x, double y)
   
 }
 
+// polynomial coefs (for cross-checking)
+//coefs_t coefs;
+
+
+// ====================================================
+// ====================================================
+// ====================================================
 int main(int argc, char* argv[])
 {
 
@@ -53,31 +125,25 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
   }
 
-  // dim is the number of variable in the multivariate polynomial representation
-  unsigned int dim=2;
+  // create monomial map for all monomial up to degree = order
+  mood::MonomialMap monomialMap(dim,order);
 
-  // highest degree / order of the polynomial
-  int order = 2;
-  
-  if (argc>1)
-    dim = atoi(argv[1]);
-  if (argc>2)
-    order = atoi(argv[2]);
-
-  mood::STENCIL_ID stencilId = mood::Stencil::select_stencil(dim,order);
 
   /*
-   * test class Polynomial.
+   * Select a stencil.
    */
   std::cout << "############################\n";
-  std::cout << "Testing class Stencil    \n";
-
+  std::cout << "Testing class Stencil       \n";
   std::cout << "############################\n";
+
+  mood::STENCIL_ID stencilId = mood::Stencil::select_stencil(dim,order);
 
   mood::Stencil stencil = mood::Stencil(stencilId);
 
   mood::StencilUtils::print_stencil(stencil);
 
+  
+  
   real_t dx, dy, dz;
   dx = dy = dz = 0.1;
   mood::GeometricTerms geomTerms(dx,dy,dz);
