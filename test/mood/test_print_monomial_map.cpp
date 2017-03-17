@@ -8,14 +8,18 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "shared/kokkos_shared.h"
+
 #include "mood/monomials_ordering.h"
 #include "mood/monomials_print_utils.h"
 
-#include "mood/Polynomial.h"
+#include "mood/MonomialMap.h"
 
 int main(int argc, char* argv[])
 {
 
+  Kokkos::initialize(argc, argv);
+ 
   // dim is the number of variable in the multivariate polynomial representation
   unsigned int dim=3;
 
@@ -46,20 +50,21 @@ int main(int argc, char* argv[])
   std::cout << "Testing MonomialMap Struct\n";
   std::cout << "############################\n";
 
-  using aMonomialMap_t = mood::MonomialMap<3,4>;
-  aMonomialMap_t monomialMap;
-
-  for (int i = 0; i<aMonomialMap_t::Ncoefs; ++i) {
-    int e[3] = {monomialMap.data[i][0],
-		monomialMap.data[i][1],
-		monomialMap.data[i][2]};
+  mood::MonomialMap monomialMap(3,4);
+  
+  for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    int e[3] = {monomialMap.data_h(i,0),
+		monomialMap.data_h(i,1),
+		monomialMap.data_h(i,2)};
 
     std::cout << "    {";
     std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
     std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2] << "\n";
 
   }
-  
-  return 0;
+
+  Kokkos::finalize();
+
+  return EXIT_SUCCESS;
   
 }

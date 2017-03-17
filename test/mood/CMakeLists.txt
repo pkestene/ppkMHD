@@ -17,6 +17,7 @@ target_include_directories(test_print_monomial_map
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
+target_link_libraries(test_print_monomial_map kokkos hwloc dl)
 
 ##############################################
 add_executable(test_polynomial
@@ -25,6 +26,7 @@ target_include_directories(test_polynomial
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
+target_link_libraries(test_polynomial kokkos hwloc dl)
 
 ##############################################
 add_executable(test_stencil
