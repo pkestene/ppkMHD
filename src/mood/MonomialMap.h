@@ -6,6 +6,7 @@
 #include "shared/kokkos_shared.h"
 
 #include "mood/monomials_ordering.h"
+#include "mood/Binomial.h"
 
 namespace mood {
 
