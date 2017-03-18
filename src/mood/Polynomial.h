@@ -46,7 +46,7 @@ public:
   
 private:
   //! array containing the polynomial coefficients 
-  Kokkos::Array<real_t,Ncoefs> coefs;
+  Kokkos::Array<real_t,Ncoefs>& coefs;
   
 public:
   /**
@@ -58,7 +58,7 @@ public:
   
 public:
   Polynomial(const MonomialMap& monomialMap,
-	     const coefs_t& coefs) :
+	     coefs_t& coefs) :
     monomialMap(monomialMap),
     coefs(coefs) {};
 

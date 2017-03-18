@@ -67,10 +67,24 @@ public:
 
     coefs_t coefs;
     for (int i=0; i<ncoefs; ++i)
-      coefs[i] = 1.0*i;
+      coefs[i] = 0.0;
 
     Polynomial_t polynomial(monomialMap, coefs);
 
+    // set coefs so that it is the same as in
+    // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
+    Kokkos::Array<int,3> e; 
+    e = {2,0,0};
+    polynomial.setCoefs(e,1.0);
+    e = {1,1,0};
+    polynomial.setCoefs(e,2.2);
+    e = {0,2,0};
+    polynomial.setCoefs(e,4.1);
+    e = {0,0,0};
+    polynomial.setCoefs(e,-5.0);
+    e = {1,0,0};
+    polynomial.setCoefs(e,1.0);
+    
     data(0) = polynomial.eval(eval_point);
     
   }
@@ -90,10 +104,10 @@ double test_function_2d(double x, double y)
   
 }
 
-// polynomial coefs (for cross-checking)
-//coefs_t coefs;
-
-
+// void set_coefs_2d(const mood::MonomialMap& MonomialMap, int e1, int e2, real_t value)
+// {  
+// }
+  
 // ====================================================
 // ====================================================
 // ====================================================
@@ -142,16 +156,74 @@ int main(int argc, char* argv[])
 
   mood::StencilUtils::print_stencil(stencil);
 
+  // compute on host
+  coefs_t coefs;
+  for (int i=0; i<ncoefs; ++i)
+    coefs[i] = 0.0;
+
+  Polynomial_t polynomial(monomialMap, coefs);
+
+  // set coefs so that it is the same as in
+  // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
+  Kokkos::Array<int,3> e; 
+  e = {2,0,0};
+  polynomial.setCoefs(e,1.0);
+  e = {1,1,0};
+  polynomial.setCoefs(e,2.2);
+  e = {0,2,0};
+  polynomial.setCoefs(e,4.1);
+  e = {0,0,0};
+  polynomial.setCoefs(e,-5.0);
+  e = {1,0,0};
+  polynomial.setCoefs(e,1.0);
+
   
   
   real_t dx, dy, dz;
-  dx = dy = dz = 0.1;
+  dx = dy = dz = 1.0;
   mood::GeometricTerms geomTerms(dx,dy,dz);
 
   int stencil_size   = mood::get_stencil_size(stencilId);
   int stencil_degree = mood::get_stencil_degree(stencilId);
-  mood::Matrix geomMatrix(stencil_size,stencil_degree);
-    
+  int NcoefsPolynom = monomialMap.Ncoefs;
+  mood::Matrix geomMatrix(stencil_size-1,NcoefsPolynom-1);
+  
+  // fill geomMatrix
+  int i=0;
+  for (int ii = 0; ii<stencil_size; ++ii) { // loop over stencil point
+    int x = stencil.offsets_h(ii,0);
+    int y = stencil.offsets_h(ii,1);
+
+    if (x != 0 or y != 0) { // avoid stencil center
+   
+      std::cout << "stencil point : " << x << " " << y << "\n";
+      
+      for (int j = 0; j<geomMatrix.n; ++j) { // loop over monomial
+	// stencil point
+	// get monomial exponent for j+1 (to avoid the constant term)
+	int n = monomialMap.data_h(j+1,0);
+	int m = monomialMap.data_h(j+1,1);
+	
+	geomMatrix(i,j) = geomTerms.eval_hat(x,y,n,m);
+      }
+      
+      ++i;
+    }
+  }
+  geomMatrix.print("geomMatrix");
+
+  // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
+  mood::Matrix geomMatrixPI;
+  mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
+  geomMatrixPI.print("geomMatrix pseudo inverse");
+
+  // check that pseudo-inv times A = Identity
+  mood::Matrix product;
+  product.mult(geomMatrixPI, geomMatrix);
+  product.print("geomMatrixPI * geomMatrix (should be Indentity)");
+
+  // instantiate functor and compute interpolating polynomial
+  
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
