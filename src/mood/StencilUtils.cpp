@@ -69,10 +69,10 @@ void StencilUtils::print_stencil(const Stencil& stencil)
 
   for(int i=0; i<stencil.stencilSize; ++i) {
 
-    std::cout << stencil.offsets_h(i,IX) << " "
-	      << stencil.offsets_h(i,IY) << " "
-	      << stencil.offsets_h(i,IZ) << "\n"; 
-    
+    printf( "[% d, % d,% d]\n",
+	    stencil.offsets_h(i,IX),
+	    stencil.offsets_h(i,IY),
+	    stencil.offsets_h(i,IZ) );
   }
   
 } // Stencil::print

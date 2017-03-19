@@ -83,7 +83,7 @@ unsigned int get_stencil_degree(STENCIL_ID stencilId) {
 void Stencil::init_stencil()
 {
 
-  std::cout << "Initializing stencil " << stencilId << "\n";
+  //std::cout << "Initializing stencil " << stencilId << "\n";
 
   // ------------------------------------
   // ------------------------------------
