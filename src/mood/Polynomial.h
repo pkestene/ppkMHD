@@ -66,24 +66,19 @@ public:
   KOKKOS_INLINE_FUNCTION
   real_t eval(real_t x, real_t y) const {
 
-    real_t result;
+    real_t result = 0;
     int c = 0;
     
     if (dim == 2) {
 
       // span monomial orders
-      for (int d = 0; d <= order; ++d) {
-
-	// for a given order, span all possible monomials
-	for (int i=0; i<=d; i++) {
-
-	  // result += coefs[c] * x^d-i * y^i
-	  result += coefs[c] * power(x,d-i) * power(y,i);
-	  c++;
-	}
-	
+      for (int i = 0; i<Ncoefs; ++i) {
+	int e[2] = {monomialMap.data(i,0),
+		    monomialMap.data(i,1)};
+	result += coefs[i] * power(x,e[0]) * power(y,e[1]);
       }
 
+      
     } // end dim == 2
 
     return result;
@@ -94,8 +89,8 @@ public:
   KOKKOS_INLINE_FUNCTION
   real_t eval(real_t x, real_t y, real_t z) const {
 
-    real_t result;
-    int c = 0;
+    real_t result=0;
+    int c=0;
 
     if (dim == 3) {
 
@@ -119,7 +114,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   real_t eval(point_t p) const {
 
-    real_t result;
+    real_t result=0;
     
     if (dim == 2) {
 
@@ -129,18 +124,12 @@ public:
       int c = 0;
       
       // span monomial orders
-      for (int d = 0; d <= order; ++d) {
-
-	// for a given order, span all possible monomials
-	for (int i=0; i<=d; i++) {
-
-	  // result += coefs[c] * x^d-i * y^i
-	  result += coefs[c] * power(x,d-i) * power(y,i);
-	  c++;
-	}
-	
+      for (int i = 0; i<Ncoefs; ++i) {
+	int e[2] = {monomialMap.data(i,0),
+		    monomialMap.data(i,1)};
+	result += coefs[i] * power(x,e[0]) * power(y,e[1]);
       }
-
+      
     } // end dim == 2
 
     if (dim == 3) {
