@@ -70,6 +70,20 @@ target_include_directories(test_reconstruct
 target_link_libraries(test_reconstruct kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
+add_executable(test_mood_functor
+  $<TARGET_OBJECTS:mood>
+  $<TARGET_OBJECTS:config>
+  $<TARGET_OBJECTS:shared>
+  test_mood_functor.cpp)
+target_include_directories(test_mood_functor
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+#set_target_properties(test_reconstruct PROPERTIES
+#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
+target_link_libraries(test_mood_functor kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+
+##############################################
 # add_executable(test_kokkos_eigen
 #   test_kokkos_eigen.cpp)
 # target_include_directories(test_kokkos_eigen

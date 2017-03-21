@@ -6,6 +6,7 @@
 #include "shared/HydroState.h"
 
 #include "mood/Polynomial.h"
+#include "mood/MoodBaseFunctor.h"
 
 namespace mood {
 
@@ -21,14 +22,14 @@ class ComputeFluxesFunctor : public MoodBaseFunctor<dim,order>
 {
     
 public:
-
+  using typename MoodBaseFunctor<dim,order>::DataArray;
+  
   ComputeFluxesFunctor(HydroParams params,
 		       DataArray Udata,
 		       DataArray FluxData_x,
 		       DataArray FluxData_y,
-		       DataArray FluxData_z,
-		       ) :
-    PolynomialEvaluator<dim,order>(),
+		       DataArray FluxData_z) :
+    MoodBaseFunctor<dim,order>(params),
     Udata(Udata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
@@ -36,8 +37,18 @@ public:
   {};
   ~ComputeFluxesFunctor() {};
 
-  //template<typename std::enable_if<dim==2>::type
-  //KOKKOS_INLINE_FUNCTION
+  //! functor for 2d 
+  template<>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim==2, int>::type& i)  const {
+
+  }
+
+  //! functor for 3d 
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim==3, int>::type& i) const {
+    
+  }
   
   DataArray Udata;
   DataArray FluxData_x, FluxData_y, FluxData_z;
