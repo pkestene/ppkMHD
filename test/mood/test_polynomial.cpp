@@ -19,17 +19,8 @@ constexpr int Dim = 3;
 // highest degree / order of the polynomial
 constexpr int Order = 2;
 
-// use to initialize data for polynomial
-constexpr int ncoefs = mood::binomial<Order+Dim,Order>();
-
-
-
 using scalar_t = Kokkos::View<double[1]>;
 using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
-
-//using coefs_t = Kokkos::Array<real_t,ncoefs>;
-//using Polynomial_host_t = mood::Polynomial<dim,order, Kokkos::OpenMP>;
-//using Polynomial_device_t = mood::Polynomial<dim,order,DEVICE>;
 
 real_t polynomial_eval(real_t x, real_t y,
 		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
@@ -101,9 +92,6 @@ public:
     for (int i=0; i<ncoefs; ++i)
       coefs[i] = 1.0*i;
 
-    //Polynomial_device_t polynomial(monomMap, coefs);
-
-    //data(0) = polynomial.eval(eval_point[0], eval_point[1]);
     if (dim==2)
       data(0) = polynomial_eval(eval_point[0], eval_point[1], coefs);
     else

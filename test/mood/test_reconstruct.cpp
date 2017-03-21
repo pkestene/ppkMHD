@@ -125,12 +125,7 @@ public:
     result(result),
     stencil(stencilId),
     stencilId(stencilId),
-    geomPI(geomPI) {
-
-    //int stencil_size   = mood::get_stencil_size(stencilId);
-
-    //rhs = array1d_t("rhs",stencil_size-1); 
-  };
+    geomPI(geomPI) {};
   ~TestReconstructFunctor() {};
   
   KOKKOS_INLINE_FUNCTION
@@ -145,7 +140,9 @@ public:
     // assemble RHS
     int s = 0;
     int stencil_size = mood::get_stencil_size(stencilId);
-    //std::cout << "##### " << stencil_size << "\n";
+#ifndef CUDA
+    std::cout << "[DEVICE] stencil_size is" << stencil_size << "\n";
+#endif
     
     for (int ii=0; ii<stencil_size; ++ii) {
       int x = stencil.offsets(ii,0);
@@ -153,7 +150,9 @@ public:
       
       if (x != 0 or y != 0) { // avoid stencil center
     	rhs[s] = this->test_function_2d_(x,y) - this->test_function_2d_(0,0);
-    	//printf("## [% d,% d, % d] % 7.5f\n",x,y,s, rhs[s] + this->test_function_2d_(0,0));
+#ifndef CUDA
+    	printf("[DEVICE] [% d,% d, % d] % 7.5f\n",x,y,s, rhs[s] + this->test_function_2d_(0,0));
+#endif
     	s++;
       }
       
@@ -170,7 +169,9 @@ public:
     	tmp += geomPI(ii,k) * rhs[k];
       }
       coefs[ii+1] = tmp;
-      //printf("device - polynomial [% d] = % 7.5f\n",ii+1,coefs[ii+1]);
+#ifndef CUDA
+      printf("[DEVICE] - polynomial [% d] = % 7.5f\n",ii+1,coefs[ii+1]);
+#endif
     }
     
     for (int ii=0; ii<stencil_size; ++ii) {
@@ -180,7 +181,7 @@ public:
 
       result(ii) = eval(eval_point, coefs);
 #ifndef CUDA
-      std::cout << polynomial.eval(eval_point) << "\n";
+      std::cout << "[DEVICE] results - " << polynomial.eval(eval_point) << "\n";
 #endif
     }
     
@@ -241,8 +242,6 @@ int main(int argc, char* argv[])
   coefs_t coefs;
   for (int i=0; i<ncoefs; ++i)
     coefs[i] = 0.0;
-
-  //Polynomial_t polynomial(monomialMap, coefs);
 
   // set coefs so that it is the same as in
   // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
@@ -346,7 +345,6 @@ int main(int argc, char* argv[])
   for (int ii=0; ii<monomialMap.Ncoefs; ++ii)
     std::cout << "polynomial [" << ii << "] = " << coef_host[ii] << "\n";
 
-  //Polynomial_t polynomial_host(monomialMap, coef_host);
   // cross-check polynomial
   if (dim == 2) {
     for (int i = 0; i<monomialMap.Ncoefs; ++i) {
@@ -380,7 +378,7 @@ int main(int argc, char* argv[])
     printf("polynomial eval on host [% d, % d]  % 7.5f == % 7.5f\n",x,y,
 	   polynomial_eval<ncoefs>(eval_point[0], eval_point[1],
 				   monomialMap.data_h, coefs),
-	   test_function_2d(x, y) );
+	   test_function_2d(x, y));
   }
 
   /*
