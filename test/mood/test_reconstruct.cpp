@@ -23,10 +23,10 @@
 #include "mood/Matrix.h"
 
 // dim is the number of variable in the multivariate polynomial representation
-constexpr int dim = 2;
+constexpr unsigned int dim = 2;
 
 // highest degree / order of the polynomial
-constexpr int order = 2;
+constexpr unsigned int order = 2;
 
 // use to initialize data for polynomial
 constexpr int ncoefs = mood::binomial<order+dim,order>();
@@ -39,7 +39,6 @@ using geom_t = Kokkos::View<real_t**,DEVICE>;
 using geom_host_t = geom_t::HostMirror;
 
 using coefs_t = Kokkos::Array<real_t,ncoefs>;
-using Polynomial_t = mood::Polynomial<dim,order>;
 
 using array1d_t = Kokkos::View<real_t*,DEVICE>;
 
@@ -56,6 +55,43 @@ real_t test_function_2d(real_t x, real_t y)
   
 }
 
+template<int N>
+real_t polynomial_eval(real_t x, real_t y,
+		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::Array<real_t,N> coefs)  {
+  
+  real_t result = 0;
+  
+  // span monomial orders
+  for (int i = 0; i<N; ++i) {
+    int e[2] = {monomMap(i,0),
+		monomMap(i,1)};
+    result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
+  }
+  
+  return result;
+  
+}; // eval 2D
+
+template<int N>
+real_t polynomial_eval(real_t x, real_t y, real_t z,
+		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::Array<real_t,N> coefs)  {
+  
+  real_t result = 0;
+  
+  // span monomial orders
+  for (int i = 0; i<N; ++i) {
+    int e[3] = {monomMap(i,0),
+		monomMap(i,1),
+		monomMap(i,2)};
+    result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
+  }
+  
+  return result;
+  
+}; // eval 3D
+
 // ====================================================
 // ====================================================
 // ====================================================
@@ -63,12 +99,11 @@ real_t test_function_2d(real_t x, real_t y)
  * A dummy functor to test computation on device with class polynomial
  * and Stencil.
  */
-class TestReconstructFunctor {
+class TestReconstructFunctor : public mood::PolynomialEvaluator<dim,order> {
 
 public:
   
   result_t result;  // size is stencilSize-1
-  mood::MonomialMap& monomialMap;
   mood::Stencil stencil;
   mood::STENCIL_ID stencilId;
   geom_t geomPI;
@@ -84,11 +119,10 @@ public:
   }
 
   TestReconstructFunctor(result_t result,
-			 mood::MonomialMap& monomialMap,
 			 mood::STENCIL_ID stencilId,
 			 geom_t geomPI) :
+    PolynomialEvaluator<dim,order>(),
     result(result),
-    monomialMap(monomialMap),
     stencil(stencilId),
     stencilId(stencilId),
     geomPI(geomPI) {
@@ -111,15 +145,15 @@ public:
     // assemble RHS
     int s = 0;
     int stencil_size = mood::get_stencil_size(stencilId);
-    std::cout << "##### " << stencil_size << "\n";
+    //std::cout << "##### " << stencil_size << "\n";
     
     for (int ii=0; ii<stencil_size; ++ii) {
-      int x = stencil.offsets_h(ii,0);
-      int y = stencil.offsets_h(ii,1);
+      int x = stencil.offsets(ii,0);
+      int y = stencil.offsets(ii,1);
       
       if (x != 0 or y != 0) { // avoid stencil center
     	rhs[s] = this->test_function_2d_(x,y) - this->test_function_2d_(0,0);
-    	printf("## [% d,% d, % d] % 7.5f\n",x,y,s, rhs[s] + this->test_function_2d_(0,0));
+    	//printf("## [% d,% d, % d] % 7.5f\n",x,y,s, rhs[s] + this->test_function_2d_(0,0));
     	s++;
       }
       
@@ -136,28 +170,24 @@ public:
     	tmp += geomPI(ii,k) * rhs[k];
       }
       coefs[ii+1] = tmp;
-      printf("device - polynomial [% d] = % 7.5f\n",ii+1,coefs[ii+1]);
+      //printf("device - polynomial [% d] = % 7.5f\n",ii+1,coefs[ii+1]);
     }
     
-    Polynomial_t polynomial(monomialMap, coefs);
-
     for (int ii=0; ii<stencil_size; ++ii) {
       Kokkos::Array<real_t,dim> eval_point;
-      eval_point[0] = stencil.offsets_h(ii,0);
-      eval_point[1] = stencil.offsets_h(ii,1);
+      eval_point[0] = stencil.offsets(ii,0);
+      eval_point[1] = stencil.offsets(ii,1);
 
-      result(ii) = polynomial.eval(eval_point);
-      //std::cout << polynomial.eval(eval_point) << "\n";
+      result(ii) = eval(eval_point, coefs);
+#ifndef CUDA
+      std::cout << polynomial.eval(eval_point) << "\n";
+#endif
     }
     
-  }
+  } // operator()
   
 }; // class TestReconstructFunctor
 
-
-// void set_coefs_2d(const mood::MonomialMap& MonomialMap, int e1, int e2, real_t value)
-// {  
-// }
   
 // ====================================================
 // ====================================================
@@ -212,21 +242,21 @@ int main(int argc, char* argv[])
   for (int i=0; i<ncoefs; ++i)
     coefs[i] = 0.0;
 
-  Polynomial_t polynomial(monomialMap, coefs);
+  //Polynomial_t polynomial(monomialMap, coefs);
 
   // set coefs so that it is the same as in
   // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
   Kokkos::Array<int,3> e; 
   e = {2,0,0};
-  polynomial.setCoefs(e,1.0);
+  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  1.0);
   e = {1,1,0};
-  polynomial.setCoefs(e,2.2);
+  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  2.2);
   e = {0,2,0};
-  polynomial.setCoefs(e,4.1);
+  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  4.1);
   e = {0,0,0};
-  polynomial.setCoefs(e,-5.0);
+  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1], -5.0);
   e = {1,0,0};
-  polynomial.setCoefs(e,1.0);
+  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  1.0);
 
   std::cout << "Print polynomial coefs\n";
   for (int ii=0; ii<monomialMap.Ncoefs-1; ++ii)
@@ -316,7 +346,7 @@ int main(int argc, char* argv[])
   for (int ii=0; ii<monomialMap.Ncoefs; ++ii)
     std::cout << "polynomial [" << ii << "] = " << coef_host[ii] << "\n";
 
-  Polynomial_t polynomial_host(monomialMap, coef_host);
+  //Polynomial_t polynomial_host(monomialMap, coef_host);
   // cross-check polynomial
   if (dim == 2) {
     for (int i = 0; i<monomialMap.Ncoefs; ++i) {
@@ -348,7 +378,8 @@ int main(int argc, char* argv[])
     int x = stencil.offsets_h(ii,0);
     int y = stencil.offsets_h(ii,1);
     printf("polynomial eval on host [% d, % d]  % 7.5f == % 7.5f\n",x,y,
-	   polynomial_host.eval(eval_point),
+	   polynomial_eval<ncoefs>(eval_point[0], eval_point[1],
+				   monomialMap.data_h, coefs),
 	   test_function_2d(x, y) );
   }
 
@@ -369,7 +400,9 @@ int main(int argc, char* argv[])
   Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
   
   // create functor
-  TestReconstructFunctor f(result, monomialMap, stencilId, geomMatrixPI_view);
+  TestReconstructFunctor f(result,
+			   stencilId,
+			   geomMatrixPI_view);
 
   // launch with only 1 thread
   Kokkos::parallel_for(1,f);

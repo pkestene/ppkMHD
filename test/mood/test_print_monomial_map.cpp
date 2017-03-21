@@ -15,6 +15,34 @@
 
 #include "mood/MonomialMap.h"
 
+/**
+ * A dummy functor to test computation on device with class MonomialMap.
+ */
+class TestMonomialMapFunctor {
+
+public:
+  mood::MonomialMap::MonomMap results;  
+  mood::MonomialMap::MonomMap monomialMap;
+
+  TestMonomialMapFunctor(mood::MonomialMap::MonomMap results,
+			 mood::MonomialMap::MonomMap monomialMap) :
+    results(results),
+    monomialMap(monomialMap) {};
+  ~TestMonomialMapFunctor() {};
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& i) const
+  {
+
+    for (int icoef = 0; icoef < monomialMap.dimension_0(); ++icoef) {
+      results(icoef, 0) = monomialMap(icoef,0);
+      results(icoef, 1) = monomialMap(icoef,1);
+      results(icoef, 2) = monomialMap(icoef,2);
+    }
+  }
+  
+}; // TestMonomialMapFunctor
+
 int main(int argc, char* argv[])
 {
 
@@ -50,7 +78,8 @@ int main(int argc, char* argv[])
   std::cout << "Testing MonomialMap Struct\n";
   std::cout << "############################\n";
 
-  mood::MonomialMap monomialMap(3,4);
+  // dim = 3, degree = 4
+  mood::MonomialMap monomialMap(dim,order);
   
   for (int i = 0; i<monomialMap.Ncoefs; ++i) {
     int e[3] = {monomialMap.data_h(i,0),
@@ -63,6 +92,30 @@ int main(int argc, char* argv[])
 
   }
 
+  std::cout << "####################################\n";
+  std::cout << "Testing MonomialMap Struct on Device\n";
+  std::cout << "####################################\n";
+  int Ncoefs = mood::binom(dim+order,dim);
+  mood::MonomialMap::MonomMap data_device = mood::MonomialMap::MonomMap("data_device",Ncoefs,dim);
+  mood::MonomialMap::MonomMap::HostMirror data_host = Kokkos::create_mirror_view(data_device);
+
+  TestMonomialMapFunctor f(data_device, monomialMap.data);
+  Kokkos::parallel_for(1,f);
+
+  // retrieve results
+  Kokkos::deep_copy(data_host,data_device);
+
+  for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    int e[3] = {data_host(i,0),
+  		data_host(i,1),
+  		data_host(i,2)};
+
+    std::cout << "    {";
+    std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
+    std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2] << "\n";
+
+  }
+  
   Kokkos::finalize();
 
   return EXIT_SUCCESS;

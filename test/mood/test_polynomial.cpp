@@ -14,38 +14,81 @@
 #include "shared/real_type.h"
 
 // dim is the number of variable in the multivariate polynomial representation
-constexpr int dim = 3;
+constexpr int Dim = 3;
 
 // highest degree / order of the polynomial
-constexpr int order = 2;
+constexpr int Order = 2;
 
 // use to initialize data for polynomial
-constexpr int ncoefs = mood::binomial<order+dim,order>();
+constexpr int ncoefs = mood::binomial<Order+Dim,Order>();
 
 
 
 using scalar_t = Kokkos::View<double[1]>;
 using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
 
-using coefs_t = Kokkos::Array<real_t,ncoefs>;
-using Polynomial_t = mood::Polynomial<dim,order>;
+//using coefs_t = Kokkos::Array<real_t,ncoefs>;
+//using Polynomial_host_t = mood::Polynomial<dim,order, Kokkos::OpenMP>;
+//using Polynomial_device_t = mood::Polynomial<dim,order,DEVICE>;
+
+real_t polynomial_eval(real_t x, real_t y,
+		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::View<double*,Kokkos::OpenMP> coefs)  {
+  
+  real_t result = 0;
+  
+  // span monomial orders
+  for (int i = 0; i<coefs.dimension_0(); ++i) {
+    int e[2] = {monomMap(i,0),
+		monomMap(i,1)};
+    result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
+  }
+  
+  return result;
+  
+}; // eval 2D
+
+real_t polynomial_eval(real_t x, real_t y, real_t z,
+		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::View<double*,Kokkos::OpenMP> coefs)  {
+  
+  real_t result = 0;
+  
+  // span monomial orders
+  for (int i = 0; i<coefs.dimension_0(); ++i) {
+    int e[3] = {monomMap(i,0),
+		monomMap(i,1),
+		monomMap(i,2)};
+    result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
+  }
+  
+  return result;
+  
+}; // eval 3D
+
 
 /**
  * A dummy functor to test computation on device with class polynomial.
  */
+template<unsigned int dim, unsigned int order>
 class TestPolynomialFunctor {
 
 public:
+  //! total number of coefficients in the polynomial
+  static const int ncoefs =  mood::binomial<dim+order,dim>();
+
+  //! number of polynomial coefficients
+  using coefs_t = Kokkos::Array<real_t,ncoefs>;
 
   scalar_t data;
-  mood::MonomialMap& monomialMap;
+  mood::MonomialMap::MonomMap monomMap;
   Kokkos::Array<real_t,dim> eval_point;
   
   TestPolynomialFunctor(scalar_t data,
-			mood::MonomialMap& monomialMap,
+			mood::MonomialMap::MonomMap monomMap,
 			Kokkos::Array<real_t,dim> eval_point) :
     data(data),
-    monomialMap(monomialMap),
+    monomMap(monomMap),
     eval_point(eval_point) {};
   ~TestPolynomialFunctor() {};
 
@@ -58,12 +101,62 @@ public:
     for (int i=0; i<ncoefs; ++i)
       coefs[i] = 1.0*i;
 
-    Polynomial_t polynomial(monomialMap, coefs);
+    //Polynomial_device_t polynomial(monomMap, coefs);
 
-    data(0) = polynomial.eval(eval_point);
+    //data(0) = polynomial.eval(eval_point[0], eval_point[1]);
+    if (dim==2)
+      data(0) = polynomial_eval(eval_point[0], eval_point[1], coefs);
+    else
+      data(0) = polynomial_eval(eval_point[0], eval_point[1], eval_point[2], coefs);
     
   }
-  
+
+    /** evaluate polynomial at a given point (2D) */
+  KOKKOS_INLINE_FUNCTION
+  real_t polynomial_eval(real_t x, real_t y, coefs_t coefs) const {
+
+    real_t result = 0;
+    
+    if (dim == 2) {
+
+      // span monomial orders
+      for (int i = 0; i<ncoefs; ++i) {
+	int e[2] = {monomMap(i,0),
+		    monomMap(i,1)};
+	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
+      }
+
+      
+    } // end dim == 2
+
+    return result;
+
+  }; // eval 2D
+
+  /** evaluate polynomial at a given point (3D) */
+  KOKKOS_INLINE_FUNCTION
+  real_t polynomial_eval(real_t x, real_t y, real_t z, coefs_t coefs) const {
+
+    real_t result=0;
+ 
+    if (dim == 3) {
+
+      // span all monomials in Graded Reverse Lexicographical order
+      for (int i = 0; i<ncoefs; ++i) {
+
+	int e[3] = {monomMap(i,0),
+		    monomMap(i,1),
+		    monomMap(i,2)};
+	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
+	
+      }
+      
+    } // end dim == 3
+
+    return result;
+    
+  }; // eval 3D
+
 };
 
 int main(int argc, char* argv[])
@@ -79,9 +172,9 @@ int main(int argc, char* argv[])
   std::cout << "############################\n";
 
   // create monomial map and print
-  mood::MonomialMap monomialMap(dim,order);
+  mood::MonomialMap monomialMap(Dim,Order);
 
-  if (dim == 2) {
+  if (Dim == 2) {
     for (int i = 0; i<monomialMap.Ncoefs; ++i) {
       
       int e[2] = {monomialMap.data_h(i,0),
@@ -111,8 +204,8 @@ int main(int argc, char* argv[])
   Kokkos::deep_copy(data,data_h);
 
   // evaluation point
-  Kokkos::Array<real_t,dim> p;
-  if (dim==2) {
+  Kokkos::Array<real_t,Dim> p;
+  if (Dim==2) {
     p[0] =  1.0;
     p[1] = -1.0;
   } else {
@@ -122,20 +215,15 @@ int main(int argc, char* argv[])
   }
   
   // compute on device
-  TestPolynomialFunctor f(data, monomialMap, p);
+  TestPolynomialFunctor<Dim,Order> f(data, monomialMap.data, p);
   Kokkos::parallel_for(1,f);
 
   Kokkos::deep_copy(data_h,data);
   std::cout << "result on device: " << data_h(0) << "\n";
   
   // compute on host
-  coefs_t coefs;
-  for (int i=0; i<ncoefs; ++i)
-    coefs[i] = 1.0*i;
-  
-  Polynomial_t polynomial(monomialMap, coefs);
 
-  if (dim == 2) {
+  if (Dim == 2) {
     for (int i = 0; i<monomialMap.Ncoefs; ++i) {
       
       int e[2] = {monomialMap.data_h(i,0),
@@ -151,10 +239,6 @@ int main(int argc, char* argv[])
       int e[3] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1),
 		  monomialMap.data_h(i,2)};
-      // std::cout << coefs[i] *
-      // 	mood::power(p[0],e[0]) *
-      // 	mood::power(p[1],e[1]) *
-      // 	mood::power(p[2],e[2]) << "    {";
       std::cout << "    {";
       std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
       std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2] << "\n";
@@ -162,9 +246,20 @@ int main(int argc, char* argv[])
     }
   }
 
+  Kokkos::View<double*,Kokkos::OpenMP> coefs_view =
+    Kokkos::View<double*,Kokkos::OpenMP>("coefs_view",monomialMap.Ncoefs);
+  for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    coefs_view(i) = 1.0*i;
+  }
   
-  double result_on_host = polynomial.eval(p);
-  std::cout << "result on host:   " << result_on_host << "\n";
+  if (Dim==2)
+    std::cout << "result on host:   " << polynomial_eval(p[0],p[1],
+							 monomialMap.data_h,
+							 coefs_view) << "\n";
+  else
+    std::cout << "result on host:   " << polynomial_eval(p[0],p[1],p[2],
+							 monomialMap.data_h,
+							 coefs_view) << "\n";
   
   Kokkos::finalize();
 
