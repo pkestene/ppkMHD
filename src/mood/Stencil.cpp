@@ -424,8 +424,6 @@ void Stencil::init_stencil()
 STENCIL_ID Stencil::select_stencil(unsigned int dim, unsigned int degree)
 {
 
-  int res=STENCIL_2D_DEGREE1;
-
   if (dim < 2 or dim > 3) {
     std::cerr << "Only 2D / 3D are allowed\n";
     std::cerr << "Returning default value, i.e. STENCIL_2D_DEGREE1\n";
@@ -466,6 +464,9 @@ STENCIL_ID Stencil::select_stencil(unsigned int dim, unsigned int degree)
     }
 
   }
+
+  // we should never be here...
+  return STENCIL_TOTAL_NUMBER;
   
 } // Stencil::select_stencil
 

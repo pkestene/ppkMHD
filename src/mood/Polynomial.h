@@ -159,7 +159,7 @@ public:
  * \param[in] value is the specified monomial coefficient.
  */
 template<int N>
-void polynomial_setCoefs(Kokkos::Array<real_t,N> coefs,
+void polynomial_setCoefs(Kokkos::Array<real_t,N>& coefs,
 			 MonomialMap monomialMap,
 			 int e0, int e1,
 			 real_t value) {
@@ -187,7 +187,7 @@ void polynomial_setCoefs(Kokkos::Array<real_t,N> coefs,
  * \param[in] value is the specified monomial coefficient.
  */
 template<int N>
-void polynomial_setCoefs(Kokkos::Array<real_t,N> coefs,
+void polynomial_setCoefs(Kokkos::Array<real_t,N>& coefs,
 			 MonomialMap monomialMap,
 			 int e0, int e1, int e2,
 			 real_t value) {

@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <array>
 
 #include "mood/monomials_ordering.h"
 #include "mood/polynomials_utils.h"
@@ -33,7 +34,7 @@ void print_all_monomials(int order)  {
   std::cout << "#################################################\n";
   
   // exponent vector
-  int e[dim];
+  std::array<int,dim> e;
   for (int i=0; i<dim; ++i) e[i] = 0;
 
   // d is the order, it will increase up to order
@@ -86,7 +87,7 @@ void print_all_monomials_map(int order)  {
     std::cout << "int monomials_map[" << get_number_of_coefficients<3>(order) << "] = {\n";
 
   // exponent vector
-  int e[dim];
+  std::array<int,dim> e;
   for (int i=0; i<dim; ++i) e[i] = 0;
 
   int sum_e = 0;

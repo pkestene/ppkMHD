@@ -3,6 +3,8 @@
 #include <lapacke.h> // for LAPACKE_dgeqrf
 #include <cblas.h> // for cblas_
 
+#include "shared/utils.h"
+
 namespace mood {
 
 // =======================================================
@@ -12,13 +14,13 @@ void Matrix::compute_qr()
 
   // leading dimension of this (assuming row-major storage)
   lapack_int lda = n;
-  lapack_int info;
-
+  
   lapack_int min_mn = m<n ? m : n;
   double* tau = (double*) malloc(min_mn*sizeof(double));
 
   // this->_data is modified here by the QR decomposition
-  info = LAPACKE_dgeqrf( LAPACK_ROW_MAJOR, m, n, data(), lda, tau );
+  lapack_int info = LAPACKE_dgeqrf( LAPACK_ROW_MAJOR, m, n, data(), lda, tau );
+  UNUSED(info);
 
   free(tau);
   

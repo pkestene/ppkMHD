@@ -50,7 +50,8 @@ namespace mood {
  *
  */
 template<unsigned int dim>
-void mono_next_grlex (int e[dim] )
+//void mono_next_grlex (int e[dim] )
+void mono_next_grlex (std::array<int,dim>& e)
 {
   int i;
   int j;

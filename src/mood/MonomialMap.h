@@ -67,7 +67,7 @@ struct MonomialMap {
   void init_map() {
       
     // exponent vector
-    int e[dim_];
+    std::array<int,dim_> e;
     for (int i=0; i<dim_; ++i) e[i] = 0;
         
     int sum_e = 0;
