@@ -2,7 +2,6 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/monomials_ordering.h
   ${CMAKE_CURRENT_SOURCE_DIR}/monomials_print_utils.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Polynomial.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/Polynomial.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/polynomials_utils.h
   ${CMAKE_CURRENT_SOURCE_DIR}/polynomials_utils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/MonomialMap.h
