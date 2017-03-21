@@ -4,6 +4,18 @@
 #include <cmath>
 #include <iosfwd>
 
+// make the compiler ignore an unused variable
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
+
+// make the compiler ignore an unused function
+#ifdef __GNUC__
+#define UNUSED_FUNCTION __attribute__ ((unused))
+#else
+#define UNUSED_FUNCTION
+#endif
+
 #define THRESHOLD 1e-12
 
 #define ISFUZZYNULL(a) (std::abs(a) < THRESHOLD)
