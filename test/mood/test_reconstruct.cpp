@@ -141,7 +141,7 @@ public:
     int s = 0;
     int stencil_size = mood::get_stencil_size(stencilId);
 #ifndef CUDA
-    std::cout << "[DEVICE] stencil_size is" << stencil_size << "\n";
+    std::cout << "[DEVICE] stencil_size is " << stencil_size << "\n";
 #endif
     
     for (int ii=0; ii<stencil_size; ++ii) {
@@ -181,7 +181,10 @@ public:
 
       result(ii) = eval(eval_point, coefs);
 #ifndef CUDA
-      std::cout << "[DEVICE] results - " << polynomial.eval(eval_point) << "\n";
+      std::cout << "[DEVICE] results - "
+		<< polynomial_eval<ncoefs>(eval_point[0],
+					   eval_point[1],
+					   monomialMap.data_h, coefs) << "\n";
 #endif
     }
     
