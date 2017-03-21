@@ -25,14 +25,14 @@ inline constexpr T power(const T base, unsigned int const exponent)
     power(base, (exponent>>1))*power(base, (exponent>>1));
 }
 
-
 /**
- * A minimal data structure representing a bi-or-tri variate polynomial.
+ * A minimal base functor for evaluating a bi-or-tri variate polynomial.
  *
- * This must be small as it will be used/created in a Kokkos kernel functor.
+ * Polynomial coefficients are supposed to be provided on a per thread basis.
+ * Monomial map is shared, it is a Kokkos::View.
  */
 template<unsigned int dim, unsigned int order>
-class Polynomial {
+class PolynomialEvaluator {
 
 public:
   //! total number of coefficients in the polynomial
@@ -44,30 +44,26 @@ public:
   //! typedef for coordinates points
   using point_t = Kokkos::Array<real_t,dim>;
   
-private:
-  //! array containing the polynomial coefficients 
-  Kokkos::Array<real_t,Ncoefs>& coefs;
-  
 public:
   /**
    * this is a map spanning all possibles monomials, and all possible
-   * variables, such that monomials_map[i][j] gives the exponent of the
+   * variables, such that monomMa(i,j) gives the exponent of the
    * jth variables in the ith monomials.
+   *
+   * MonomialMap::MonomMap is a Kokkos::View type defined in class MonomialMap.
    */
-  const MonomialMap& monomialMap;
+  const MonomialMap monomialMap;
   
 public:
-  Polynomial(const MonomialMap& monomialMap,
-	     coefs_t& coefs) :
-    monomialMap(monomialMap),
-    coefs(coefs) {};
+  PolynomialEvaluator() : monomialMap(dim,order) {};
 
+  virtual ~PolynomialEvaluator() {};
+  
   /** evaluate polynomial at a given point (2D) */
   KOKKOS_INLINE_FUNCTION
-  real_t eval(real_t x, real_t y) const {
+  real_t eval(real_t x, real_t y, coefs_t coefs) const {
 
     real_t result = 0;
-    int c = 0;
     
     if (dim == 2) {
 
@@ -75,7 +71,7 @@ public:
       for (int i = 0; i<Ncoefs; ++i) {
 	int e[2] = {monomialMap.data(i,0),
 		    monomialMap.data(i,1)};
-	result += coefs[i] * power(x,e[0]) * power(y,e[1]);
+	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
       }
 
       
@@ -87,11 +83,10 @@ public:
 
   /** evaluate polynomial at a given point (3D) */
   KOKKOS_INLINE_FUNCTION
-  real_t eval(real_t x, real_t y, real_t z) const {
-
+  real_t eval(real_t x, real_t y, real_t z, coefs_t coefs) const {
+    
     real_t result=0;
-    int c=0;
-
+ 
     if (dim == 3) {
 
       // span all monomials in Graded Reverse Lexicographical order
@@ -100,7 +95,7 @@ public:
 	int e[3] = {monomialMap.data(i,0),
 		    monomialMap.data(i,1),
 		    monomialMap.data(i,2)};
-	result += coefs[i] * power(x,e[0]) * power(y,e[1]) * power(z,e[2]);
+	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
 	
       }
       
@@ -112,7 +107,7 @@ public:
 
   /** evaluate polynomial at a given point (3D) */
   KOKKOS_INLINE_FUNCTION
-  real_t eval(point_t p) const {
+  real_t eval(point_t p, coefs_t coefs) const {
 
     real_t result=0;
     
@@ -121,13 +116,11 @@ public:
       real_t x = p[0]; 
       real_t y = p[1];
       
-      int c = 0;
-      
       // span monomial orders
       for (int i = 0; i<Ncoefs; ++i) {
 	int e[2] = {monomialMap.data(i,0),
 		    monomialMap.data(i,1)};
-	result += coefs[i] * power(x,e[0]) * power(y,e[1]);
+	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
       }
       
     } // end dim == 2
@@ -138,15 +131,13 @@ public:
       real_t y = p[1];
       real_t z = p[2];
       
-      int c = 0;
-
       // span all monomials in Graded Reverse Lexicographical order
       for (int i = 0; i<Ncoefs; ++i) {
 
 	int e[3] = {monomialMap.data(i,0),
 		    monomialMap.data(i,1),
 		    monomialMap.data(i,2)};
-	result += coefs[i] * power(x,e[0]) * power(y,e[1]) * power(z,e[2]);
+	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
 	
       }
       
@@ -155,66 +146,66 @@ public:
     return result;
     
   }; // eval generique
-
-  KOKKOS_INLINE_FUNCTION
-  real_t getCoefs(int i) const {
-
-    real_t tmp = 0.0;
-    if (i>=0 and i<Ncoefs)
-      tmp = coefs[i];
     
-    return tmp;
-    
-  } // getCoefs
+}; // class PolynomialEvaluator
 
-  /**
-   * set i-th coefficients
-   */
-  KOKKOS_INLINE_FUNCTION
-  void setCoefs(int i, real_t value) const {
 
-    if (i>=0 and i<Ncoefs)
+/**
+ * set polynomial coefficients based on monomial exponents :
+ * 
+ * \param[in,out] coefs arrary of coefficients, one per monomial
+ * \param[in] MonomialMap member data_h contains the map between monomial and exponents
+ * \param[in] e0 e1 exponents (identifying a given monomial)
+ * \param[in] value is the specified monomial coefficient.
+ */
+template<int N>
+void polynomial_setCoefs(Kokkos::Array<real_t,N> coefs,
+			 MonomialMap monomialMap,
+			 int e0, int e1,
+			 real_t value) {
+
+  // we should assert here that N == monomialMap.Ncoefs
+  
+  for (int i = 0; i<N; ++i) {
+    // find the right location of the monomial identified by e0, e1
+    if (monomialMap.data_h(i,0) == e0 and
+	monomialMap.data_h(i,1) == e1) {
       coefs[i] = value;
-    
-    return;
-    
-  } // setCoefs
-
-  /**
-   * set polynomial coefficients based on monomial exponents :
-   * 
-   * \param[in] e exponent array (identifying a given monomial)
-   * \param[in] value is the specified monomial coefficient.
-   */
-  KOKKOS_INLINE_FUNCTION
-  void setCoefs(Kokkos::Array<int,3> e, real_t value) const {
-
-    if (dim == 2) {
-
-      for (int i = 0; i<Ncoefs; ++i) {
-	if (monomialMap.data(i,0) == e[0] and
-	    monomialMap.data(i,1) == e[1]) {
-	  coefs[i] = value;
-	}
-      }
-      
-    } else if (dim == 3) {
-
-      for (int i = 0; i<Ncoefs; ++i) {
-	if (monomialMap.data(i,0) == e[0] and
-	    monomialMap.data(i,1) == e[1] and
-	    monomialMap.data(i,2) == e[2]) {
-	  coefs[i] = value;
-	}
-      }
-
     }
+  }
+  
+  return;
+  
+} // polynomial_setCoefs
 
-    return;
-    
-  } // setCoefs
-    
-}; // class Polynomial
+/**
+ * set polynomial coefficients based on monomial exponents :
+ * 
+ * \param[in,out] coefs arrary of coefficients, one per monomial
+ * \param[in] MonomialMap member data_h contains the map between monomial and exponents
+ * \param[in] e0 e1 e2 exponents (identifying a given monomial)
+ * \param[in] value is the specified monomial coefficient.
+ */
+template<int N>
+void polynomial_setCoefs(Kokkos::Array<real_t,N> coefs,
+			 MonomialMap monomialMap,
+			 int e0, int e1, int e2,
+			 real_t value) {
+
+  // we should assert here that N == monomialMap.Ncoefs
+
+  for (int i = 0; i<N; ++i) {
+    // find the right location of the monomial identified by e0, e1, e2
+    if (monomialMap.data_h(i,0) == e0 and
+	monomialMap.data_h(i,1) == e1 and
+	monomialMap.data_h(i,2) == e2) {
+      coefs[i] = value;
+    }
+  }
+  
+  return;
+  
+} // polynomial_setCoefs
 
 // initialize static member
 //template<unsigned int dim, unsigned int order>

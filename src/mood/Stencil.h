@@ -98,7 +98,41 @@ enum STENCIL_ID {
  *
  * \return number of cells contained in stencil.
  */
-unsigned int get_stencil_size(STENCIL_ID stencilId);
+KOKKOS_INLINE_FUNCTION
+unsigned int get_stencil_size(STENCIL_ID stencilId)  {
+
+  if (stencilId == STENCIL_2D_DEGREE1)
+    return 5;
+  if (stencilId == STENCIL_2D_DEGREE2)
+    return 9;
+  if (stencilId == STENCIL_2D_DEGREE3)
+    return 13;
+  if (stencilId == STENCIL_2D_DEGREE3_V2)
+    return 16;
+  if (stencilId == STENCIL_2D_DEGREE4)
+    return 25;
+  if (stencilId == STENCIL_2D_DEGREE5)
+    return 36;
+
+  if (stencilId == STENCIL_3D_DEGREE1)
+    return 7;
+  if (stencilId == STENCIL_3D_DEGREE2)
+    return 27;
+  if (stencilId == STENCIL_3D_DEGREE3)
+    return 27;
+  if (stencilId == STENCIL_3D_DEGREE3_V2)
+    return 33;
+  if (stencilId == STENCIL_3D_DEGREE4)
+    return 64;
+  if (stencilId == STENCIL_3D_DEGREE5)
+    return 125;
+  if (stencilId == STENCIL_3D_DEGREE5_V2)
+    return 88;
+
+  // we shouldn't be here
+  return 0;
+  
+} // get_stencil_size
 
 /**
  * Return the polynomial degree used with input stencil.
@@ -107,7 +141,41 @@ unsigned int get_stencil_size(STENCIL_ID stencilId);
  *
  * \return polynomial degree.
  */
-unsigned int get_stencil_degree(STENCIL_ID stencilId);
+KOKKOS_INLINE_FUNCTION
+unsigned int get_stencil_degree(STENCIL_ID stencilId) {
+
+  if (stencilId == STENCIL_2D_DEGREE1)
+    return 1;
+  if (stencilId == STENCIL_2D_DEGREE2)
+    return 2;
+  if (stencilId == STENCIL_2D_DEGREE3)
+    return 3;
+  if (stencilId == STENCIL_2D_DEGREE3_V2)
+    return 3;
+  if (stencilId == STENCIL_2D_DEGREE4)
+    return 4;
+  if (stencilId == STENCIL_2D_DEGREE5)
+    return 5;
+
+  if (stencilId == STENCIL_3D_DEGREE1)
+    return 1;
+  if (stencilId == STENCIL_3D_DEGREE2)
+    return 2;
+  if (stencilId == STENCIL_3D_DEGREE3)
+    return 3;
+  if (stencilId == STENCIL_3D_DEGREE3_V2)
+    return 3;
+  if (stencilId == STENCIL_3D_DEGREE4)
+    return 4;
+  if (stencilId == STENCIL_3D_DEGREE5)
+    return 5;
+  if (stencilId == STENCIL_3D_DEGREE5_V2)
+    return 5;
+
+  // we shouldn't be here
+  return 0;
+  
+} // get_stencil_degree
 
 /**
  * \struct Stencil

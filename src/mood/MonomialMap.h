@@ -69,10 +69,7 @@ struct MonomialMap {
     // exponent vector
     int e[dim_];
     for (int i=0; i<dim_; ++i) e[i] = 0;
-    
-    // d is the order, it will increase up to order
-    int d = -1;
-    
+        
     int sum_e = 0;
     for (int i=0; i<dim_; ++i) sum_e += e[i];
 
@@ -81,7 +78,7 @@ struct MonomialMap {
     // span all possible monomials
     while ( sum_e <= order ) {
 
-      if (dim_==2) {
+      if (dim_ == 2) {
 	data_h(index,0) = e[0];
 	data_h(index,1) = e[1];
       } else if (dim_ == 3) {

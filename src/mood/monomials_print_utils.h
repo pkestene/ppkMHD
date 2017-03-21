@@ -89,9 +89,6 @@ void print_all_monomials_map(int order)  {
   int e[dim];
   for (int i=0; i<dim; ++i) e[i] = 0;
 
-  // d is the order, it will increase up to order
-  int d = -1;
-
   int sum_e = 0;
   for (int i=0; i<dim; ++i) sum_e += e[i];
 
