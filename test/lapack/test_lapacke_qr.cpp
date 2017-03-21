@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 {
   
   /* Locals */
-  lapack_int m, n, lda, ldat, ldq, ldr, lda_check, info;
+  lapack_int m, n, lda, ldat, lda_check, info;
   int i, j, k;
 
   lapack_int min_mn;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
   min_mn = m<n ? m : n;
   
   /* Initialization */
-  lda=n, ldq=m, ldr=n;
+  lda=n;
   ldat=m;
   lda_check=n;
   
