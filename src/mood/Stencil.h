@@ -2,6 +2,7 @@
 #define MOOD_STENCIL_H_
 
 #include "shared/kokkos_shared.h"
+#include <array>
 
 namespace mood {
 
@@ -90,6 +91,26 @@ enum STENCIL_ID {
   STENCIL_TOTAL_NUMBER /* This is not a stencil ! */
 };
 
+/**
+ * The following array is a "solution" to the probleme faced when one want
+ * to get stencil size at compile in a template class; get_stencil_size routine
+ * can't be used there.
+ */
+constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
+  {5,  /* STENCIL_2D_DEGREE1 */
+   9,  /* STENCIL_2D_DEGREE2 */
+   13, /* STENCIL_2D_DEGREE3 */
+   16, /* STENCIL_2D_DEGREE3_V2 */
+   25, /* STENCIL_2D_DEGREE4 */
+   36, /* STENCIL_2D_DEGREE5 */
+   7,  /* STENCIL_3D_DEGREE1 */
+   27, /* STENCIL_3D_DEGREE2 */
+   27, /* STENCIL_3D_DEGREE3 */
+   33, /* STENCIL_3D_DEGREE3_V2 */
+   64, /* STENCIL_3D_DEGREE4 */
+   125,/* STENCIL_3D_DEGREE5 */
+   88  /* STENCIL_3D_DEGREE5_V2 */
+  };
 
 /**
  * Return how many cell is made the stencil.
@@ -133,6 +154,27 @@ unsigned int get_stencil_size(STENCIL_ID stencilId)  {
   return 0;
   
 } // get_stencil_size
+
+/**
+ * A constexpr array mapping stencilId to the polynomial degree.
+ *
+ * Same information as get_stencil_degree, but at compile time.
+ */
+constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
+  {1,  /* STENCIL_2D_DEGREE1 */
+   2,  /* STENCIL_2D_DEGREE2 */
+   3,  /* STENCIL_2D_DEGREE3 */
+   3,  /* STENCIL_2D_DEGREE3_V2 */
+   4,  /* STENCIL_2D_DEGREE4 */
+   5,  /* STENCIL_2D_DEGREE5 */
+   1,  /* STENCIL_3D_DEGREE1 */
+   2,  /* STENCIL_3D_DEGREE2 */
+   3,  /* STENCIL_3D_DEGREE3 */
+   3,  /* STENCIL_3D_DEGREE3_V2 */
+   4,  /* STENCIL_3D_DEGREE4 */
+   5,  /* STENCIL_3D_DEGREE5 */
+   5   /* STENCIL_3D_DEGREE5_V2 */
+  };
 
 /**
  * Return the polynomial degree used with input stencil.
