@@ -7,15 +7,14 @@
 #include <iostream>
 #include <array>
 
+// kokkos
+#include "shared/real_type.h"
 
 // mood
 #include "mood/monomials_ordering.h"
 #include "mood/monomials_print_utils.h"
-
 #include "mood/Polynomial.h"
 
-// kokkos
-#include "shared/real_type.h"
 
 #include "mood/Stencil.h"
 #include "mood/StencilUtils.h"
