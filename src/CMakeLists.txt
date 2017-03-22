@@ -32,6 +32,7 @@ add_executable(${EXE_NAME}
   $<TARGET_OBJECTS:muscl>
   $<TARGET_OBJECTS:shared>
   $<TARGET_OBJECTS:solver_factory>
+  mood/StencilUtils.cpp
   main.cpp
   )
 

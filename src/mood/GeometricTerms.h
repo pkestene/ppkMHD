@@ -2,6 +2,7 @@
 #define GEOMETRIC_TERMS_H_
 
 #include <array>
+
 #include "shared/real_type.h"
 
 namespace mood {

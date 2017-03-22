@@ -7,6 +7,9 @@
 
 #include "config/inih/ini.h" // our INI file reader
 
+#include "mood/Stencil.h"
+#include "mood/StencilUtils.h"
+
 /*
  * Hydro Parameters (read parameter file)
  */
@@ -22,17 +25,39 @@ void HydroParams::setup(ConfigMap &configMap)
 
   std::string solver_name = configMap.getString("run", "solver_name", "unknown");
   if ( !solver_name.compare("Hydro_Muscl_2D") ) {
+    
     nbvar = 4;
     ghostWidth = 2;
+    
   } else if ( !solver_name.compare("Hydro_Muscl_3D")) {
+
     nbvar = 5;
     ghostWidth = 2;
+    
   } else if ( !solver_name.compare("MHD_Muscl_2D") ) {
+
     nbvar = 8;
     ghostWidth = 3;
+    
   } else if ( !solver_name.compare("MHD_Muscl_3D") ) {
+
     nbvar = 8;
     ghostWidth = 3;
+    
+  } else if ( !solver_name.compare("Hydro_Mood_2D") ) {
+
+    std::string stencilId_str = configMap.getString("mood","stencil_id","Unknown");
+    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_string(stencilId_str);
+    nbvar = 4;
+    ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    
+  } else if ( !solver_name.compare("Hydro_Mood_3D") ) {
+
+    std::string stencilId_str = configMap.getString("mood","stencil_id","Unknown");
+    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_string(stencilId_str);
+    nbvar = 5;
+    ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    
   }
   
   /* initialize MESH parameters */

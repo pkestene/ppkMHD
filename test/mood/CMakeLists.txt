@@ -86,6 +86,22 @@ target_include_directories(test_mood_functor
 target_link_libraries(test_mood_functor kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
+add_executable(test_mood_functor_flux
+  $<TARGET_OBJECTS:mood>
+  $<TARGET_OBJECTS:config>
+  $<TARGET_OBJECTS:shared>
+  $<TARGET_OBJECTS:io>
+  $<TARGET_OBJECTS:time>
+  test_mood_functor_flux.cpp)
+target_include_directories(test_mood_functor_flux
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+#set_target_properties(test_reconstruct PROPERTIES
+#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
+target_link_libraries(test_mood_functor_flux kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+
+##############################################
 # add_executable(test_kokkos_eigen
 #   test_kokkos_eigen.cpp)
 # target_include_directories(test_kokkos_eigen

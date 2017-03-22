@@ -178,6 +178,50 @@ unsigned int get_stencil_degree(STENCIL_ID stencilId) {
 } // get_stencil_degree
 
 /**
+ * Return the ghostwidth one should use to define a propoer mood 
+ * computational kernel.
+ *
+ * \param[in] stencilId a valid value from enum STENCIL_ID
+ *
+ * \return ghostwidth.
+ */
+KOKKOS_INLINE_FUNCTION
+unsigned int get_stencil_ghostwidth(STENCIL_ID stencilId) {
+
+  if (stencilId == STENCIL_2D_DEGREE1)
+    return 2;
+  if (stencilId == STENCIL_2D_DEGREE2)
+    return 2;
+  if (stencilId == STENCIL_2D_DEGREE3)
+    return 3;
+  if (stencilId == STENCIL_2D_DEGREE3_V2)
+    return 3;
+  if (stencilId == STENCIL_2D_DEGREE4)
+    return 3;
+  if (stencilId == STENCIL_2D_DEGREE5)
+    return 4;
+
+  if (stencilId == STENCIL_3D_DEGREE1)
+    return 2;
+  if (stencilId == STENCIL_3D_DEGREE2)
+    return 2;
+  if (stencilId == STENCIL_3D_DEGREE3)
+    return 2;
+  if (stencilId == STENCIL_3D_DEGREE3_V2)
+    return 3;
+  if (stencilId == STENCIL_3D_DEGREE4)
+    return 3;
+  if (stencilId == STENCIL_3D_DEGREE5)
+    return 3;
+  if (stencilId == STENCIL_3D_DEGREE5_V2)
+    return 4;
+
+  // we shouldn't be here
+  return 0;
+  
+} // get_stencil_ghostwidth
+
+/**
  * \struct Stencil
  * Just store the coordinates (x,y,z) of the neighbor cells contained in the stencil.
  */

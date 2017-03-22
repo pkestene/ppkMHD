@@ -13,6 +13,8 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometricTerms.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mood_utils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mood_utils.cpp
   )
 
 add_library(mood OBJECT
