@@ -74,6 +74,8 @@ add_executable(test_mood_functor
   $<TARGET_OBJECTS:mood>
   $<TARGET_OBJECTS:config>
   $<TARGET_OBJECTS:shared>
+  $<TARGET_OBJECTS:io>
+  $<TARGET_OBJECTS:time>
   test_mood_functor.cpp)
 target_include_directories(test_mood_functor
   PUBLIC

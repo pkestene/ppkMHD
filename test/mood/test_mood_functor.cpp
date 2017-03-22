@@ -22,19 +22,75 @@
 #include "mood/GeometricTerms.h"
 #include "mood/Matrix.h"
 
-#include "mood/MoodFunctors.h"
-
-// dim is the number of variable in the multivariate polynomial representation
-constexpr unsigned int dim = 3;
+#include "mood/MoodBaseFunctor.h"
 
 // highest degree / order of the polynomial
-constexpr unsigned int order = 4;
+constexpr unsigned int order_ = 4;
+
+
+/**
+ *
+ * Test mood functor.
+ */
+template<unsigned int dim, unsigned int order>
+class TestMoodFunctor : public mood::MoodBaseFunctor<dim,order>
+{
+    
+public:
+  using typename mood::MoodBaseFunctor<dim,order>::DataArray;
+
+  
+  /**
+   * Constructor for 2D/3D.
+   */
+  TestMoodFunctor(HydroParams params,
+		  DataArray Udata,
+		  DataArray FluxData_x,
+		  DataArray FluxData_y,
+		  DataArray FluxData_z) :
+    mood::MoodBaseFunctor<dim,order>(params),
+    Udata(Udata),
+    FluxData_x(FluxData_x),
+    FluxData_y(FluxData_y),
+    FluxData_z(FluxData_z)    
+  {};
+
+  ~TestMoodFunctor() {};
+
+  //! functor for 2d 
+  template<unsigned int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& i)  const
+  {
+#ifndef CUDA
+    printf("2D functor\n");
+#endif
+  }
+
+  //! functor for 3d 
+  template<unsigned int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& i) const
+  {
+#ifndef CUDA
+    printf("3D functor\n");
+#endif
+  }
+  
+  DataArray Udata;
+  DataArray FluxData_x, FluxData_y, FluxData_z;
+
+}; // class TestMoodFunctor
+
 
 // ====================================================
 // ====================================================
 // ====================================================
 int main(int argc, char* argv[])
 {
+
+  if (argc < 2)
+    Kokkos::abort("[ABORT] You MUST provide a parameter file !");
 
   Kokkos::initialize(argc, argv);
 
@@ -71,18 +127,43 @@ int main(int argc, char* argv[])
   HydroParams params = HydroParams();
   params.setup(configMap);
 
-  // data array alias
-  using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  // 2D test
+  {
 
-  DataArray U        = DataArray("U",1,2,3);
-  DataArray Fluxes_x = DataArray("Fx",1,2,3);
-  DataArray Fluxes_y = DataArray("Fy",1,2,3);
-  DataArray Fluxes_z = DataArray("Fz",1,2,3);
-  
-  // create functor
-  
-  mood::ComputeFluxesFunctor<dim,order>(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    // data array alias
+    //using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+    using DataArray = DataArray2d;
+    
+    DataArray U        = DataArray("U",1,2,3);
+    DataArray Fluxes_x = DataArray("Fx",1,2,3);
+    DataArray Fluxes_y = DataArray("Fy",1,2,3);
+    DataArray Fluxes_z = DataArray("Fz",0,0,0);
 
+    // create functor  
+    TestMoodFunctor<2,order_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    
+    // launch with only 1 thread
+    Kokkos::parallel_for(1,f);
+
+  }
+
+  // 3D test
+  {
+
+    using DataArray = DataArray3d;
+
+    DataArray U        = DataArray("U",1,2,3,4);
+    DataArray Fluxes_x = DataArray("Fx",1,2,3,4);
+    DataArray Fluxes_y = DataArray("Fy",1,2,3,4);
+    DataArray Fluxes_z = DataArray("Fz",1,2,3,4);
+    
+    // create functor  
+    TestMoodFunctor<3,order_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    
+    // launch with only 1 thread
+    Kokkos::parallel_for(1,f);
+
+  }
   
   Kokkos::finalize();
 

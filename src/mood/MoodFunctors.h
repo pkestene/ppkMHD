@@ -23,7 +23,11 @@ class ComputeFluxesFunctor : public MoodBaseFunctor<dim,order>
     
 public:
   using typename MoodBaseFunctor<dim,order>::DataArray;
+
   
+  /**
+   * Constructor for 2D/3D.
+   */
   ComputeFluxesFunctor(HydroParams params,
 		       DataArray Udata,
 		       DataArray FluxData_x,
@@ -35,24 +39,31 @@ public:
     FluxData_y(FluxData_y),
     FluxData_z(FluxData_z)    
   {};
+
   ~ComputeFluxesFunctor() {};
 
   //! functor for 2d 
-  template<>
+  template<unsigned int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim==2, int>::type& i)  const {
-
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& i)  const
+  {
+    //printf("2\n");
   }
 
   //! functor for 3d 
+  template<unsigned int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim==3, int>::type& i) const {
-    
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& i) const
+  {
+    //printf("3\n");
   }
   
   DataArray Udata;
   DataArray FluxData_x, FluxData_y, FluxData_z;
-  
+
+  //Stencil          stencil;
+  //mood_matrix_pi_t mood_matrix_pi;
+
 }; // class ComputeFluxesFunctor
 
 } // namespace mood

@@ -31,6 +31,7 @@ add_executable(${EXE_NAME}
   $<TARGET_OBJECTS:io>
   $<TARGET_OBJECTS:muscl>
   $<TARGET_OBJECTS:shared>
+  $<TARGET_OBJECTS:solver_factory>
   main.cpp
   )
 
