@@ -25,6 +25,12 @@
 #include "mood/MoodFunctors.h"
 #include "mood/mood_utils.h"
 
+double test_func(double x, double y)
+{
+  return x*x+y;
+  //return 3.5*x*x+y*0.02+6;
+}
+
 // ====================================================
 // ====================================================
 // ====================================================
@@ -97,7 +103,10 @@ int main(int argc, char* argv[])
     printf("U\n");
     for (int i=0; i<params.isize; ++i) {
       for (int j=0; j<params.jsize; ++j) {
-	Uh(i,j,ID) = 1.0*( (i*dx-2*dx)*(i*dx-2*dx) + (j*dy-2*dy)*(j*dy-2*dy) );
+	//Uh(i,j,ID) = 1.0*( (i*dx-2*dx)*(i*dx-2*dx) + (j*dy-2*dy)*(j*dy-2*dy) );
+	real_t x = dx*(i-2);
+	real_t y = dy*(j-2);
+	Uh(i,j,ID) = test_func(x,y);
 	printf("% 8.5f ",Uh(i,j,ID));
       }
       printf("\n");
@@ -155,7 +164,9 @@ int main(int argc, char* argv[])
     Kokkos::deep_copy(Uh,Fluxes_x);
     for (int i=0; i<params.isize; ++i) {
       for (int j=0; j<params.jsize; ++j) {
-	printf("% 8.5f ",Uh(i,j,ID)-1.0*( (i*dx-0.5*dx-2*dx)*(i*dx-0.5*dx-2*dx) + (j*dy-2*dy)*(j*dy-2*dy) ));
+	real_t x = dx*(i-2) - 0.5*dx;
+	real_t y = dy*(j-2);
+	printf("% 8.5f ",Uh(i,j,ID) - test_func(x,y));
       }
       printf("\n");
     }
