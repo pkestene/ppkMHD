@@ -96,7 +96,9 @@ enum STENCIL_ID {
  * to get stencil size at compile in a template class; get_stencil_size routine
  * can't be used there.
  */
-constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
+//constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
+//constexpr Kokkos::Array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
+constexpr int STENCIL_SIZE[STENCIL_TOTAL_NUMBER] =
   {5,  /* STENCIL_2D_DEGREE1 */
    9,  /* STENCIL_2D_DEGREE2 */
    13, /* STENCIL_2D_DEGREE3 */
@@ -160,7 +162,9 @@ unsigned int get_stencil_size(STENCIL_ID stencilId)  {
  *
  * Same information as get_stencil_degree, but at compile time.
  */
-constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
+//constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
+//constexpr Kokkos::Array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
+constexpr int STENCIL_DEGREE[STENCIL_TOTAL_NUMBER] =
   {1,  /* STENCIL_2D_DEGREE1 */
    2,  /* STENCIL_2D_DEGREE2 */
    3,  /* STENCIL_2D_DEGREE3 */

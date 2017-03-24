@@ -71,7 +71,7 @@ public:
     Kokkos::Array<real_t,stencil_size-1> rhs;
 
     //! rhs for neighbor cell (accross an x-face, y-face or z-face)
-    Kokkos::Array<real_t,stencil_size-1> rhs_n;
+    //Kokkos::Array<real_t,stencil_size-1> rhs_n;
     
     
     if(j >= ghostWidth && j < jsize-ghostWidth+1  &&
@@ -105,13 +105,13 @@ public:
       FluxData_x(i,j,ID) = this->eval(-0.5*dx, 0.0   ,coefs_c);
       FluxData_y(i,j,ID) = this->eval( 0.0   ,-0.5*dy,coefs_c);
 
-      if (i==4 and j==4) {
-	for (int icoef=0; icoef<mat_pi.dimension_0()+1; ++icoef)
-	  printf("coef e0 e1 %f %d %d\n",
-		 coefs_c[icoef],
-		 this->monomialMap.data(icoef,0),
-		 this->monomialMap.data(icoef,1));
-      }
+      // if (i==4 and j==4) {
+      // 	for (int icoef=0; icoef<mat_pi.dimension_0()+1; ++icoef)
+      // 	  printf("coef e0 e1 %f %d %d\n",
+      // 		 coefs_c[icoef],
+      // 		 this->monomialMap.data(icoef,0),
+      // 		 this->monomialMap.data(icoef,1));
+      // }
     } // end if
     
   } // end functor 2d
@@ -141,8 +141,8 @@ public:
 
   Stencil          stencil;
   mood_matrix_pi_t mat_pi;
-
-  static const int stencil_size = STENCIL_SIZE[stencilId];
+  
+  static constexpr int stencil_size = STENCIL_SIZE[stencilId];
   
 }; // class ComputeFluxesFunctor
 
