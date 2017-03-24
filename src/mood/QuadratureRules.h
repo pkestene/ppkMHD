@@ -1,7 +1,8 @@
 #ifndef MOOD_QUADRATURE_RULES_H_
 #define MOOD_QUADRATURE_RULES_H_
 
-#include <array>
+//#include <array>
+#include <cmath>
 
 #include "shared/real_type.h"
 
@@ -15,7 +16,8 @@ namespace mood {
  *
  * In 3D, a tensor product must be done.
  */
-constexpr std::array<int,STENCIL_TOTAL_NUMBER> QUADRATURE_NUM_POINTS =
+//constexpr std::array<int,STENCIL_TOTAL_NUMBER> QUADRATURE_NUM_POINTS =
+constexpr int QUADRATURE_NUM_POINTS[STENCIL_TOTAL_NUMBER] =
   {1,  /* STENCIL_2D_DEGREE1 */
    2,  /* STENCIL_2D_DEGREE2 */
    2,  /* STENCIL_2D_DEGREE3 */
@@ -34,7 +36,7 @@ constexpr std::array<int,STENCIL_TOTAL_NUMBER> QUADRATURE_NUM_POINTS =
 /**
  * Quadrature weights when using 1 point (Gauss-Legendre).
  */
-constexpr std::array<real_t,1> QUADRATURE_WEIGHTS_N1 =
+constexpr real_t QUADRATURE_WEIGHTS_N1[1] =
   {
     1.0
   };
@@ -42,7 +44,7 @@ constexpr std::array<real_t,1> QUADRATURE_WEIGHTS_N1 =
 /**
  * Quadrature weights when using 2 points (Gauss-Legendre).
  */
-constexpr std::array<real_t,2> QUADRATURE_WEIGHTS_N2 =
+constexpr real_t QUADRATURE_WEIGHTS_N2[2] =
   {
     0.5, 0.5
   };
@@ -50,7 +52,7 @@ constexpr std::array<real_t,2> QUADRATURE_WEIGHTS_N2 =
 /**
  * Quadrature weights when using 3 points (Gauss-Legendre).
  */
-constexpr std::array<real_t,3> QUADRATURE_WEIGHTS_N3 =
+constexpr real_t QUADRATURE_WEIGHTS_N3[3] =
   {
     5.0/18, 8.0/18, 5.0/18
   };
@@ -67,7 +69,7 @@ constexpr std::array<real_t,3> QUADRATURE_WEIGHTS_N3 =
  *
  * Left interface along X axis.
  */
-constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_X_M =
+constexpr real_t QUADRATURE_LOCATION_2D_N1_X_M[1][2] =
   {
     {-0.5, 0.0}
   };
@@ -78,7 +80,7 @@ constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_X_M =
  *
  * Right interface along X axis.
  */
-constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_X_P =
+constexpr real_t QUADRATURE_LOCATION_2D_N1_X_P[1][2] =
   {
     { 0.5, 0.0}
   };
@@ -89,7 +91,7 @@ constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_X_P =
  *
  * Left interface along Y axis.
  */
-constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_Y_M =
+constexpr real_t QUADRATURE_LOCATION_2D_N1_Y_M[1][2] =
   {
     { 0.0,-0.5}
   };
@@ -100,7 +102,7 @@ constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_Y_M =
  *
  * Right interface along Y axis.
  */
-constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_Y_P =
+constexpr real_t QUADRATURE_LOCATION_2D_N1_Y_P[1][2] =
   {
     { 0.0, 0.5}
   };
@@ -109,25 +111,29 @@ constexpr std::array<std::array<real_t,2>,1> QUADRATURE_LOCATION_2D_N1_Y_P =
  * X,Y coordinates of Gauss-Legendre quadrature points relative to cell center (0,0)
  * when 2 points are enougth.
  */
-constexpr std::array<std::array<real_t,2>,2> QUADRATURE_LOCATION_2D_N2_X_M =
+// from sympy import *
+// N(sqrt(3),37)
+constexpr real_t SQRT_3 = 1.732050807568877293527446341505872367;
+
+constexpr real_t QUADRATURE_LOCATION_2D_N2_X_M[2][2] =
   {
     {-0.5, -0.5/sqrt(3.0)},
     {-0.5,  0.5/sqrt(3.0)},
   };
 
-constexpr std::array<std::array<real_t,2>,2> QUADRATURE_LOCATION_2D_N2_X_P =
+constexpr real_t QUADRATURE_LOCATION_2D_N2_X_P[2][2] =
   {
     { 0.5, -0.5/sqrt(3.0)},
     { 0.5,  0.5/sqrt(3.0)},
   };
 
-constexpr std::array<std::array<real_t,2>,2> QUADRATURE_LOCATION_2D_N2_Y_M =
+constexpr real_t QUADRATURE_LOCATION_2D_N2_Y_M[2][2] =
   {
     {-0.5/sqrt(3.0), -0.5},
     { 0.5/sqrt(3.0), -0.5},
   };
 
-constexpr std::array<std::array<real_t,2>,2> QUADRATURE_LOCATION_2D_N2_Y_P =
+constexpr real_t QUADRATURE_LOCATION_2D_N2_Y_P[2][2] =
   {
     {-0.5/sqrt(3.0),  0.5},
     { 0.5/sqrt(3.0),  0.5},
@@ -137,28 +143,28 @@ constexpr std::array<std::array<real_t,2>,2> QUADRATURE_LOCATION_2D_N2_Y_P =
  * X,Y coordinates of Gauss-Legendre quadrature points relative to cell center (0,0)
  * when 3 points are enougth.
  */
-constexpr std::array<std::array<real_t,2>,3> QUADRATURE_LOCATION_2D_N3_X_M =
+constexpr real_t QUADRATURE_LOCATION_2D_N3_X_M[3][2] =
   {
     {-0.5, -0.5*sqrt(3.0/5.0)},
     {-0.5,  0.0},
     {-0.5,  0.5*sqrt(3.0/5.0)},
   };
 
-constexpr std::array<std::array<real_t,2>,3> QUADRATURE_LOCATION_2D_N3_X_P =
+constexpr real_t QUADRATURE_LOCATION_2D_N3_X_P[3][2] =
   {
     { 0.5, -0.5*sqrt(3.0/5.0)},
     { 0.5,  0.0},
     { 0.5,  0.5*sqrt(3.0/5.0)},
   };
 
-constexpr std::array<std::array<real_t,2>,3> QUADRATURE_LOCATION_2D_N3_Y_M =
+constexpr real_t QUADRATURE_LOCATION_2D_N3_Y_M[3][2] =
   {
     {-0.5*sqrt(3.0/5.0), -0.5},
     { 0.0,               -0.5},
     { 0.5*sqrt(3.0/5.0), -0.5},
   };
 
-constexpr std::array<std::array<real_t,2>,3> QUADRATURE_LOCATION_2D_N3_Y_P =
+constexpr real_t QUADRATURE_LOCATION_2D_N3_Y_P[3][2] =
   {
     {-0.5*sqrt(3.0/5.0),  0.5},
     { 0.0,                0.5},
@@ -177,7 +183,7 @@ constexpr std::array<std::array<real_t,2>,3> QUADRATURE_LOCATION_2D_N3_Y_P =
  *
  * Left interface along X axis.
  */
-constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_X_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N1_X_M[1][3] =
   {
     {-0.5, 0.0, 0.0}
   };
@@ -188,7 +194,7 @@ constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_X_M =
  *
  * Right interface along X axis.
  */
-constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_X_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N1_X_P[1][3] =
   {
     { 0.5, 0.0, 0.0}
   };
@@ -199,7 +205,7 @@ constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_X_P =
  *
  * Left interface along Y axis.
  */
-constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Y_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N1_Y_M[1][3] =
   {
     { 0.0,-0.5, 0.0}
   };
@@ -210,7 +216,7 @@ constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Y_M =
  *
  * Right interface along Y axis.
  */
-constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Y_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N1_Y_P[1][3] =
   {
     { 0.0, 0.5, 0.0}
   };
@@ -221,7 +227,7 @@ constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Y_P =
  *
  * Left interface along Z axis.
  */
-constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Z_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N1_Z_M[1][3] =
   {
     { 0.0, 0.0,-0.5}
   };
@@ -232,7 +238,7 @@ constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Z_M =
  *
  * Right interface along Z axis.
  */
-constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Z_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N1_Z_P[1][3] =
   {
     { 0.0, 0.0, 0.5}
   };
@@ -241,7 +247,7 @@ constexpr std::array<std::array<real_t,3>,1> QUADRATURE_LOCATION_3D_N1_Z_P =
  * X,Y,Z coordinates of Gauss-Legendre quadrature points relative to cell center (0,0,0)
  * when 2 points are enougth.
  */
-constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_X_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N2_X_M[4][3] =
   {
     {-0.5, -0.5/sqrt(3.0), -0.5/sqrt(3.0)},
     {-0.5,  0.5/sqrt(3.0), -0.5/sqrt(3.0)},
@@ -249,7 +255,7 @@ constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_X_M =
     {-0.5,  0.5/sqrt(3.0),  0.5/sqrt(3.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_X_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N2_X_P[4][3] =
   {
     { 0.5, -0.5/sqrt(3.0), -0.5/sqrt(3.0)},
     { 0.5,  0.5/sqrt(3.0), -0.5/sqrt(3.0)},
@@ -257,7 +263,7 @@ constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_X_P =
     { 0.5,  0.5/sqrt(3.0),  0.5/sqrt(3.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Y_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N2_Y_M[4][3] =
   {
     {-0.5/sqrt(3.0), -0.5, -0.5/sqrt(3.0)},
     { 0.5/sqrt(3.0), -0.5, -0.5/sqrt(3.0)},
@@ -265,7 +271,7 @@ constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Y_M =
     { 0.5/sqrt(3.0), -0.5,  0.5/sqrt(3.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Y_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N2_Y_P[4][3] =
   {
     {-0.5/sqrt(3.0),  0.5, -0.5/sqrt(3.0)},
     { 0.5/sqrt(3.0),  0.5, -0.5/sqrt(3.0)},
@@ -273,7 +279,7 @@ constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Y_P =
     { 0.5/sqrt(3.0),  0.5,  0.5/sqrt(3.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Z_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N2_Z_M[4][3] =
   {
     {-0.5/sqrt(3.0), -0.5/sqrt(3.0), -0.5},
     { 0.5/sqrt(3.0), -0.5/sqrt(3.0), -0.5},
@@ -281,7 +287,7 @@ constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Z_M =
     { 0.5/sqrt(3.0),  0.5/sqrt(3.0), -0.5},
   };
 
-constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Z_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N2_Z_P[4][3] =
   {
     {-0.5/sqrt(3.0), -0.5/sqrt(3.0),  0.5},
     { 0.5/sqrt(3.0), -0.5/sqrt(3.0),  0.5},
@@ -293,7 +299,7 @@ constexpr std::array<std::array<real_t,3>,4> QUADRATURE_LOCATION_3D_N2_Z_P =
  * X,Y,Z coordinates of Gauss-Legendre quadrature points relative to cell center (0,0,0)
  * when 2 points are enougth.
  */
-constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_X_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N3_X_M[9][3] =
   {
     {-0.5, -0.5*sqrt(3.0/5.0), -0.5*sqrt(3.0/5.0)},
     {-0.5,  0.0,               -0.5*sqrt(3.0/5.0)},
@@ -306,7 +312,7 @@ constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_X_M =
     {-0.5,  0.5*sqrt(3.0/5.0),  0.5*sqrt(3.0/5.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_X_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N3_X_P[9][3] =
   {
     { 0.5, -0.5*sqrt(3.0/5.0), -0.5*sqrt(3.0/5.0)},
     { 0.5,  0.0,               -0.5*sqrt(3.0/5.0)},
@@ -319,7 +325,7 @@ constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_X_P =
     { 0.5,  0.5*sqrt(3.0/5.0),  0.5*sqrt(3.0/5.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Y_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N3_Y_M[9][3] =
   {
     {-0.5*sqrt(3.0/5.0), -0.5, -0.5*sqrt(3.0/5.0)},
     { 0.0,               -0.5, -0.5*sqrt(3.0/5.0)},
@@ -332,7 +338,7 @@ constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Y_M =
     { 0.5*sqrt(3.0/5.0), -0.5,  0.5*sqrt(3.0/5.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Y_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N3_Y_P[9][3] =
   {
     {-0.5*sqrt(3.0/5.0),  0.5, -0.5*sqrt(3.0/5.0)},
     { 0.0,                0.5, -0.5*sqrt(3.0/5.0)},
@@ -345,7 +351,7 @@ constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Y_P =
     { 0.5*sqrt(3.0/5.0),  0.5,  0.5*sqrt(3.0/5.0)},
   };
 
-constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Z_M =
+constexpr real_t QUADRATURE_LOCATION_3D_N3_Z_M[9][3] =
   {
     {-0.5*sqrt(3.0/5.0), -0.5*sqrt(3.0/5.0), -0.5},
     { 0.0,               -0.5*sqrt(3.0/5.0), -0.5},
@@ -358,7 +364,7 @@ constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Z_M =
     { 0.5*sqrt(3.0/5.0),  0.5*sqrt(3.0/5.0), -0.5},
   };
 
-constexpr std::array<std::array<real_t,3>,9> QUADRATURE_LOCATION_3D_N3_Z_P =
+constexpr real_t QUADRATURE_LOCATION_3D_N3_Z_P[9][3] =
   {
     {-0.5*sqrt(3.0/5.0), -0.5*sqrt(3.0/5.0),  0.5},
     { 0.0,               -0.5*sqrt(3.0/5.0),  0.5},

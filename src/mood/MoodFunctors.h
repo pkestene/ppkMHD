@@ -5,9 +5,10 @@
 #include "shared/HydroParams.h"
 #include "shared/HydroState.h"
 
+#include "mood/mood_shared.h"
 #include "mood/Polynomial.h"
 #include "mood/MoodBaseFunctor.h"
-#include "mood/mood_shared.h"
+#include "mood/QuadratureRules.h"
 
 namespace mood {
 
@@ -66,11 +67,11 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-
-    //! rhs is sized upon stencil, just remove central point
+    
+    // rhs is sized upon stencil, just remove central point
     Kokkos::Array<real_t,stencil_size-1> rhs;
 
-    //! rhs for neighbor cell (accross an x-face, y-face or z-face)
+    // rhs for neighbor cell (accross an x-face, y-face or z-face)
     //Kokkos::Array<real_t,stencil_size-1> rhs_n;
     
     
@@ -85,8 +86,6 @@ public:
 	if (x != 0 or y != 0) {
 	  rhs[irhs] = Udata(i+x,j+y,ID) - Udata(i,j,ID);
 	  irhs++;
-	  // if (i==2 and j==2)
-	  //   printf("x y rhs %d %d %f\n",x,y,rhs[irhs-1]+Udata(i,j,ID));
 	}	
       } // end for is
 
@@ -105,13 +104,6 @@ public:
       FluxData_x(i,j,ID) = this->eval(-0.5*dx, 0.0   ,coefs_c);
       FluxData_y(i,j,ID) = this->eval( 0.0   ,-0.5*dy,coefs_c);
 
-      // if (i==4 and j==4) {
-      // 	for (int icoef=0; icoef<mat_pi.dimension_0()+1; ++icoef)
-      // 	  printf("coef e0 e1 %f %d %d\n",
-      // 		 coefs_c[icoef],
-      // 		 this->monomialMap.data(icoef,0),
-      // 		 this->monomialMap.data(icoef,1));
-      // }
     } // end if
     
   } // end functor 2d
@@ -141,8 +133,12 @@ public:
 
   Stencil          stencil;
   mood_matrix_pi_t mat_pi;
-  
+
+  // get the number of cells in stencil
   static constexpr int stencil_size = STENCIL_SIZE[stencilId];
+
+  // get the number of quadrature point per face corresponding to this stencil
+  static constexpr int nbQuadraturePoints = QUADRATURE_NUM_POINTS[stencilId];
   
 }; // class ComputeFluxesFunctor
 
