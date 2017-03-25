@@ -31,6 +31,11 @@ double test_func(double x, double y)
   //return 3.5*x*x+y*0.02+6;
 }
 
+double test_func_3d(double x, double y, double z)
+{
+  return x*x+y-2*z*z;
+}
+
 // ====================================================
 // ====================================================
 // ====================================================
@@ -63,7 +68,7 @@ int main(int argc, char* argv[])
   }
 
   // which stencil shall we use ?
-  const mood::STENCIL_ID stencilId = mood::STENCIL_2D_DEGREE2;
+  const mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE2;
 
   // highest degree / order of the polynomial
   unsigned int order = mood::get_stencil_degree(stencilId);
@@ -79,7 +84,7 @@ int main(int argc, char* argv[])
   params.setup(configMap);
 
   // 2D test
-  {
+  if (params.nz == 1) {
 
     int dim = 2;
     
@@ -174,22 +179,106 @@ int main(int argc, char* argv[])
   }
 
   // 3D test
-  // {
+  if (params.nz > 1) {
 
-  //   using DataArray = DataArray3d;
-
-  //   DataArray U        = DataArray("U",params.isize,params.jsize,params.ksize,params.nbvar);
-  //   DataArray Fluxes_x = DataArray("Fx",params.isize,params.jsize,params.ksize,params.nbvar);
-  //   DataArray Fluxes_y = DataArray("Fy",params.isize,params.jsize,params.ksize,params.nbvar);
-  //   DataArray Fluxes_z = DataArray("Fz",params.isize,params.jsize,params.ksize,params.nbvar);
+    int dim = 3;
     
-  //   // create functor  
-  //   TestMoodFunctor<3,order> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    // create fake hydro data
+    using DataArray     = DataArray3d;
+    using DataArrayHost = DataArray3dHost;
     
-  //   // launch with only 1 thread
-  //   Kokkos::parallel_for(1,f);
+    DataArray U        = DataArray("U",params.isize,params.jsize,params.ksize,params.nbvar);
+    DataArray Fluxes_x = DataArray("Fx",params.isize,params.jsize,params.ksize,params.nbvar);
+    DataArray Fluxes_y = DataArray("Fy",params.isize,params.jsize,params.ksize,params.nbvar);
+    DataArray Fluxes_z = DataArray("Fz",params.isize,params.jsize,params.ksize,params.nbvar);
 
-  // }
+    DataArrayHost Uh   = Kokkos::create_mirror_view(U);
+    
+    printf("Data sizes %d %d %d \n",params.isize,params.jsize,params.ksize);
+
+    real_t dx = params.dx;
+    real_t dy = params.dy;
+    real_t dz = params.dz;
+    
+    // init and upload
+    printf("U\n");
+    for (int i=0; i<params.isize; ++i) {
+      for (int j=0; j<params.jsize; ++j) {
+	for (int k=0; k<params.ksize; ++k) {
+	  //Uh(i,j,ID) = 1.0*( (i*dx-2*dx)*(i*dx-2*dx) + (j*dy-2*dy)*(j*dy-2*dy) );
+	  real_t x = dx*(i-2);
+	  real_t y = dy*(j-2);
+	  real_t z = dz*(k-2);
+	  Uh(i,j,k,ID) = test_func_3d(x,y,z);
+	  //printf("% 8.5f ",Uh(i,j,k,ID));
+	}
+	//printf("\n");
+      }
+    }
+    Kokkos::deep_copy(U,Uh);
+	
+    // instantiate stencil
+    mood::Stencil stencil = mood::Stencil(stencilId);
+
+    // create monomial map for all monomial up to degree = order
+    mood::MonomialMap monomialMap(dim,order);
+    
+    // compute the geometric terms matrix and its pseudo-inverse
+    int stencil_size   = mood::get_stencil_size(stencilId);
+    int stencil_degree = mood::get_stencil_degree(stencilId);
+    int NcoefsPolynom = monomialMap.Ncoefs;
+    mood::Matrix geomMatrix(stencil_size-1,NcoefsPolynom-1);
+    
+    std::array<real_t,3> dxyz = {params.dx, params.dy, params.dz};
+    printf("dx dy dz : %f %f %f\n",params.dx, params.dy, params.dz);
+    mood::fill_geometry_matrix(geomMatrix, stencil, monomialMap, dxyz);
+    geomMatrix.print("geomMatrix");
+
+    // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
+    mood::Matrix geomMatrixPI;
+    mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
+    geomMatrixPI.print("geomMatrix pseudo inverse");
+
+    using geom_t = Kokkos::View<real_t**,DEVICE>;
+    using geom_host_t = geom_t::HostMirror;
+
+    geom_t geomMatrixPI_view = geom_t("geomMatrixPI_view",geomMatrixPI.m,geomMatrixPI.n);
+    geom_host_t geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
+
+    // copy geomMatrixPI into geomMatrixPI_view
+    for (int i = 0; i<geomMatrixPI.m; ++i) { // loop over stencil point
+      
+      for (int j = 0; j<geomMatrixPI.n; ++j) { // loop over monomial
+	
+	geomMatrixPI_view_h(i,j) = geomMatrixPI(i,j);
+      }
+    }
+    Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
+    
+    // create functor - template params are dim,order,stencil
+    mood::ComputeFluxesFunctor<3,2,stencilId>
+       f(U,Fluxes_x,Fluxes_y,Fluxes_z,params,stencil, geomMatrixPI_view);
+    
+    // launch
+    int ijksize = params.isize*params.jsize*params.ksize; 
+    Kokkos::parallel_for(ijksize,f);
+
+    // retrieve results and print
+    printf("Fluxes_x\n");
+    Kokkos::deep_copy(Uh,Fluxes_x);
+    for (int i=0; i<params.isize; ++i) {
+      for (int j=0; j<params.jsize; ++j) {
+	for (int k=0; k<params.ksize; ++k) {
+	  real_t x = dx*(i-2) - 0.5*dx;
+	  real_t y = dy*(j-2);
+	  real_t z = dz*(k-2);
+	  printf("% 8.5f ",Uh(i,j,k,ID) - test_func_3d(x,y,z));
+	}
+	printf("\n");
+      }
+    }
+    
+  }
   
   Kokkos::finalize();
 
