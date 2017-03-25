@@ -101,9 +101,15 @@ public:
       }
 
       // reconstruct Udata on the left face along X direction
+      // for each quadrature points
+      if (nbQuadraturePoints==1) {
+	int x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
+	int y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
+      }
+
       FluxData_x(i,j,ID) = this->eval(-0.5*dx, 0.0   ,coefs_c);
       FluxData_y(i,j,ID) = this->eval( 0.0   ,-0.5*dy,coefs_c);
-
+      
     } // end if
     
   } // end functor 2d
@@ -118,12 +124,56 @@ public:
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
 
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
+
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
-    if(k >= ghostWidth && k < ksize - ghostWidth &&
-       j >= ghostWidth && j < jsize - ghostWidth &&
-       i >= ghostWidth && i < isize - ghostWidth) {
+    // rhs is sized upon stencil, just remove central point
+    Kokkos::Array<real_t,stencil_size-1> rhs;
+    
+    if(k >= ghostWidth && k < ksize - ghostWidth+1 &&
+       j >= ghostWidth && j < jsize - ghostWidth+1 &&
+       i >= ghostWidth && i < isize - ghostWidth+1) {
+
+      // retrieve neighbors data for ID, and build rhs
+      int irhs = 0;
+      for (int is=0; is<stencil_size; ++is) {
+	int x = stencil.offsets(is,0);
+	int y = stencil.offsets(is,1);
+	int z = stencil.offsets(is,2);
+	if (x != 0 or y != 0 or z != 0) {
+	  rhs[irhs] = Udata(i+x,j+y,k+z,ID) - Udata(i,j,k,ID);
+	  irhs++;
+	}	
+      } // end for is
+
+      // retrieve reconstruction polynomial coefficients in current cell
+      coefs_t coefs_c;
+      coefs_c[0] = Udata(i,j,k,ID);
+      for (int icoef=0; icoef<mat_pi.dimension_0(); ++icoef) {
+	real_t tmp = 0;
+	for (int ik=0; ik<mat_pi.dimension_1(); ++ik) {
+	  tmp += mat_pi(icoef,ik) * rhs[ik];
+	}
+	coefs_c[icoef+1] = tmp;
+      }
+
+      // reconstruct Udata on the left face along X direction
+      // for each quadrature points
+      if (nbQuadraturePoints==1) {
+	int x = QUADRATURE_LOCATION_3D_N1_X_M[0][IX];
+	int y = QUADRATURE_LOCATION_3D_N1_X_M[0][IY];
+	int z = QUADRATURE_LOCATION_3D_N1_X_M[0][IZ];
+      }
+
+      FluxData_x(i,j,k,ID) = this->eval(-0.5*dx, 0.0   , 0.0   , coefs_c);
+      FluxData_y(i,j,k,ID) = this->eval( 0.0   ,-0.5*dy, 0.0   , coefs_c);
+      FluxData_z(i,j,k,ID) = this->eval( 0.0   , 0.0   ,-0.5*dz, coefs_c);
+
+      
     }
     
   }  // end functor 3d
