@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
   }
 
   // which stencil shall we use ?
-  const mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE2;
+  const mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE3;
 
   // highest degree / order of the polynomial
   unsigned int order = mood::get_stencil_degree(stencilId);
@@ -82,6 +82,9 @@ int main(int argc, char* argv[])
   // test: create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
+
+  // make sure ghostWidth is ok
+  params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
 
   // 2D test
   if (params.nz == 1) {
@@ -99,7 +102,7 @@ int main(int argc, char* argv[])
 
     DataArrayHost Uh   = Kokkos::create_mirror_view(U);
 
-    printf("Data sizes %d %d\n",params.isize,params.jsize);
+    printf("Data sizes %d %d - ghostwidth=%d\n",params.isize,params.jsize,params.ghostWidth);
 
     real_t dx = params.dx;
     real_t dy = params.dy;
@@ -132,7 +135,7 @@ int main(int argc, char* argv[])
 
     std::array<real_t,3> dxyz = {params.dx, params.dy, params.dz};
     printf("dx dy dz : %f %f %f\n",params.dx, params.dy, params.dz);
-    mood::fill_geometry_matrix(geomMatrix, stencil, monomialMap, dxyz);
+    mood::fill_geometry_matrix_2d(geomMatrix, stencil, monomialMap, dxyz);
     //geomMatrix.print("geomMatrix");
 
     // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
@@ -195,6 +198,7 @@ int main(int argc, char* argv[])
     DataArrayHost Uh   = Kokkos::create_mirror_view(U);
     
     printf("Data sizes %d %d %d \n",params.isize,params.jsize,params.ksize);
+    printf("Data sizes %d %d %d - ghostwidth=%d\n",params.isize,params.jsize,params.ksize,params.ghostWidth);
 
     real_t dx = params.dx;
     real_t dy = params.dy;
@@ -231,7 +235,7 @@ int main(int argc, char* argv[])
     
     std::array<real_t,3> dxyz = {params.dx, params.dy, params.dz};
     printf("dx dy dz : %f %f %f\n",params.dx, params.dy, params.dz);
-    mood::fill_geometry_matrix(geomMatrix, stencil, monomialMap, dxyz);
+    mood::fill_geometry_matrix_3d(geomMatrix, stencil, monomialMap, dxyz);
     geomMatrix.print("geomMatrix");
 
     // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
@@ -276,6 +280,7 @@ int main(int argc, char* argv[])
 	}
 	printf("\n");
       }
+      printf("---\n");
     }
     
   }

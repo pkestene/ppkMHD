@@ -18,10 +18,22 @@ namespace mood {
  * \param[in] stencil
  * \param[in] monomialMap
  */
-void fill_geometry_matrix(Matrix& mat,
-			  Stencil stencil,
-			  const MonomialMap& monomialMap,
-			  std::array<real_t,3> dxyz);
+void fill_geometry_matrix_2d(Matrix& mat,
+			     Stencil stencil,
+			     const MonomialMap& monomialMap,
+			     std::array<real_t,3> dxyz);
+
+/**
+ * Fill the Matrix with the geometric terms (for regular cartesian grid).
+ *
+ * \param[in,out] mat matrix to fill
+ * \param[in] stencil
+ * \param[in] monomialMap
+ */
+void fill_geometry_matrix_3d(Matrix& mat,
+			     Stencil stencil,
+			     const MonomialMap& monomialMap,
+			     std::array<real_t,3> dxyz);
 
 } // namespace mood
 
