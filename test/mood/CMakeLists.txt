@@ -58,16 +58,28 @@ target_include_directories(test_matrix_qr
 target_link_libraries(test_matrix_qr kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
-add_executable(test_reconstruct
+add_executable(test_reconstruct_2d
   $<TARGET_OBJECTS:mood>
-  test_reconstruct.cpp)
-target_include_directories(test_reconstruct
+  test_reconstruct_2d.cpp)
+target_include_directories(test_reconstruct_2d
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
 #set_target_properties(test_reconstruct PROPERTIES
 #  LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(test_reconstruct kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(test_reconstruct_2d kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+
+##############################################
+add_executable(test_reconstruct_3d
+  $<TARGET_OBJECTS:mood>
+  test_reconstruct_3d.cpp)
+target_include_directories(test_reconstruct_3d
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+#set_target_properties(test_reconstruct PROPERTIES
+#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
+target_link_libraries(test_reconstruct_3d kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
 add_executable(test_mood_functor

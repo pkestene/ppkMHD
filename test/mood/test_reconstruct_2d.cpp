@@ -25,10 +25,12 @@
 constexpr unsigned int dim = 2;
 
 // highest degree / order of the polynomial
-constexpr unsigned int order = 2;
+constexpr unsigned int order = 5;
 
 // use to initialize data for polynomial
 constexpr int ncoefs = mood::binomial<order+dim,order>();
+
+constexpr mood::STENCIL_ID stencilId_ = mood::STENCIL_2D_DEGREE5;
 
 // to be removed ...
 using result_t = Kokkos::View<real_t*,DEVICE>;
@@ -98,13 +100,13 @@ real_t polynomial_eval(real_t x, real_t y, real_t z,
  * A dummy functor to test computation on device with class polynomial
  * and Stencil.
  */
+template <mood::STENCIL_ID stencilId>
 class TestReconstructFunctor : public mood::PolynomialEvaluator<dim,order> {
 
 public:
   
   result_t result;  // size is stencilSize-1
   mood::Stencil stencil;
-  mood::STENCIL_ID stencilId;
   geom_t geomPI;
   
   //array1d_t rhs;
@@ -118,12 +120,10 @@ public:
   }
 
   TestReconstructFunctor(result_t result,
-			 mood::STENCIL_ID stencilId,
 			 geom_t geomPI) :
     PolynomialEvaluator<dim,order>(),
     result(result),
     stencil(stencilId),
-    stencilId(stencilId),
     geomPI(geomPI) {};
   ~TestReconstructFunctor() {};
   
@@ -131,14 +131,13 @@ public:
   void operator()(const int& i) const
   {
     
-    Kokkos::Array<real_t,8> rhs;
-    for (int ii=0; ii<8; ++ii) {
+    Kokkos::Array<real_t,stencil_size-1> rhs;
+    for (int ii=0; ii<rhs.size(); ++ii) {
       rhs[ii]=0;
     }
     
     // assemble RHS
     int s = 0;
-    int stencil_size = mood::get_stencil_size(stencilId);
 #ifndef CUDA
     std::cout << "[DEVICE] stencil_size is " << stencil_size << "\n";
 #endif
@@ -188,7 +187,10 @@ public:
     }
     
   } // operator()
-  
+
+  // get the number of cells in stencil
+  static constexpr int stencil_size = mood::STENCIL_SIZE[stencilId];
+
 }; // class TestReconstructFunctor
 
   
@@ -234,9 +236,7 @@ int main(int argc, char* argv[])
   std::cout << "Testing class Stencil       \n";
   std::cout << "############################\n";
 
-  mood::STENCIL_ID stencilId = mood::Stencil::select_stencil(dim,order);
-
-  mood::Stencil stencil = mood::Stencil(stencilId);
+  mood::Stencil stencil = mood::Stencil(stencilId_);
 
   mood::StencilUtils::print_stencil(stencil);
 
@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
 
   // set coefs so that it is the same as in
   // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
-  Kokkos::Array<int,3> e; 
+  Kokkos::Array<int,3> e;
   e = {2,0,0};
   mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  1.0);
   e = {1,1,0};
@@ -268,8 +268,8 @@ int main(int argc, char* argv[])
   dx = dy = dz = 1.0;
   mood::GeometricTerms geomTerms(dx,dy,dz);
 
-  int stencil_size   = mood::get_stencil_size(stencilId);
-  int stencil_degree = mood::get_stencil_degree(stencilId);
+  constexpr int stencil_size = mood::STENCIL_SIZE[stencilId_];
+  int stencil_degree = mood::get_stencil_degree(stencilId_);
   int NcoefsPolynom = monomialMap.Ncoefs;
   mood::Matrix geomMatrix(stencil_size-1,NcoefsPolynom-1);
   
@@ -308,7 +308,7 @@ int main(int argc, char* argv[])
   product.print("geomMatrixPI * geomMatrix (should be Indentity)");
 
   printf("\n");
-  std::array<real_t,8> rhs_host;
+  std::array<real_t,stencil_size-1> rhs_host;
   int rhs_index=0;
   std::cout << "test function computed on host\n";
   {
@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
 
   // try retrieve polynomial coefficient on host: multiply geomMatrixPI
   // by rhs_host
-  Kokkos::Array<real_t,6> coef_host;
+  Kokkos::Array<real_t,ncoefs> coef_host;
   coef_host[0] = test_function_2d(0,0);
   
   for (int index=0; index<geomMatrixPI.m; index++) {
@@ -345,7 +345,8 @@ int main(int argc, char* argv[])
 
   std::cout << "polynomial coef obtained by least-square fit\n";
   for (int ii=0; ii<monomialMap.Ncoefs; ++ii)
-    std::cout << "polynomial [" << ii << "] = " << coef_host[ii] << "\n";
+    std::cout << "polynomial [" << ii << "] = " << coef_host[ii]
+	      << " (diff = " << coef_host[ii] - coefs[ii] << ")" << "\n";
 
   // cross-check polynomial
   if (dim == 2) {
@@ -400,9 +401,8 @@ int main(int argc, char* argv[])
   Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
   
   // create functor
-  TestReconstructFunctor f(result,
-			   stencilId,
-			   geomMatrixPI_view);
+  TestReconstructFunctor<stencilId_> f(result,
+				       geomMatrixPI_view);
 
   // launch with only 1 thread
   Kokkos::parallel_for(1,f);
@@ -419,7 +419,7 @@ int main(int argc, char* argv[])
       int y = stencil.offsets_h(index,1);
 
       if (x != 0 or y != 0) { // avoid stencil center
-	printf("[% d,% d]  % 7.5f\n",x,y,result_h(index));
+	printf("[% d,% d]  % 7.5f == % 7.5f\n",x,y,result_h(index),test_function_2d(x,y));
       }
     }
   }

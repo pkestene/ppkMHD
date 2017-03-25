@@ -84,10 +84,9 @@ enum STENCIL_ID {
   STENCIL_3D_DEGREE1,       /*  6 */
   STENCIL_3D_DEGREE2,       /*  7 */
   STENCIL_3D_DEGREE3,       /*  8 */
-  STENCIL_3D_DEGREE3_V2,    /*  9 */
-  STENCIL_3D_DEGREE4,       /* 10 */
-  STENCIL_3D_DEGREE5,       /* 11 */
-  STENCIL_3D_DEGREE5_V2,    /* 12 */
+  STENCIL_3D_DEGREE4,       /*  9 */
+  STENCIL_3D_DEGREE5,       /* 10 */
+  STENCIL_3D_DEGREE5_V2,    /* 11 */
   STENCIL_TOTAL_NUMBER /* This is not a stencil ! */
 };
 
@@ -107,11 +106,10 @@ constexpr int STENCIL_SIZE[STENCIL_TOTAL_NUMBER] =
    36, /* STENCIL_2D_DEGREE5 */
    7,  /* STENCIL_3D_DEGREE1 */
    27, /* STENCIL_3D_DEGREE2 */
-   27, /* STENCIL_3D_DEGREE3 */
-   33, /* STENCIL_3D_DEGREE3_V2 */
-   64, /* STENCIL_3D_DEGREE4 */
-   125,/* STENCIL_3D_DEGREE5 */
-   88  /* STENCIL_3D_DEGREE5_V2 */
+   33, /* STENCIL_3D_DEGREE3 */
+   63, /* STENCIL_3D_DEGREE4 */
+   88, /* STENCIL_3D_DEGREE5 */
+   131 /* STENCIL_3D_DEGREE5_V2 */
   };
 
 /**
@@ -142,15 +140,13 @@ unsigned int get_stencil_size(STENCIL_ID stencilId)  {
   if (stencilId == STENCIL_3D_DEGREE2)
     return 27;
   if (stencilId == STENCIL_3D_DEGREE3)
-    return 27;
-  if (stencilId == STENCIL_3D_DEGREE3_V2)
     return 33;
   if (stencilId == STENCIL_3D_DEGREE4)
-    return 64;
+    return 63;
   if (stencilId == STENCIL_3D_DEGREE5)
-    return 125;
-  if (stencilId == STENCIL_3D_DEGREE5_V2)
     return 88;
+  if (stencilId == STENCIL_3D_DEGREE5_V2)
+    return 131;
 
   // we shouldn't be here
   return 0;
@@ -174,7 +170,6 @@ constexpr int STENCIL_DEGREE[STENCIL_TOTAL_NUMBER] =
    1,  /* STENCIL_3D_DEGREE1 */
    2,  /* STENCIL_3D_DEGREE2 */
    3,  /* STENCIL_3D_DEGREE3 */
-   3,  /* STENCIL_3D_DEGREE3_V2 */
    4,  /* STENCIL_3D_DEGREE4 */
    5,  /* STENCIL_3D_DEGREE5 */
    5   /* STENCIL_3D_DEGREE5_V2 */
@@ -208,8 +203,6 @@ unsigned int get_stencil_degree(STENCIL_ID stencilId) {
   if (stencilId == STENCIL_3D_DEGREE2)
     return 2;
   if (stencilId == STENCIL_3D_DEGREE3)
-    return 3;
-  if (stencilId == STENCIL_3D_DEGREE3_V2)
     return 3;
   if (stencilId == STENCIL_3D_DEGREE4)
     return 4;
@@ -252,13 +245,11 @@ unsigned int get_stencil_ghostwidth(STENCIL_ID stencilId) {
   if (stencilId == STENCIL_3D_DEGREE2)
     return 2;
   if (stencilId == STENCIL_3D_DEGREE3)
-    return 2;
-  if (stencilId == STENCIL_3D_DEGREE3_V2)
     return 3;
   if (stencilId == STENCIL_3D_DEGREE4)
     return 3;
   if (stencilId == STENCIL_3D_DEGREE5)
-    return 3;
+    return 4;
   if (stencilId == STENCIL_3D_DEGREE5_V2)
     return 4;
 

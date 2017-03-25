@@ -193,7 +193,7 @@ void Stencil::init_stencil()
   
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_DEGREE2 || stencilId == STENCIL_3D_DEGREE3) {
+  else if (stencilId == STENCIL_3D_DEGREE2) {
 
     // 3-by-3-by-3 = 27 points
     
@@ -209,11 +209,11 @@ void Stencil::init_stencil()
       }
     }
 
-  } // STENCIL_3D_DEGREE2 || STENCIL_3D_DEGREE3
+  } // STENCIL_3D_DEGREE2
   
   // ------------------------------------
   // ------------------------------------
-  else if (stencilId == STENCIL_3D_DEGREE3_V2) {
+  else if (stencilId == STENCIL_3D_DEGREE3) {
 
     // 3-by-3-by-3 + 6 = 33 points
     
@@ -250,18 +250,18 @@ void Stencil::init_stencil()
     offsets_h(index,IY) = 0;
     offsets_h(index,IZ) = -2; index++;
 
-  } // STENCIL_3D_DEGREE3_V2
+  } // STENCIL_3D_DEGREE3
 
   // ------------------------------------
   // ------------------------------------
   else if (stencilId == STENCIL_3D_DEGREE4) {
 
-    // 4-by-4-by-4 = 64 points
+    // 3-by-3-by-3 + 6 = 33 points + 6*5 = 63
     
     int index = 0;
-    for (int k = -2; k <= 1; ++k) {
-      for (int j = -2; j <= 1; ++j) {
-	for (int i = -2; i <= 1; ++i) {
+    for (int k = -1; k <= 1; ++k) {
+      for (int j = -1; j <= 1; ++j) {
+	for (int i = -1; i <= 1; ++i) {
 	  offsets_h(index,IX) = i;
 	  offsets_h(index,IY) = j;
 	  offsets_h(index,IZ) = k;
@@ -269,32 +269,254 @@ void Stencil::init_stencil()
 	}
       }
     }
+
+    // face +x
+    offsets_h(index,IX) = 2;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 2;
+    offsets_h(index,IY) = -1;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 2;
+    offsets_h(index,IY) = 1;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 2;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = -1; index++;
+
+    offsets_h(index,IX) = 2;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 1; index++;
+
+    // face -x
+    offsets_h(index,IX) = -2;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = -2;
+    offsets_h(index,IY) = -1;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = -2;
+    offsets_h(index,IY) = 1;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = -2;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = -1; index++;
+
+    offsets_h(index,IX) = -2;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 1; index++;
+
+    // face +y
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 2;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = -1;
+    offsets_h(index,IY) = 2;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 1;
+    offsets_h(index,IY) = 2;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 2;
+    offsets_h(index,IZ) = -1; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 2;
+    offsets_h(index,IZ) = 1; index++;
+
+    // face -y
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = -2;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = -1;
+    offsets_h(index,IY) = -2;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 1;
+    offsets_h(index,IY) = -2;
+    offsets_h(index,IZ) = 0; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = -2;
+    offsets_h(index,IZ) = -1; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = -2;
+    offsets_h(index,IZ) = 1; index++;
+
+    // face +z
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 2; index++;
+
+    offsets_h(index,IX) = -1;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 2; index++;
+
+    offsets_h(index,IX) = 1;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 2; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = -1;
+    offsets_h(index,IZ) = 2; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 1;
+    offsets_h(index,IZ) = 2; index++;
+
+    // face -z
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = -2; index++;
+
+    offsets_h(index,IX) = -1;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = -2; index++;
+
+    offsets_h(index,IX) = 1;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = -2; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = -1;
+    offsets_h(index,IZ) = -2; index++;
+
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 1;
+    offsets_h(index,IZ) = -2; index++;
+
+    // 4-by-4-by-4 = 64 points + 6*4 = 88 points
+    
+    // int index = 0;
+    // for (int k = -2; k <= 1; ++k) {
+    //   for (int j = -2; j <= 1; ++j) {
+    // 	for (int i = -2; i <= 1; ++i) {
+    // 	  offsets_h(index,IX) = i;
+    // 	  offsets_h(index,IY) = j;
+    // 	  offsets_h(index,IZ) = k;
+    // 	  index++;
+    // 	}
+    //   }
+    // }
+
+    // // face +x
+    // offsets_h(index,IX) = 2;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = 2;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = 0; index++;
+
+    // offsets_h(index,IX) = 2;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = 2;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = 0; index++;
+
+    // // face -x
+    // offsets_h(index,IX) = -3;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = -3;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = 0; index++;
+
+    // offsets_h(index,IX) = -3;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = -3;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = 0; index++;
+
+    // // face +y
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = 2;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = 2;
+    // offsets_h(index,IZ) = 0; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = 2;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = 2;
+    // offsets_h(index,IZ) = 0; index++;
+    
+    // // face -y
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = -3;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = -3;
+    // offsets_h(index,IZ) = 0; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = -3;
+    // offsets_h(index,IZ) = -1; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = -3;
+    // offsets_h(index,IZ) = 0; index++;
+    
+    // // face +z
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = 2; index++;
+
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = 2; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = 2; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = 2; index++;
+    
+    // // face -z
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = -3; index++;
+
+    // offsets_h(index,IX) = -1;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = -3; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = -1;
+    // offsets_h(index,IZ) = -3; index++;
+
+    // offsets_h(index,IX) = 0;
+    // offsets_h(index,IY) = 0;
+    // offsets_h(index,IZ) = -3; index++;
 
   } // STENCIL_3D_DEGREE4
 
   // ------------------------------------
   // ------------------------------------
   else if (stencilId == STENCIL_3D_DEGREE5) {
-
-    // 5-by-5-by-5 = 125 points
-    
-    int index = 0;
-    for (int k = -2; k <= 2; ++k) {
-      for (int j = -2; j <= 2; ++j) {
-	for (int i = -2; i <= 2; ++i) {
-	  offsets_h(index,IX) = i;
-	  offsets_h(index,IY) = j;
-	  offsets_h(index,IZ) = k;
-	  index++;
-	}
-      }
-    }
-
-  } // STENCIL_3D_DEGREE5
-
-  // ------------------------------------
-  // ------------------------------------
-  else if (stencilId == STENCIL_3D_DEGREE5_V2) {
 
     // 4-by-4-by-4 = 64 points + 6*4 = 88 points
     
@@ -413,6 +635,57 @@ void Stencil::init_stencil()
     offsets_h(index,IZ) = -3; index++;
     
   } // STENCIL_3D_DEGREE5
+
+  // ------------------------------------
+  // ------------------------------------
+  else if (stencilId == STENCIL_3D_DEGREE5_V2) {
+
+    // 5-by-5-by-5 = 125 points + 6 = 131
+    
+    int index = 0;
+    for (int k = -2; k <= 2; ++k) {
+      for (int j = -2; j <= 2; ++j) {
+	for (int i = -2; i <= 2; ++i) {
+	  offsets_h(index,IX) = i;
+	  offsets_h(index,IY) = j;
+	  offsets_h(index,IZ) = k;
+	  index++;
+	}
+      }
+    }
+
+    // face +x
+    offsets_h(index,IX) = 3;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 0; index++;
+
+    // face -x
+    offsets_h(index,IX) = -3;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 0; index++;
+
+    // face +y
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 3;
+    offsets_h(index,IZ) = 0; index++;
+
+    // face -y
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = -3;
+    offsets_h(index,IZ) = 0; index++;
+
+    // face +z
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = 3; index++;
+
+    // face -z
+    offsets_h(index,IX) = 0;
+    offsets_h(index,IY) = 0;
+    offsets_h(index,IZ) = -3; index++;
+
+
+  } // STENCIL_3D_DEGREE5_V2
 
   // upload data to DEVICE
   Kokkos::deep_copy(offsets, offsets_h);
