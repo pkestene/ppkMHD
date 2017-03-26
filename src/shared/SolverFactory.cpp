@@ -1,11 +1,13 @@
-#include "SolverFactory.h"
+#include "shared/SolverFactory.h"
 
-#include "SolverBase.h"
+#include "shared/SolverBase.h"
 
-#include "SolverHydroMuscl2D.h"
-#include "SolverHydroMuscl3D.h"
-#include "SolverMHDMuscl2D.h"
-#include "SolverMHDMuscl3D.h"
+#include "muscl/SolverHydroMuscl2D.h"
+#include "muscl/SolverHydroMuscl3D.h"
+#include "muscl/SolverMHDMuscl2D.h"
+#include "muscl/SolverMHDMuscl3D.h"
+
+#include "mood/SolverHydroMood.h"
 
 namespace ppkMHD {
 
@@ -20,6 +22,7 @@ SolverFactory::SolverFactory()
   registerSolver("Hydro_Muscl_3D", &SolverHydroMuscl3D::create);
   registerSolver("MHD_Muscl_2D",   &SolverMHDMuscl2D::create);
   registerSolver("MHD_Muscl_3D",   &SolverMHDMuscl3D::create);
+  //registerSolver("Mood_Hydro_2D_degree2",  &mood::SolverHydroMood<2,2>::create);
   	 
 } // SolverFactory::SolverFactory
 

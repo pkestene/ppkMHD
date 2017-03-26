@@ -307,10 +307,10 @@ struct Stencil {
 
   void init_stencil();
 
-  static STENCIL_ID select_stencil(unsigned int dim, unsigned int degree);
-  
 }; // Stencil
 
+STENCIL_ID select_stencil(int dim, int degree);
+  
 } // namespace mood
 
 #endif // MOOD_STENCIL_H_

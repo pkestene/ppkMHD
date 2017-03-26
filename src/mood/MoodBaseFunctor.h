@@ -13,8 +13,8 @@ namespace mood {
  * MOOD base functor, this is not a functor, but a base class to derive an actual
  * Kokkos functor.
  */
-template<unsigned int dim, unsigned int order>
-class MoodBaseFunctor : public PolynomialEvaluator<dim,order>
+template<int dim, int degree>
+class MoodBaseFunctor : public PolynomialEvaluator<dim,degree>
 {
   
 public:
@@ -25,7 +25,7 @@ public:
   using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
   
   MoodBaseFunctor(HydroParams params) :
-    PolynomialEvaluator<dim,order>(),
+    PolynomialEvaluator<dim,degree>(),
     params(params) {};
   virtual ~MoodBaseFunctor() {};
 

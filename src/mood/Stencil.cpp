@@ -694,7 +694,7 @@ void Stencil::init_stencil()
 
 // =======================================================
 // =======================================================
-STENCIL_ID Stencil::select_stencil(unsigned int dim, unsigned int degree)
+STENCIL_ID select_stencil(int dim, int degree)
 {
 
   if (dim < 2 or dim > 3) {
@@ -741,7 +741,7 @@ STENCIL_ID Stencil::select_stencil(unsigned int dim, unsigned int degree)
   // we should never be here...
   return STENCIL_TOTAL_NUMBER;
   
-} // Stencil::select_stencil
+} // select_stencil
 
 } // namespace mood
 

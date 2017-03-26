@@ -21,15 +21,15 @@ namespace mood {
  *
  * stencilId must be known at compile time, so that stencilSize is too.
  */
-template<unsigned int dim,
-	 unsigned int order,
+template<int dim,
+	 int degree,
 	 STENCIL_ID stencilId>
-class ComputeFluxesFunctor : public MoodBaseFunctor<dim,order>
+class ComputeFluxesFunctor : public MoodBaseFunctor<dim,degree>
 {
     
 public:
-  using typename MoodBaseFunctor<dim,order>::DataArray;
-  using typename PolynomialEvaluator<dim,order>::coefs_t;
+  using typename MoodBaseFunctor<dim,degree>::DataArray;
+  using typename PolynomialEvaluator<dim,degree>::coefs_t;
   
   /**
    * Constructor for 2D/3D.
@@ -41,7 +41,7 @@ public:
 		       HydroParams      params,
 		       Stencil          stencil,
 		       mood_matrix_pi_t mat_pi) :
-    MoodBaseFunctor<dim,order>(params),
+    MoodBaseFunctor<dim,degree>(params),
     Udata(Udata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),

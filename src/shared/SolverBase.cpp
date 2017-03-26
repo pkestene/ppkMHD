@@ -72,7 +72,7 @@ SolverBase::read_config()
 
   m_problem_name = configMap.getString("hydro", "problem", "unknown");
 
-  m_solver_name = configMap.getString("run", "solver_name", "muscl_2d");
+  m_solver_name = configMap.getString("run", "solver_name", "unknown");
 
   /* restart run : default is no */
   m_restart_run_enabled = configMap.getInteger("run", "restart_enabled", 0);

@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   if (argc>2)
     order = atoi(argv[2]);
 
-  mood::STENCIL_ID stencilId = mood::Stencil::select_stencil(dim,order);
+  mood::STENCIL_ID stencilId = mood::select_stencil(dim,order);
 
   /*
    * test class Polynomial.
