@@ -25,10 +25,10 @@
 constexpr unsigned int dim = 2;
 
 // highest degree / order of the polynomial
-constexpr unsigned int order = 5;
+constexpr unsigned int degree = 5;
 
 // use to initialize data for polynomial
-constexpr int ncoefs = mood::binomial<order+dim,order>();
+constexpr int ncoefs = mood::binomial<degree+dim,degree>();
 
 constexpr mood::STENCIL_ID stencilId_ = mood::STENCIL_2D_DEGREE5;
 
@@ -63,7 +63,7 @@ real_t polynomial_eval(real_t x, real_t y,
   
   real_t result = 0;
   
-  // span monomial orders
+  // span monomial degrees
   for (int i = 0; i<N; ++i) {
     int e[2] = {monomMap(i,0),
 		monomMap(i,1)};
@@ -81,7 +81,7 @@ real_t polynomial_eval(real_t x, real_t y, real_t z,
   
   real_t result = 0;
   
-  // span monomial orders
+  // span monomial degrees
   for (int i = 0; i<N; ++i) {
     int e[3] = {monomMap(i,0),
 		monomMap(i,1),
@@ -101,7 +101,7 @@ real_t polynomial_eval(real_t x, real_t y, real_t z,
  * and Stencil.
  */
 template <mood::STENCIL_ID stencilId>
-class TestReconstructFunctor : public mood::PolynomialEvaluator<dim,order> {
+class TestReconstructFunctor : public mood::PolynomialEvaluator<dim,degree> {
 
 public:
   
@@ -121,7 +121,7 @@ public:
 
   TestReconstructFunctor(result_t result,
 			 geom_t geomPI) :
-    PolynomialEvaluator<dim,order>(),
+    PolynomialEvaluator<dim,degree>(),
     result(result),
     stencil(stencilId),
     geomPI(geomPI) {};
@@ -149,7 +149,7 @@ public:
       if (x != 0 or y != 0) { // avoid stencil center
     	rhs[s] = this->test_function_2d_(x,y) - this->test_function_2d_(0,0);
 #ifndef CUDA
-    	printf("[DEVICE] [% d,% d, % d] % 7.5f\n",x,y,s, rhs[s] + this->test_function_2d_(0,0));
+    	printf("[DEVICE] [% d,% d,% d] % 7.5f\n",x,y,s, rhs[s] + this->test_function_2d_(0,0));
 #endif
     	s++;
       }
@@ -163,8 +163,8 @@ public:
     coefs[0] = this->test_function_2d_(0,0);
     for (int ii=0; ii<geomPI.dimension_0(); ++ii) {
       real_t tmp = 0;
-      for (int k=0; k<geomPI.dimension_1(); ++k) {
-    	tmp += geomPI(ii,k) * rhs[k];
+      for (int ik=0; ik<geomPI.dimension_1(); ++ik) {
+    	tmp += geomPI(ii,ik) * rhs[ik];
       }
       coefs[ii+1] = tmp;
 #ifndef CUDA
@@ -225,8 +225,8 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
   }
 
-  // create monomial map for all monomial up to degree = order
-  mood::MonomialMap monomialMap(dim,order);
+  // create monomial map for all monomial up to degree = degree
+  mood::MonomialMap<dim,degree> monomialMap;
 
 
   /*
@@ -249,18 +249,18 @@ int main(int argc, char* argv[])
   // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
   Kokkos::Array<int,3> e;
   e = {2,0,0};
-  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  1.0);
+  mood::polynomial_setCoefs<ncoefs,degree>(coefs, monomialMap, e[0], e[1],  1.0);
   e = {1,1,0};
-  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  2.2);
+  mood::polynomial_setCoefs<ncoefs,degree>(coefs, monomialMap, e[0], e[1],  2.2);
   e = {0,2,0};
-  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  4.1);
+  mood::polynomial_setCoefs<ncoefs,degree>(coefs, monomialMap, e[0], e[1],  4.1);
   e = {0,0,0};
-  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1], -5.0);
+  mood::polynomial_setCoefs<ncoefs,degree>(coefs, monomialMap, e[0], e[1], -5.0);
   e = {1,0,0};
-  mood::polynomial_setCoefs<ncoefs>(coefs, monomialMap, e[0], e[1],  1.0);
+  mood::polynomial_setCoefs<ncoefs,degree>(coefs, monomialMap, e[0], e[1],  1.0);
 
   std::cout << "Print polynomial coefs\n";
-  for (int ii=0; ii<monomialMap.Ncoefs-1; ++ii)
+  for (int ii=0; ii<mood::MonomialMap<dim,degree>::ncoefs-1; ++ii)
     printf( "polynomial [% d] = % 7.5f\n",ii,coefs[ii+1]);
   printf("\n");
   
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
 
   constexpr int stencil_size = mood::STENCIL_SIZE[stencilId_];
   int stencil_degree = mood::get_stencil_degree(stencilId_);
-  int NcoefsPolynom = monomialMap.Ncoefs;
+  int NcoefsPolynom = mood::MonomialMap<dim,degree>::ncoefs;
   mood::Matrix geomMatrix(stencil_size-1,NcoefsPolynom-1);
   
   // fill geomMatrix
@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
 
     if (x != 0 or y != 0) { // avoid stencil center
    
-      printf("stencil point coordiantes : % d,% d\n",x,y);
+      printf("stencil point coordinates : % d,% d\n",x,y);
       
       for (int j = 0; j<geomMatrix.n; ++j) { // loop over monomial
 	// stencil point
@@ -337,20 +337,20 @@ int main(int argc, char* argv[])
   
   for (int index=0; index<geomMatrixPI.m; index++) {
     real_t tmp=0;
-    for (int k=0; k<geomMatrixPI.n; k++) {
-      tmp += geomMatrixPI(index,k) * rhs_host[k]; 
+    for (int ik=0; ik<geomMatrixPI.n; ik++) {
+      tmp += geomMatrixPI(index,ik) * rhs_host[ik]; 
     }
     coef_host[index+1] = tmp;
   }
 
   std::cout << "polynomial coef obtained by least-square fit\n";
-  for (int ii=0; ii<monomialMap.Ncoefs; ++ii)
+  for (int ii=0; ii<mood::MonomialMap<dim,degree>::ncoefs; ++ii)
     std::cout << "polynomial [" << ii << "] = " << coef_host[ii]
 	      << " (diff = " << coef_host[ii] - coefs[ii] << ")" << "\n";
 
   // cross-check polynomial
   if (dim == 2) {
-    for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    for (int i = 0; i<mood::MonomialMap<dim,degree>::ncoefs; ++i) {
       
       int e[2] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1)};
@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
       
     }
   } else {
-    for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    for (int i = 0; i<mood::MonomialMap<dim,degree>::ncoefs; ++i) {
       
       int e[3] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1),

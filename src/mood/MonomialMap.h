@@ -14,48 +14,40 @@ namespace mood {
  * MonomialMap structure holds a 2D array:
  * - first entry is the monomial Id
  * - second entry multivariate index
- *
+ * 
+ * template parameters are
+ * dim : dimension (either 2 or 3)
+ * degree : degree of the polynomial (maximum degree of the multivariate polynomial)
  */
+template<int dim, int degree>
 struct MonomialMap {
 
-  //! dimension : 2 or 3
-  int dim;
-
-  //! order (maximum degree of the multivariate polynomial)
-  int order;
-  
   //! total number of dim-variate monomials of order less than order.
-  int Ncoefs;
+  static constexpr int ncoefs = mood::binomial<degree+dim,degree>();
 
   //! typedef for data map
-  using MonomMap = Kokkos::View<int**, DEVICE>;
-  using MonomMapHost = MonomMap::HostMirror; 
+  using MonomMap = Kokkos::View<int[ncoefs][dim], DEVICE>;
+  using MonomMapHost = typename MonomMap::HostMirror; 
   
   //! store the exponent of each variable in a monomials, for all monomials.
-  //int data[Ncoefs][dim];
+  //int data[ncoefs][dim];
   MonomMap data;
   MonomMapHost data_h;
   
   /**
    * Default constructor build monomials map entries.
    */
-  MonomialMap(int dim, int order) :
-    dim(dim),
-    order(order),
-    Ncoefs(binom(dim+order,dim)) {
+  MonomialMap() {
 
     if (dim != 2 and dim != 3) {
       std::cerr << "[MonomialMap] error: invalid value for dim (should be 2 or 3)\n";
     }
     
     // memory allocation for map
-    data   = MonomMap("data", Ncoefs, dim);
+    data   = MonomMap("data");
     data_h = Kokkos::create_mirror_view(data);
-
-    if (dim == 2)
-      init_map<2>();
-    else
-      init_map<3>();
+    
+    init_map();
 
     // upload data to device
     Kokkos::deep_copy(data,data_h);
@@ -63,25 +55,24 @@ struct MonomialMap {
   } // MonomialMap
 
   //! init map (on host and copy on device)
-  template<int dim_>
   void init_map() {
       
     // exponent vector
-    std::array<int,dim_> e;
-    for (int i=0; i<dim_; ++i) e[i] = 0;
+    std::array<int,dim> e;
+    for (int i=0; i<e.size(); ++i) e[i] = 0;
         
     int sum_e = 0;
-    for (int i=0; i<dim_; ++i) sum_e += e[i];
+    for (int i=0; i<e.size(); ++i) sum_e += e[i];
 
     int index = 0;
     
     // span all possible monomials
-    while ( sum_e <= order ) {
+    while ( sum_e <= degree ) {
 
-      if (dim_ == 2) {
+      if (dim == 2) {
 	data_h(index,0) = e[0];
 	data_h(index,1) = e[1];
-      } else if (dim_ == 3) {
+      } else if (dim == 3) {
 	data_h(index,0) = e[0];
 	data_h(index,1) = e[1];
 	data_h(index,2) = e[2];
@@ -89,11 +80,11 @@ struct MonomialMap {
       
       // increment (in the sens of graded reverse lexicographic order)
       // the exponents vector representing a monomial x^e[0] * y^e[1] * z^[2]
-      mono_next_grlex<dim_>(e);
+      mono_next_grlex<dim>(e);
       
       // update sum of exponents
       sum_e = 0;
-      for (int i=0; i<dim_; ++i) sum_e += e[i];
+      for (int i=0; i<dim; ++i) sum_e += e[i];
 
       ++index;
       

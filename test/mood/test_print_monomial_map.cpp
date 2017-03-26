@@ -18,14 +18,15 @@
 /**
  * A dummy functor to test computation on device with class MonomialMap.
  */
+template <int dim, int degree>
 class TestMonomialMapFunctor {
 
 public:
-  mood::MonomialMap::MonomMap results;  
-  mood::MonomialMap::MonomMap monomialMap;
+  typename mood::MonomialMap<dim,degree>::MonomMap results;  
+  typename mood::MonomialMap<dim,degree>::MonomMap monomialMap;
 
-  TestMonomialMapFunctor(mood::MonomialMap::MonomMap results,
-			 mood::MonomialMap::MonomMap monomialMap) :
+  TestMonomialMapFunctor(typename mood::MonomialMap<dim,degree>::MonomMap results,
+			 typename mood::MonomialMap<dim,degree>::MonomMap monomialMap) :
     results(results),
     monomialMap(monomialMap) {};
   ~TestMonomialMapFunctor() {};
@@ -49,23 +50,18 @@ int main(int argc, char* argv[])
   Kokkos::initialize(argc, argv);
  
   // dim is the number of variable in the multivariate polynomial representation
-  unsigned int dim=3;
+  constexpr int dim = 3;
 
-  // highest degree / order of the polynomial
-  int order = 4;
+  // highest degree of the polynomial
+  constexpr int degree = 4;
   
-  if (argc>1)
-    dim = atoi(argv[1]);
-  if (argc>2)
-    order = atoi(argv[2]);
-
   // print all multivariate monomials up to order in dimension dim
   if        (dim == 2) {
-    mood::print_all_monomials<2>(order);
-    mood::print_all_monomials_map<2>(order);
+    mood::print_all_monomials<2>(degree);
+    mood::print_all_monomials_map<2>(degree);
   } else if (dim == 3) {
-    mood::print_all_monomials<3>(order);
-    mood::print_all_monomials_map<3>(order);
+    mood::print_all_monomials<3>(degree);
+    mood::print_all_monomials_map<3>(degree);
   } else {
     std::cerr << "Not implemented or not tested !\n";
   }
@@ -75,13 +71,13 @@ int main(int argc, char* argv[])
    * test MonomialMap structure
    */
   std::cout << "############################\n";
-  std::cout << "Testing MonomialMap Struct\n";
+  std::cout << " Testing MonomialMap Struct \n";
   std::cout << "############################\n";
 
   // dim = 3, degree = 4
-  mood::MonomialMap monomialMap(dim,order);
+  mood::MonomialMap<dim,degree> monomialMap;
   
-  for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+  for (int i = 0; i<mood::MonomialMap<dim,degree>::ncoefs; ++i) {
     int e[3] = {monomialMap.data_h(i,0),
 		monomialMap.data_h(i,1),
 		monomialMap.data_h(i,2)};
@@ -95,17 +91,17 @@ int main(int argc, char* argv[])
   std::cout << "####################################\n";
   std::cout << "Testing MonomialMap Struct on Device\n";
   std::cout << "####################################\n";
-  int Ncoefs = mood::binom(dim+order,dim);
-  mood::MonomialMap::MonomMap data_device = mood::MonomialMap::MonomMap("data_device",Ncoefs,dim);
-  mood::MonomialMap::MonomMap::HostMirror data_host = Kokkos::create_mirror_view(data_device);
+  int ncoefs = mood::binom(dim+degree,dim);
+  mood::MonomialMap<dim,degree>::MonomMap data_device = mood::MonomialMap<dim,degree>::MonomMap("data_device");
+  mood::MonomialMap<dim,degree>::MonomMap::HostMirror data_host = Kokkos::create_mirror_view(data_device);
 
-  TestMonomialMapFunctor f(data_device, monomialMap.data);
+  TestMonomialMapFunctor<dim,degree> f(data_device, monomialMap.data);
   Kokkos::parallel_for(1,f);
 
   // retrieve results
   Kokkos::deep_copy(data_host,data_device);
 
-  for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+  for (int i = 0; i<mood::MonomialMap<dim,degree>::ncoefs; ++i) {
     int e[3] = {data_host(i,0),
   		data_host(i,1),
   		data_host(i,2)};

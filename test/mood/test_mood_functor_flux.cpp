@@ -68,10 +68,10 @@ int main(int argc, char* argv[])
   }
 
   // which stencil shall we use ?
-  const mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE3;
+  constexpr mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE3;
 
-  // highest degree / order of the polynomial
-  unsigned int order = mood::get_stencil_degree(stencilId);
+  // degree of the polynomial
+  constexpr int degree = mood::STENCIL_DEGREE[stencilId];
  
   // hydro params
   // read parameter file and initialize parameter
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
   // 2D test
   if (params.nz == 1) {
 
-    int dim = 2;
+    constexpr int dim = 2;
     
     // create fake hydro data
     using DataArray     = DataArray2d;
@@ -124,18 +124,18 @@ int main(int argc, char* argv[])
     // instantiate stencil
     mood::Stencil stencil = mood::Stencil(stencilId);
 
-    // create monomial map for all monomial up to degree = order
-    mood::MonomialMap monomialMap(dim,order);
+    // create monomial map for all monomial up to degree = degree
+    mood::MonomialMap<dim,degree> monomialMap;
     
     // compute the geometric terms matrix and its pseudo-inverse
     int stencil_size   = mood::get_stencil_size(stencilId);
     int stencil_degree = mood::get_stencil_degree(stencilId);
-    int NcoefsPolynom = monomialMap.Ncoefs;
+    int NcoefsPolynom = mood::MonomialMap<dim,degree>::ncoefs;
     mood::Matrix geomMatrix(stencil_size-1,NcoefsPolynom-1);
 
     std::array<real_t,3> dxyz = {params.dx, params.dy, params.dz};
     printf("dx dy dz : %f %f %f\n",params.dx, params.dy, params.dz);
-    mood::fill_geometry_matrix_2d(geomMatrix, stencil, monomialMap, dxyz);
+    mood::fill_geometry_matrix<dim,degree>(geomMatrix, stencil, monomialMap, dxyz);
     //geomMatrix.print("geomMatrix");
 
     // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
@@ -183,8 +183,8 @@ int main(int argc, char* argv[])
 
   // 3D test
   if (params.nz > 1) {
-
-    int dim = 3;
+    
+    constexpr int dim = 3;
     
     // create fake hydro data
     using DataArray     = DataArray3d;
@@ -224,18 +224,18 @@ int main(int argc, char* argv[])
     // instantiate stencil
     mood::Stencil stencil = mood::Stencil(stencilId);
 
-    // create monomial map for all monomial up to degree = order
-    mood::MonomialMap monomialMap(dim,order);
+    // create monomial map for all monomial up to degree = degree
+    mood::MonomialMap<dim,degree> monomialMap;
     
     // compute the geometric terms matrix and its pseudo-inverse
     int stencil_size   = mood::get_stencil_size(stencilId);
     int stencil_degree = mood::get_stencil_degree(stencilId);
-    int NcoefsPolynom = monomialMap.Ncoefs;
+    int NcoefsPolynom = mood::MonomialMap<dim,degree>::ncoefs;
     mood::Matrix geomMatrix(stencil_size-1,NcoefsPolynom-1);
     
     std::array<real_t,3> dxyz = {params.dx, params.dy, params.dz};
     printf("dx dy dz : %f %f %f\n",params.dx, params.dy, params.dz);
-    mood::fill_geometry_matrix_3d(geomMatrix, stencil, monomialMap, dxyz);
+    mood::fill_geometry_matrix<dim,degree>(geomMatrix, stencil, monomialMap, dxyz);
     geomMatrix.print("geomMatrix");
 
     // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
     }
     Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
     
-    // create functor - template params are dim,order,stencil
+    // create functor - template params are dim,degree,stencil
     mood::ComputeFluxesFunctor<3,2,stencilId>
        f(U,Fluxes_x,Fluxes_y,Fluxes_z,params,stencil, geomMatrixPI_view);
     

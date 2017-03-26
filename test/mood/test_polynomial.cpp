@@ -17,7 +17,7 @@
 constexpr int Dim = 3;
 
 // highest degree / order of the polynomial
-constexpr int Order = 2;
+constexpr int Degree = 2;
 
 using scalar_t = Kokkos::View<double[1]>;
 using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
@@ -61,22 +61,22 @@ real_t polynomial_eval(real_t x, real_t y, real_t z,
 /**
  * A dummy functor to test computation on device with class polynomial.
  */
-template<unsigned int dim, unsigned int order>
+template<int dim, int degree>
 class TestPolynomialFunctor {
 
 public:
   //! total number of coefficients in the polynomial
-  static const int ncoefs =  mood::binomial<dim+order,dim>();
+  static const int ncoefs =  mood::binomial<dim+degree,dim>();
 
   //! number of polynomial coefficients
   using coefs_t = Kokkos::Array<real_t,ncoefs>;
 
   scalar_t data;
-  mood::MonomialMap::MonomMap monomMap;
+  typename mood::MonomialMap<dim,degree>::MonomMap monomMap;
   Kokkos::Array<real_t,dim> eval_point;
   
   TestPolynomialFunctor(scalar_t data,
-			mood::MonomialMap::MonomMap monomMap,
+			typename mood::MonomialMap<dim,degree>::MonomMap monomMap,
 			Kokkos::Array<real_t,dim> eval_point) :
     data(data),
     monomMap(monomMap),
@@ -160,10 +160,11 @@ int main(int argc, char* argv[])
   std::cout << "############################\n";
 
   // create monomial map and print
-  mood::MonomialMap monomialMap(Dim,Order);
+  using mMap = mood::MonomialMap<Dim,Degree>;
+  mMap monomialMap;
 
   if (Dim == 2) {
-    for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    for (int i = 0; i<mMap::ncoefs; ++i) {
       
       int e[2] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1)};
@@ -173,7 +174,7 @@ int main(int argc, char* argv[])
       
     }
   } else {
-    for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    for (int i = 0; i<mMap::ncoefs; ++i) {
       
       int e[3] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1),
@@ -203,7 +204,7 @@ int main(int argc, char* argv[])
   }
   
   // compute on device
-  TestPolynomialFunctor<Dim,Order> f(data, monomialMap.data, p);
+  TestPolynomialFunctor<Dim,Degree> f(data, monomialMap.data, p);
   Kokkos::parallel_for(1,f);
 
   Kokkos::deep_copy(data_h,data);
@@ -212,7 +213,7 @@ int main(int argc, char* argv[])
   // compute on host
 
   if (Dim == 2) {
-    for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    for (int i = 0; i<mMap::ncoefs; ++i) {
       
       int e[2] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1)};
@@ -222,7 +223,7 @@ int main(int argc, char* argv[])
       
     }
   } else {
-    for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    for (int i = 0; i<mMap::ncoefs; ++i) {
       
       int e[3] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1),
@@ -235,8 +236,8 @@ int main(int argc, char* argv[])
   }
 
   Kokkos::View<double*,Kokkos::OpenMP> coefs_view =
-    Kokkos::View<double*,Kokkos::OpenMP>("coefs_view",monomialMap.Ncoefs);
-  for (int i = 0; i<monomialMap.Ncoefs; ++i) {
+    Kokkos::View<double*,Kokkos::OpenMP>("coefs_view",monomialMap.ncoefs);
+  for (int i = 0; i<monomialMap.ncoefs; ++i) {
     coefs_view(i) = 1.0*i;
   }
   

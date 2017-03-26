@@ -31,12 +31,12 @@ inline constexpr T power(const T base, unsigned int const exponent)
  * Polynomial coefficients are supposed to be provided on a per thread basis.
  * Monomial map is shared, it is a Kokkos::View.
  */
-template<unsigned int dim, unsigned int order>
+template<unsigned int dim, unsigned int degree>
 class PolynomialEvaluator {
 
 public:
   //! total number of coefficients in the polynomial
-  static const int Ncoefs =  binomial<dim+order,dim>();
+  static const int Ncoefs =  binomial<dim+degree,dim>();
 
   //! typedef for the coefs array
   using coefs_t = Kokkos::Array<real_t,Ncoefs>;
@@ -52,10 +52,10 @@ public:
    *
    * MonomialMap::MonomMap is a Kokkos::View type defined in class MonomialMap.
    */
-  const MonomialMap monomialMap;
+  const MonomialMap<dim,degree> monomialMap;
   
 public:
-  PolynomialEvaluator() : monomialMap(dim,order) {};
+  PolynomialEvaluator() : monomialMap() {};
 
   virtual ~PolynomialEvaluator() {};
   
@@ -67,7 +67,7 @@ public:
     
     if (dim == 2) {
 
-      // span monomial orders
+      // span monomial degrees
       for (int i = 0; i<Ncoefs; ++i) {
 	int e[2] = {monomialMap.data(i,0),
 		    monomialMap.data(i,1)};
@@ -89,7 +89,7 @@ public:
  
     if (dim == 3) {
 
-      // span all monomials in Graded Reverse Lexicographical order
+      // span all monomials in Graded Reverse Lexicographical degree
       for (int i = 0; i<Ncoefs; ++i) {
 
 	int e[3] = {monomialMap.data(i,0),
@@ -116,7 +116,7 @@ public:
       real_t x = p[0]; 
       real_t y = p[1];
       
-      // span monomial orders
+      // span monomial degrees
       for (int i = 0; i<Ncoefs; ++i) {
 	int e[2] = {monomialMap.data(i,0),
 		    monomialMap.data(i,1)};
@@ -131,7 +131,7 @@ public:
       real_t y = p[1];
       real_t z = p[2];
       
-      // span all monomials in Graded Reverse Lexicographical order
+      // span all monomials in Graded Reverse Lexicographical degree
       for (int i = 0; i<Ncoefs; ++i) {
 
 	int e[3] = {monomialMap.data(i,0),
@@ -157,16 +157,19 @@ public:
  * \param[in] MonomialMap member data_h contains the map between monomial and exponents
  * \param[in] e0 e1 exponents (identifying a given monomial)
  * \param[in] value is the specified monomial coefficient.
+ *
+ * \tparam ncoefs number of polynomial coefficients
+ * \tparam degree polynomial degree
  */
-template<int N>
-void polynomial_setCoefs(Kokkos::Array<real_t,N>& coefs,
-			 MonomialMap monomialMap,
+template<int ncoefs, int degree>
+void polynomial_setCoefs(Kokkos::Array<real_t,ncoefs>& coefs,
+			 MonomialMap<2,degree> monomialMap,
 			 int e0, int e1,
 			 real_t value) {
 
-  // we should assert here that N == monomialMap.Ncoefs
+  // we should assert here that ncoefs == monomialMap.ncoefs
   
-  for (int i = 0; i<N; ++i) {
+  for (int i = 0; i<ncoefs; ++i) {
     // find the right location of the monomial identified by e0, e1
     if (monomialMap.data_h(i,0) == e0 and
 	monomialMap.data_h(i,1) == e1) {
@@ -185,46 +188,37 @@ void polynomial_setCoefs(Kokkos::Array<real_t,N>& coefs,
  * \param[in] MonomialMap member data_h contains the map between monomial and exponents
  * \param[in] e0 e1 e2 exponents (identifying a given monomial)
  * \param[in] value is the specified monomial coefficient.
+ *
+ * \tparam ncoefs number of polynomial coefficients
+ * \tparam degree polynomial degree
  */
-template<int N>
-void polynomial_setCoefs(Kokkos::Array<real_t,N>& coefs,
-			 MonomialMap monomialMap,
+template<int ncoefs, int degree>
+void polynomial_setCoefs(Kokkos::Array<real_t,ncoefs>& coefs,
+			 MonomialMap<3,degree>& monomialMap,
 			 int e0, int e1, int e2,
 			 real_t value) {
 
-  // we should assert here that N == monomialMap.Ncoefs
+  // we should assert here that ncoefs == monomialMap.ncoefs
 
-  for (int i = 0; i<N; ++i) {
+  for (int i = 0; i<ncoefs; ++i) {
+
     // find the right location of the monomial identified by e0, e1, e2
     if (monomialMap.data_h(i,0) == e0 and
 	monomialMap.data_h(i,1) == e1 and
 	monomialMap.data_h(i,2) == e2) {
       coefs[i] = value;
     }
-  }
+    
+  } // end for
   
   return;
   
 } // polynomial_setCoefs
 
 // initialize static member
-//template<unsigned int dim, unsigned int order>
-//const MonomialMap<dim,order> Polynomial<dim,order>::monomialMap;
+//template<unsigned int dim, unsigned int degree>
+//const MonomialMap<dim,degree> Polynomial<dim,degree>::monomialMap;
 
-// /**
-//  * Just print a polynomial for checking.
-//  */
-// template<unsigned int dim, unsigned int order>
-// void print_polynomial(const Polynomial<dim,order>& poly)
-// {
-
-//   if (order == 2) {
-
-    
-    
-//   }
-
-// } // print_polynomial
 
 } // namespace mood
 
