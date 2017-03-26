@@ -66,30 +66,30 @@ int main(int argc, char* argv[])
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
-
-  // which stencil shall we use ?
-  constexpr mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE3;
-
-  // degree of the polynomial
-  constexpr int degree = mood::STENCIL_DEGREE[stencilId];
  
-  // hydro params
-  // read parameter file and initialize parameter
-  // parse parameters from input file
-  std::string input_file = std::string("test_mood_functor.ini");
-  ConfigMap configMap(input_file);
-
-  // test: create a HydroParams object
-  HydroParams params = HydroParams();
-  params.setup(configMap);
-
-  // make sure ghostWidth is ok
-  params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
-
   // 2D test
-  if (params.nz == 1) {
-
+  {
+    
     constexpr int dim = 2;
+
+    // which stencil shall we use ?
+    constexpr mood::STENCIL_ID stencilId = mood::STENCIL_2D_DEGREE3;
+    
+    // degree of the polynomial
+    constexpr int degree = mood::STENCIL_DEGREE[stencilId];
+    
+    // hydro params
+    // read parameter file and initialize parameter
+    // parse parameters from input file
+    std::string input_file = std::string("test_mood_functor_2d.ini");
+    ConfigMap configMap(input_file);
+    
+    // test: create a HydroParams object
+    HydroParams params = HydroParams();
+    params.setup(configMap);
+    
+    // make sure ghostWidth is ok
+    params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
     
     // create fake hydro data
     using DataArray     = DataArray2d;
@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
     Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
     
     // create functor
-    mood::ComputeFluxesFunctor<2,2,stencilId>
+    mood::ComputeFluxesFunctor<dim,degree,stencilId>
        f(U,Fluxes_x,Fluxes_y,Fluxes_z,params,stencil, geomMatrixPI_view);
     
     // launch
@@ -181,11 +181,33 @@ int main(int argc, char* argv[])
     
   }
 
+  std::cout << "// ======================== //\n";
+  std::cout << "// ======================== //\n";
+  
   // 3D test
-  if (params.nz > 1) {
+  {
     
     constexpr int dim = 3;
     
+    // which stencil shall we use ?
+    constexpr mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE2;
+    
+    // degree of the polynomial
+    constexpr int degree = mood::STENCIL_DEGREE[stencilId];
+
+    // hydro params
+    // read parameter file and initialize parameter
+    // parse parameters from input file
+    std::string input_file = std::string("test_mood_functor_3d.ini");
+    ConfigMap configMap(input_file);
+    
+    // test: create a HydroParams object
+    HydroParams params = HydroParams();
+    params.setup(configMap);
+    
+    // make sure ghostWidth is ok
+    params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+
     // create fake hydro data
     using DataArray     = DataArray3d;
     using DataArrayHost = DataArray3dHost;
@@ -197,8 +219,11 @@ int main(int argc, char* argv[])
 
     DataArrayHost Uh   = Kokkos::create_mirror_view(U);
     
-    printf("Data sizes %d %d %d \n",params.isize,params.jsize,params.ksize);
-    printf("Data sizes %d %d %d - ghostwidth=%d\n",params.isize,params.jsize,params.ksize,params.ghostWidth);
+    printf("Data sizes %d %d %d - ghostwidth=%d\n",
+	   params.isize,
+	   params.jsize,
+	   params.ksize,
+	   params.ghostWidth);
 
     real_t dx = params.dx;
     real_t dy = params.dy;
@@ -260,7 +285,7 @@ int main(int argc, char* argv[])
     Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
     
     // create functor - template params are dim,degree,stencil
-    mood::ComputeFluxesFunctor<3,2,stencilId>
+    mood::ComputeFluxesFunctor<dim,degree,stencilId>
        f(U,Fluxes_x,Fluxes_y,Fluxes_z,params,stencil, geomMatrixPI_view);
     
     // launch

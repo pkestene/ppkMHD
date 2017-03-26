@@ -103,8 +103,8 @@ public:
       // reconstruct Udata on the left face along X direction
       // for each quadrature points
       if (nbQuadraturePoints==1) {
-	int x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
-	int y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
+	//int x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
+	//int y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
       }
 
       FluxData_x(i,j,ID) = this->eval(-0.5*dx, 0.0   ,coefs_c);
@@ -164,9 +164,9 @@ public:
       // reconstruct Udata on the left face along X direction
       // for each quadrature points
       if (nbQuadraturePoints==1) {
-	int x = QUADRATURE_LOCATION_3D_N1_X_M[0][IX];
-	int y = QUADRATURE_LOCATION_3D_N1_X_M[0][IY];
-	int z = QUADRATURE_LOCATION_3D_N1_X_M[0][IZ];
+	//int x = QUADRATURE_LOCATION_3D_N1_X_M[0][IX];
+	//int y = QUADRATURE_LOCATION_3D_N1_X_M[0][IY];
+	//int z = QUADRATURE_LOCATION_3D_N1_X_M[0][IZ];
       }
 
       FluxData_x(i,j,k,ID) = this->eval(-0.5*dx, 0.0   , 0.0   , coefs_c);
