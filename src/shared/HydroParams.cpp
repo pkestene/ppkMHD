@@ -10,6 +10,8 @@
 #include "mood/Stencil.h"
 #include "mood/StencilUtils.h"
 
+// =======================================================
+// =======================================================
 /*
  * Hydro Parameters (read parameter file)
  */
@@ -44,17 +46,15 @@ void HydroParams::setup(ConfigMap &configMap)
     nbvar = 8;
     ghostWidth = 3;
     
-  } else if ( !solver_name.compare("Hydro_Mood_2D") ) {
+  } else if ( solver_name.find("Mood_Hydro_2D") != std::string::npos ) {
 
-    std::string stencilId_str = configMap.getString("mood","stencil_id","Unknown");
-    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_string(stencilId_str);
+    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
     nbvar = 4;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
     
-  } else if ( !solver_name.compare("Hydro_Mood_3D") ) {
+  } else if ( !solver_name.find("Mood_Hydro_3D") != std::string::npos ) {
 
-    std::string stencilId_str = configMap.getString("mood","stencil_id","Unknown");
-    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_string(stencilId_str);
+    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
     nbvar = 5;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
     

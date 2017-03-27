@@ -53,7 +53,7 @@ public:
   ~ComputeFluxesFunctor() {};
 
   //! functor for 2d 
-  template<unsigned int dim_ = dim>
+  template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
   {
@@ -115,7 +115,7 @@ public:
   } // end functor 2d
 
   //! functor for 3d 
-  template<unsigned int dim_ = dim>
+  template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
   {

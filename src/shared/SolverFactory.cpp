@@ -22,7 +22,7 @@ SolverFactory::SolverFactory()
   registerSolver("Hydro_Muscl_3D", &SolverHydroMuscl3D::create);
   registerSolver("MHD_Muscl_2D",   &SolverMHDMuscl2D::create);
   registerSolver("MHD_Muscl_3D",   &SolverMHDMuscl3D::create);
-  registerSolver("Mood_Hydro_2D_degree2",  &mood::SolverHydroMood<2,2>::create);
+  registerSolver("Hydro_Mood_2D_degree2",  &mood::SolverHydroMood<2,2>::create);
   	 
 } // SolverFactory::SolverFactory
 
