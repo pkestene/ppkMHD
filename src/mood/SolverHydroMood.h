@@ -147,11 +147,14 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
-  nbCells(params.isize*params.jsize*params.ksize),
+  nbCells(params.isize*params.jsize),
   stencilId(select_stencil(dim,degree)),
   stencil(stencilId)
 {
 
+  if (dim==3)
+    nbCells = params.isize*params.jsize*params.ksize;
+  
   m_nCells = nbCells;
 
   int nbvar = params.nbvar;
@@ -170,13 +173,13 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
     
   } else if (dim==3) {
 
-    U     = DataArray("U", isize, jsize, ksize, nbvar);
-    Uhost = Kokkos::create_mirror_view(U);
-    U2    = DataArray("U2",isize, jsize, ksize, nbvar);
+    // U     = DataArray("U", isize, jsize, ksize, nbvar);
+    // Uhost = Kokkos::create_mirror_view(U);
+    // U2    = DataArray("U2",isize, jsize, ksize, nbvar);
     
-    Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
-    Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nbvar);
-    Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nbvar);
+    // Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
+    // Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nbvar);
+    // Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nbvar);
 
   }
     
@@ -262,7 +265,8 @@ double SolverHydroMood<dim,degree>::compute_dt_local()
   //Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
-
+  dt = 1.0;
+  
   return dt;
 
 } // SolverHydroMood::compute_dt_local

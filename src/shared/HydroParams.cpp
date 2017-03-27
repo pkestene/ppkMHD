@@ -46,17 +46,22 @@ void HydroParams::setup(ConfigMap &configMap)
     nbvar = 8;
     ghostWidth = 3;
     
-  } else if ( solver_name.find("Mood_Hydro_2D") != std::string::npos ) {
+  } else if ( solver_name.find("Hydro_Mood_2D") != std::string::npos ) {
 
     mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
     nbvar = 4;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
     
-  } else if ( !solver_name.find("Mood_Hydro_3D") != std::string::npos ) {
+  } else if ( !solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
 
     mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
     nbvar = 5;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    
+  } else {
+
+    // we should probably abort
+    std::cerr << "Solver name not valid : " << solver_name << "\n";
     
   }
   
