@@ -66,6 +66,10 @@ public:
    */
   //static constexpr STENCIL_ID stencilId = STENCIL_MAP[dim-2][degree-1];
   static constexpr STENCIL_ID stencilId = STENCIL_MAPP[(dim-2)*5+ degree-1];
+
+  //! stencil size (number of cells)
+  static const int stencil_size = STENCIL_SIZE[stencilId];
+  
   
   SolverHydroMood(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMood();
@@ -100,7 +104,14 @@ public:
    * MOOD config
    */
   Stencil stencil;
+
+  //! ordered list of monomials
+  MonomialMap<dim,degree> monomialMap;
+
   Matrix geomMatrix;
+
+  //! pseudo-inverse of the geomMatrix
+  mood_matrix_pi_t geomMatrixPI_view;
   
   /*
    * methods
@@ -156,7 +167,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   jsize(params.jsize),
   ksize(params.ksize),
   nbCells(params.isize*params.jsize),
-  stencil(stencilId)
+  stencil(stencilId),
+  geomMatrix(stencil_size-1,ncoefs-1)
 {
 
   if (dim==3)
@@ -201,6 +213,31 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
     }
     
   }
+
+  /*
+   * Init MOOD structure (geometric terms matrix and its pseudo invers).
+   */
+  std::array<real_t,3> dxyz = {params.dx, params.dy, params.dz};
+  fill_geometry_matrix<dim,degree>(geomMatrix, stencil, monomialMap, dxyz);
+  geomMatrix.print("geomMatrix");
+
+  // compute pseudo inverse
+  Matrix geomMatrixPI;
+  compute_pseudo_inverse(geomMatrix, geomMatrixPI);
+  geomMatrixPI.print("geomMatrix pseudo inverse");
+
+  geomMatrixPI_view = mood_matrix_pi_t("geomMatrixPI_view",geomMatrixPI.m,geomMatrixPI.n);
+  mood_matrix_pi_host_t geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
+
+  // copy geomMatrixPI into geomMatrixPI_view
+  for (int i = 0; i<geomMatrixPI.m; ++i) { // loop over stencil point
+    
+    for (int j = 0; j<geomMatrixPI.n; ++j) { // loop over monomial
+      
+      geomMatrixPI_view_h(i,j) = geomMatrixPI(i,j);
+    }
+  }
+  Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
 
   
   /*
@@ -378,9 +415,10 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // compute reconstruction polynomial coefficients
   {
 
-    //ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
-    //functor(data_in, PolyCoefs, params, stencil, );
-      
+    ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
+      functor(data_in, PolyCoefs, params, stencil, geomMatrixPI_view);
+    Kokkos::parallel_for(nbCells,functor);
+    
   }
   
   // compute fluxes
