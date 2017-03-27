@@ -59,6 +59,82 @@ public:
     
   } // eos
 
+  /**
+   * Convert conservative variables (rho, rho*u, rho*v, e) to 
+   * primitive variables (rho,u,v,p)
+   * @param[in]  u  conservative variables array
+   * @param[out] q  primitive    variables array (allocated in calling routine, size is constant nbvar)
+   * @param[out] c  local speed of sound
+   */
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void computePrimitives(const typename Kokkos::Impl::enable_if<dim_==2, HydroState>::type& u,
+			 real_t* c,
+			 typename Kokkos::Impl::enable_if<dim_==2, HydroState>::type& q) const
+  {
+    real_t gamma0 = params.settings.gamma0;
+    real_t smallr = params.settings.smallr;
+    real_t smallp = params.settings.smallp;
+    
+    real_t d, p, ux, uy;
+    
+    d = fmax(u[ID], smallr);
+    ux = u[IU] / d;
+    uy = u[IV] / d;
+    
+    real_t eken = HALF_F * (ux*ux + uy*uy);
+    real_t e = u[IP] / d - eken;
+    
+    // compute pressure and speed of sound
+    p = fmax((gamma0 - 1.0) * d * e, d * smallp);
+    *c = sqrt(gamma0 * (p) / d);
+    
+    q[ID] = d;
+    q[IP] = p;
+    q[IU] = ux;
+    q[IV] = uy;
+    
+  } // computePrimitive
+
+    /**
+   * Convert conservative variables (rho, rho*u, rho*v, e) to 
+   * primitive variables (rho,u,v,p)
+   * @param[in]  u  conservative variables array
+   * @param[out] q  primitive    variables array (allocated in calling routine, size is constant nbvar)
+   * @param[out] c  local speed of sound
+   */
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void computePrimitives(const typename Kokkos::Impl::enable_if<dim_==3, HydroState>::type& u,
+			 real_t* c,
+			 typename Kokkos::Impl::enable_if<dim_==3, HydroState>::type& q) const
+  {
+    real_t gamma0 = params.settings.gamma0;
+    real_t smallr = params.settings.smallr;
+    real_t smallp = params.settings.smallp;
+    
+    real_t d, p, ux, uy, uz;
+    
+    d = fmax(u[ID], smallr);
+    ux = u[IU] / d;
+    uy = u[IV] / d;
+    uz = u[IW] / d;
+    
+    real_t eken = HALF_F * (ux*ux + uy*uy + uz*uz);
+    real_t e = u[IP] / d - eken;
+    
+    // compute pressure and speed of sound
+    p = fmax((gamma0 - 1.0) * d * e, d * smallp);
+    *c = sqrt(gamma0 * (p) / d);
+    
+    q[ID] = d;
+    q[IP] = p;
+    q[IU] = ux;
+    q[IV] = uy;
+    q[IW] = uz;
+    
+  } // computePrimitive
+
 }; // class MoodBaseFunctor
 
 } // namespace mood

@@ -381,9 +381,9 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
-    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
-    real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
+    //real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    //real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    //real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
 
     // TODO - TODO - TODO
     Udata(i  ,j  ,k  , ID) = 1.0;

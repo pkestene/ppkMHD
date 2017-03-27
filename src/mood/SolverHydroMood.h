@@ -27,8 +27,11 @@
 #include "mood/GeometricTerms.h"
 #include "mood/Matrix.h"
 
+// mood functors (where the action takes place)
 #include "mood/MoodFunctors.h"
 #include "mood/MoodInitFunctors.h"
+#include "mood/MoodDtFunctor.h"
+
 #include "mood/mood_utils.h"
 
 // for IO
@@ -54,6 +57,8 @@ public:
   //! Data array typedef for host memory space
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
+  //! total number of coefficients in the polynomial
+  static const int ncoefs =  mood::binomial<dim+degree,dim>();
   
   SolverHydroMood(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMood();
@@ -73,7 +78,7 @@ public:
   DataArray     U2;    /*!< hydrodynamics conservative variables arrays */
 
   //! reconstructing polynomial
-  //DataArray[] Polynomial
+  std::array<DataArray,ncoefs> PolyCoefs;
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
@@ -123,9 +128,6 @@ public:
   
   int isize, jsize, ksize, nbCells;
 
-  //! total number of coefficients in the polynomial
-  static const int ncoefs =  mood::binomial<dim+degree,dim>();
-
 }; // class SolverHydroMood
 
 
@@ -170,19 +172,32 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
     
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
+
+    // init polynomial coefficients array
+    for (int ip=0; ip<ncoefs; ++ip) {
+      std::string label = "PolyCoefs_" + std::to_string(ip);
+      PolyCoefs[ip] = DataArray(label, isize, jsize, nbvar);
+    }
     
   } else if (dim==3) {
 
-    // U     = DataArray("U", isize, jsize, ksize, nbvar);
-    // Uhost = Kokkos::create_mirror_view(U);
-    // U2    = DataArray("U2",isize, jsize, ksize, nbvar);
+    U     = DataArray("U", isize, jsize, ksize, nbvar);
+    Uhost = Kokkos::create_mirror_view(U);
+    U2    = DataArray("U2",isize, jsize, ksize, nbvar);
     
-    // Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
-    // Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nbvar);
-    // Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nbvar);
+    Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
+    Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nbvar);
+    Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nbvar);
 
-  }
+    // init polynomial coefficients array
+    for (int ip=0; ip<ncoefs; ++ip) {
+      std::string label = "PolyCoefs_" + std::to_string(ip);
+      PolyCoefs[ip] = DataArray(label, isize, jsize, ksize, nbvar);
+    }
     
+  }
+
+  
   /*
    * initialize hydro array at t=0
    */
@@ -260,12 +275,17 @@ double SolverHydroMood<dim,degree>::compute_dt_local()
   else
     Udata = U2;
 
+  // typedef computeDtFunctor
+  using ComputeDtFunctor =
+    typename std::conditional<dim==2,
+			      ComputeDtFunctor2d<degree>,
+			      ComputeDtFunctor3d<degree>>::type;
+
   // call device functor
-  //ComputeDtFunctor computeDtFunctor(params, Udata);
-  //Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
+  ComputeDtFunctor computeDtFunctor(params, Udata);
+  Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
-  dt = 1.0;
   
   return dt;
 
