@@ -86,7 +86,7 @@ struct HydroParams {
   int boundary_type_zmax;
   
   // IO parameters
-  bool ioVTK;    /*!< enable VTK  output file format (using VTI).*/
+  bool ioVTK;   /*!< enable VTK  output file format (using VTI).*/
   bool ioHDF5;  /*!< enable HDF5 output file format.*/
   
   // hydro settings (will be passed to device functions)
