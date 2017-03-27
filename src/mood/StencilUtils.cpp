@@ -22,7 +22,8 @@ std::array<std::string,STENCIL_TOTAL_NUMBER> make_stencil_names() {
   names[STENCIL_3D_DEGREE5_V2] = "STENCIL_3D_DEGREE5_V2";
 
   return names;
-}
+  
+} // make_stencil_names
 
 std::array<std::string,STENCIL_TOTAL_NUMBER> StencilUtils::names = make_stencil_names();
 

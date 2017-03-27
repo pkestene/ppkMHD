@@ -30,9 +30,9 @@ add_executable(${EXE_NAME}
   $<TARGET_OBJECTS:time>
   $<TARGET_OBJECTS:io>
   $<TARGET_OBJECTS:muscl>
+  $<TARGET_OBJECTS:mood>
   $<TARGET_OBJECTS:shared>
   $<TARGET_OBJECTS:solver_factory>
-  mood/StencilUtils.cpp
   main.cpp
   )
 
@@ -45,4 +45,4 @@ target_include_directories(${EXE_NAME}
 
 set_target_properties(${EXE_NAME} PROPERTIES
   LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(${EXE_NAME} kokkos hwloc dl)
+target_link_libraries(${EXE_NAME} kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
