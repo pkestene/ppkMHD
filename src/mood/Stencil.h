@@ -91,6 +91,38 @@ enum STENCIL_ID {
 };
 
 /**
+ * first  index is dim-2
+ * second index is degree-1
+ */
+constexpr STENCIL_ID STENCIL_MAP[2][5] =
+  {
+    {STENCIL_2D_DEGREE1,
+     STENCIL_2D_DEGREE2,
+     STENCIL_2D_DEGREE3,
+     STENCIL_2D_DEGREE4,
+     STENCIL_2D_DEGREE5},
+    {STENCIL_3D_DEGREE1,
+     STENCIL_3D_DEGREE2,
+     STENCIL_3D_DEGREE3,
+     STENCIL_3D_DEGREE4,
+     STENCIL_3D_DEGREE5}    
+  };
+
+constexpr STENCIL_ID STENCIL_MAPP[10] =
+  {
+    STENCIL_2D_DEGREE1,
+    STENCIL_2D_DEGREE2,
+    STENCIL_2D_DEGREE3,
+    STENCIL_2D_DEGREE4,
+    STENCIL_2D_DEGREE5,
+    STENCIL_3D_DEGREE1,
+    STENCIL_3D_DEGREE2,
+    STENCIL_3D_DEGREE3,
+    STENCIL_3D_DEGREE4,
+    STENCIL_3D_DEGREE5   
+  };
+
+/**
  * The following array is a "solution" to the probleme faced when one want
  * to get stencil size at compile in a template class; get_stencil_size routine
  * can't be used there.

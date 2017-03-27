@@ -59,6 +59,13 @@ public:
 
   //! total number of coefficients in the polynomial
   static const int ncoefs =  mood::binomial<dim+degree,dim>();
+
+  /**
+   * stencilId. 
+   * This is really ugly because nvcc does'nt support 2d array in constexpr
+   */
+  //static constexpr STENCIL_ID stencilId = STENCIL_MAP[dim-2][degree-1];
+  static constexpr STENCIL_ID stencilId = STENCIL_MAPP[(dim-2)*5+ degree-1];
   
   SolverHydroMood(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMood();
@@ -92,7 +99,6 @@ public:
   /*
    * MOOD config
    */
-  STENCIL_ID stencilId;
   Stencil stencil;
   Matrix geomMatrix;
   
@@ -150,7 +156,6 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   jsize(params.jsize),
   ksize(params.ksize),
   nbCells(params.isize*params.jsize),
-  stencilId(select_stencil(dim,degree)),
   stencil(stencilId)
 {
 
@@ -370,6 +375,14 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // start main computation
   timers[TIMER_NUM_SCHEME]->start();
 
+  // compute reconstruction polynomial coefficients
+  {
+
+    //ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
+    //functor(data_in, PolyCoefs, params, stencil, );
+      
+  }
+  
   // compute fluxes
   // {
   //   ComputeAndStoreFluxesFunctor functor(params, Q,

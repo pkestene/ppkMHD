@@ -294,22 +294,22 @@ public:
     
   } // end functor 2d
 
-  // //! functor for 3d 
-  // template<int dim_ = dim>
-  // KOKKOS_INLINE_FUNCTION
-  // void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
-  // {
-  //   const int isize = this->params.isize;
-  //   const int jsize = this->params.jsize;
-  //   const int ksize = this->params.ksize;
-  //   const int ghostWidth = this->params.ghostWidth;
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
 
-  //   const real_t dx = this->params.dx;
-  //   const real_t dy = this->params.dy;
-  //   const real_t dz = this->params.dz;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
 
-  //   int i,j,k;
-  //   index2coord(index,i,j,k,isize,jsize,ksize);
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
 
   //   // rhs is sized upon stencil, just remove central point
   //   Kokkos::Array<real_t,stencil_size-1> rhs;
@@ -356,7 +356,7 @@ public:
       
   //   }
     
-  // }  // end functor 3d
+  }  // end functor 3d
   
   DataArray                    Udata;
   std::array<DataArray,ncoefs> polyCoefs;
