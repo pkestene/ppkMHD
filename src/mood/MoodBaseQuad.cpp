@@ -2,7 +2,6 @@
 
 namespace mood {
 
-//using 
 
 // initialize static members
 const real_t MoodBaseQuad::QUAD_LOC_2D[maxNbQuadRules][DIM2][2][maxNbQuadPoints][TWO_D] =

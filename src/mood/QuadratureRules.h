@@ -245,7 +245,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_Z_P[1][3] =
 
 /**
  * X,Y,Z coordinates of Gauss-Legendre quadrature points relative to cell center (0,0,0)
- * when 2 points are enougth.
+ * when 2x2 points are enougth.
  */
 constexpr real_t QUADRATURE_LOCATION_3D_N2_X_M[4][3] =
   {
@@ -297,7 +297,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N2_Z_P[4][3] =
 
 /**
  * X,Y,Z coordinates of Gauss-Legendre quadrature points relative to cell center (0,0,0)
- * when 2 points are enougth.
+ * when 3x3 points are enougth.
  */
 constexpr real_t QUADRATURE_LOCATION_3D_N3_X_M[9][3] =
   {

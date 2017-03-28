@@ -69,8 +69,14 @@ public:
 
   //! stencil size (number of cells)
   static const int stencil_size = STENCIL_SIZE[stencilId];
-  
-  
+
+  //! quadrature rules related constants
+  static constexpr int maxNbQuadRules  = 3;
+  static constexpr int maxNbQuadPoints = 3;
+  static constexpr int maxNbQuadPoints_3d = 9;
+  static constexpr real_t SQRT_3   = 1.732050807568877293527446341505872367;
+  static constexpr real_t SQRT_3_5 = 0.7745966692414834042779148148838430643;
+
   SolverHydroMood(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMood();
 
@@ -113,6 +119,17 @@ public:
   //! pseudo-inverse of the geomMatrix
   mood_matrix_pi_t      geomMatrixPI_view;
   mood_matrix_pi_host_t geomMatrixPI_view_h;
+
+  //! Quadrature point location view
+  using QuadLoc_2d_t = Kokkos::View<real_t[maxNbQuadRules][DIM2][2][maxNbQuadPoints][TWO_D]>;
+  using QuadLoc_2d_h_t = QuadLoc_2d_t::HostMirror;
+  QuadLoc_2d_t   QUAD_LOC_2D;
+  QuadLoc_2d_h_t QUAD_LOC_2D_h;
+  
+  using QuadLoc_3d_t = Kokkos::View<real_t[maxNbQuadRules][DIM3][2][maxNbQuadPoints_3d][THREE_D]>;
+  using QuadLoc_3d_h_t = QuadLoc_3d_t::HostMirror;
+  QuadLoc_3d_t   QUAD_LOC_3D;
+  QuadLoc_3d_h_t QUAD_LOC_3D_h;
   
   /*
    * methods
@@ -242,6 +259,288 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   // upload pseudo-inverse to device memory
   Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);  
   
+  /*
+   * quadrature rules initialization.
+   */
+  QUAD_LOC_2D = QuadLoc_2d_t("QUAD_LOC_2D");
+  QUAD_LOC_2D_h = Kokkos::create_mirror_view(QUAD_LOC_2D);
+
+  // 1 quadrature point (items #2 and #3 are not used)
+
+  // along X
+  // -X
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MIN,0,IX) = -0.5;
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MIN,0,IY) =  0.0;
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MIN,1,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MIN,1,IY) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MIN,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MIN,2,IY) =  0.0; // not used
+  // + X
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MAX,0,IX) =  0.5;
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MAX,0,IY) =  0.0;
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MAX,1,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MAX,1,IY) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MAX,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_X,FACE_MAX,2,IY) =  0.0; // not used
+
+  // along Y
+  // -Y
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MIN,0,IX) =  0.0;
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MIN,0,IY) = -0.5;
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MIN,1,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MIN,1,IY) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MIN,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MIN,2,IY) =  0.0; // not used
+  // +Y
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MAX,0,IX) =  0.0;
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MAX,0,IY) =  0.5;
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MAX,1,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MAX,1,IY) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MAX,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(0,DIR_Y,FACE_MAX,2,IY) =  0.0; // not used
+
+  // 2 quadrature points (item #3 is not used)
+
+  // along X
+  // -X
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MIN,0,IX) = -0.5;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MIN,0,IY) = -0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MIN,1,IX) = -0.5;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MIN,1,IY) =  0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MIN,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MIN,2,IY) =  0.0; // not used
+  // +X
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MAX,0,IX) =  0.5;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MAX,0,IY) = -0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MAX,1,IX) =  0.5;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MAX,1,IY) =  0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MAX,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(1,DIR_X,FACE_MAX,2,IY) =  0.0; // not used
+
+  // along Y
+  // -Y
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MIN,0,IX) = -0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MIN,0,IY) = -0.5;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MIN,1,IX) =  0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MIN,1,IY) = -0.5;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MIN,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MIN,2,IY) =  0.0; // not used
+  
+  // +Y
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MAX,0,IX) = -0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MAX,0,IY) =  0.5;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MAX,1,IX) =  0.5/SQRT_3;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MAX,1,IY) =  0.5;
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MAX,2,IX) =  0.0; // not used
+  QUAD_LOC_2D_h(1,DIR_Y,FACE_MAX,2,IY) =  0.0; // not used
+  
+  // 3 quadrature points
+
+  // along X
+  // -X
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MIN,0,IX) = -0.5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MIN,0,IY) = -0.5*SQRT_3_5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MIN,1,IX) = -0.5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MIN,1,IY) =  0.0;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MIN,2,IX) = -0.5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MIN,2,IY) =  0.5*SQRT_3_5;
+
+  // +X
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MAX,0,IX) =  0.5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MAX,0,IY) = -0.5*SQRT_3_5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MAX,1,IX) =  0.5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MAX,1,IY) =  0.0;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MAX,2,IX) =  0.5;
+  QUAD_LOC_2D_h(2,DIR_X,FACE_MAX,2,IY) =  0.5*SQRT_3_5;
+
+  // along Y
+  // -Y
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MIN,0,IX) = -0.5*SQRT_3_5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MIN,0,IY) = -0.5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MIN,1,IX) =  0.0;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MIN,1,IY) = -0.5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MIN,2,IX) =  0.5*SQRT_3_5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MIN,2,IY) = -0.5;
+  
+  // +Y
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MAX,0,IX) = -0.5*SQRT_3_5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MAX,0,IY) =  0.5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MAX,1,IX) =  0.0;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MAX,1,IY) =  0.5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MAX,2,IX) =  0.5*SQRT_3_5;
+  QUAD_LOC_2D_h(2,DIR_Y,FACE_MAX,2,IY) =  0.5;
+
+  Kokkos::deep_copy(QUAD_LOC_2D,QUAD_LOC_2D_h);
+  
+  /*
+   * Quadrature rules in 3D.
+   */
+  QUAD_LOC_3D = QuadLoc_3d_t("QUAD_LOC_3D");
+  QUAD_LOC_3D_h = Kokkos::create_mirror_view(QUAD_LOC_3D);
+
+  // 1x1=1 quadrature point (items #2 and #3 are not used)
+
+  // along X
+  // -X
+  QUAD_LOC_3D_h(0,DIR_X,FACE_MIN,0,IX) = -0.5;
+  QUAD_LOC_3D_h(0,DIR_X,FACE_MIN,0,IY) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_X,FACE_MIN,0,IZ) =  0.0;
+
+  // +X
+  QUAD_LOC_3D_h(0,DIR_X,FACE_MAX,0,IX) =  0.5;
+  QUAD_LOC_3D_h(0,DIR_X,FACE_MAX,0,IY) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_X,FACE_MAX,0,IZ) =  0.0;
+
+  // along Y
+  // -Y
+  QUAD_LOC_3D_h(0,DIR_Y,FACE_MIN,0,IX) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_Y,FACE_MIN,0,IY) = -0.5;
+  QUAD_LOC_3D_h(0,DIR_Y,FACE_MIN,0,IZ) =  0.0;
+  
+  // +Y
+  QUAD_LOC_3D_h(0,DIR_Y,FACE_MAX,0,IX) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_Y,FACE_MAX,0,IY) =  0.5;
+  QUAD_LOC_3D_h(0,DIR_Y,FACE_MAX,0,IZ) =  0.0;
+
+  // along Z
+  // -Z
+  QUAD_LOC_3D_h(0,DIR_Z,FACE_MIN,0,IX) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_Z,FACE_MIN,0,IY) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_Z,FACE_MIN,0,IZ) = -0.5;
+  
+  // +Z
+  QUAD_LOC_3D_h(0,DIR_Z,FACE_MAX,0,IX) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_Z,FACE_MAX,0,IY) =  0.0;
+  QUAD_LOC_3D_h(0,DIR_Z,FACE_MAX,0,IZ) =  0.5;
+  
+  // 2x2=4 quadrature points
+
+  // along X
+  // -X
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,0,IX) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,0,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,0,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,1,IX) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,1,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,1,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,2,IX) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,2,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,2,IZ) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,3,IX) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,3,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MIN,3,IZ) =  0.5/SQRT_3;
+
+  // +X
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,0,IX) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,0,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,0,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,1,IX) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,1,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,1,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,2,IX) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,2,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,2,IZ) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,3,IX) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,3,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_X,FACE_MAX,3,IZ) =  0.5/SQRT_3;
+
+  // along Y
+  // -Y
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,0,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,0,IY) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,0,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,1,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,1,IY) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,1,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,2,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,2,IY) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,2,IZ) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,3,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,3,IY) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MIN,3,IZ) =  0.5/SQRT_3;
+
+  // +Y
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,0,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,0,IY) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,0,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,1,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,1,IY) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,1,IZ) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,2,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,2,IY) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,2,IZ) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,3,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,3,IY) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Y,FACE_MAX,3,IZ) =  0.5/SQRT_3;
+
+  // along Z
+  // -Z
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,0,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,0,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,0,IZ) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,1,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,1,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,1,IZ) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,2,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,2,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,2,IZ) = -0.5;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,3,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,3,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MIN,3,IZ) = -0.5;
+
+  // +Z
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,0,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,0,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,0,IZ) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,1,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,1,IY) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,1,IZ) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,2,IX) = -0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,2,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,2,IZ) =  0.5;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,3,IX) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,3,IY) =  0.5/SQRT_3;
+  QUAD_LOC_3D_h(1,DIR_Z,FACE_MAX,3,IZ) =  0.5;
+
+  // 3x3=9 quadrature points
+
+  // along X
+  // -X
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,0,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,0,IY) = -0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,0,IZ) = -0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,1,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,1,IY) =  0.0;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,1,IZ) = -0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,2,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,2,IY) =  0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,2,IZ) = -0.5*SQRT_3_5;
+
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,3,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,3,IY) = -0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,3,IZ) =  0.0;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,4,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,4,IY) =  0.0;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,4,IZ) =  0.0;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,5,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,5,IY) =  0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,5,IZ) =  0.0;
+
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,6,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,6,IY) = -0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,6,IZ) =  0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,7,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,7,IY) =  0.0;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,7,IZ) =  0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,8,IX) = -0.5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,8,IY) =  0.5*SQRT_3_5;
+  QUAD_LOC_3D_h(2,DIR_X,FACE_MIN,8,IZ) =  0.5*SQRT_3_5;
+
+  // ...
+  // UNFINISHED - FIXE ME - MAKE IT MORE ROBUST
+  // ...
+  Kokkos::deep_copy(QUAD_LOC_3D,QUAD_LOC_3D_h);
+
   /*
    * initialize hydro array at t=0
    */

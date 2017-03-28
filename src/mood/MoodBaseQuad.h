@@ -14,6 +14,8 @@ namespace mood {
  *
  * In the future, if nvcc will support multi-dimensional constexpr array, we
  * will re-use again QuadratureRules.h again.
+ *
+ * THIS CLASS IS UNUSED, JUST HERE FOR REFERENCE.
  */
 class MoodBaseQuad {
 
