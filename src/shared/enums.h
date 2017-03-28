@@ -71,7 +71,7 @@ enum Direction {
   ZDIR=3,
   DIR_X = 0,
   DIR_Y = 1,
-  DIR_2 = 2
+  DIR_Z = 2
 };
 
 //! location of the outside boundary
