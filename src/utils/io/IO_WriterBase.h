@@ -2,6 +2,7 @@
 #define IO_WRITER_BASE_H_
 
 #include <shared/kokkos_shared.h>
+#include <string>
 
 namespace ppkMHD { namespace io {
 
@@ -18,11 +19,13 @@ public:
 
   virtual void save_data(DataArray2d             Udata,
 			 DataArray2d::HostMirror Uhost,
-			 int iStep) {};
+			 int iStep,
+			 std::string debug_name) {};
 
   virtual void save_data(DataArray3d             Udata,
 			 DataArray3d::HostMirror Uhost,
-			 int iStep) {};
+			 int iStep,
+			 std::string debug_name) {};
 
 }; // class IO_WriterBase
 

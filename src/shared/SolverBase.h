@@ -131,6 +131,16 @@ public:
 		 DataArray3d::HostMirror Uh,
 		 int iStep);
   
+  void save_data_debug(DataArray2d             U,
+		       DataArray2d::HostMirror Uh,
+		       int iStep,
+		       std::string debug_name);
+
+  void save_data_debug(DataArray3d             U,
+		       DataArray3d::HostMirror Uh,
+		       int iStep,
+		       std::string debug_name);
+  
 protected:
 
   //! io writer
