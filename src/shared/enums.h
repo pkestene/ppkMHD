@@ -34,7 +34,9 @@ enum FaceIdType {
   FACE_YMIN=2,
   FACE_YMAX=3,
   FACE_ZMIN=4,
-  FACE_ZMAX=5
+  FACE_ZMAX=5,
+  FACE_MIN =0,
+  FACE_MAX =1
 };
 
 //! Riemann solver type for hydro fluxes
@@ -66,7 +68,10 @@ enum ComponentIndex3D {
 enum Direction {
   XDIR=1, 
   YDIR=2,
-  ZDIR=3
+  ZDIR=3,
+  DIR_X = 0,
+  DIR_Y = 1,
+  DIR_2 = 2
 };
 
 //! location of the outside boundary

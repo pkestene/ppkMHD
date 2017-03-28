@@ -11,6 +11,7 @@
 #include "mood/mood_shared.h"
 #include "mood/Polynomial.h"
 #include "mood/MoodBaseFunctor.h"
+#include "mood/MoodBaseQuad.h"
 #include "mood/QuadratureRules.h"
 
 namespace mood {
@@ -29,7 +30,7 @@ namespace mood {
 template<int dim,
 	 int degree,
 	 STENCIL_ID stencilId>
-class ComputeFluxesFunctor : public MoodBaseFunctor<dim,degree>
+class ComputeFluxesFunctor : public MoodBaseFunctor<dim,degree>, public MoodBaseQuad
 {
     
 public:
@@ -40,6 +41,7 @@ public:
   //! total number of coefficients in the polynomial
   static const int ncoefs =  mood::binomial<dim+degree,dim>();
 
+  
   /**
    * Constructor for 2D/3D.
    */
@@ -52,6 +54,7 @@ public:
 		       Stencil          stencil,
 		       mood_matrix_pi_t mat_pi) :
     MoodBaseFunctor<dim,degree>(params),
+    MoodBaseQuad(),
     Udata(Udata),
     polyCoefs(polyCoefs),
     FluxData_x(FluxData_x),
@@ -120,41 +123,55 @@ public:
 	real_t x,y;
 	if (nbQuadPts==1) {
 
+	  int iq = 0;
+	  
 	  // left  interface in current cell
-	  x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
-	  y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
+	  //x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
+	  x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IX];
+	  //y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
+	  y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IY];
 	  UL[0][ivar] = this->eval(x*dx, y*dy, coefs_c);
 	    
 	  // right interface in neighbor cell
-	  x = QUADRATURE_LOCATION_2D_N1_X_P[0][IX];
-	  y = QUADRATURE_LOCATION_2D_N1_X_P[0][IY];
-	  UR[0][ivar] = this->eval(x*dx, y*dy, coefs_n);	  
+	  //x = QUADRATURE_LOCATION_2D_N1_X_P[0][IX];
+	  x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IX];
+	  //y = QUADRATURE_LOCATION_2D_N1_X_P[0][IY];
+	  y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IY];
+	  UR[0][ivar] = this->eval(x*dx, y*dy, coefs_n);
 	  
 	} else if (nbQuadPts==2) {
 
 	  for (int iq=0; iq<nbQuadPts; ++iq) {
 	    // left  interface in current cell
-	    x = QUADRATURE_LOCATION_2D_N2_X_M[iq][IX];
-	    y = QUADRATURE_LOCATION_2D_N2_X_M[iq][IY];
+	    //x = QUADRATURE_LOCATION_2D_N2_X_M[iq][IX];
+	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IX];
+	    //y = QUADRATURE_LOCATION_2D_N2_X_M[iq][IY];
+	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IY];
 	    UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
 	    
 	    // right interface in neighbor cell
-	    x = QUADRATURE_LOCATION_2D_N2_X_P[iq][IX];
-	    y = QUADRATURE_LOCATION_2D_N2_X_P[iq][IY];
-	    UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);	  
+	    //x = QUADRATURE_LOCATION_2D_N2_X_P[iq][IX];
+	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IX];
+	    //y = QUADRATURE_LOCATION_2D_N2_X_P[iq][IY];
+	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IY];
+	    UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
 	  }
 	  
 	} else if (nbQuadPts==3) {
 
 	  for (int iq=0; iq<nbQuadPts; ++iq) {
 	    // left  interface in current cell
-	    x = QUADRATURE_LOCATION_2D_N3_X_M[iq][IX];
-	    y = QUADRATURE_LOCATION_2D_N3_X_M[iq][IY];
+	    //x = QUADRATURE_LOCATION_2D_N3_X_M[iq][IX];
+	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IX];
+	    //y = QUADRATURE_LOCATION_2D_N3_X_M[iq][IY];
+	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IY];
 	    UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
 	    
 	    // right interface in neighbor cell
-	    x = QUADRATURE_LOCATION_2D_N3_X_P[iq][IX];
-	    y = QUADRATURE_LOCATION_2D_N3_X_P[iq][IY];
+	    //x = QUADRATURE_LOCATION_2D_N3_X_P[iq][IX];
+	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IX];
+	    //y = QUADRATURE_LOCATION_2D_N3_X_P[iq][IY];
+	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IY];
 	    UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);	  
 	  }
 	  
@@ -264,6 +281,7 @@ public:
   static constexpr int nbQuadPts = QUADRATURE_NUM_POINTS[stencilId];
   
 }; // class ComputeFluxesFunctor
+
 
 // =======================================================================
 // =======================================================================
