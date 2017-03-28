@@ -89,7 +89,7 @@ public:
   DataArray     U2;    /*!< hydrodynamics conservative variables arrays */
 
   //! reconstructing polynomial
-  std::array<DataArray,ncoefs> PolyCoefs;
+  Kokkos::Array<DataArray,ncoefs> PolyCoefs;
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
@@ -111,7 +111,8 @@ public:
   Matrix geomMatrix;
 
   //! pseudo-inverse of the geomMatrix
-  mood_matrix_pi_t geomMatrixPI_view;
+  mood_matrix_pi_t      geomMatrixPI_view;
+  mood_matrix_pi_host_t geomMatrixPI_view_h;
   
   /*
    * methods
@@ -226,8 +227,9 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   compute_pseudo_inverse(geomMatrix, geomMatrixPI);
   geomMatrixPI.print("geomMatrix pseudo inverse");
 
-  geomMatrixPI_view = mood_matrix_pi_t("geomMatrixPI_view",geomMatrixPI.m,geomMatrixPI.n);
-  mood_matrix_pi_host_t geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
+  printf("Compute pseudo inverse of size %d %d\n",geomMatrixPI.m,geomMatrixPI.n);
+  geomMatrixPI_view   = mood_matrix_pi_t("geomMatrixPI_view",geomMatrixPI.m,geomMatrixPI.n);
+  geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
 
   // copy geomMatrixPI into geomMatrixPI_view
   for (int i = 0; i<geomMatrixPI.m; ++i) { // loop over stencil point
@@ -237,8 +239,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
       geomMatrixPI_view_h(i,j) = geomMatrixPI(i,j);
     }
   }
-  Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
-
+  // upload pseudo-inverse to device memory
+  Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);  
   
   /*
    * initialize hydro array at t=0
@@ -328,7 +330,7 @@ double SolverHydroMood<dim,degree>::compute_dt_local()
   Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
-  
+
   return dt;
 
 } // SolverHydroMood::compute_dt_local
@@ -340,7 +342,7 @@ void SolverHydroMood<dim,degree>::next_iteration_impl()
 {
 
   if (m_iteration % 10 == 0) {
-    std::cout << "time step=" << m_iteration << std::endl;
+    std::cout << "time step=" << m_iteration << " (dt=" << m_dt << ")" << std::endl;
   }
   
   // output
@@ -394,11 +396,11 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 							real_t dt)
 {
   
-  real_t dtdx;
-  real_t dtdy;
+  //real_t dtdx;
+  //real_t dtdy;
   
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
+  //dtdx = dt / params.dx;
+  //dtdy = dt / params.dy;
 
   // fill ghost cell in data_in
   timers[TIMER_BOUNDARIES]->start();
@@ -418,16 +420,22 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
       functor(data_in, PolyCoefs, params, stencil, geomMatrixPI_view);
     Kokkos::parallel_for(nbCells,functor);
-    
+
+    for (int icoef=0; icoef<ncoefs; ++icoef)
+      save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved, "poly"+std::to_string(icoef));
+
   }
   
   // compute fluxes
-  // {
-  //   ComputeAndStoreFluxesFunctor functor(params, Q,
-  // 					   Fluxes_x, Fluxes_y,
-  // 					   dtdx, dtdy);
-  //   Kokkos::parallel_for(nbCells, functor);
-  // }
+  {
+    //ComputeAndStoreFluxesFunctor
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
+							Fluxes_x, Fluxes_y, Fluxes_z,
+							params, stencil, geomMatrixPI_view);
+    Kokkos::parallel_for(nbCells, functor);
+
+    save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
+  }
   
   // actual update
   // {
