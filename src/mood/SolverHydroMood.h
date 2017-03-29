@@ -70,13 +70,6 @@ public:
   //! stencil size (number of cells)
   static const int stencil_size = STENCIL_SIZE[stencilId];
 
-  //! quadrature rules related constants
-  static constexpr int maxNbQuadRules  = 3;
-  static constexpr int maxNbQuadPoints = 3;
-  static constexpr int maxNbQuadPoints_3d = 9;
-  static constexpr real_t SQRT_3   = 1.732050807568877293527446341505872367;
-  static constexpr real_t SQRT_3_5 = 0.7745966692414834042779148148838430643;
-
   SolverHydroMood(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMood();
 
@@ -121,13 +114,9 @@ public:
   mood_matrix_pi_host_t geomMatrixPI_view_h;
 
   //! Quadrature point location view
-  using QuadLoc_2d_t = Kokkos::View<real_t[maxNbQuadRules][DIM2][2][maxNbQuadPoints][TWO_D]>;
-  using QuadLoc_2d_h_t = QuadLoc_2d_t::HostMirror;
   QuadLoc_2d_t   QUAD_LOC_2D;
   QuadLoc_2d_h_t QUAD_LOC_2D_h;
   
-  using QuadLoc_3d_t = Kokkos::View<real_t[maxNbQuadRules][DIM3][2][maxNbQuadPoints_3d][THREE_D]>;
-  using QuadLoc_3d_h_t = QuadLoc_3d_t::HostMirror;
   QuadLoc_3d_t   QUAD_LOC_3D;
   QuadLoc_3d_h_t QUAD_LOC_3D_h;
   
@@ -722,7 +711,8 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     //ComputeAndStoreFluxesFunctor
     ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
 							Fluxes_x, Fluxes_y, Fluxes_z,
-							params, stencil, geomMatrixPI_view);
+							params, stencil, geomMatrixPI_view,
+							QUAD_LOC_2D);
     Kokkos::parallel_for(nbCells, functor);
 
     save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");

@@ -5,10 +5,25 @@
 #include <cmath>
 
 #include "shared/real_type.h"
+#include "shared/enums.h"
 
 #include "mood/Stencil.h"
 
 namespace mood {
+
+//! quadrature rules related constants
+constexpr int maxNbQuadRules  = 3;
+constexpr int maxNbQuadPoints = 3;
+constexpr int maxNbQuadPoints_3d = 9;
+constexpr real_t SQRT_3   = 1.732050807568877293527446341505872367;
+constexpr real_t SQRT_3_5 = 0.7745966692414834042779148148838430643;
+
+using QuadLoc_2d_t = Kokkos::View<real_t[maxNbQuadRules][DIM2][2][maxNbQuadPoints][TWO_D]>;
+using QuadLoc_2d_h_t = QuadLoc_2d_t::HostMirror;
+
+using QuadLoc_3d_t = Kokkos::View<real_t[maxNbQuadRules][DIM3][2][maxNbQuadPoints_3d][THREE_D]>;
+using QuadLoc_3d_h_t = QuadLoc_3d_t::HostMirror;
+
 
 /**
  * Quadrature rules: map stencil id to the required number of quadrature
@@ -112,8 +127,8 @@ constexpr real_t QUADRATURE_LOCATION_2D_N1_Y_P[1][2] =
  */
 // from sympy import *
 // N(sqrt(3),37)
-constexpr real_t SQRT_3 = 1.732050807568877293527446341505872367;
-constexpr real_t SQRT_3_5 = 0.7745966692414834042779148148838430643;
+//constexpr real_t SQRT_3 = 1.732050807568877293527446341505872367;
+//constexpr real_t SQRT_3_5 = 0.7745966692414834042779148148838430643;
 
 constexpr real_t QUADRATURE_LOCATION_2D_N2_X_M[2][2] =
   {

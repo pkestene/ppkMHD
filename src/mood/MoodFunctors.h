@@ -11,7 +11,7 @@
 #include "mood/mood_shared.h"
 #include "mood/Polynomial.h"
 #include "mood/MoodBaseFunctor.h"
-#include "mood/MoodBaseQuad.h"
+//#include "mood/MoodBaseQuad.h"
 #include "mood/QuadratureRules.h"
 
 namespace mood {
@@ -30,7 +30,7 @@ namespace mood {
 template<int dim,
 	 int degree,
 	 STENCIL_ID stencilId>
-class ComputeFluxesFunctor : public MoodBaseFunctor<dim,degree>, public MoodBaseQuad
+class ComputeFluxesFunctor : public MoodBaseFunctor<dim,degree>
 {
     
 public:
@@ -40,7 +40,6 @@ public:
   
   //! total number of coefficients in the polynomial
   static const int ncoefs =  mood::binomial<dim+degree,dim>();
-
   
   /**
    * Constructor for 2D/3D.
@@ -52,16 +51,17 @@ public:
 		       DataArray        FluxData_z,
 		       HydroParams      params,
 		       Stencil          stencil,
-		       mood_matrix_pi_t mat_pi) :
+		       mood_matrix_pi_t mat_pi,
+		       QuadLoc_2d_t     QUAD_LOC_2D) :
     MoodBaseFunctor<dim,degree>(params),
-    MoodBaseQuad(),
     Udata(Udata),
     polyCoefs(polyCoefs),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
     FluxData_z(FluxData_z),
     stencil(stencil),
-    mat_pi(mat_pi)
+    mat_pi(mat_pi),
+    QUAD_LOC_2D(QUAD_LOC_2D)
   {};
 
   ~ComputeFluxesFunctor() {};
@@ -121,59 +121,17 @@ public:
 	// reconstruct Udata on the left face along X direction
 	// for each quadrature points
 	real_t x,y;
-	if (nbQuadPts==1) {
-
-	  int iq = 0;
+	for (int iq = 0; iq<nbQuadPts; ++iq) {
 	  
 	  // left  interface in current cell
-	  //x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
-	  x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IX];
-	  //y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
-	  y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IY];
-	  UL[0][ivar] = this->eval(x*dx, y*dy, coefs_c);
+	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IY);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
 	    
 	  // right interface in neighbor cell
-	  //x = QUADRATURE_LOCATION_2D_N1_X_P[0][IX];
-	  x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IX];
-	  //y = QUADRATURE_LOCATION_2D_N1_X_P[0][IY];
-	  y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IY];
-	  UR[0][ivar] = this->eval(x*dx, y*dy, coefs_n);
-	  
-	} else if (nbQuadPts==2) {
-
-	  for (int iq=0; iq<nbQuadPts; ++iq) {
-	    // left  interface in current cell
-	    //x = QUADRATURE_LOCATION_2D_N2_X_M[iq][IX];
-	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IX];
-	    //y = QUADRATURE_LOCATION_2D_N2_X_M[iq][IY];
-	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IY];
-	    UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
-	    
-	    // right interface in neighbor cell
-	    //x = QUADRATURE_LOCATION_2D_N2_X_P[iq][IX];
-	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IX];
-	    //y = QUADRATURE_LOCATION_2D_N2_X_P[iq][IY];
-	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IY];
-	    UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
-	  }
-	  
-	} else if (nbQuadPts==3) {
-
-	  for (int iq=0; iq<nbQuadPts; ++iq) {
-	    // left  interface in current cell
-	    //x = QUADRATURE_LOCATION_2D_N3_X_M[iq][IX];
-	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IX];
-	    //y = QUADRATURE_LOCATION_2D_N3_X_M[iq][IY];
-	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MIN][iq][IY];
-	    UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
-	    
-	    // right interface in neighbor cell
-	    //x = QUADRATURE_LOCATION_2D_N3_X_P[iq][IX];
-	    x = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IX];
-	    //y = QUADRATURE_LOCATION_2D_N3_X_P[iq][IY];
-	    y = QUAD_LOC_2D[nbQuadPts-1][DIR_X][FACE_MAX][iq][IY];
-	    UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);	  
-	  }
+	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IX);
+	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IY);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
 	  
 	}
 
@@ -273,6 +231,7 @@ public:
 
   Stencil          stencil;
   mood_matrix_pi_t mat_pi;
+  QuadLoc_2d_t     QUAD_LOC_2D;
 
   // get the number of cells in stencil
   static constexpr int stencil_size = STENCIL_SIZE[stencilId];
