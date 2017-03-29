@@ -1,7 +1,5 @@
-#ifndef MOOD_FUNCTORS_H_
-#define MOOD_FUNCTORS_H_
-
-#include <array>
+#ifndef MOOD_FLUXES_FUNCTORS_H_
+#define MOOD_FLUXES_FUNCTORS_H_
 
 #include "shared/kokkos_shared.h"
 #include "shared/HydroParams.h"
@@ -11,7 +9,6 @@
 #include "mood/mood_shared.h"
 #include "mood/Polynomial.h"
 #include "mood/MoodBaseFunctor.h"
-//#include "mood/MoodBaseQuad.h"
 #include "mood/QuadratureRules.h"
 
 namespace mood {
@@ -81,7 +78,8 @@ public:
 
     const real_t nbvar = this->params.nbvar;
 
-    // riemann solver states left/right (co
+    // riemann solver states left/right (conservative variables),
+    // one for each quadrature point
     HydroState UL[nbQuadPts], UR[nbQuadPts];
 
     // primitive variables left / right states
@@ -126,15 +124,15 @@ public:
 	real_t x,y;
 	for (int iq = 0; iq<nbQuadPts; ++iq) {
 	  
-	  // left  interface in current cell
-	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IX);
-	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IY);
-	  UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
-	    
-	  // right interface in neighbor cell
+	  // left  interface in neighbor cell
 	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IX);
 	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IY);
-	  UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
+	    
+	  // right interface in current cell
+	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IY);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
 	  
 	}
 
@@ -209,15 +207,15 @@ public:
 	real_t x,y;
 	for (int iq = 0; iq<nbQuadPts; ++iq) {
 	  
-	  // left  interface in current cell
-	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IX);
-	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IY);
-	  UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
-	    
-	  // right interface in neighbor cell
+	  // left  interface in neighbor cell
 	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IX);
 	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IY);
-	  UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
+	    
+	  // right interface in current cell
+	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IY);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
 	  
 	}
 	
@@ -269,6 +267,9 @@ public:
   } // end functor 2d
 
   //! functor for 3d 
+  /************* UNFINISHED - TODO ***************/
+  /************* UNFINISHED - TODO ***************/
+  /************* UNFINISHED - TODO ***************/
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
@@ -348,46 +349,43 @@ public:
   
 }; // class ComputeFluxesFunctor
 
-
 // =======================================================================
 // =======================================================================
 /**
- * Compute MOOD polynomial coefficients.
+ * Recompute MOOD fluxes arround flagged cells.
  * 
  * Please note:
  * - DataArray and HydroState are typedef'ed in MoodBaseFunctor
+ * - FluxData_z may or may not be allocated (depending dim==2 or 3).
  *
- * stencilId must be known at compile time, so that stencilSize is too.
  */
 template<int dim,
-	 int degree,
-	 STENCIL_ID stencilId>
-class ComputeReconstructionPolynomialFunctor : public MoodBaseFunctor<dim,degree>
+	 int degree>
+class RecomputeFluxesFunctor : public MoodBaseFunctor<dim,degree>
 {
     
 public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
-  using typename PolynomialEvaluator<dim,degree>::coefs_t;
-
-  //! total number of coefficients in the polynomial
-  static const int ncoefs =  mood::binomial<dim+degree,dim>();
-
+  using typename MoodBaseFunctor<dim,degree>::HydroState;
+    
   /**
    * Constructor for 2D/3D.
    */
-  ComputeReconstructionPolynomialFunctor(DataArray                       Udata,
-					 Kokkos::Array<DataArray,ncoefs> polyCoefs,
-					 HydroParams                     params,
-					 Stencil                         stencil,
-					 mood_matrix_pi_t                mat_pi) :
+  RecomputeFluxesFunctor(DataArray        Udata,
+			 DataArray        Flags,
+			 DataArray        FluxData_x,
+			 DataArray        FluxData_y,
+			 DataArray        FluxData_z,
+			 HydroParams      params) :
     MoodBaseFunctor<dim,degree>(params),
     Udata(Udata),
-    polyCoefs(polyCoefs),
-    stencil(stencil),
-    mat_pi(mat_pi)
+    Flags(Flags),
+    FluxData_x(FluxData_x),
+    FluxData_y(FluxData_y),
+    FluxData_z(FluxData_z)
   {};
 
-  ~ComputeReconstructionPolynomialFunctor() {};
+  ~RecomputeFluxesFunctor() {};
 
   //! functor for 2d 
   template<int dim_ = dim>
@@ -399,129 +397,188 @@ public:
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
 
-    //const real_t dx = this->params.dx;
-    //const real_t dy = this->params.dy;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
 
     const real_t nbvar = this->params.nbvar;
+
+    // riemann solver states left/right 
+    HydroState UL, UR;
+
+    // primitive variables left / right states
+    HydroState qL, qR, qgdnv;
+    real_t     c;
     
+    // accumulate flux over all quadrature points
+    HydroState flux;
+
+    // current cell coordinates
     int i,j;
     index2coord(index,i,j,isize,jsize);
+
+    // current flag (indicating if fluxes need to be recomputed)
+    real_t flag = Flags(i,j,0);
     
-    // rhs is sized upon stencil, just remove central point
-    Kokkos::Array<real_t,stencil_size-1> rhs;
+    if( flag > 0 ) {
 
-    if(j >= ghostWidth-1 && j < jsize-ghostWidth+1  &&
-       i >= ghostWidth-1 && i < isize-ghostWidth+1 ) {
+      /*********************************
+       * flux along DIR_X - FACE_XMIN
+       *********************************/
 
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
       for (int ivar=0; ivar<nbvar; ++ivar) {
 	
-	// retrieve neighbors data for variable ivar, and build rhs
-	int irhs = 0;
-	for (int is=0; is<stencil_size; ++is) {
-	  int x = stencil.offsets(is,0);
-	  int y = stencil.offsets(is,1);
-	  if (x != 0 or y != 0) {
-	    rhs[irhs] = Udata(i+x,j+y,ivar) - Udata(i,j,ivar);
-	    irhs++;
-	  }	
-	} // end for is
+	// left  interface in neighbor cell
+	UL[ivar] = Udata(i-1,j,ivar);
 	
-	// retrieve reconstruction polynomial coefficients in current cell
-	coefs_t coefs_c;
-	coefs_c[0] = Udata(i,j,ivar);
-	for (int icoef=0; icoef<mat_pi.dimension_0(); ++icoef) {
-	  real_t tmp = 0;
-	  for (int ik=0; ik<mat_pi.dimension_1(); ++ik) {
-	    tmp += mat_pi(icoef,ik) * rhs[ik];
-	  }
-	  coefs_c[icoef+1] = tmp;
-	}
-
-	// copy back results on device memory
-	for (int icoef=0; icoef<ncoefs; ++icoef)
-	  polyCoefs[icoef](i,j,ivar) = coefs_c[icoef];
-
+	// right interface in current cell
+	UR[ivar] = Udata(i,j,ivar);
+		
       } // end for ivar
+
+      // we can now perform the riemann solvers 
+
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);	  
+     
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_x(i,j,ivar) = flux[ivar];
+      
+      /*********************************
+       * flux along DIR_X - FACE_XMAX
+       *********************************/
+
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+	
+	// left interface in current cell
+	UL[ivar] = Udata(i,j,ivar);
+	
+	// right  interface in neighbor cell
+	UR[ivar] = Udata(i+1,j,ivar);
+		
+      } // end for ivar
+
+      // we can now perform the riemann solvers 
+
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);	  
+     
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_x(i+1,j,ivar) = flux[ivar];
+      
+      /*********************************
+       * flux along DIR_Y - FACE_YMIN
+       *********************************/
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+		  
+	// left  interface in neighbor cell
+	UL[ivar] = Udata(i,j-1,ivar);
+	    
+	// right interface in current cell
+	UR[ivar] = Udata(i,j,ivar);
+	  
+      } // end for ivar
+
+      // we can now perform the riemann solvers
+      
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      // swap IU and IV velocity
+      this->swap(qL[IU],qL[IV]);
+      this->swap(qR[IU],qR[IV]);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);
+
+      // swap again IU and IV
+      this->swap(flux[IU],flux[IV]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_y(i,j,ivar) = flux[ivar];
+      
+      /*********************************
+       * flux along DIR_Y - FACE_YMAX
+       *********************************/
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+		  
+	// left  interface in current cell
+	UL[ivar] = Udata(i,j,ivar);
+	    
+	// right interface in neighbor cell
+	UR[ivar] = Udata(i,j+1,ivar);
+	  
+      } // end for ivar
+
+      // we can now perform the riemann solvers
+      
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      // swap IU and IV velocity
+      this->swap(qL[IU],qL[IV]);
+      this->swap(qR[IU],qR[IV]);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);
+
+      // swap again IU and IV
+      this->swap(flux[IU],flux[IV]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_y(i,j+1,ivar) = flux[ivar];
       
     } // end if
     
   } // end functor 2d
 
-  //! functor for 3d 
-  template<int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
-  {
-    const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
-
-    //const real_t dx = this->params.dx;
-    //const real_t dy = this->params.dy;
-    //const real_t dz = this->params.dz;
-
-    const real_t nbvar = this->params.nbvar;
-
-    int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
-
-    // rhs is sized upon stencil, just remove central point
-    Kokkos::Array<real_t,stencil_size-1> rhs;
-    
-    if(k >= ghostWidth && k < ksize - ghostWidth+1 &&
-       j >= ghostWidth && j < jsize - ghostWidth+1 &&
-       i >= ghostWidth && i < isize - ghostWidth+1) {
-
-      for (int ivar=0; ivar<nbvar; ++ivar) {
-
-	// retrieve neighbors data for ivar, and build rhs
-	int irhs = 0;
-	for (int is=0; is<stencil_size; ++is) {
-	  int x = stencil.offsets(is,0);
-	  int y = stencil.offsets(is,1);
-	  int z = stencil.offsets(is,2);
-	  if (x != 0 or y != 0 or z != 0) {
-	    rhs[irhs] = Udata(i+x,j+y,k+z,ivar) - Udata(i,j,k,ivar);
-	    irhs++;
-	  }	
-	} // end for is
-
-	// retrieve reconstruction polynomial coefficients in current cell
-	coefs_t coefs_c;
-	coefs_c[0] = Udata(i,j,k,ivar);
-	for (int icoef=0; icoef<mat_pi.dimension_0(); ++icoef) {
-	  real_t tmp = 0;
-	  for (int ik=0; ik<mat_pi.dimension_1(); ++ik) {
-	    tmp += mat_pi(icoef,ik) * rhs[ik];
-	  }
-	  coefs_c[icoef+1] = tmp;
-	}
-	
-	// copy back results on device memory
-	for (int icoef=0; icoef<ncoefs; ++icoef)
-	  polyCoefs[icoef](i,j,k,ivar) = coefs_c[icoef];
-	
-      } // end for ivar
-      
-    } // end if i,j,k
-    
-  }  // end functor 3d
+  DataArray   Udata;
+  DataArray   Flags;
+  DataArray   FluxData_x, FluxData_y, FluxData_z;
   
-  DataArray                       Udata;
-  Kokkos::Array<DataArray,ncoefs> polyCoefs;
-
-  Stencil          stencil;
-  mood_matrix_pi_t mat_pi;
-
-  // get the number of cells in stencil
-  static constexpr int stencil_size = STENCIL_SIZE[stencilId];
-
-  // get the number of quadrature point per face corresponding to this stencil
-  static constexpr int nbQuadPts = QUADRATURE_NUM_POINTS[stencilId];
-  
-}; // class ComputeReconstructionPolynomialFunctor
+}; // class RecomputeFluxesFunctor
 
 } // namespace mood
 
-#endif // MOOD_FUNCTORS_H_
+#endif // MOOD_FLUXES_FUNCTORS_H_

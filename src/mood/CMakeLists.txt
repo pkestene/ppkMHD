@@ -18,8 +18,10 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/MoodBaseFunctor.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MoodBaseQuad.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MoodBaseQuad.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/MoodFunctors.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/MoodPolynomialReconstructionFunctors.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/MoodFluxesFunctors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MoodInitFunctors.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/MoodUpdateFunctors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroMood.h
   )
 

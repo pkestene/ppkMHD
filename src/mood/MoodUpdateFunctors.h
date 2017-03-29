@@ -17,11 +17,16 @@ public:
   UpdateFunctor2D(HydroParams params,
 		  DataArray2d Udata,
 		  DataArray2d FluxData_x,
-		  DataArray2d FluxData_y) :
+		  DataArray2d FluxData_y,
+		  real_t dtdx,
+		  real_t dtdy) :
     params(params),
     Udata(Udata),
     FluxData_x(FluxData_x),
-    FluxData_y(FluxData_y) {};
+    FluxData_y(FluxData_y),
+    dtdx(dtdx),
+    dtdy(dtdy)
+  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -36,25 +41,25 @@ public:
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
-      Udata(i  ,j  , ID) +=  FluxData_x(i  ,j  , ID);
-      Udata(i  ,j  , IP) +=  FluxData_x(i  ,j  , IP);
-      Udata(i  ,j  , IU) +=  FluxData_x(i  ,j  , IU);
-      Udata(i  ,j  , IV) +=  FluxData_x(i  ,j  , IV);
+      Udata(i  ,j  , ID) +=  FluxData_x(i  ,j  , ID) * dtdx;
+      Udata(i  ,j  , IP) +=  FluxData_x(i  ,j  , IP) * dtdx;
+      Udata(i  ,j  , IU) +=  FluxData_x(i  ,j  , IU) * dtdx;
+      Udata(i  ,j  , IV) +=  FluxData_x(i  ,j  , IV) * dtdx;
 
-      Udata(i  ,j  , ID) -=  FluxData_x(i+1,j  , ID);
-      Udata(i  ,j  , IP) -=  FluxData_x(i+1,j  , IP);
-      Udata(i  ,j  , IU) -=  FluxData_x(i+1,j  , IU);
-      Udata(i  ,j  , IV) -=  FluxData_x(i+1,j  , IV);
+      Udata(i  ,j  , ID) -=  FluxData_x(i+1,j  , ID) * dtdx;
+      Udata(i  ,j  , IP) -=  FluxData_x(i+1,j  , IP) * dtdx;
+      Udata(i  ,j  , IU) -=  FluxData_x(i+1,j  , IU) * dtdx;
+      Udata(i  ,j  , IV) -=  FluxData_x(i+1,j  , IV) * dtdx;
       
-      Udata(i  ,j  , ID) +=  FluxData_y(i  ,j  , ID);
-      Udata(i  ,j  , IP) +=  FluxData_y(i  ,j  , IP);
-      Udata(i  ,j  , IU) +=  FluxData_y(i  ,j  , IV); //
-      Udata(i  ,j  , IV) +=  FluxData_y(i  ,j  , IU); //
+      Udata(i  ,j  , ID) +=  FluxData_y(i  ,j  , ID) * dtdy;
+      Udata(i  ,j  , IP) +=  FluxData_y(i  ,j  , IP) * dtdy;
+      Udata(i  ,j  , IU) +=  FluxData_y(i  ,j  , IV) * dtdy; //
+      Udata(i  ,j  , IV) +=  FluxData_y(i  ,j  , IU) * dtdy; //
       
-      Udata(i  ,j  , ID) -=  FluxData_y(i  ,j+1, ID);
-      Udata(i  ,j  , IP) -=  FluxData_y(i  ,j+1, IP);
-      Udata(i  ,j  , IU) -=  FluxData_y(i  ,j+1, IV); //
-      Udata(i  ,j  , IV) -=  FluxData_y(i  ,j+1, IU); //
+      Udata(i  ,j  , ID) -=  FluxData_y(i  ,j+1, ID) * dtdy;
+      Udata(i  ,j  , IP) -=  FluxData_y(i  ,j+1, IP) * dtdy;
+      Udata(i  ,j  , IU) -=  FluxData_y(i  ,j+1, IV) * dtdy; //
+      Udata(i  ,j  , IV) -=  FluxData_y(i  ,j+1, IU) * dtdy; //
 
     } // end if
     
@@ -64,6 +69,7 @@ public:
   DataArray2d Udata;
   DataArray2d FluxData_x;
   DataArray2d FluxData_y;
+  real_t dtdx, dtdy;
   
 }; // UpdateFunctor2D
 
@@ -82,12 +88,17 @@ public:
 				  DataArray2d Udata,
 				  DataArray2d Flags,
 				  DataArray2d FluxData_x,
-				  DataArray2d FluxData_y) :
+				  DataArray2d FluxData_y,
+				  real_t dtdx,
+				  real_t dtdy) :
     params(params),
     Udata(Udata),
     Flags(Flags),
     FluxData_x(FluxData_x),
-    FluxData_y(FluxData_y) {};
+    FluxData_y(FluxData_y),
+    dtdx(dtdx),
+    dtdy(dtdy)
+  {};
   
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
@@ -110,10 +121,10 @@ public:
       real_t rho = Udata(i  ,j  , ID);
 
       real_t rho_new = rho
-	+ FluxData_x(i  ,j  , ID)
-	- FluxData_x(i+1,j  , ID)
-	+ FluxData_y(i  ,j  , ID)
-	- FluxData_y(i  ,j+1, ID);
+	+ FluxData_x(i  ,j  , ID) * dtdx
+	- FluxData_x(i+1,j  , ID) * dtdx
+	+ FluxData_y(i  ,j  , ID) * dtdy
+	- FluxData_y(i  ,j+1, ID) * dtdy; 
 
       if (rho_new < 0)
 	flag_tmp = 1.0;
@@ -129,6 +140,7 @@ public:
   DataArray2d Flags;
   DataArray2d FluxData_x;
   DataArray2d FluxData_y;
+  real_t      dtdx, dtdy;
   
 }; // ComputeMoodFlagsUpdateFunctor2D
 

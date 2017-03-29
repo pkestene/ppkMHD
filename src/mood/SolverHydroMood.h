@@ -28,7 +28,8 @@
 #include "mood/Matrix.h"
 
 // mood functors (where the action takes place)
-#include "mood/MoodFunctors.h"
+#include "mood/MoodPolynomialReconstructionFunctors.h"
+#include "mood/MoodFluxesFunctors.h"
 #include "mood/MoodInitFunctors.h"
 #include "mood/MoodDtFunctor.h"
 #include "mood/MoodUpdateFunctors.h"
@@ -680,12 +681,14 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 							real_t dt)
 {
   
-  //real_t dtdx;
-  //real_t dtdy;
+  real_t dtdx;
+  real_t dtdy;
   
-  //dtdx = dt / params.dx;
-  //dtdy = dt / params.dy;
+  dtdx = dt / params.dx;
+  dtdy = dt / params.dy;
 
+  //printf("KKKK % 12.10f % 12.10f %f %f\n",dtdx,dtdy, params.dx, params.dy);
+  
   // fill ghost cell in data_in
   timers[TIMER_BOUNDARIES]->start();
   make_boundaries(data_in);
@@ -712,7 +715,6 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   
   // compute fluxes
   {
-    //ComputeAndStoreFluxesFunctor
     ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
 							Fluxes_x, Fluxes_y, Fluxes_z,
 							params, stencil, geomMatrixPI_view,
@@ -726,22 +728,26 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // flag cells for which fluxes need to be recomputed
   {  
     ComputeMoodFlagsUpdateFunctor2D functor(params, data_out, MoodFlags,
-					    Fluxes_x, Fluxes_y);
+					    Fluxes_x, Fluxes_y,
+					    dtdx,     dtdy);
     Kokkos::parallel_for(nbCells, functor);
     save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
   }
 
-  // recompute flagged cells
+  // recompute fluxes arround flagged cells
   {
-    RecomputeFunctor2D functor(params, data_out, MoodFlags,
-			       Fluxes_x, Fluxes_y);
+    RecomputeFluxesFunctor<dim,degree> functor(data_out, MoodFlags,
+					       Fluxes_x, Fluxes_y, Fluxes_z, params);
     Kokkos::parallel_for(nbCells, functor);
+    save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
+    save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
   }
   
   // actual update
   {
     UpdateFunctor2D functor(params, data_out,
-			    Fluxes_x, Fluxes_y);
+			    Fluxes_x, Fluxes_y,
+			    dtdx,     dtdy);
     Kokkos::parallel_for(nbCells, functor);
   }
     
