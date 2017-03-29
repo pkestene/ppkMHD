@@ -31,6 +31,7 @@
 #include "mood/MoodFunctors.h"
 #include "mood/MoodInitFunctors.h"
 #include "mood/MoodDtFunctor.h"
+#include "mood/MoodUpdateFunctors.h"
 
 #include "mood/mood_utils.h"
 
@@ -97,7 +98,7 @@ public:
   DataArray Fluxes_x, Fluxes_y, Fluxes_z;
 
   //! mood detection
-  DataArrayScalar MoodFlags;
+  DataArray MoodFlags;
 
   /*
    * MOOD config
@@ -179,6 +180,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   SolverBase(params, configMap),
   U(), Uhost(), U2(),
   Fluxes_x(), Fluxes_y(), Fluxes_z(),
+  MoodFlags(),
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
@@ -205,7 +207,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
     
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
-
+    MoodFlags = DataArray("MoodFlags", isize, jsize, 1);
+    
     // init polynomial coefficients array
     for (int ip=0; ip<ncoefs; ++ip) {
       std::string label = "PolyCoefs_" + std::to_string(ip);
@@ -221,6 +224,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
     Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nbvar);
     Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nbvar);
+    MoodFlags = DataArray("MoodFlags", isize, jsize, ksize, 1);
 
     // init polynomial coefficients array
     for (int ip=0; ip<ncoefs; ++ip) {
@@ -621,13 +625,13 @@ template<int dim, int degree>
 void SolverHydroMood<dim,degree>::next_iteration_impl()
 {
 
-  if (m_iteration % 10 == 0) {
+  if (m_iteration % 1 == 0) {
     std::cout << "time step=" << m_iteration << " (dt=" << m_dt << ")" << std::endl;
   }
   
   // output
   if (params.enableOutput) {
-    if ( should_save_solution() ) {
+    //if ( should_save_solution() ) {
       
       std::cout << "Output results at time t=" << m_t
 		<< " step " << m_iteration
@@ -635,7 +639,7 @@ void SolverHydroMood<dim,degree>::next_iteration_impl()
       
       save_solution();
       
-    } // end output
+      //} // end output
   } // end enable output
   
   // compute new dt
@@ -702,7 +706,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     Kokkos::parallel_for(nbCells,functor);
 
     for (int icoef=0; icoef<ncoefs; ++icoef)
-      save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved, "poly"+std::to_string(icoef));
+      save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
 
   }
   
@@ -716,16 +720,24 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     Kokkos::parallel_for(nbCells, functor);
 
     save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
+    save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+  }
+
+  // flag cells for which fluxes need to be recomputed
+  {  
+    TryUpdateFunctor2D functor(params, data_out, MoodFlags,
+			       Fluxes_x, Fluxes_y);
+    Kokkos::parallel_for(nbCells, functor);
+    save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
   }
   
   // actual update
-  // {
-  //   UpdateFunctor functor(params, data_out,
-  // 			    Fluxes_x, Fluxes_y);
-  //   Kokkos::parallel_for(nbCells, functor);
-  // }
-  
-  
+  {
+    UpdateFunctor2D functor(params, data_out,
+			    Fluxes_x, Fluxes_y);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+    
   timers[TIMER_NUM_SCHEME]->stop();
   
 } // SolverHydroMood::time_integration_impl

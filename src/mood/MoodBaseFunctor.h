@@ -33,6 +33,14 @@ public:
   const int nbvar = params.nbvar;
 
   /**
+   * a dummy swap device routine.
+   */
+  KOKKOS_INLINE_FUNCTION
+  void swap ( real_t& a, real_t& b ) const {
+    real_t c = a; a=b; b=c;
+  }
+
+  /**
    * Equation of state:
    * compute pressure p and speed of sound c, from density rho and
    * internal energy eint using the "calorically perfect gas" equation

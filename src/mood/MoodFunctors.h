@@ -93,8 +93,11 @@ public:
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
-        
-    if(j >= ghostWidth && j < jsize-ghostWidth+1  &&
+
+    /*********************
+     * flux along DIR_X
+     *********************/
+    if(j >= ghostWidth && j < jsize-ghostWidth   &&
        i >= ghostWidth && i < isize-ghostWidth+1 ) {
 
       // reset flux
@@ -147,15 +150,119 @@ public:
 	// compute riemann flux
 	::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux_tmp,this->params);
 
-	for (int ivar=0; ivar<nbvar; ++ivar)
-	  flux[ivar] += flux_tmp[ivar];
-	
+	// the following will be nicer when nvcc will accept constexpr array.
+	if (nbQuadPts == 1) {
+	  
+	  // just copy flux_tmp into flux
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] = flux_tmp[ivar];
+	  
+	} else if (nbQuadPts == 2) {
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N2[iq];
+	  	  
+	} else if (nbQuadPts == 3) {
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N3[iq];
+
+	}
+	  
       }
 
       // finaly copy back the flux on device memory
       for (int ivar=0; ivar<nbvar; ++ivar)
 	FluxData_x(i,j,ivar) = flux[ivar];
+      
+    } // end if
 
+    /*********************
+     * flux along DIR_Y
+     *********************/
+    if(j >= ghostWidth && j < jsize-ghostWidth+1   &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve reconstruction polynomial coefficients in current cell
+      // and all compute UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+	
+	// current cell
+	coefs_t coefs_c;
+
+	// neighbor cell
+	coefs_t coefs_n;
+	
+	// read polynomial coefficients
+	for (int icoef=0; icoef<ncoefs; ++icoef) {
+	  coefs_c[icoef] = polyCoefs[icoef](i  ,j  ,ivar);
+	  coefs_n[icoef] = polyCoefs[icoef](i  ,j-1,ivar);
+	}
+	
+	// reconstruct Udata on the left face along X direction
+	// for each quadrature points
+	real_t x,y;
+	for (int iq = 0; iq<nbQuadPts; ++iq) {
+	  
+	  // left  interface in current cell
+	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IY);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, coefs_c);
+	    
+	  // right interface in neighbor cell
+	  x = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IX);
+	  y = QUAD_LOC_2D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IY);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, coefs_n);
+	  
+	}
+	
+      } // end for ivar
+
+      // we can now perform the riemann solvers for each quadrature point
+      for (int iq=0; iq<nbQuadPts; ++iq) {
+
+	// convert to primitive variable before riemann solver
+	this->computePrimitives(UL[iq], &c, qL);
+	this->computePrimitives(UR[iq], &c, qR);
+
+	// compute riemann flux
+	// swap IU and IV velocity
+	this->swap(qL[IU],qL[IV]);
+	this->swap(qR[IU],qR[IV]);
+	::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux_tmp,this->params);
+
+	// the following will be nicer when nvcc will accept constexpr array.
+	if (nbQuadPts == 1) {
+	  
+	  // just copy flux_tmp into flux
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] = flux_tmp[ivar];
+	  
+	} else if (nbQuadPts == 2) {
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N2[iq];
+	  	  
+	} else if (nbQuadPts == 3) {
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N3[iq];
+
+	}
+	  
+      }
+
+      // swap again IU and IV
+      this->swap(flux[IU],flux[IV]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_y(i,j,ivar) = flux[ivar];
       
     } // end if
     
