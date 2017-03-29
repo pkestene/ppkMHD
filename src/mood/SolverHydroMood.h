@@ -725,10 +725,17 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 
   // flag cells for which fluxes need to be recomputed
   {  
-    TryUpdateFunctor2D functor(params, data_out, MoodFlags,
-			       Fluxes_x, Fluxes_y);
+    ComputeMoodFlagsUpdateFunctor2D functor(params, data_out, MoodFlags,
+					    Fluxes_x, Fluxes_y);
     Kokkos::parallel_for(nbCells, functor);
     save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
+  }
+
+  // recompute flagged cells
+  {
+    RecomputeFunctor2D functor(params, data_out, MoodFlags,
+			       Fluxes_x, Fluxes_y);
+    Kokkos::parallel_for(nbCells, functor);
   }
   
   // actual update

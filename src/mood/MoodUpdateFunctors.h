@@ -73,16 +73,16 @@ public:
  * This functor tries to perform update on density, if density becomes negative, 
  * we flag the cells for recompute.
  */
-class TryUpdateFunctor2D
+class ComputeMoodFlagsUpdateFunctor2D
 {
 
 public:
 
-  TryUpdateFunctor2D(HydroParams params,
-		     DataArray2d Udata,
-		     DataArray2d Flags,
-		     DataArray2d FluxData_x,
-		     DataArray2d FluxData_y) :
+  ComputeMoodFlagsUpdateFunctor2D(HydroParams params,
+				  DataArray2d Udata,
+				  DataArray2d Flags,
+				  DataArray2d FluxData_x,
+				  DataArray2d FluxData_y) :
     params(params),
     Udata(Udata),
     Flags(Flags),
@@ -130,7 +130,7 @@ public:
   DataArray2d FluxData_x;
   DataArray2d FluxData_y;
   
-}; // TryUpdateFunctor2D
+}; // ComputeMoodFlagsUpdateFunctor2D
 
 } // namespace mood
 
