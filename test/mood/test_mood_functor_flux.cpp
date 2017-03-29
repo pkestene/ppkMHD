@@ -22,7 +22,7 @@
 #include "mood/GeometricTerms.h"
 #include "mood/Matrix.h"
 
-#include "mood/MoodFunctors.h"
+#include "mood/MoodFluxesFunctors.h"
 #include "mood/mood_utils.h"
 
 double test_func(double x, double y)
