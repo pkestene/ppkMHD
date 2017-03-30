@@ -45,7 +45,11 @@
 namespace mood {
 
 /**
- * Main hydrodynamics data structure.
+ * Main hydrodynamics data structure driving MOOD numerical solver.
+ *
+ * \tparam dim dimension of the domain (2 or 3)
+ * \tparam degree od the polynomial used to reconstruct values at
+ *  quadrature points.
  */
 template<int dim, int degree>
 class SolverHydroMood : public ppkMHD::SolverBase
@@ -97,7 +101,7 @@ public:
 
   //! fluxes
   DataArray Fluxes_x, Fluxes_y, Fluxes_z;
-
+  
   //! mood detection
   DataArray MoodFlags;
 
@@ -203,13 +207,13 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   if (dim==2) {
 
     U     = DataArray("U", isize, jsize, nbvar);
-    Uhost = Kokkos::create_mirror_view(U);
+    Uhost = Kokkos::create_mirror(U);
     U2    = DataArray("U2",isize, jsize, nbvar);
     
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
     MoodFlags = DataArray("MoodFlags", isize, jsize, 1);
-    
+
     // init polynomial coefficients array
     for (int ip=0; ip<ncoefs; ++ip) {
       std::string label = "PolyCoefs_" + std::to_string(ip);
@@ -632,7 +636,7 @@ void SolverHydroMood<dim,degree>::next_iteration_impl()
   
   // output
   if (params.enableOutput) {
-    //if ( should_save_solution() ) {
+    if ( should_save_solution() ) {
       
       std::cout << "Output results at time t=" << m_t
 		<< " step " << m_iteration
@@ -640,7 +644,7 @@ void SolverHydroMood<dim,degree>::next_iteration_impl()
       
       save_solution();
       
-      //} // end output
+    } // end output
   } // end enable output
   
   // compute new dt

@@ -54,9 +54,13 @@ SolverMHDMuscl2D::SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap) :
 
   /*
    * memory allocation (use sizes with ghosts included)
+   *
+   * Note that Uhost is not just a view to U, Uhost will be used
+   * to save data from multiple other device array.
+   * That's why we didn't use create_mirror_view to initialize Uhost.
    */
   U     = DataArray("U", isize,jsize, nbvar);
-  Uhost = Kokkos::create_mirror_view(U);
+  Uhost = Kokkos::create_mirror(U);
   U2    = DataArray("U2",isize,jsize, nbvar);
   Q     = DataArray("Q", isize,jsize, nbvar);
 

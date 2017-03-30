@@ -52,10 +52,14 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
   int nbvar = params.nbvar;
   
   /*
-   * memory allocation (use sizes with ghosts included)
+   * memory allocation (use sizes with ghosts included).
+   *
+   * Note that Uhost is not just a view to U, Uhost will be used
+   * to save data from multiple other device array.
+   * That's why we didn't use create_mirror_view to initialize Uhost.
    */
   U     = DataArray("U", isize, jsize, nbvar);
-  Uhost = Kokkos::create_mirror_view(U);
+  Uhost = Kokkos::create_mirror(U);
   U2    = DataArray("U2",isize, jsize, nbvar);
   Q     = DataArray("Q", isize, jsize, nbvar);
 
@@ -252,6 +256,8 @@ void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in,
 					     Fluxes_x, Fluxes_y,
 					     dtdx, dtdy);
       Kokkos::parallel_for(ijsize, functor);
+      //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
+      //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
     }
 
     // actual update

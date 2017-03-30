@@ -42,7 +42,7 @@ public:
   /* implementation 0 */
   DataArray Fluxes_x; /*!< implementation 0 */
   DataArray Fluxes_y; /*!< implementation 0 */
-  
+
   /* implementation 1 only */
   DataArray Slopes_x; /*!< implementation 1 only */
   DataArray Slopes_y; /*!< implementation 1 only */
