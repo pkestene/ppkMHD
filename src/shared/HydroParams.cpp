@@ -22,7 +22,7 @@ void HydroParams::setup(ConfigMap &configMap)
   nStepmax = configMap.getInteger("run","nstepmax",1000);
   tEnd     = configMap.getFloat  ("run","tend",0.0);
   nOutput  = configMap.getInteger("run","noutput",100);
-  if (nOutput == -1)
+  if (nOutput == 0)
     enableOutput = false;
 
   std::string solver_name = configMap.getString("run", "solver_name", "unknown");

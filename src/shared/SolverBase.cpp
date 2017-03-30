@@ -191,7 +191,8 @@ SolverBase::should_save_solution()
   
   double interval = m_tEnd / params.nOutput;
 
-  // negative value means : no output will ever be done
+  // params.nOutput == 0 means no output at all
+  // params.nOutput < 0  means always output 
   if (params.nOutput < 0) {
     return 1;
   }
