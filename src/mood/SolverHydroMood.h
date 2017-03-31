@@ -687,12 +687,12 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   
   real_t dtdx;
   real_t dtdy;
+  real_t dtdz;
   
   dtdx = dt / params.dx;
   dtdy = dt / params.dy;
+  dtdz = dt / params.dz;
 
-  //printf("KKKK % 12.10f % 12.10f %f %f\n",dtdx,dtdy, params.dx, params.dy);
-  
   // fill ghost cell in data_in
   timers[TIMER_BOUNDARIES]->start();
   make_boundaries(data_in);
@@ -722,7 +722,8 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
 							Fluxes_x, Fluxes_y, Fluxes_z,
 							params, stencil, geomMatrixPI_view,
-							QUAD_LOC_2D);
+							QUAD_LOC_2D,
+							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 
     save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
@@ -732,8 +733,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // flag cells for which fluxes need to be recomputed
   {  
     ComputeMoodFlagsUpdateFunctor2D functor(params, data_out, MoodFlags,
-					    Fluxes_x, Fluxes_y,
-					    dtdx,     dtdy);
+					    Fluxes_x, Fluxes_y);
     Kokkos::parallel_for(nbCells, functor);
     save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
   }
@@ -741,7 +741,9 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // recompute fluxes arround flagged cells
   {
     RecomputeFluxesFunctor<dim,degree> functor(data_out, MoodFlags,
-					       Fluxes_x, Fluxes_y, Fluxes_z, params);
+					       Fluxes_x, Fluxes_y, Fluxes_z,
+					       params,
+					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
     save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
     save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
@@ -750,8 +752,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // actual update
   {
     UpdateFunctor2D functor(params, data_out,
-			    Fluxes_x, Fluxes_y,
-			    dtdx,     dtdy);
+			    Fluxes_x, Fluxes_y);
     Kokkos::parallel_for(nbCells, functor);
   }
     
