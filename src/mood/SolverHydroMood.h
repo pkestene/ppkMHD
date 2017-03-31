@@ -633,7 +633,7 @@ template<int dim, int degree>
 void SolverHydroMood<dim,degree>::next_iteration_impl()
 {
 
-  if (m_iteration % 1 == 0) {
+  if (m_iteration % 10 == 0) {
     std::cout << "time step=" << m_iteration << " (dt=" << m_dt << ")" << std::endl;
   }
   
@@ -715,8 +715,8 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
       functor(data_in, PolyCoefs, params, stencil, geomMatrixPI_view);
     Kokkos::parallel_for(nbCells,functor);
 
-    for (int icoef=0; icoef<ncoefs; ++icoef)
-      save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
+    // for (int icoef=0; icoef<ncoefs; ++icoef)
+    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
 
   }
 
@@ -754,8 +754,8 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 
-    save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
-    save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
   }
 
   //for (int iRecomp=0; iRecomp<5; ++iRecomp) {
@@ -769,7 +769,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 						      Fluxes_y,
 						      Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
-    save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
+    //save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
   }
   
   // recompute fluxes arround flagged cells
@@ -779,8 +779,8 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 					       params,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
-    save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
-    save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
   }
   //}
 

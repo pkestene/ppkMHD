@@ -24,6 +24,7 @@ SolverFactory::SolverFactory()
   registerSolver("MHD_Muscl_3D",   &SolverMHDMuscl3D::create);
   registerSolver("Hydro_Mood_2D_degree1",  &mood::SolverHydroMood<2,1>::create);
   registerSolver("Hydro_Mood_2D_degree2",  &mood::SolverHydroMood<2,2>::create);
+  registerSolver("Hydro_Mood_2D_degree3",  &mood::SolverHydroMood<2,3>::create);
   	 
 } // SolverFactory::SolverFactory
 
