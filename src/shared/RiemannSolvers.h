@@ -438,6 +438,10 @@ void riemann_hydro(const HydroState2d& qleft,
     
     riemann_approx<HydroState2d>(qleft,qright,qgdnv,flux,params);
     
+  } else if (params.riemannSolverType == RIEMANN_HLL) {
+    
+    riemann_hll<HydroState2d>  (qleft,qright,qgdnv,flux,params);
+
   } else if (params.riemannSolverType == RIEMANN_HLLC) {
     
     riemann_hllc<HydroState2d>  (qleft,qright,qgdnv,flux,params);
