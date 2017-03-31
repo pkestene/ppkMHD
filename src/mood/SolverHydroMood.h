@@ -730,14 +730,20 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
   }
 
+  //for (int iRecomp=0; iRecomp<5; ++iRecomp) {
+  
   // flag cells for which fluxes need to be recomputed
   {  
-    ComputeMoodFlagsUpdateFunctor2D functor(params, data_out, MoodFlags,
-					    Fluxes_x, Fluxes_y);
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params,
+						      data_out,
+						      MoodFlags,
+						      Fluxes_x,
+						      Fluxes_y,
+						      Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
     save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
   }
-
+  
   // recompute fluxes arround flagged cells
   {
     RecomputeFluxesFunctor<dim,degree> functor(data_out, MoodFlags,
@@ -748,7 +754,9 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
     save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
     save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
   }
-  
+  //}
+
+
   // actual update
   {
     UpdateFunctor2D functor(params, data_out,

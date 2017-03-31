@@ -5,6 +5,8 @@
 #include "shared/HydroParams.h"
 #include "shared/HydroState.h"
 
+#include "mood/MoodBaseFunctor.h"
+
 namespace mood {
 
 // =======================================================================
@@ -74,29 +76,37 @@ public:
  * This functor tries to perform update on density, if density or internal energy
  * becomes negative, we flag the cells for recompute.
  */
-class ComputeMoodFlagsUpdateFunctor2D
+template<int dim,
+	 int degree>
+class ComputeMoodFlagsUpdateFunctor : public MoodBaseFunctor<dim,degree>
 {
 
 public:
+  using typename MoodBaseFunctor<dim,degree>::DataArray;
+  using typename MoodBaseFunctor<dim,degree>::HydroState;
 
-  ComputeMoodFlagsUpdateFunctor2D(HydroParams params,
-				  DataArray2d Udata,
-				  DataArray2d Flags,
-				  DataArray2d FluxData_x,
-				  DataArray2d FluxData_y) :
-    params(params),
+  ComputeMoodFlagsUpdateFunctor(HydroParams params,
+				DataArray Udata,
+				DataArray Flags,
+				DataArray FluxData_x,
+				DataArray FluxData_y,
+				DataArray FluxData_z) :
+    MoodBaseFunctor<dim,degree>(params),
     Udata(Udata),
     Flags(Flags),
     FluxData_x(FluxData_x),
-    FluxData_y(FluxData_y)
+    FluxData_y(FluxData_y),
+    FluxData_z(FluxData_z)
   {};
   
+  //! functor for 2d 
+  template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
   {
-    const int isize = params.isize;
-    const int jsize = params.jsize;
-    const int ghostWidth = params.ghostWidth;
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ghostWidth = this->params.ghostWidth;
     
     int i,j;
     index2coord(index,i,j,isize,jsize);
@@ -111,7 +121,9 @@ public:
 
       real_t rho = Udata(i  ,j  , ID);
       real_t e   = Udata(i  ,j  , IP);
-
+      real_t u   = Udata(i  ,j  , IU);
+      real_t v   = Udata(i  ,j  , IV);
+      
       real_t rho_new = rho
 	+ FluxData_x(i  ,j  , ID)
 	- FluxData_x(i+1,j  , ID)
@@ -124,22 +136,55 @@ public:
 	+ FluxData_y(i  ,j  , IP)
 	- FluxData_y(i  ,j+1, IP);
 
-      if (rho_new < 0 or e_new < 0)
+      real_t u_new = u
+	+ FluxData_x(i  ,j  , IU)
+	- FluxData_x(i+1,j  , IU)
+	+ FluxData_y(i  ,j  , IU)
+	- FluxData_y(i  ,j+1, IU);
+      
+      real_t v_new = v
+	+ FluxData_x(i  ,j  , IV)
+	- FluxData_x(i+1,j  , IV)
+	+ FluxData_y(i  ,j  , IV)
+	- FluxData_y(i  ,j+1, IV);
+
+      // conservative variable
+      HydroState UNew;
+      UNew[ID]=rho;
+      UNew[IP]=e;
+      UNew[IU]=u;
+      UNew[IV]=v;
+
+      real_t c;
+      // compute pressure from primitive variables
+      HydroState QNew;
+      this->computePrimitives(UNew, &c, QNew);
+
+      // test if solution is not physically admissible (negative density or pressure)
+      if (rho_new < 0 or QNew[IP] < 0)
 	flag_tmp = 1.0;
 
       Flags(i,j,0) = flag_tmp;
       
     } // end if
     
-  } // end operator ()
+  } // end operator () - 2d
   
-  HydroParams params;
-  DataArray2d Udata;
-  DataArray2d Flags;
-  DataArray2d FluxData_x;
-  DataArray2d FluxData_y;
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+  } // end operator () - 3d
   
-}; // ComputeMoodFlagsUpdateFunctor2D
+  DataArray   Udata;
+  DataArray   Flags;
+  DataArray   FluxData_x;
+  DataArray   FluxData_y;
+  DataArray   FluxData_z;
+  
+}; // ComputeMoodFlagsUpdateFunctor
 
 } // namespace mood
 
