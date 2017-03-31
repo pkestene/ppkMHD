@@ -104,7 +104,7 @@ public:
     
   } // computePrimitive
 
-    /**
+  /**
    * Convert conservative variables (rho, rho*u, rho*v, e) to 
    * primitive variables (rho,u,v,p)
    * @param[in]  u  conservative variables array
@@ -143,6 +143,70 @@ public:
     
   } // computePrimitive
 
+  /**
+   * Given an hydrodynamics state in input (rho, rho*u, rho*v, e), check if the state is valid.
+   *
+   * More precisely, just check if density and pressure are positive. 
+   *
+   * @param[in]  u  conservative variables HydroState
+   * @return 1 if the state is valid, 0 if not.
+   */
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  int isValid(const typename Kokkos::Impl::enable_if<dim_==2, HydroState>::type& u) const
+  {
+
+    int isValid_ = 1;
+    real_t c;
+
+    // check density
+    if (u[ID] < 0)
+      isValid_ = 0;
+
+    // compute prsessure through equation of state
+    HydroState q;
+    this->computePrimitives(u,&c,q);
+
+    // check pressure
+    if (q[IP] < 0)
+      isValid_ = 0;
+    
+    return isValid_;
+    
+  } // isValid - 2d
+
+  /**
+   * Given an hydrodynamics state in input (rho, rho*u, rho*v, rho*w, e), check if the state is valid.
+   *
+   * More precisely, just check if density and pressure are positive. 
+   *
+   * @param[in]  u  conservative variables HydroState
+   * @return 1 if the state is valid, 0 if not.
+   */
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  int isValid(const typename Kokkos::Impl::enable_if<dim_==3, HydroState>::type& u) const
+  {
+
+    int isValid_ = 1;
+    real_t c;
+
+    // check density
+    if (u[ID] < 0)
+      isValid_ = 0;
+
+    // compute prsessure through equation of state
+    HydroState q;
+    this->computePrimitives(u,&c,q);
+
+    // check pressure
+    if (q[IP] < 0)
+      isValid_ = 0;
+    
+    return isValid_;
+    
+  } // isValid - 3d
+  
 }; // class MoodBaseFunctor
 
 } // namespace mood

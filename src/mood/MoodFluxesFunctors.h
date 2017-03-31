@@ -107,7 +107,7 @@ public:
       // reset flux
       for (int ivar=0; ivar<nbvar; ++ivar)
 	flux[ivar]=0.0;
-      
+            
       // for each variable,
       // retrieve reconstruction polynomial coefficients in current cell
       // and all compute UL / UR states
@@ -115,7 +115,7 @@ public:
 	
 	// current cell
 	coefs_t coefs_c;
-
+	
 	// neighbor cell
 	coefs_t coefs_n;
 	
@@ -144,6 +144,24 @@ public:
 
       } // end for ivar
 
+
+      // check if the reconstructed states are valid, if not we use  Udata
+      for (int iq=0; iq<nbQuadPts; ++iq) {
+
+	if ( this->isValid(UL[iq]) == 0 ) {
+	  // change UL into Udata from neighbor
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UL[iq][ivar] = polyCoefs[0](i-1,j,ivar);
+	}
+	  
+	if ( this->isValid(UR[iq]) == 0 ) {
+	  // change UR into Udata from current cell
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UR[iq][ivar] = polyCoefs[0](i,j,ivar);
+	}
+	
+      } // end check validity
+      
       // we can now perform the riemann solvers for each quadrature point
       for (int iq=0; iq<nbQuadPts; ++iq) {
 
@@ -190,7 +208,7 @@ public:
       // reset flux
       for (int ivar=0; ivar<nbvar; ++ivar)
 	flux[ivar]=0.0;
-      
+      	
       // for each variable,
       // retrieve reconstruction polynomial coefficients in current cell
       // and all compute UL / UR states
@@ -198,7 +216,7 @@ public:
 	
 	// current cell
 	coefs_t coefs_c;
-
+	
 	// neighbor cell
 	coefs_t coefs_n;
 	
@@ -226,6 +244,23 @@ public:
 	}
 	
       } // end for ivar
+
+      // check if the reconstructed states are valid, if not we use  Udata
+      for (int iq=0; iq<nbQuadPts; ++iq) {
+
+	if ( this->isValid(UL[iq]) == 0 ) {
+	  // change UL into Udata from neighbor
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UL[iq][ivar] = polyCoefs[0](i,j-1,ivar);
+	}
+	  
+	if ( this->isValid(UR[iq]) == 0 ) {
+	  // change UR into Udata from current cell
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UR[iq][ivar] = polyCoefs[0](i,j,ivar);
+	}
+	
+      } // end check validity
 
       // we can now perform the riemann solvers for each quadrature point
       for (int iq=0; iq<nbQuadPts; ++iq) {

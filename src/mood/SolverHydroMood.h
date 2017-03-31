@@ -34,6 +34,9 @@
 #include "mood/MoodDtFunctor.h"
 #include "mood/MoodUpdateFunctors.h"
 
+// for test / debug only
+#include "mood/MoodTestReconstruction.h"
+
 #include "mood/mood_utils.h"
 
 // for IO
@@ -716,7 +719,32 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
       save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
 
   }
+
+  // for debug only
+  // {
+  //   if (dim==2) {
+
+  //     int nbvar = params.nbvar;
+
+  //     DataArray RecState1 = DataArray("RecState1", isize, jsize, nbvar);
+  //     DataArray RecState2 = DataArray("RecState2", isize, jsize, nbvar);
+  //     DataArray RecState3 = DataArray("RecState3", isize, jsize, nbvar);
+
+  //     TestReconstructionFunctor<dim,degree,stencilId> functor(data_in, PolyCoefs,
+  // 							      RecState1, RecState2, RecState3,
+  // 							      params, stencil, geomMatrixPI_view,
+  // 							      QUAD_LOC_2D);
+  //     Kokkos::parallel_for(nbCells,functor);
+
+  //     save_data_debug(RecState1, Uhost, m_times_saved, "RecState1");
+  //     save_data_debug(RecState2, Uhost, m_times_saved, "RecState2");
+      
+  //   } else {
+  //   }
+    
+  // }
   
+ 
   // compute fluxes
   {
     ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
