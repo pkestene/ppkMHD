@@ -560,6 +560,182 @@ public:
     
   } // end functor 2d
 
+  //! functor for 3d
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
+  {
+    
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
+
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
+
+    const real_t nbvar = this->params.nbvar;
+
+    // riemann solver states left/right 
+    HydroState UL, UR;
+
+    // primitive variables left / right states
+    HydroState qL, qR, qgdnv;
+    real_t     c;
+    
+    // accumulate flux over all quadrature points
+    HydroState flux;
+
+    // current cell coordinates
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+
+    // current flag (indicating if fluxes need to be recomputed)
+    real_t flag  = Flags(i,j,k,0);
+    real_t flagx = 0.0;
+    real_t flagy = 0.0;
+    real_t flagz = 0.0;
+
+    if (i>0)
+      Flags(i-1,j  ,k  ,0);
+    if (j>0)
+      Flags(i  ,j-1,k  ,0);
+    if (k>0)
+      Flags(i  ,j  ,k-1,0);
+
+    if( flag > 0 or flagx > 0) {
+
+      /*********************************
+       * flux along DIR_X - FACE_XMIN
+       *********************************/
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+	
+	// left  interface in neighbor cell
+	UL[ivar] = Udata(i-1,j,k,ivar);
+	
+	// right interface in current cell
+	UR[ivar] = Udata(i,j,k,ivar);
+		
+      } // end for ivar
+
+      // we can now perform the riemann solvers 
+
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);	  
+      //::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
+     
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_x(i,j,k,ivar) = flux[ivar] * dtdx;
+
+    } // end flux along X
+    
+    if( flag > 0 or flagy > 0) {
+
+      /*********************************
+       * flux along DIR_Y - FACE_YMIN
+       *********************************/
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+		  
+	// left  interface in neighbor cell
+	UL[ivar] = Udata(i,j-1,k,ivar);
+	    
+	// right interface in current cell
+	UR[ivar] = Udata(i,j  ,k,ivar);
+	  
+      } // end for ivar
+
+      // we can now perform the riemann solvers
+      
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      // swap IU and IV velocity
+      this->swap(qL[IU],qL[IV]);
+      this->swap(qR[IU],qR[IV]);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);
+      //::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
+
+      // swap again IU and IV
+      this->swap(flux[IU],flux[IV]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_y(i,j,k,ivar) = flux[ivar] * dtdy;
+            
+    } // end flux along Y
+    
+    if( flag > 0 or flagz > 0) {
+
+      /*********************************
+       * flux along DIR_Z - FACE_ZMIN
+       *********************************/
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+		  
+	// left  interface in neighbor cell
+	UL[ivar] = Udata(i,j,k-1,ivar);
+	    
+	// right interface in current cell
+	UR[ivar] = Udata(i,j,k  ,ivar);
+	  
+      } // end for ivar
+
+      // we can now perform the riemann solvers
+      
+      // convert to primitive variable before riemann solver
+      this->computePrimitives(UL, &c, qL);
+      this->computePrimitives(UR, &c, qR);
+
+      // compute riemann flux
+      // swap IU and IW velocity
+      this->swap(qL[IU],qL[IW]);
+      this->swap(qR[IU],qR[IW]);
+
+      // compute riemann flux
+      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);
+      //::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
+
+      // swap again IU and IW
+      this->swap(flux[IU],flux[IW]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_z(i,j,k,ivar) = flux[ivar] * dtdz;
+            
+    } // end flux along Z
+    
+  } // end functor 3d
+  
   DataArray   Udata;
   DataArray   Flags;
   DataArray   FluxData_x, FluxData_y, FluxData_z;
