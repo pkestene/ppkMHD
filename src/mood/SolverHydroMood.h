@@ -787,8 +787,8 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 
   // actual update
   {
-    UpdateFunctor2D functor(params, data_out,
-			    Fluxes_x, Fluxes_y);
+    UpdateFunctor<dim> functor(params, data_out,
+			       Fluxes_x, Fluxes_y, Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
   }
     
