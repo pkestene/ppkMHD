@@ -289,10 +289,10 @@ public:
 
   InitFourQuadrantFunctor(HydroParams params,
 			  DataArray   Udata,
-			  HydroState U0,
-			  HydroState U1,
-			  HydroState U2,
-			  HydroState U3,
+			  HydroState2d U0,
+			  HydroState2d U1,
+			  HydroState2d U2,
+			  HydroState2d U3,
 			  real_t xt,
 			  real_t yt) :
     MoodBaseFunctor<dim,degree>(params),
@@ -382,22 +382,49 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
-    //real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-    //real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
     //real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
 
-    // TODO - TODO - TODO
-    Udata(i  ,j  ,k  , ID) = 1.0;
-    Udata(i  ,j  ,k  , IP) = 1.0;
-    Udata(i  ,j  ,k  , IU) = 0.0;
-    Udata(i  ,j  ,k  , IV) = 0.0;
-    Udata(i  ,j  ,k  , IW) = 0.0;
+    if (x<xt) {
+      if (y<yt) {
+	// quarter 2
+	Udata(i  ,j  ,k  , ID) = U2[ID];
+	Udata(i  ,j  ,k  , IP) = U2[IP];
+	Udata(i  ,j  ,k  , IU) = U2[IU];
+	Udata(i  ,j  ,k  , IV) = U2[IV];
+	Udata(i  ,j  ,k  , IW) = 0.0;
+      } else {
+	// quarter 1
+	Udata(i  ,j  ,k  , ID) = U1[ID];
+	Udata(i  ,j  ,k  , IP) = U1[IP];
+	Udata(i  ,j  ,k  , IU) = U1[IU];
+	Udata(i  ,j  ,k  , IV) = U1[IV];
+	Udata(i  ,j  ,k  , IW) = 0.0;
+      }
+    } else {
+      if (y<yt) {
+	// quarter 3
+	Udata(i  ,j  ,k  , ID) = U3[ID];
+	Udata(i  ,j  ,k  , IP) = U3[IP];
+	Udata(i  ,j  ,k  , IU) = U3[IU];
+	Udata(i  ,j  ,k  , IV) = U3[IV];
+	Udata(i  ,j  ,k  , IW) = 0.0;
+      } else {
+	// quarter 0
+	Udata(i  ,j  ,k  , ID) = U0[ID];
+	Udata(i  ,j  ,k  , IP) = U0[IP];
+	Udata(i  ,j  ,k  , IU) = U0[IU];
+	Udata(i  ,j  ,k  , IV) = U0[IV];
+	Udata(i  ,j  ,k  , IW) = 0.0;
+      }
+    }
     
   } // end operator () - 3d
   
-  DataArray  Udata;
-  HydroState U0, U1, U2, U3;
-  real_t     xt, yt;
+  DataArray    Udata;
+  HydroState2d U0, U1, U2, U3;
+  real_t       xt, yt;
   
 }; // class InitFourQuadrantFunctor
 

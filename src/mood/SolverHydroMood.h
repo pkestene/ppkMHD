@@ -921,28 +921,20 @@ void SolverHydroMood<dim,degree>::init_four_quadrant(DataArray Udata)
   int configNumber = configMap.getInteger("riemann2d","config_number",0);
   real_t xt = configMap.getFloat("riemann2d","x",0.8);
   real_t yt = configMap.getFloat("riemann2d","y",0.8);
-
-  if (dim==2) {
     
-    HydroState2d U0, U1, U2, U3;
-    ppkMHD::getRiemannConfig2d(configNumber, U0, U1, U2, U3);
-    
-    ppkMHD::primToCons_2D(U0, params.settings.gamma0);
-    ppkMHD::primToCons_2D(U1, params.settings.gamma0);
-    ppkMHD::primToCons_2D(U2, params.settings.gamma0);
-    ppkMHD::primToCons_2D(U3, params.settings.gamma0);
-    
-    InitFourQuadrantFunctor<dim,degree> functor(params, Udata,
-						U0, U1, U2, U3,
-						xt, yt);
-    Kokkos::parallel_for(nbCells, functor);
-    
-  } else if (dim==3) {
-
-    // TODO - TODO - TODO
-    
-  }
+  HydroState2d U0, U1, U2, U3;
+  ppkMHD::getRiemannConfig2d(configNumber, U0, U1, U2, U3);
   
+  ppkMHD::primToCons_2D(U0, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U1, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U2, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U3, params.settings.gamma0);
+  
+  InitFourQuadrantFunctor<dim,degree> functor(params, Udata,
+					      U0, U1, U2, U3,
+					      xt, yt);
+  Kokkos::parallel_for(nbCells, functor);
+    
 } // init_four_quadrant
 
 // =======================================================
