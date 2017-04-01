@@ -751,6 +751,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 							Fluxes_x, Fluxes_y, Fluxes_z,
 							params, stencil, geomMatrixPI_view,
 							QUAD_LOC_2D,
+							QUAD_LOC_3D,
 							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 

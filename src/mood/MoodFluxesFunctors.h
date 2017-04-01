@@ -50,6 +50,7 @@ public:
 		       Stencil          stencil,
 		       mood_matrix_pi_t mat_pi,
 		       QuadLoc_2d_t     QUAD_LOC_2D,
+		       QuadLoc_3d_t     QUAD_LOC_3D,
 		       real_t dtdx,
 		       real_t dtdy,
 		       real_t dtdz) :
@@ -62,6 +63,7 @@ public:
     stencil(stencil),
     mat_pi(mat_pi),
     QUAD_LOC_2D(QUAD_LOC_2D),
+    QUAD_LOC_3D(QUAD_LOC_3D),
     dtdx(dtdx),
     dtdy(dtdy),
     dtdz(dtdz)
@@ -324,53 +326,360 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
 
+    const real_t nbvar = this->params.nbvar;
+
+    // riemann solver states left/right (conservative variables),
+    // one for each quadrature point
+    HydroState UL[nbQuadPts3d], UR[nbQuadPts3d];
+
+    // primitive variables left / right states
+    HydroState qL, qR, qgdnv;
+    real_t     c;
+    
+    // accumulate flux over all quadrature points
+    HydroState flux, flux_tmp;
+
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
-    // rhs is sized upon stencil, just remove central point
-    Kokkos::Array<real_t,stencil_size-1> rhs;
-    
-    if(k >= ghostWidth && k < ksize - ghostWidth+1 &&
-       j >= ghostWidth && j < jsize - ghostWidth+1 &&
-       i >= ghostWidth && i < isize - ghostWidth+1) {
+    /*********************
+     * flux along DIR_X
+     *********************/
+    if(k >= ghostWidth && k < ksize-ghostWidth   &&
+       j >= ghostWidth && j < jsize-ghostWidth   &&
+       i >= ghostWidth && i < isize-ghostWidth+1 ) {
 
-      // retrieve neighbors data for ID, and build rhs
-      int irhs = 0;
-      for (int is=0; is<stencil_size; ++is) {
-	int x = stencil.offsets(is,0);
-	int y = stencil.offsets(is,1);
-	int z = stencil.offsets(is,2);
-	if (x != 0 or y != 0 or z != 0) {
-	  rhs[irhs] = Udata(i+x,j+y,k+z,ID) - Udata(i,j,k,ID);
-	  irhs++;
-	}	
-      } // end for is
-
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+            
+      // for each variable,
       // retrieve reconstruction polynomial coefficients in current cell
-      coefs_t coefs_c;
-      coefs_c[0] = Udata(i,j,k,ID);
-      for (int icoef=0; icoef<mat_pi.dimension_0(); ++icoef) {
-	real_t tmp = 0;
-	for (int ik=0; ik<mat_pi.dimension_1(); ++ik) {
-	  tmp += mat_pi(icoef,ik) * rhs[ik];
+      // and all compute UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+	
+	// current cell
+	coefs_t coefs_c;
+	
+	// neighbor cell
+	coefs_t coefs_n;
+	
+	// read polynomial coefficients
+	for (int icoef=0; icoef<ncoefs; ++icoef) {
+	  coefs_c[icoef] = polyCoefs[icoef](i  ,j,k,ivar);
+	  coefs_n[icoef] = polyCoefs[icoef](i-1,j,k,ivar);
 	}
-	coefs_c[icoef+1] = tmp;
-      }
+	
+	// reconstruct Udata on the left face along X direction
+	// for each quadrature points
+	real_t x,y,z;
+	for (int iq = 0; iq<nbQuadPts3d; ++iq) {
+	  
+	  // left  interface in neighbor cell
+	  x = QUAD_LOC_3D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IX);
+	  y = QUAD_LOC_3D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IY);
+	  z = QUAD_LOC_3D(nbQuadPts-1,DIR_X,FACE_MAX,iq,IZ);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, z*dz, coefs_n);
+	    
+	  // right interface in current cell
+	  x = QUAD_LOC_3D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_3D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IY);
+	  z = QUAD_LOC_3D(nbQuadPts-1,DIR_X,FACE_MIN,iq,IZ);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, z*dz, coefs_c);
+	  
+	}
 
-      // reconstruct Udata on the left face along X direction
-      // for each quadrature points
-      if (nbQuadPts==1) {
-	//int x = QUADRATURE_LOCATION_3D_N1_X_M[0][IX];
-	//int y = QUADRATURE_LOCATION_3D_N1_X_M[0][IY];
-	//int z = QUADRATURE_LOCATION_3D_N1_X_M[0][IZ];
-      }
+      } // end for ivar
 
-      FluxData_x(i,j,k,ID) = this->eval(-0.5*dx, 0.0   , 0.0   , coefs_c);
-      FluxData_y(i,j,k,ID) = this->eval( 0.0   ,-0.5*dy, 0.0   , coefs_c);
-      FluxData_z(i,j,k,ID) = this->eval( 0.0   , 0.0   ,-0.5*dz, coefs_c);
+      // check if the reconstructed states are valid, if not we use  Udata
+      for (int iq=0; iq<nbQuadPts3d; ++iq) {
 
+	if ( this->isValid(UL[iq]) == 0 ) {
+	  // change UL into Udata from neighbor
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UL[iq][ivar] = polyCoefs[0](i-1,j,k,ivar);
+	}
+	  
+	if ( this->isValid(UR[iq]) == 0 ) {
+	  // change UR into Udata from current cell
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UR[iq][ivar] = polyCoefs[0](i,j,k,ivar);
+	}
+	
+      } // end check validity
       
-    }
+      // we can now perform the riemann solvers for each quadrature point
+      for (int iq=0; iq<nbQuadPts3d; ++iq) {
+
+	// convert to primitive variable before riemann solver
+	this->computePrimitives(UL[iq], &c, qL);
+	this->computePrimitives(UR[iq], &c, qR);
+
+	// compute riemann flux
+	::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux_tmp,this->params);
+
+	// the following will be nicer when nvcc will accept constexpr array.
+	if (nbQuadPts == 1) {
+	  
+	  // just copy flux_tmp into flux
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] = flux_tmp[ivar];
+	  
+	} else if (nbQuadPts == 2) {
+
+	  int iq1 = iq/nbQuadPts;
+	  int iq2 = iq-iq1*nbQuadPts;
+	  
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N2[iq1]*QUADRATURE_WEIGHTS_N2[iq2];
+	  	  
+	} else if (nbQuadPts == 3) {
+
+	  int iq1 = iq/nbQuadPts;
+	  int iq2 = iq-iq1*nbQuadPts;
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N3[iq1]*QUADRATURE_WEIGHTS_N3[iq2];
+
+	}
+	  
+      }
+
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_x(i,j,k,ivar) = flux[ivar] * dtdx;
+      
+    } // end - flux along X
+
+    /*********************
+     * flux along DIR_Y
+     *********************/
+    if(k >= ghostWidth && k < ksize-ghostWidth   &&
+       j >= ghostWidth && j < jsize-ghostWidth+1 &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve reconstruction polynomial coefficients in current cell
+      // and all compute UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+	
+	// current cell
+	coefs_t coefs_c;
+	
+	// neighbor cell
+	coefs_t coefs_n;
+	
+	// read polynomial coefficients
+	for (int icoef=0; icoef<ncoefs; ++icoef) {
+	  coefs_c[icoef] = polyCoefs[icoef](i  ,j  ,k,ivar);
+	  coefs_n[icoef] = polyCoefs[icoef](i  ,j-1,k,ivar);
+	}
+	
+	// reconstruct Udata on the left face along X direction
+	// for each quadrature points
+	real_t x,y,z;
+	for (int iq = 0; iq<nbQuadPts3d; ++iq) {
+	  
+	  // left  interface in neighbor cell
+	  x = QUAD_LOC_3D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IX);
+	  y = QUAD_LOC_3D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IY);
+	  z = QUAD_LOC_3D(nbQuadPts-1,DIR_Y,FACE_MAX,iq,IZ);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, z*dz, coefs_n);
+	    
+	  // right interface in current cell
+	  x = QUAD_LOC_3D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_3D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IY);
+	  z = QUAD_LOC_3D(nbQuadPts-1,DIR_Y,FACE_MIN,iq,IZ);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, z*dz, coefs_c);
+	  
+	}
+	
+      } // end for ivar
+
+      // check if the reconstructed states are valid, if not we use  Udata
+      for (int iq=0; iq<nbQuadPts3d; ++iq) {
+
+	if ( this->isValid(UL[iq]) == 0 ) {
+	  // change UL into Udata from neighbor
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UL[iq][ivar] = polyCoefs[0](i,j-1,k,ivar);
+	}
+	  
+	if ( this->isValid(UR[iq]) == 0 ) {
+	  // change UR into Udata from current cell
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UR[iq][ivar] = polyCoefs[0](i,j,k,ivar);
+	}
+	
+      } // end check validity
+
+      // we can now perform the riemann solvers for each quadrature point
+      for (int iq=0; iq<nbQuadPts3d; ++iq) {
+
+	// convert to primitive variable before riemann solver
+	this->computePrimitives(UL[iq], &c, qL);
+	this->computePrimitives(UR[iq], &c, qR);
+
+	// compute riemann flux
+	// swap IU and IV velocity
+	this->swap(qL[IU],qL[IV]);
+	this->swap(qR[IU],qR[IV]);
+	::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux_tmp,this->params);
+
+	// the following will be nicer when nvcc will accept constexpr array.
+	if (nbQuadPts == 1) {
+	  
+	  // just copy flux_tmp into flux
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] = flux_tmp[ivar];
+	  
+	} else if (nbQuadPts == 2) {
+
+	  int iq1 = iq/nbQuadPts;
+	  int iq2 = iq-iq1*nbQuadPts;
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N2[iq1]*QUADRATURE_WEIGHTS_N2[iq2];
+	  	  
+	} else if (nbQuadPts == 3) {
+
+	  int iq1 = iq/nbQuadPts;
+	  int iq2 = iq-iq1*nbQuadPts;
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N3[iq1]*QUADRATURE_WEIGHTS_N3[iq2];
+
+	}
+	  
+      }
+
+      // swap again IU and IV
+      this->swap(flux[IU],flux[IV]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_y(i,j,k,ivar) = flux[ivar] * dtdy;
+      
+    } // end flux along Y
+
+    /*********************
+     * flux along DIR_Z
+     *********************/
+    if(k >= ghostWidth && k < ksize-ghostWidth+1 &&
+       j >= ghostWidth && j < jsize-ghostWidth   &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+      
+      // reset flux
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	flux[ivar]=0.0;
+      
+      // for each variable,
+      // retrieve reconstruction polynomial coefficients in current cell
+      // and all compute UL / UR states
+      for (int ivar=0; ivar<nbvar; ++ivar) {
+	
+	// current cell
+	coefs_t coefs_c;
+	
+	// neighbor cell
+	coefs_t coefs_n;
+	
+	// read polynomial coefficients
+	for (int icoef=0; icoef<ncoefs; ++icoef) {
+	  coefs_c[icoef] = polyCoefs[icoef](i  ,j  ,k  ,ivar);
+	  coefs_n[icoef] = polyCoefs[icoef](i  ,j  ,k-1,ivar);
+	}
+	
+	// reconstruct Udata on the left face along X direction
+	// for each quadrature points
+	real_t x,y,z;
+	for (int iq = 0; iq<nbQuadPts3d; ++iq) {
+	  
+	  // left  interface in neighbor cell
+	  x = QUAD_LOC_3D(nbQuadPts-1,DIR_Z,FACE_MAX,iq,IX);
+	  y = QUAD_LOC_3D(nbQuadPts-1,DIR_Z,FACE_MAX,iq,IY);
+	  z = QUAD_LOC_3D(nbQuadPts-1,DIR_Z,FACE_MAX,iq,IZ);
+	  UL[iq][ivar] = this->eval(x*dx, y*dy, z*dz, coefs_n);
+	    
+	  // right interface in current cell
+	  x = QUAD_LOC_3D(nbQuadPts-1,DIR_Z,FACE_MIN,iq,IX);
+	  y = QUAD_LOC_3D(nbQuadPts-1,DIR_Z,FACE_MIN,iq,IY);
+	  z = QUAD_LOC_3D(nbQuadPts-1,DIR_Z,FACE_MIN,iq,IZ);
+	  UR[iq][ivar] = this->eval(x*dx, y*dy, z*dz, coefs_c);
+	  
+	}
+	
+      } // end for ivar
+
+      // check if the reconstructed states are valid, if not we use  Udata
+      for (int iq=0; iq<nbQuadPts3d; ++iq) {
+
+	if ( this->isValid(UL[iq]) == 0 ) {
+	  // change UL into Udata from neighbor
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UL[iq][ivar] = polyCoefs[0](i,j,k-1,ivar);
+	}
+	  
+	if ( this->isValid(UR[iq]) == 0 ) {
+	  // change UR into Udata from current cell
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    UR[iq][ivar] = polyCoefs[0](i,j,k,ivar);
+	}
+	
+      } // end check validity
+
+      // we can now perform the riemann solvers for each quadrature point
+      for (int iq=0; iq<nbQuadPts3d; ++iq) {
+
+	// convert to primitive variable before riemann solver
+	this->computePrimitives(UL[iq], &c, qL);
+	this->computePrimitives(UR[iq], &c, qR);
+
+	// compute riemann flux
+	// swap IU and IV velocity
+	this->swap(qL[IU],qL[IW]);
+	this->swap(qR[IU],qR[IW]);
+	::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux_tmp,this->params);
+
+	// the following will be nicer when nvcc will accept constexpr array.
+	if (nbQuadPts == 1) {
+	  
+	  // just copy flux_tmp into flux
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] = flux_tmp[ivar];
+	  
+	} else if (nbQuadPts == 2) {
+
+	  int iq1 = iq/nbQuadPts;
+	  int iq2 = iq-iq1*nbQuadPts;
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N2[iq1]*QUADRATURE_WEIGHTS_N2[iq2];
+	  	  
+	} else if (nbQuadPts == 3) {
+
+	  int iq1 = iq/nbQuadPts;
+	  int iq2 = iq-iq1*nbQuadPts;
+
+	  for (int ivar=0; ivar<nbvar; ++ivar)
+	    flux[ivar] += flux_tmp[ivar]*QUADRATURE_WEIGHTS_N3[iq1]*QUADRATURE_WEIGHTS_N3[iq2];
+
+	}
+	  
+      }
+
+      // swap again IU and IW
+      this->swap(flux[IU],flux[IW]);
+      
+      // finaly copy back the flux on device memory
+      for (int ivar=0; ivar<nbvar; ++ivar)
+	FluxData_z(i,j,k,ivar) = flux[ivar] * dtdy;
+      
+    } // end flux along Z    
     
   }  // end functor 3d
   
@@ -381,6 +690,7 @@ public:
   Stencil          stencil;
   mood_matrix_pi_t mat_pi;
   QuadLoc_2d_t     QUAD_LOC_2D;
+  QuadLoc_3d_t     QUAD_LOC_3D;
   real_t           dtdx, dtdy, dtdz;
 
   // get the number of cells in stencil
@@ -388,6 +698,7 @@ public:
 
   // get the number of quadrature point per face corresponding to this stencil
   static constexpr int nbQuadPts = QUADRATURE_NUM_POINTS[stencilId];
+  static constexpr int nbQuadPts3d = nbQuadPts*nbQuadPts;
   
 }; // class ComputeFluxesFunctor
 
