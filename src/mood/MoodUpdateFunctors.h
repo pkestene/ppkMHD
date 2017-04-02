@@ -112,11 +112,11 @@ public:
        j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
-      tmp[ID] = UOld(i,j,ID);
-      tmp[IP] = UOld(i,j,IP);
-      tmp[IU] = UOld(i,j,IU);
-      tmp[IV] = UOld(i,j,IV);
-      tmp[IW] = UOld(i,j,IW);
+      tmp[ID] = UOld(i,j,k,ID);
+      tmp[IP] = UOld(i,j,k,IP);
+      tmp[IU] = UOld(i,j,k,IU);
+      tmp[IV] = UOld(i,j,k,IV);
+      tmp[IW] = UOld(i,j,k,IW);
 
       tmp[ID] += FluxData_x(i  ,j  ,k  , ID);
       tmp[IP] += FluxData_x(i  ,j  ,k  , IP);
@@ -153,6 +153,12 @@ public:
       tmp[IU] -= FluxData_z(i  ,j  ,k+1, IU);
       tmp[IV] -= FluxData_z(i  ,j  ,k+1, IV);
       tmp[IW] -= FluxData_z(i  ,j  ,k+1, IW);
+
+      UNew(i,j,k,ID) = tmp[ID];
+      UNew(i,j,k,IP) = tmp[IP];
+      UNew(i,j,k,IU) = tmp[IU];
+      UNew(i,j,k,IV) = tmp[IV];
+      UNew(i,j,k,IW) = tmp[IW];
 
     } // end if
     
