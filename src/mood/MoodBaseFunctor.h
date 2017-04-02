@@ -160,7 +160,7 @@ public:
     real_t c;
 
     // check density
-    if (u[ID] < 0)
+    if (u[ID] < 1e-6)
       isValid_ = 0;
 
     // compute prsessure through equation of state
@@ -168,7 +168,7 @@ public:
     this->computePrimitives(u,&c,q);
 
     // check pressure
-    if (q[IP] < 0)
+    if (q[IP] < 1e-6)
       isValid_ = 0;
     
     return isValid_;

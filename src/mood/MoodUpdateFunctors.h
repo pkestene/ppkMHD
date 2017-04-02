@@ -22,16 +22,21 @@ class UpdateFunctor
 {
 
 public:
+  //! Decide at compile-time which HydroState to use
+  using HydroState = typename std::conditional<dim==2,HydroState2d,HydroState3d>::type;
+  
   //! Decide at compile-time which data array to use
   using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
 
   UpdateFunctor(HydroParams params,
-		DataArray Udata,
+		DataArray UOld,
+		DataArray UNew,
 		DataArray FluxData_x,
 		DataArray FluxData_y,
 		DataArray FluxData_z) :
     params(params),
-    Udata(Udata),
+    UOld(UOld),
+    UNew(UNew),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
     FluxData_z(FluxData_z)
@@ -49,29 +54,41 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
+    HydroState tmp;
+    
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
-      Udata(i  ,j  , ID) +=  FluxData_x(i  ,j  , ID);
-      Udata(i  ,j  , IP) +=  FluxData_x(i  ,j  , IP);
-      Udata(i  ,j  , IU) +=  FluxData_x(i  ,j  , IU);
-      Udata(i  ,j  , IV) +=  FluxData_x(i  ,j  , IV);
+      tmp[ID] = UOld(i,j,ID);
+      tmp[IP] = UOld(i,j,IP);
+      tmp[IU] = UOld(i,j,IU);
+      tmp[IV] = UOld(i,j,IV);
 
-      Udata(i  ,j  , ID) -=  FluxData_x(i+1,j  , ID);
-      Udata(i  ,j  , IP) -=  FluxData_x(i+1,j  , IP);
-      Udata(i  ,j  , IU) -=  FluxData_x(i+1,j  , IU);
-      Udata(i  ,j  , IV) -=  FluxData_x(i+1,j  , IV);
-      
-      Udata(i  ,j  , ID) +=  FluxData_y(i  ,j  , ID);
-      Udata(i  ,j  , IP) +=  FluxData_y(i  ,j  , IP);
-      Udata(i  ,j  , IU) +=  FluxData_y(i  ,j  , IU);
-      Udata(i  ,j  , IV) +=  FluxData_y(i  ,j  , IV);
-      
-      Udata(i  ,j  , ID) -=  FluxData_y(i  ,j+1, ID);
-      Udata(i  ,j  , IP) -=  FluxData_y(i  ,j+1, IP);
-      Udata(i  ,j  , IU) -=  FluxData_y(i  ,j+1, IU);
-      Udata(i  ,j  , IV) -=  FluxData_y(i  ,j+1, IV);
+      tmp[ID] += FluxData_x(i  ,j  , ID);
+      tmp[IP] += FluxData_x(i  ,j  , IP);
+      tmp[IU] += FluxData_x(i  ,j  , IU);
+      tmp[IV] += FluxData_x(i  ,j  , IV);
 
+      tmp[ID] -= FluxData_x(i+1,j  , ID);
+      tmp[IP] -= FluxData_x(i+1,j  , IP);
+      tmp[IU] -= FluxData_x(i+1,j  , IU);
+      tmp[IV] -= FluxData_x(i+1,j  , IV);
+      
+      tmp[ID] += FluxData_y(i  ,j  , ID);
+      tmp[IP] += FluxData_y(i  ,j  , IP);
+      tmp[IU] += FluxData_y(i  ,j  , IU);
+      tmp[IV] += FluxData_y(i  ,j  , IV);
+      
+      tmp[ID] -= FluxData_y(i  ,j+1, ID);
+      tmp[IP] -= FluxData_y(i  ,j+1, IP);
+      tmp[IU] -= FluxData_y(i  ,j+1, IU);
+      tmp[IV] -= FluxData_y(i  ,j+1, IV);
+
+      UNew(i,j,ID) = tmp[ID];
+      UNew(i,j,IP) = tmp[IP];
+      UNew(i,j,IU) = tmp[IU];
+      UNew(i,j,IV) = tmp[IV];
+      
     } // end if
     
   } // end operator ()
@@ -89,52 +106,61 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
+    HydroState tmp;
+
     if(k >= ghostWidth && k < ksize-ghostWidth  &&
        j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
-      Udata(i  ,j  ,k  , ID) +=  FluxData_x(i  ,j  ,k  , ID);
-      Udata(i  ,j  ,k  , IP) +=  FluxData_x(i  ,j  ,k  , IP);
-      Udata(i  ,j  ,k  , IU) +=  FluxData_x(i  ,j  ,k  , IU);
-      Udata(i  ,j  ,k  , IV) +=  FluxData_x(i  ,j  ,k  , IV);
-      Udata(i  ,j  ,k  , IW) +=  FluxData_x(i  ,j  ,k  , IW);
+      tmp[ID] = UOld(i,j,ID);
+      tmp[IP] = UOld(i,j,IP);
+      tmp[IU] = UOld(i,j,IU);
+      tmp[IV] = UOld(i,j,IV);
+      tmp[IW] = UOld(i,j,IW);
 
-      Udata(i  ,j  ,k  , ID) -=  FluxData_x(i+1,j  ,k  , ID);
-      Udata(i  ,j  ,k  , IP) -=  FluxData_x(i+1,j  ,k  , IP);
-      Udata(i  ,j  ,k  , IU) -=  FluxData_x(i+1,j  ,k  , IU);
-      Udata(i  ,j  ,k  , IV) -=  FluxData_x(i+1,j  ,k  , IV);
-      Udata(i  ,j  ,k  , IW) -=  FluxData_x(i+1,j  ,k  , IW);
+      tmp[ID] += FluxData_x(i  ,j  ,k  , ID);
+      tmp[IP] += FluxData_x(i  ,j  ,k  , IP);
+      tmp[IU] += FluxData_x(i  ,j  ,k  , IU);
+      tmp[IV] += FluxData_x(i  ,j  ,k  , IV);
+      tmp[IW] += FluxData_x(i  ,j  ,k  , IW);
+
+      tmp[ID] -= FluxData_x(i+1,j  ,k  , ID);
+      tmp[IP] -= FluxData_x(i+1,j  ,k  , IP);
+      tmp[IU] -= FluxData_x(i+1,j  ,k  , IU);
+      tmp[IV] -= FluxData_x(i+1,j  ,k  , IV);
+      tmp[IW] -= FluxData_x(i+1,j  ,k  , IW);
       
-      Udata(i  ,j  ,k  , ID) +=  FluxData_y(i  ,j  ,k  , ID);
-      Udata(i  ,j  ,k  , IP) +=  FluxData_y(i  ,j  ,k  , IP);
-      Udata(i  ,j  ,k  , IU) +=  FluxData_y(i  ,j  ,k  , IU);
-      Udata(i  ,j  ,k  , IV) +=  FluxData_y(i  ,j  ,k  , IV);
-      Udata(i  ,j  ,k  , IW) +=  FluxData_y(i  ,j  ,k  , IW);
+      tmp[ID] += FluxData_y(i  ,j  ,k  , ID);
+      tmp[IP] += FluxData_y(i  ,j  ,k  , IP);
+      tmp[IU] += FluxData_y(i  ,j  ,k  , IU);
+      tmp[IV] += FluxData_y(i  ,j  ,k  , IV);
+      tmp[IW] += FluxData_y(i  ,j  ,k  , IW);
       
-      Udata(i  ,j  ,k  , ID) -=  FluxData_y(i  ,j+1,k  , ID);
-      Udata(i  ,j  ,k  , IP) -=  FluxData_y(i  ,j+1,k  , IP);
-      Udata(i  ,j  ,k  , IU) -=  FluxData_y(i  ,j+1,k  , IU);
-      Udata(i  ,j  ,k  , IV) -=  FluxData_y(i  ,j+1,k  , IV);
-      Udata(i  ,j  ,k  , IW) -=  FluxData_y(i  ,j+1,k  , IW);
+      tmp[ID] -= FluxData_y(i  ,j+1,k  , ID);
+      tmp[IP] -= FluxData_y(i  ,j+1,k  , IP);
+      tmp[IU] -= FluxData_y(i  ,j+1,k  , IU);
+      tmp[IV] -= FluxData_y(i  ,j+1,k  , IV);
+      tmp[IW] -= FluxData_y(i  ,j+1,k  , IW);
 
-      Udata(i  ,j  ,k  , ID) +=  FluxData_z(i  ,j  ,k  , ID);
-      Udata(i  ,j  ,k  , IP) +=  FluxData_z(i  ,j  ,k  , IP);
-      Udata(i  ,j  ,k  , IU) +=  FluxData_z(i  ,j  ,k  , IU);
-      Udata(i  ,j  ,k  , IV) +=  FluxData_z(i  ,j  ,k  , IV);
-      Udata(i  ,j  ,k  , IW) +=  FluxData_z(i  ,j  ,k  , IW);
+      tmp[ID] += FluxData_z(i  ,j  ,k  , ID);
+      tmp[IP] += FluxData_z(i  ,j  ,k  , IP);
+      tmp[IU] += FluxData_z(i  ,j  ,k  , IU);
+      tmp[IV] += FluxData_z(i  ,j  ,k  , IV);
+      tmp[IW] += FluxData_z(i  ,j  ,k  , IW);
 
-      Udata(i  ,j  ,k  , ID) -=  FluxData_z(i  ,j  ,k+1, ID);
-      Udata(i  ,j  ,k  , IP) -=  FluxData_z(i  ,j  ,k+1, IP);
-      Udata(i  ,j  ,k  , IU) -=  FluxData_z(i  ,j  ,k+1, IU);
-      Udata(i  ,j  ,k  , IV) -=  FluxData_z(i  ,j  ,k+1, IV);
-      Udata(i  ,j  ,k  , IW) -=  FluxData_z(i  ,j  ,k+1, IW);
+      tmp[ID] -= FluxData_z(i  ,j  ,k+1, ID);
+      tmp[IP] -= FluxData_z(i  ,j  ,k+1, IP);
+      tmp[IU] -= FluxData_z(i  ,j  ,k+1, IU);
+      tmp[IV] -= FluxData_z(i  ,j  ,k+1, IV);
+      tmp[IW] -= FluxData_z(i  ,j  ,k+1, IW);
 
     } // end if
     
   } // end operator ()
   
   HydroParams params;
-  DataArray   Udata;
+  DataArray   UOld;
+  DataArray   UNew;
   DataArray   FluxData_x;
   DataArray   FluxData_y;
   DataArray   FluxData_z;

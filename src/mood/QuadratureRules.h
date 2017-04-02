@@ -47,29 +47,29 @@ constexpr int QUADRATURE_NUM_POINTS[STENCIL_TOTAL_NUMBER] =
    3   /* STENCIL_3D_DEGREE5_V2 */
   };
 
-/**
- * Quadrature weights when using 1 point (Gauss-Legendre).
- */
-constexpr real_t QUADRATURE_WEIGHTS_N1[1] =
-  {
-    1.0
-  };
+// /**
+//  * Quadrature weights when using 1 point (Gauss-Legendre).
+//  */
+// constexpr real_t QUADRATURE_WEIGHTS_N1[1] =
+//   {
+//     1.0
+//   };
 
-/**
- * Quadrature weights when using 2 points (Gauss-Legendre).
- */
-constexpr real_t QUADRATURE_WEIGHTS_N2[2] =
-  {
-    0.5, 0.5
-  };
+// /**
+//  * Quadrature weights when using 2 points (Gauss-Legendre).
+//  */
+// constexpr real_t QUADRATURE_WEIGHTS_N2[2] =
+//   {
+//     0.5, 0.5
+//   };
 
-/**
- * Quadrature weights when using 3 points (Gauss-Legendre).
- */
-constexpr real_t QUADRATURE_WEIGHTS_N3[3] =
-  {
-    5.0/18, 8.0/18, 5.0/18
-  };
+// /**
+//  * Quadrature weights when using 3 points (Gauss-Legendre).
+//  */
+// constexpr real_t QUADRATURE_WEIGHTS_N3[3] =
+//   {
+//     5.0/18, 8.0/18, 5.0/18
+//   };
 
 // ============================================================================
 // ============================================================================

@@ -86,6 +86,15 @@ public:
 
     const real_t nbvar = this->params.nbvar;
 
+    // Quadrature weights when using 1 point (Gauss-Legendre).
+    //const real_t QUADRATURE_WEIGHTS_N1[1] = {1.0};
+    
+    // Quadrature weights when using 2 points (Gauss-Legendre).
+    const real_t QUADRATURE_WEIGHTS_N2[2] = {0.5, 0.5};
+    
+    // Quadrature weights when using 3 points (Gauss-Legendre).
+    const real_t QUADRATURE_WEIGHTS_N3[3] = {5.0/18, 8.0/18, 5.0/18};
+
     // riemann solver states left/right (conservative variables),
     // one for each quadrature point
     HydroState UL[nbQuadPts], UR[nbQuadPts];
@@ -150,18 +159,27 @@ public:
       // check if the reconstructed states are valid, if not we use  Udata
       for (int iq=0; iq<nbQuadPts; ++iq) {
 
-	if ( this->isValid(UL[iq]) == 0 ) {
+	// if ( this->isValid(UL[iq]) == 0 ) {
+	//   // change UL into Udata from neighbor
+	//   for (int ivar=0; ivar<nbvar; ++ivar)
+	//     UL[iq][ivar] = polyCoefs[0](i-1,j,ivar);
+	// }
+	  
+	// if ( this->isValid(UR[iq]) == 0 ) {
+	//   // change UR into Udata from current cell
+	//   for (int ivar=0; ivar<nbvar; ++ivar)
+	//     UR[iq][ivar] = polyCoefs[0](i,j,ivar);
+	// }
+
+	if ( this->isValid(UL[iq]) == 0 or this->isValid(UR[iq]) == 0 ) {
 	  // change UL into Udata from neighbor
-	  for (int ivar=0; ivar<nbvar; ++ivar)
+	  // change UR into Udata from current cell
+	  for (int ivar=0; ivar<nbvar; ++ivar) {
 	    UL[iq][ivar] = polyCoefs[0](i-1,j,ivar);
+	    UR[iq][ivar] = polyCoefs[0](i,j,ivar);
+	  }
 	}
 	  
-	if ( this->isValid(UR[iq]) == 0 ) {
-	  // change UR into Udata from current cell
-	  for (int ivar=0; ivar<nbvar; ++ivar)
-	    UR[iq][ivar] = polyCoefs[0](i,j,ivar);
-	}
-	
       } // end check validity
       
       // we can now perform the riemann solvers for each quadrature point
@@ -250,16 +268,24 @@ public:
       // check if the reconstructed states are valid, if not we use  Udata
       for (int iq=0; iq<nbQuadPts; ++iq) {
 
-	if ( this->isValid(UL[iq]) == 0 ) {
-	  // change UL into Udata from neighbor
-	  for (int ivar=0; ivar<nbvar; ++ivar)
-	    UL[iq][ivar] = polyCoefs[0](i,j-1,ivar);
-	}
+	// if ( this->isValid(UL[iq]) == 0 ) {
+	//   // change UL into Udata from neighbor
+	//   for (int ivar=0; ivar<nbvar; ++ivar)
+	//     UL[iq][ivar] = polyCoefs[0](i,j-1,ivar);
+	// }
 	  
-	if ( this->isValid(UR[iq]) == 0 ) {
-	  // change UR into Udata from current cell
-	  for (int ivar=0; ivar<nbvar; ++ivar)
+	// if ( this->isValid(UR[iq]) == 0 ) {
+	//   // change UR into Udata from current cell
+	//   for (int ivar=0; ivar<nbvar; ++ivar)
+	//     UR[iq][ivar] = polyCoefs[0](i,j,ivar);
+	// }
+	
+	if ( this->isValid(UL[iq]) == 0 or this->isValid(UR[iq]) == 0 ) {
+	  // change UL into Udata from neighbor
+	  for (int ivar=0; ivar<nbvar; ++ivar) {
+	    UL[iq][ivar] = polyCoefs[0](i,j-1,ivar);
 	    UR[iq][ivar] = polyCoefs[0](i,j,ivar);
+	  }
 	}
 	
       } // end check validity
@@ -327,6 +353,15 @@ public:
     const real_t dz = this->params.dz;
 
     const real_t nbvar = this->params.nbvar;
+
+    // Quadrature weights when using 1 point (Gauss-Legendre).
+    //const real_t QUADRATURE_WEIGHTS_N1[1] = {1.0};
+    
+    // Quadrature weights when using 2 points (Gauss-Legendre).
+    const real_t QUADRATURE_WEIGHTS_N2[2] = {0.5, 0.5};
+    
+    // Quadrature weights when using 3 points (Gauss-Legendre).
+    const real_t QUADRATURE_WEIGHTS_N3[3] = {5.0/18, 8.0/18, 5.0/18};
 
     // riemann solver states left/right (conservative variables),
     // one for each quadrature point
@@ -699,6 +734,7 @@ public:
   // get the number of quadrature point per face corresponding to this stencil
   static constexpr int nbQuadPts = QUADRATURE_NUM_POINTS[stencilId];
   static constexpr int nbQuadPts3d = nbQuadPts*nbQuadPts;
+
   
 }; // class ComputeFluxesFunctor
 
@@ -814,8 +850,8 @@ public:
       this->computePrimitives(UR, &c, qR);
 
       // compute riemann flux
-      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);	  
-      //::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
+      //::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);	  
+      ::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
      
       // finaly copy back the flux on device memory
       for (int ivar=0; ivar<nbvar; ++ivar)
@@ -857,8 +893,8 @@ public:
       this->swap(qR[IU],qR[IV]);
 
       // compute riemann flux
-      ::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);
-      //::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
+      //::ppkMHD::riemann_hydro(qL,qR,qgdnv,flux,this->params);
+      ::ppkMHD::riemann_hll<HydroState2d>(qL,qR,qgdnv,flux,this->params);
 
       // swap again IU and IV
       this->swap(flux[IU],flux[IV]);

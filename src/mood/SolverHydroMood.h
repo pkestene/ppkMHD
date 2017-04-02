@@ -226,7 +226,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   } else if (dim==3) {
 
     U     = DataArray("U", isize, jsize, ksize, nbvar);
-    Uhost = Kokkos::create_mirror_view(U);
+    Uhost = Kokkos::create_mirror(U);
     U2    = DataArray("U2",isize, jsize, ksize, nbvar);
     
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
@@ -748,23 +748,29 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // compute fluxes
   {
     ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
-							Fluxes_x, Fluxes_y, Fluxes_z,
-							params, stencil, geomMatrixPI_view,
+							Fluxes_x,
+							Fluxes_y,
+							Fluxes_z,
+							params,
+							stencil,
+							geomMatrixPI_view,
 							QUAD_LOC_2D,
 							QUAD_LOC_3D,
 							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+    save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
+    save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
   }
 
   //for (int iRecomp=0; iRecomp<5; ++iRecomp) {
   
-  // flag cells for which fluxes need to be recomputed
+  // flag cells for which fluxes will need to be recomputed
+  // because attemp to update leads to physically invalid values
+  // (negative density or pressure)
   {  
     ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params,
-						      data_out,
+						      data_in,
 						      MoodFlags,
 						      Fluxes_x,
 						      Fluxes_y,
@@ -775,7 +781,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   
   // recompute fluxes arround flagged cells
   {
-    RecomputeFluxesFunctor<dim,degree> functor(data_out, MoodFlags,
+    RecomputeFluxesFunctor<dim,degree> functor(data_in, MoodFlags,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
 					       params,
 					       dtdx, dtdy, dtdz);
@@ -788,7 +794,7 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
 
   // actual update
   {
-    UpdateFunctor<dim> functor(params, data_out,
+    UpdateFunctor<dim> functor(params, data_in, data_out,
 			       Fluxes_x, Fluxes_y, Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
   }
