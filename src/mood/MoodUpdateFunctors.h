@@ -176,6 +176,173 @@ public:
 // =======================================================================
 // =======================================================================
 /**
+ * Given the fluxes array, perform update of Udata (conservative variable
+ * array).
+ *
+ * \tparam dim dimension (2 or 3).
+ */
+template<int dim>
+class UpdateFunctor_ssprk2
+{
+
+public:
+  //! Decide at compile-time which HydroState to use
+  using HydroState = typename std::conditional<dim==2,HydroState2d,HydroState3d>::type;
+  
+  //! Decide at compile-time which data array to use
+  using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+
+  UpdateFunctor_ssprk2(HydroParams params,
+		       DataArray UOld,
+		       DataArray URK,
+		       DataArray UNew,
+		       DataArray FluxData_x,
+		       DataArray FluxData_y,
+		       DataArray FluxData_z) :
+    params(params),
+    UOld(UOld),
+    URK(URK),
+    UNew(UNew),
+    FluxData_x(FluxData_x),
+    FluxData_y(FluxData_y),
+    FluxData_z(FluxData_z)
+  {};
+  
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
+  {
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+
+    HydroState tmp;
+    
+    if(j >= ghostWidth && j < jsize-ghostWidth  &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+
+      tmp[ID] = UOld(i,j,ID) + URK(i,j,ID);
+      tmp[IP] = UOld(i,j,IP) + URK(i,j,IP);
+      tmp[IU] = UOld(i,j,IU) + URK(i,j,IU);
+      tmp[IV] = UOld(i,j,IV) + URK(i,j,IV);
+
+      tmp[ID] += FluxData_x(i  ,j  , ID);
+      tmp[IP] += FluxData_x(i  ,j  , IP);
+      tmp[IU] += FluxData_x(i  ,j  , IU);
+      tmp[IV] += FluxData_x(i  ,j  , IV);
+
+      tmp[ID] -= FluxData_x(i+1,j  , ID);
+      tmp[IP] -= FluxData_x(i+1,j  , IP);
+      tmp[IU] -= FluxData_x(i+1,j  , IU);
+      tmp[IV] -= FluxData_x(i+1,j  , IV);
+      
+      tmp[ID] += FluxData_y(i  ,j  , ID);
+      tmp[IP] += FluxData_y(i  ,j  , IP);
+      tmp[IU] += FluxData_y(i  ,j  , IU);
+      tmp[IV] += FluxData_y(i  ,j  , IV);
+      
+      tmp[ID] -= FluxData_y(i  ,j+1, ID);
+      tmp[IP] -= FluxData_y(i  ,j+1, IP);
+      tmp[IU] -= FluxData_y(i  ,j+1, IU);
+      tmp[IV] -= FluxData_y(i  ,j+1, IV);
+
+      UNew(i,j,ID) = 0.5*tmp[ID];
+      UNew(i,j,IP) = 0.5*tmp[IP];
+      UNew(i,j,IU) = 0.5*tmp[IU];
+      UNew(i,j,IV) = 0.5*tmp[IV];
+      
+    } // end if
+    
+  } // end operator ()
+  
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
+  {
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+    const int ghostWidth = params.ghostWidth;
+    
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+
+    HydroState tmp;
+
+    if(k >= ghostWidth && k < ksize-ghostWidth  &&
+       j >= ghostWidth && j < jsize-ghostWidth  &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+
+      tmp[ID] = UOld(i,j,k,ID) + URK(i,j,k,ID);
+      tmp[IP] = UOld(i,j,k,IP) + URK(i,j,k,IP);
+      tmp[IU] = UOld(i,j,k,IU) + URK(i,j,k,IU);
+      tmp[IV] = UOld(i,j,k,IV) + URK(i,j,k,IV);
+      tmp[IW] = UOld(i,j,k,IW) + URK(i,j,k,IW);
+
+      tmp[ID] += FluxData_x(i  ,j  ,k  , ID);
+      tmp[IP] += FluxData_x(i  ,j  ,k  , IP);
+      tmp[IU] += FluxData_x(i  ,j  ,k  , IU);
+      tmp[IV] += FluxData_x(i  ,j  ,k  , IV);
+      tmp[IW] += FluxData_x(i  ,j  ,k  , IW);
+
+      tmp[ID] -= FluxData_x(i+1,j  ,k  , ID);
+      tmp[IP] -= FluxData_x(i+1,j  ,k  , IP);
+      tmp[IU] -= FluxData_x(i+1,j  ,k  , IU);
+      tmp[IV] -= FluxData_x(i+1,j  ,k  , IV);
+      tmp[IW] -= FluxData_x(i+1,j  ,k  , IW);
+      
+      tmp[ID] += FluxData_y(i  ,j  ,k  , ID);
+      tmp[IP] += FluxData_y(i  ,j  ,k  , IP);
+      tmp[IU] += FluxData_y(i  ,j  ,k  , IU);
+      tmp[IV] += FluxData_y(i  ,j  ,k  , IV);
+      tmp[IW] += FluxData_y(i  ,j  ,k  , IW);
+      
+      tmp[ID] -= FluxData_y(i  ,j+1,k  , ID);
+      tmp[IP] -= FluxData_y(i  ,j+1,k  , IP);
+      tmp[IU] -= FluxData_y(i  ,j+1,k  , IU);
+      tmp[IV] -= FluxData_y(i  ,j+1,k  , IV);
+      tmp[IW] -= FluxData_y(i  ,j+1,k  , IW);
+
+      tmp[ID] += FluxData_z(i  ,j  ,k  , ID);
+      tmp[IP] += FluxData_z(i  ,j  ,k  , IP);
+      tmp[IU] += FluxData_z(i  ,j  ,k  , IU);
+      tmp[IV] += FluxData_z(i  ,j  ,k  , IV);
+      tmp[IW] += FluxData_z(i  ,j  ,k  , IW);
+
+      tmp[ID] -= FluxData_z(i  ,j  ,k+1, ID);
+      tmp[IP] -= FluxData_z(i  ,j  ,k+1, IP);
+      tmp[IU] -= FluxData_z(i  ,j  ,k+1, IU);
+      tmp[IV] -= FluxData_z(i  ,j  ,k+1, IV);
+      tmp[IW] -= FluxData_z(i  ,j  ,k+1, IW);
+
+      UNew(i,j,k,ID) = 0.5*tmp[ID];
+      UNew(i,j,k,IP) = 0.5*tmp[IP];
+      UNew(i,j,k,IU) = 0.5*tmp[IU];
+      UNew(i,j,k,IV) = 0.5*tmp[IV];
+      UNew(i,j,k,IW) = 0.5*tmp[IW];
+
+    } // end if
+    
+  } // end operator ()
+  
+  HydroParams params;
+  DataArray   UOld;
+  DataArray   URK;
+  DataArray   UNew;
+  DataArray   FluxData_x;
+  DataArray   FluxData_y;
+  DataArray   FluxData_z;
+  
+}; // UpdateFunctor_ssprk2
+
+// =======================================================================
+// =======================================================================
+/**
  * This functor tries to perform update on density, if density or 
  * pressure becomes negative, we flag the cells for recompute.
  *
