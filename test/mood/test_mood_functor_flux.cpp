@@ -56,18 +56,22 @@ class TestFunctor : public MoodBaseFunctor<dim,degree>
 public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
   using typename PolynomialEvaluator<dim,degree>::coefs_t;
+
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+
   
   /**
    * Constructor for 2D/3D.
    */
-  TestFunctor(DataArray        Udata,
+  TestFunctor(HydroParams      params,
+	      MonomMap         monomMap,
+	      DataArray        Udata,
 	      DataArray        FluxData_x,
 	      DataArray        FluxData_y,
 	      DataArray        FluxData_z,
-	      HydroParams      params,
 	      Stencil          stencil,
 	      mood_matrix_pi_t mat_pi) :
-    MoodBaseFunctor<dim,degree>(params),
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
@@ -348,10 +352,10 @@ int main(int argc, char* argv[])
       }
     }
     Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
-    
+
     // create functor
     mood::TestFunctor<dim,degree,stencilId>
-       f(U,Fluxes_x,Fluxes_y,Fluxes_z,params,stencil, geomMatrixPI_view);
+      f(params,monomialMap.data,U,Fluxes_x,Fluxes_y,Fluxes_z,stencil, geomMatrixPI_view);
     
     // launch
     int ijsize = params.isize*params.jsize; 
@@ -481,7 +485,7 @@ int main(int argc, char* argv[])
     
     // create functor - template params are dim,degree,stencil
     mood::TestFunctor<dim,degree,stencilId>
-       f(U,Fluxes_x,Fluxes_y,Fluxes_z,params,stencil, geomMatrixPI_view);
+      f(params,monomialMap.data,U,Fluxes_x,Fluxes_y,Fluxes_z,stencil, geomMatrixPI_view);
     
     // launch
     int ijksize = params.isize*params.jsize*params.ksize; 

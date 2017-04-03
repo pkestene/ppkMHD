@@ -7,6 +7,9 @@
 #include "shared/HydroParams.h"
 #include "shared/HydroState.h"
 
+#include "mood/Polynomial.h"
+#include "mood/MonomialMap.h"
+
 namespace mood {
 
 /**
@@ -24,8 +27,9 @@ public:
   //! Decide at compile-time which data array to use
   using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
   
-  MoodBaseFunctor(HydroParams params) :
-    PolynomialEvaluator<dim,degree>(),
+  MoodBaseFunctor(HydroParams params,
+		  typename MonomialMap<dim,degree>::MonomMap monomMap) :
+    PolynomialEvaluator<dim,degree>(monomMap),
     params(params) {};
   virtual ~MoodBaseFunctor() {};
 

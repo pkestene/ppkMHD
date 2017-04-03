@@ -20,8 +20,10 @@ namespace mood {
  * degree : degree of the polynomial (maximum degree of the multivariate polynomial)
  */
 template<int dim, int degree>
-struct MonomialMap {
+class MonomialMap {
 
+public:
+  
   //! total number of dim-variate monomials of order less than order.
   static constexpr int ncoefs = mood::binomial<degree+dim,degree>();
 
@@ -54,6 +56,8 @@ struct MonomialMap {
     
   } // MonomialMap
 
+  virtual ~MonomialMap() {};
+  
   //! init map (on host and copy on device)
   void init_map() {
       

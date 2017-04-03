@@ -29,10 +29,12 @@ class InitImplodeFunctor : public MoodBaseFunctor<dim,degree>
 
 public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
-
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+  
   InitImplodeFunctor(HydroParams params,
+		     MonomMap    monomMap,
 		     DataArray   Udata) :
-    MoodBaseFunctor<dim,degree>(params), Udata(Udata)  {};
+    MoodBaseFunctor<dim,degree>(params,monomMap), Udata(Udata)  {};
   
   ~InitImplodeFunctor() {};
 
@@ -141,11 +143,13 @@ class InitBlastFunctor : public MoodBaseFunctor<dim,degree>
 
 public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
 
   InitBlastFunctor(HydroParams params,
+		   MonomMap    monomMap,
 		   BlastParams bParams,
 		   DataArray   Udata) :
-    MoodBaseFunctor<dim,degree>(params),
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     bParams(bParams),
     Udata(Udata)  {};
   
@@ -286,8 +290,10 @@ public:
   // use Base class typedef types.
   using typename MoodBaseFunctor<dim,degree>::DataArray;
   using typename MoodBaseFunctor<dim,degree>::HydroState;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
 
   InitFourQuadrantFunctor(HydroParams params,
+			  MonomMap    monomMap,
 			  DataArray   Udata,
 			  HydroState2d U0,
 			  HydroState2d U1,
@@ -295,7 +301,7 @@ public:
 			  HydroState2d U3,
 			  real_t xt,
 			  real_t yt) :
-    MoodBaseFunctor<dim,degree>(params),
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
     U0(U0), U1(U1), U2(U2), U3(U3), xt(xt), yt(yt)
   {};

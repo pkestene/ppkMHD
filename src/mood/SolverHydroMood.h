@@ -666,7 +666,7 @@ double SolverHydroMood<dim,degree>::compute_dt_local()
 			      ComputeDtFunctor3d<degree>>::type;
 
   // call device functor
-  ComputeDtFunctor computeDtFunctor(params, Udata);
+  ComputeDtFunctor computeDtFunctor(params, monomialMap.data, Udata);
   Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
@@ -780,7 +780,7 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
   {
     
     ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
-      functor(data_in, PolyCoefs, params, stencil, geomMatrixPI_view);
+      functor(params, monomialMap.data, data_in, PolyCoefs, stencil, geomMatrixPI_view);
     Kokkos::parallel_for(nbCells,functor);
 
     // for (int icoef=0; icoef<ncoefs; ++icoef)
@@ -815,11 +815,11 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
  
   // compute fluxes
   {
-    ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(params, monomialMap.data,
+							data_in, PolyCoefs,
 							Fluxes_x,
 							Fluxes_y,
 							Fluxes_z,
-							params,
 							stencil,
 							geomMatrixPI_view,
 							QUAD_LOC_2D,
@@ -837,7 +837,7 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
   // because attemp to update leads to physically invalid values
   // (negative density or pressure)
   {  
-    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params,
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params, monomialMap.data,
 						      data_in,
 						      MoodFlags,
 						      Fluxes_x,
@@ -849,9 +849,9 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
   
   // recompute fluxes arround flagged cells
   {
-    RecomputeFluxesFunctor<dim,degree> functor(data_in, MoodFlags,
+    RecomputeFluxesFunctor<dim,degree> functor(params, monomialMap.data,
+					       data_in, MoodFlags,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
-					       params,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
     //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
@@ -894,7 +894,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   {
     
     ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
-      functor(data_in, PolyCoefs, params, stencil, geomMatrixPI_view);
+      functor(params, monomialMap.data, data_in, PolyCoefs, stencil, geomMatrixPI_view);
     Kokkos::parallel_for(nbCells,functor);
 
     // for (int icoef=0; icoef<ncoefs; ++icoef)
@@ -904,11 +904,11 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 
   // compute fluxes to update data_in
   {
-    ComputeFluxesFunctor<dim,degree, stencilId> functor(data_in, PolyCoefs,
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(params, monomialMap.data,
+							data_in, PolyCoefs,
 							Fluxes_x,
 							Fluxes_y,
 							Fluxes_z,
-							params,
 							stencil,
 							geomMatrixPI_view,
 							QUAD_LOC_2D,
@@ -924,7 +924,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   // because attemp to update leads to physically invalid values
   // (negative density or pressure)
   {  
-    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params,
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params, monomialMap.data,
 						      data_in,
 						      MoodFlags,
 						      Fluxes_x,
@@ -936,9 +936,9 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   
   // recompute fluxes arround flagged cells
   {
-    RecomputeFluxesFunctor<dim,degree> functor(data_in, MoodFlags,
+    RecomputeFluxesFunctor<dim,degree> functor(params, monomialMap.data,
+					       data_in, MoodFlags,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
-					       params,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
     //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
@@ -959,7 +959,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   {
     
     ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
-      functor(U_RK1, PolyCoefs, params, stencil, geomMatrixPI_view);
+      functor(params, monomialMap.data, U_RK1, PolyCoefs, stencil, geomMatrixPI_view);
     Kokkos::parallel_for(nbCells,functor);
 
   }
@@ -967,11 +967,11 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   // compute fluxes to update U_RK1
   {
 
-    ComputeFluxesFunctor<dim,degree, stencilId> functor(U_RK1, PolyCoefs,
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(params, monomialMap.data,
+							U_RK1, PolyCoefs,
 							Fluxes_x,
 							Fluxes_y,
 							Fluxes_z,
-							params,
 							stencil,
 							geomMatrixPI_view,
 							QUAD_LOC_2D,
@@ -985,7 +985,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   // because attemp to update leads to physically invalid values
   // (negative density or pressure)
   {  
-    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params,
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params, monomialMap.data,
 						      U_RK1,
 						      MoodFlags,
 						      Fluxes_x,
@@ -996,9 +996,9 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   
   // recompute fluxes arround flagged cells
   {
-    RecomputeFluxesFunctor<dim,degree> functor(U_RK1, MoodFlags,
+    RecomputeFluxesFunctor<dim,degree> functor(params, monomialMap.data,
+					       U_RK1, MoodFlags,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
-					       params,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
   }
@@ -1098,7 +1098,7 @@ template<int dim, int degree>
 void SolverHydroMood<dim,degree>::init_implode(DataArray Udata)
 {
 
-  InitImplodeFunctor<dim,degree> functor(params, Udata);
+  InitImplodeFunctor<dim,degree> functor(params, monomialMap.data, Udata);
   Kokkos::parallel_for(nbCells, functor);
   
 } // init_implode
@@ -1115,7 +1115,7 @@ void SolverHydroMood<dim,degree>::init_blast(DataArray Udata)
 
   BlastParams blastParams = BlastParams(configMap);
   
-  InitBlastFunctor<dim,degree> functor(params, blastParams, Udata);
+  InitBlastFunctor<dim,degree> functor(params, monomialMap.data, blastParams, Udata);
   Kokkos::parallel_for(nbCells, functor);
 
 } // SolverHydroMood::init_blast
@@ -1145,7 +1145,8 @@ void SolverHydroMood<dim,degree>::init_four_quadrant(DataArray Udata)
   ppkMHD::primToCons_2D(U2, params.settings.gamma0);
   ppkMHD::primToCons_2D(U3, params.settings.gamma0);
   
-  InitFourQuadrantFunctor<dim,degree> functor(params, Udata,
+  InitFourQuadrantFunctor<dim,degree> functor(params, monomialMap.data,
+					      Udata,
 					      U0, U1, U2, U3,
 					      xt, yt);
   Kokkos::parallel_for(nbCells, functor);

@@ -16,6 +16,7 @@
 // mood
 #include "mood/monomials_ordering.h"
 #include "mood/monomials_print_utils.h"
+#include "mood/MonomialMap.h"
 #include "mood/Polynomial.h"
 #include "mood/Stencil.h"
 #include "mood/StencilUtils.h"
@@ -39,16 +40,19 @@ class TestMoodFunctor : public mood::MoodBaseFunctor<dim,degree>
 public:
   using typename mood::MoodBaseFunctor<dim,degree>::DataArray;
 
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+
   
   /**
    * Constructor for 2D/3D.
    */
   TestMoodFunctor(HydroParams params,
+		  MonomMap monomMap,
 		  DataArray Udata,
 		  DataArray FluxData_x,
 		  DataArray FluxData_y,
 		  DataArray FluxData_z) :
-    mood::MoodBaseFunctor<dim,degree>(params),
+    mood::MoodBaseFunctor<dim,degree>(params, monomMap),
     Udata(Udata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
@@ -139,8 +143,10 @@ int main(int argc, char* argv[])
     DataArray Fluxes_y = DataArray("Fy",1,2,3);
     DataArray Fluxes_z = DataArray("Fz",0,0,0);
 
+    mood::MonomialMap<2,degree_> monomialMap;
+    
     // create functor  
-    TestMoodFunctor<2,degree_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    TestMoodFunctor<2,degree_> f(params,monomialMap.data,U,Fluxes_x,Fluxes_y,Fluxes_z);
     
     // launch with only 1 thread
     Kokkos::parallel_for(1,f);
@@ -157,8 +163,10 @@ int main(int argc, char* argv[])
     DataArray Fluxes_y = DataArray("Fy",1,2,3,4);
     DataArray Fluxes_z = DataArray("Fz",1,2,3,4);
     
+    mood::MonomialMap<3,degree_> monomialMap;
+
     // create functor  
-    TestMoodFunctor<3,degree_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    TestMoodFunctor<3,degree_> f(params,monomialMap.data,U,Fluxes_x,Fluxes_y,Fluxes_z);
     
     // launch with only 1 thread
     Kokkos::parallel_for(1,f);

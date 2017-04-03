@@ -34,19 +34,21 @@ public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
   using typename MoodBaseFunctor<dim,degree>::HydroState;
   using typename PolynomialEvaluator<dim,degree>::coefs_t;
-  
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+
   //! total number of coefficients in the polynomial
   static const int ncoefs =  mood::binomial<dim+degree,dim>();
   
   /**
    * Constructor for 2D/3D.
    */
-  ComputeFluxesFunctor(DataArray        Udata,
+  ComputeFluxesFunctor(HydroParams      params,
+		       MonomMap         monomMap,
+		       DataArray        Udata,
 		       Kokkos::Array<DataArray,ncoefs> polyCoefs,
 		       DataArray        FluxData_x,
 		       DataArray        FluxData_y,
 		       DataArray        FluxData_z,
-		       HydroParams      params,
 		       Stencil          stencil,
 		       mood_matrix_pi_t mat_pi,
 		       QuadLoc_2d_t     QUAD_LOC_2D,
@@ -54,7 +56,7 @@ public:
 		       real_t dtdx,
 		       real_t dtdy,
 		       real_t dtdz) :
-    MoodBaseFunctor<dim,degree>(params),
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
     polyCoefs(polyCoefs),
     FluxData_x(FluxData_x),
@@ -756,20 +758,22 @@ class RecomputeFluxesFunctor : public MoodBaseFunctor<dim,degree>
 public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
   using typename MoodBaseFunctor<dim,degree>::HydroState;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
     
   /**
    * Constructor for 2D/3D.
    */
-  RecomputeFluxesFunctor(DataArray        Udata,
+  RecomputeFluxesFunctor(HydroParams      params,
+			 MonomMap         monomMap,
+			 DataArray        Udata,
 			 DataArray        Flags,
 			 DataArray        FluxData_x,
 			 DataArray        FluxData_y,
 			 DataArray        FluxData_z,
-			 HydroParams      params,
 			 real_t           dtdx,
 			 real_t           dtdy,
 			 real_t           dtdz) :
-    MoodBaseFunctor<dim,degree>(params),
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
     Flags(Flags),
     FluxData_x(FluxData_x),

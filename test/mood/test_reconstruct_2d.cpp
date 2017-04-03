@@ -24,7 +24,7 @@
 // dim is the number of variable in the multivariate polynomial representation
 constexpr unsigned int dim = 2;
 
-// highest degree / order of the polynomial
+// highest degree of the polynomial
 constexpr unsigned int degree = 5;
 
 // use to initialize data for polynomial
@@ -120,8 +120,9 @@ public:
   }
 
   TestReconstructFunctor(result_t result,
-			 geom_t geomPI) :
-    PolynomialEvaluator<dim,degree>(),
+			 geom_t geomPI,
+			 typename mood::MonomialMap<dim,degree>::MonomMap monomMap) :
+    PolynomialEvaluator<dim,degree>(monomMap),
     result(result),
     stencil(stencilId),
     geomPI(geomPI) {};
@@ -179,10 +180,10 @@ public:
 
       result(ii) = eval(eval_point, coefs);
 #ifndef CUDA
-      std::cout << "[DEVICE] results - "
-		<< polynomial_eval<ncoefs>(eval_point[0],
-					   eval_point[1],
-					   monomialMap.data_h, coefs) << "\n";
+      // std::cout << "[DEVICE] results - "
+      // 		<< polynomial_eval<ncoefs>(eval_point[0],
+      // 					   eval_point[1],
+      // 					   monomMap.data, coefs) << "\n";
 #endif
     }
     
@@ -400,9 +401,13 @@ int main(int argc, char* argv[])
   }
   Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
   
+  // create monomial map for all monomial up to degree = degree
+  mood::MonomialMap<dim,degree> monomialMap2;
+
   // create functor
   TestReconstructFunctor<stencilId_> f(result,
-				       geomMatrixPI_view);
+				       geomMatrixPI_view,
+				       monomialMap2.data);
 
   // launch with only 1 thread
   Kokkos::parallel_for(1,f);

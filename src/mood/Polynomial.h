@@ -52,10 +52,12 @@ public:
    *
    * MonomialMap::MonomMap is a Kokkos::View type defined in class MonomialMap.
    */
-  const MonomialMap<dim,degree> monomialMap;
+  //const MonomialMap<dim,degree> monomialMap;
+  typename MonomialMap<dim,degree>::MonomMap monomMap;
   
 public:
-  PolynomialEvaluator() : monomialMap() {};
+  PolynomialEvaluator(typename MonomialMap<dim,degree>::MonomMap monomMap) :
+    monomMap(monomMap) {};
 
   virtual ~PolynomialEvaluator() {};
   
@@ -69,8 +71,8 @@ public:
 
       // span monomial degrees
       for (int i = 0; i<Ncoefs; ++i) {
-	int e[2] = {monomialMap.data(i,0),
-		    monomialMap.data(i,1)};
+	int e[2] = {monomMap(i,0),
+		    monomMap(i,1)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
       }
 
@@ -92,9 +94,9 @@ public:
       // span all monomials in Graded Reverse Lexicographical degree
       for (int i = 0; i<Ncoefs; ++i) {
 
-	int e[3] = {monomialMap.data(i,0),
-		    monomialMap.data(i,1),
-		    monomialMap.data(i,2)};
+	int e[3] = {monomMap(i,0),
+		    monomMap(i,1),
+		    monomMap(i,2)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
 	
       }
@@ -118,8 +120,8 @@ public:
       
       // span monomial degrees
       for (int i = 0; i<Ncoefs; ++i) {
-	int e[2] = {monomialMap.data(i,0),
-		    monomialMap.data(i,1)};
+	int e[2] = {monomMap(i,0),
+		    monomMap(i,1)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
       }
       
@@ -134,9 +136,9 @@ public:
       // span all monomials in Graded Reverse Lexicographical degree
       for (int i = 0; i<Ncoefs; ++i) {
 
-	int e[3] = {monomialMap.data(i,0),
-		    monomialMap.data(i,1),
-		    monomialMap.data(i,2)};
+	int e[3] = {monomMap(i,0),
+		    monomMap(i,1),
+		    monomMap(i,2)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
 	
       }

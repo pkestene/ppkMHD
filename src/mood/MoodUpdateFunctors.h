@@ -357,14 +357,16 @@ class ComputeMoodFlagsUpdateFunctor : public MoodBaseFunctor<dim,degree>
 public:
   using typename MoodBaseFunctor<dim,degree>::DataArray;
   using typename MoodBaseFunctor<dim,degree>::HydroState;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
 
   ComputeMoodFlagsUpdateFunctor(HydroParams params,
-				DataArray Udata,
-				DataArray Flags,
-				DataArray FluxData_x,
-				DataArray FluxData_y,
-				DataArray FluxData_z) :
-    MoodBaseFunctor<dim,degree>(params),
+				MonomMap    monomMap,
+				DataArray   Udata,
+				DataArray   Flags,
+				DataArray   FluxData_x,
+				DataArray   FluxData_y,
+				DataArray   FluxData_z) :
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
     Flags(Flags),
     FluxData_x(FluxData_x),

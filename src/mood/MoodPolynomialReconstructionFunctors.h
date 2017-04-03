@@ -51,6 +51,9 @@ public:
   //! total number of coefficients in the reconstructing polynomial
   static const int ncoefs =  mood::binomial<dim+degree,dim>();
 
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+
+  
   /**
    * Constructor for 2D/3D.
    *
@@ -60,12 +63,13 @@ public:
    * \param[in] stencil (array containing neighbor x,y,z coordinates)
    * \param[in] mat_pi pseudo-inverse of the geometric terms matrix.
    */
-  ComputeReconstructionPolynomialFunctor(DataArray                       Udata,
+  ComputeReconstructionPolynomialFunctor(HydroParams                     params,
+					 MonomMap                        monomMap,
+					 DataArray                       Udata,
 					 Kokkos::Array<DataArray,ncoefs> polyCoefs,
-					 HydroParams                     params,
 					 Stencil                         stencil,
 					 mood_matrix_pi_t                mat_pi) :
-    MoodBaseFunctor<dim,degree>(params),
+    MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
     polyCoefs(polyCoefs),
     stencil(stencil),

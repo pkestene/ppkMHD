@@ -167,13 +167,15 @@ class ComputeDtFunctor2d : public MoodBaseFunctor<2,degree>
 public:
   using typename MoodBaseFunctor<2,degree>::DataArray;
   using typename MoodBaseFunctor<2,degree>::HydroState;
+  using MonomMap = typename mood::MonomialMap<2,degree>::MonomMap;
 
   /**
    * Constructor for 2D
    */
   ComputeDtFunctor2d(HydroParams params,
-		     DataArray Udata) :
-    MoodBaseFunctor<2,degree>(params),
+		     MonomMap    monomMap,
+		     DataArray   Udata) :
+    MoodBaseFunctor<2,degree>(params,monomMap),
     Udata(Udata)
   {};
 
@@ -258,13 +260,15 @@ class ComputeDtFunctor3d : public MoodBaseFunctor<3,degree>
 public:
   using typename MoodBaseFunctor<3,degree>::DataArray;
   using typename MoodBaseFunctor<3,degree>::HydroState;
+  using MonomMap = typename mood::MonomialMap<3,degree>::MonomMap;
 
   /**
    * Constructor for 3D.
    */
   ComputeDtFunctor3d(HydroParams params,
-		     DataArray Udata) :
-    MoodBaseFunctor<3,degree>(params),
+		     MonomMap    monomMap,
+		     DataArray   Udata) :
+    MoodBaseFunctor<3,degree>(params,monomMap),
     Udata(Udata)
   {};
 
