@@ -31,4 +31,5 @@ add_library(mood OBJECT
 target_include_directories(mood
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
+  ${LAPACKE_INCLUDE_DIR}
   )
