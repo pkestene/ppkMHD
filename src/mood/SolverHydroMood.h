@@ -219,6 +219,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   m_nCells = nbCells;
 
   int nbvar = params.nbvar;
+
+  long long int total_mem_size = 0;
   
   /*
    * memory allocation (use sizes with ghosts included)
@@ -238,7 +240,11 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
       std::string label = "PolyCoefs_" + std::to_string(ip);
       PolyCoefs[ip] = DataArray(label, isize, jsize, nbvar);
     }
-    
+
+    total_mem_size += isize*jsize*nbvar*4 * sizeof(real_t);
+    total_mem_size += isize*jsize * sizeof(real_t);
+    total_mem_size += isize*jsize*nbvar * ncoefs * sizeof(real_t);
+      
   } else if (dim==3) {
 
     U     = DataArray("U", isize, jsize, ksize, nbvar);
@@ -255,7 +261,11 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
       std::string label = "PolyCoefs_" + std::to_string(ip);
       PolyCoefs[ip] = DataArray(label, isize, jsize, ksize, nbvar);
     }
-    
+
+    total_mem_size += isize*jsize*ksize*nbvar*5 * sizeof(real_t);
+    total_mem_size += isize*jsize*ksize * sizeof(real_t);
+    total_mem_size += isize*jsize*ksize*nbvar * ncoefs * sizeof(real_t);
+
   }
 
   /*
@@ -276,8 +286,10 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   if (ssprk2_enabled) {
     if (dim == 2) {
       U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
+      total_mem_size += isize*jsize*nbvar * sizeof(real_t);
     } else if (dim == 3) {
       U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
+      total_mem_size += isize*jsize*ksize*nbvar * sizeof(real_t);
     }      
   }
   
@@ -308,6 +320,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   std::cout << "##########################" << "\n";
   std::cout << "Solver is " << m_solver_name << "\n";
   std::cout << "Problem (init condition) is " << m_problem_name << "\n";
+  std::cout << "Mood degree : " << degree << "\n";
+  std::cout << "Mood polynomial coefficients : " << ncoefs << "\n";
   std::cout << "Time integration is :\n";
   std::cout << "Forward Euler : " << !ssprk2_enabled << "\n";
   std::cout << "SSPRK2        : " <<  ssprk2_enabled << "\n";
@@ -315,6 +329,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
 
   // print parameters on screen
   params.print();
+  std::cout << "##########################" << "\n";
+  std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n"; 
   std::cout << "##########################" << "\n";
 
   // initialize time step

@@ -25,6 +25,7 @@ SolverFactory::SolverFactory()
   registerSolver("Hydro_Mood_2D_degree1",  &mood::SolverHydroMood<2,1>::create);
   registerSolver("Hydro_Mood_2D_degree2",  &mood::SolverHydroMood<2,2>::create);
   registerSolver("Hydro_Mood_2D_degree3",  &mood::SolverHydroMood<2,3>::create);
+  registerSolver("Hydro_Mood_2D_degree4",  &mood::SolverHydroMood<2,4>::create);
   registerSolver("Hydro_Mood_3D_degree1",  &mood::SolverHydroMood<3,1>::create);
   	 
 } // SolverFactory::SolverFactory
