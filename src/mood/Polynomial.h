@@ -47,7 +47,7 @@ public:
 public:
   /**
    * this is a map spanning all possibles monomials, and all possible
-   * variables, such that monomMa(i,j) gives the exponent of the
+   * variables, such that monomMap(i,j) gives the exponent of the
    * jth variables in the ith monomials.
    *
    * MonomialMap::MonomMap is a Kokkos::View type defined in class MonomialMap.
