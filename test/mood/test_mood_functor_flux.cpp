@@ -128,10 +128,10 @@ public:
 
       // reconstruct Udata on the left face along X direction
       // for each quadrature points
-      if (nbQuadraturePoints==1) {
-	//int x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
-	//int y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
-      }
+      //if (nbQuadraturePoints==1) {
+      //int x = QUADRATURE_LOCATION_2D_N1_X_M[0][IX];
+      //int y = QUADRATURE_LOCATION_2D_N1_X_M[0][IY];
+      //}
 
       FluxData_x(i,j,ID) = this->eval(-0.5*dx, 0.0   ,coefs_c);
       FluxData_y(i,j,ID) = this->eval( 0.0   ,-0.5*dy,coefs_c);
@@ -189,11 +189,11 @@ public:
 
       // reconstruct Udata on the left face along X direction
       // for each quadrature points
-      if (nbQuadraturePoints==1) {
-	//int x = QUADRATURE_LOCATION_3D_N1_X_M[0][IX];
-	//int y = QUADRATURE_LOCATION_3D_N1_X_M[0][IY];
-	//int z = QUADRATURE_LOCATION_3D_N1_X_M[0][IZ];
-      }
+      //if (nbQuadraturePoints==1) {
+      //int x = QUADRATURE_LOCATION_3D_N1_X_M[0][IX];
+      //int y = QUADRATURE_LOCATION_3D_N1_X_M[0][IY];
+      //int z = QUADRATURE_LOCATION_3D_N1_X_M[0][IZ];
+      //}
 
       FluxData_x(i,j,k,ID) = this->eval(-0.5*dx, 0.0   , 0.0   , coefs_c);
       FluxData_y(i,j,k,ID) = this->eval( 0.0   ,-0.5*dy, 0.0   , coefs_c);
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
     constexpr int dim = 2;
 
     // which stencil shall we use ?
-    constexpr mood::STENCIL_ID stencilId = mood::STENCIL_2D_DEGREE3;
+    constexpr mood::STENCIL_ID stencilId = mood::STENCIL_2D_DEGREE5;
     
     // degree of the polynomial
     constexpr int degree = mood::STENCIL_DEGREE[stencilId];
@@ -275,9 +275,11 @@ int main(int argc, char* argv[])
     
     // make sure ghostWidth is ok
     params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    params.isize = params.nx + 2*params.ghostWidth;
+    params.jsize = params.ny + 2*params.ghostWidth;
     params.print();
     std::string solver_name = configMap.getString("run", "solver_name", "unknown");
-    std::cout << "Using solver " << solver_name << "\n";
+    std::cout << "Using solver mood with degree" << degree << "\n";
     
     // create fake hydro data
     using DataArray     = DataArray2d;
@@ -394,7 +396,9 @@ int main(int argc, char* argv[])
     params.setup(configMap);
     
     // make sure ghostWidth is ok
-    //params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    params.isize = params.nx + 2*params.ghostWidth;
+    params.jsize = params.ny + 2*params.ghostWidth;
     params.print();
     std::string solver_name = configMap.getString("run", "solver_name", "unknown");
     std::cout << "Using solver " << solver_name << "\n";

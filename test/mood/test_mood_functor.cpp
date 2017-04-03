@@ -24,20 +24,20 @@
 
 #include "mood/MoodBaseFunctor.h"
 
-// highest degree / order of the polynomial
-constexpr unsigned int order_ = 4;
+// highest degree of the polynomial
+constexpr unsigned int degree_ = 4;
 
 
 /**
  *
  * Test mood functor.
  */
-template<unsigned int dim, unsigned int order>
-class TestMoodFunctor : public mood::MoodBaseFunctor<dim,order>
+template<unsigned int dim, unsigned int degree>
+class TestMoodFunctor : public mood::MoodBaseFunctor<dim,degree>
 {
     
 public:
-  using typename mood::MoodBaseFunctor<dim,order>::DataArray;
+  using typename mood::MoodBaseFunctor<dim,degree>::DataArray;
 
   
   /**
@@ -48,7 +48,7 @@ public:
 		  DataArray FluxData_x,
 		  DataArray FluxData_y,
 		  DataArray FluxData_z) :
-    mood::MoodBaseFunctor<dim,order>(params),
+    mood::MoodBaseFunctor<dim,degree>(params),
     Udata(Udata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y),
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     DataArray Fluxes_z = DataArray("Fz",0,0,0);
 
     // create functor  
-    TestMoodFunctor<2,order_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    TestMoodFunctor<2,degree_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
     
     // launch with only 1 thread
     Kokkos::parallel_for(1,f);
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
     DataArray Fluxes_z = DataArray("Fz",1,2,3,4);
     
     // create functor  
-    TestMoodFunctor<3,order_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
+    TestMoodFunctor<3,degree_> f(params,U,Fluxes_x,Fluxes_y,Fluxes_z);
     
     // launch with only 1 thread
     Kokkos::parallel_for(1,f);
