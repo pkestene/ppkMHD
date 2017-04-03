@@ -209,6 +209,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   ksize(params.ksize),
   nbCells(params.isize*params.jsize),
   stencil(stencilId),
+  monomialMap(),
   geomMatrix(stencil_size-1,ncoefs-1),
   ssprk2_enabled(false)
 {
