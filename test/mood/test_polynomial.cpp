@@ -17,7 +17,7 @@
 constexpr int Dim = 3;
 
 // highest degree / order of the polynomial
-constexpr int Degree = 2;
+constexpr int Degree = 4;
 
 using scalar_t = Kokkos::View<double[1]>;
 using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
@@ -84,22 +84,33 @@ public:
   ~TestPolynomialFunctor() {};
 
 
+  template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int& i) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& i) const
   {
 
     coefs_t coefs;
     for (int i=0; i<ncoefs; ++i)
       coefs[i] = 1.0*i;
 
-    if (dim==2)
-      data(0) = polynomial_eval(eval_point[0], eval_point[1], coefs);
-    else
-      data(0) = polynomial_eval(eval_point[0], eval_point[1], eval_point[2], coefs);
+    data(0) = polynomial_eval(eval_point[0], eval_point[1], coefs);
     
   }
 
-    /** evaluate polynomial at a given point (2D) */
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& i) const
+  {
+
+    coefs_t coefs;
+    for (int i=0; i<ncoefs; ++i)
+      coefs[i] = 1.0*i;
+
+    data(0) = polynomial_eval(eval_point[0], eval_point[1], eval_point[2], coefs);
+    
+  }
+
+  /** evaluate polynomial at a given point (2D) */
   KOKKOS_INLINE_FUNCTION
   real_t polynomial_eval(real_t x, real_t y, coefs_t coefs) const {
 
@@ -169,7 +180,7 @@ int main(int argc, char* argv[])
       int e[2] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1)};
       std::cout << "    {";
-      std::cout << e[0] << "," << e[1] << "," << "},";
+      std::cout << e[0] << "," << e[1] << "},";
       std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << "\n";
       
     }
@@ -195,8 +206,8 @@ int main(int argc, char* argv[])
   // evaluation point
   Kokkos::Array<real_t,Dim> p;
   if (Dim==2) {
-    p[0] =  1.0;
-    p[1] = -1.0;
+    p[0] =  1.04;
+    p[1] = -1.65;
   } else {
     p[0] =  1.12;
     p[1] =  0.02;
@@ -218,7 +229,7 @@ int main(int argc, char* argv[])
       int e[2] = {monomialMap.data_h(i,0),
 		  monomialMap.data_h(i,1)};
       std::cout << "    {";
-      std::cout << e[0] << "," << e[1] << "," << "},";
+      std::cout << e[0] << "," << e[1] << "},";
       std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << "\n";
       
     }
