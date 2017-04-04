@@ -343,6 +343,184 @@ public:
 // =======================================================================
 // =======================================================================
 /**
+ * Given the fluxes array, perform update of Udata (conservative variable
+ * array).
+ *
+ * \tparam dim dimension (2 or 3).
+ */
+template<int dim>
+class UpdateFunctor_weight
+{
+
+public:
+  //! Decide at compile-time which HydroState to use
+  using HydroState = typename std::conditional<dim==2,HydroState2d,HydroState3d>::type;
+  
+  //! Decide at compile-time which data array to use
+  using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+
+  UpdateFunctor_weight(HydroParams params,
+		       DataArray UOld,
+		       DataArray URK,
+		       DataArray UNew,
+		       DataArray FluxData_x,
+		       DataArray FluxData_y,
+		       DataArray FluxData_z,
+		       real_t weight_uold,
+		       real_t weight_urk,
+		       real_t weight_flux) :
+    params(params),
+    UOld(UOld),
+    URK(URK),
+    UNew(UNew),
+    FluxData_x(FluxData_x),
+    FluxData_y(FluxData_y),
+    FluxData_z(FluxData_z),
+    weight_uold(weight_uold),
+    weight_urk(weight_urk),
+    weight_flux(weight_flux)
+  {};
+  
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
+  {
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+
+    HydroState tmp;
+    HydroState tmp2;
+    
+    if(j >= ghostWidth && j < jsize-ghostWidth  &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+
+      tmp[ID] = weight_uold * UOld(i,j,ID) + weight_urk * URK(i,j,ID);
+      tmp[IP] = weight_uold * UOld(i,j,IP) + weight_urk * URK(i,j,IP);
+      tmp[IU] = weight_uold * UOld(i,j,IU) + weight_urk * URK(i,j,IU);
+      tmp[IV] = weight_uold * UOld(i,j,IV) + weight_urk * URK(i,j,IV);
+
+      tmp2[ID] = FluxData_x(i  ,j  , ID);
+      tmp2[IP] = FluxData_x(i  ,j  , IP);
+      tmp2[IU] = FluxData_x(i  ,j  , IU);
+      tmp2[IV] = FluxData_x(i  ,j  , IV);
+
+      tmp2[ID] -= FluxData_x(i+1,j  , ID);
+      tmp2[IP] -= FluxData_x(i+1,j  , IP);
+      tmp2[IU] -= FluxData_x(i+1,j  , IU);
+      tmp2[IV] -= FluxData_x(i+1,j  , IV);
+      
+      tmp2[ID] += FluxData_y(i  ,j  , ID);
+      tmp2[IP] += FluxData_y(i  ,j  , IP);
+      tmp2[IU] += FluxData_y(i  ,j  , IU);
+      tmp2[IV] += FluxData_y(i  ,j  , IV);
+      
+      tmp2[ID] -= FluxData_y(i  ,j+1, ID);
+      tmp2[IP] -= FluxData_y(i  ,j+1, IP);
+      tmp2[IU] -= FluxData_y(i  ,j+1, IU);
+      tmp2[IV] -= FluxData_y(i  ,j+1, IV);
+
+      UNew(i,j,ID) = tmp[ID] + weight_flux * tmp2[ID];
+      UNew(i,j,IP) = tmp[IP] + weight_flux * tmp2[IP];
+      UNew(i,j,IU) = tmp[IU] + weight_flux * tmp2[IU];
+      UNew(i,j,IV) = tmp[IV] + weight_flux * tmp2[IV];
+      
+    } // end if
+    
+  } // end operator ()
+  
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
+  {
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+    const int ghostWidth = params.ghostWidth;
+    
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+
+    HydroState tmp;
+    HydroState tmp2;
+
+    if(k >= ghostWidth && k < ksize-ghostWidth  &&
+       j >= ghostWidth && j < jsize-ghostWidth  &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
+
+      tmp[ID] = weight_uold * UOld(i,j,k,ID) + weight_urk * URK(i,j,k,ID);
+      tmp[IP] = weight_uold * UOld(i,j,k,IP) + weight_urk * URK(i,j,k,IP);
+      tmp[IU] = weight_uold * UOld(i,j,k,IU) + weight_urk * URK(i,j,k,IU);
+      tmp[IV] = weight_uold * UOld(i,j,k,IV) + weight_urk * URK(i,j,k,IV);
+      tmp[IW] = weight_uold * UOld(i,j,k,IW) + weight_urk * URK(i,j,k,IW);
+
+      tmp2[ID]  = FluxData_x(i  ,j  ,k  , ID);
+      tmp2[IP]  = FluxData_x(i  ,j  ,k  , IP);
+      tmp2[IU]  = FluxData_x(i  ,j  ,k  , IU);
+      tmp2[IV]  = FluxData_x(i  ,j  ,k  , IV);
+      tmp2[IW]  = FluxData_x(i  ,j  ,k  , IW);
+
+      tmp2[ID] -= FluxData_x(i+1,j  ,k  , ID);
+      tmp2[IP] -= FluxData_x(i+1,j  ,k  , IP);
+      tmp2[IU] -= FluxData_x(i+1,j  ,k  , IU);
+      tmp2[IV] -= FluxData_x(i+1,j  ,k  , IV);
+      tmp2[IW] -= FluxData_x(i+1,j  ,k  , IW);
+      
+      tmp2[ID] += FluxData_y(i  ,j  ,k  , ID);
+      tmp2[IP] += FluxData_y(i  ,j  ,k  , IP);
+      tmp2[IU] += FluxData_y(i  ,j  ,k  , IU);
+      tmp2[IV] += FluxData_y(i  ,j  ,k  , IV);
+      tmp2[IW] += FluxData_y(i  ,j  ,k  , IW);
+      
+      tmp2[ID] -= FluxData_y(i  ,j+1,k  , ID);
+      tmp2[IP] -= FluxData_y(i  ,j+1,k  , IP);
+      tmp2[IU] -= FluxData_y(i  ,j+1,k  , IU);
+      tmp2[IV] -= FluxData_y(i  ,j+1,k  , IV);
+      tmp2[IW] -= FluxData_y(i  ,j+1,k  , IW);
+
+      tmp2[ID] += FluxData_z(i  ,j  ,k  , ID);
+      tmp2[IP] += FluxData_z(i  ,j  ,k  , IP);
+      tmp2[IU] += FluxData_z(i  ,j  ,k  , IU);
+      tmp2[IV] += FluxData_z(i  ,j  ,k  , IV);
+      tmp2[IW] += FluxData_z(i  ,j  ,k  , IW);
+
+      tmp2[ID] -= FluxData_z(i  ,j  ,k+1, ID);
+      tmp2[IP] -= FluxData_z(i  ,j  ,k+1, IP);
+      tmp2[IU] -= FluxData_z(i  ,j  ,k+1, IU);
+      tmp2[IV] -= FluxData_z(i  ,j  ,k+1, IV);
+      tmp2[IW] -= FluxData_z(i  ,j  ,k+1, IW);
+
+      UNew(i,j,k,ID) = tmp[ID] + weight_flux * tmp2[ID];
+      UNew(i,j,k,IP) = tmp[IP] + weight_flux * tmp2[IP];
+      UNew(i,j,k,IU) = tmp[IU] + weight_flux * tmp2[IU];
+      UNew(i,j,k,IV) = tmp[IV] + weight_flux * tmp2[IV];
+      UNew(i,j,k,IW) = tmp[IW] + weight_flux * tmp2[IW];
+
+    } // end if
+    
+  } // end operator ()
+  
+  HydroParams params;
+  DataArray   UOld;
+  DataArray   URK;
+  DataArray   UNew;
+  DataArray   FluxData_x;
+  DataArray   FluxData_y;
+  DataArray   FluxData_z;
+  real_t      weight_uold;
+  real_t      weight_urk;
+  real_t      weight_flux;
+  
+}; // UpdateFunctor_weight
+
+// =======================================================================
+// =======================================================================
+/**
  * This functor tries to perform update on density, if density or 
  * pressure becomes negative, we flag the cells for recompute.
  *

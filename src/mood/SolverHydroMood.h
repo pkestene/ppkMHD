@@ -166,6 +166,11 @@ public:
 		       DataArray data_out, 
 		       real_t dt);
   
+  //! time integration using SSP RK3
+  void time_int_ssprk3(DataArray data_in, 
+		       DataArray data_out, 
+		       real_t dt);
+  
 
   template<int dim_=dim>
   void make_boundaries(typename std::enable_if<dim_==2,DataArray2d>::type Udata);
@@ -181,7 +186,9 @@ public:
   void save_solution_impl();
 
   // time integration
+  bool forward_euler_enabled;
   bool ssprk2_enabled;
+  bool ssprk3_enabled;
   
   int isize, jsize, ksize, nbCells;
 
@@ -211,7 +218,9 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   stencil(stencilId),
   monomialMap(),
   geomMatrix(stencil_size-1,ncoefs-1),
-  ssprk2_enabled(false)
+  forward_euler_enabled(true),
+  ssprk2_enabled(false),
+  ssprk3_enabled(false)
 {
 
   if (dim==3)
@@ -283,17 +292,34 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   /*
    * Time integration
    */
-  ssprk2_enabled = configMap.getBool("mood", "ssprk2", false);
+  forward_euler_enabled = configMap.getBool("mood", "forward_euler", true);
+  ssprk2_enabled        = configMap.getBool("mood", "ssprk2", false);
+  ssprk3_enabled        = configMap.getBool("mood", "ssprk3", false);
+
   if (ssprk2_enabled) {
+
     if (dim == 2) {
       U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
       total_mem_size += isize*jsize*nbvar * sizeof(real_t);
     } else if (dim == 3) {
       U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
       total_mem_size += isize*jsize*ksize*nbvar * sizeof(real_t);
-    }      
+    }
+    
+  } else if (ssprk3_enabled) {
+
+    if (dim == 2) {
+      U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
+      U_RK2 = DataArray("U_RK2",isize, jsize, nbvar);
+      total_mem_size += isize*jsize*nbvar * 2 * sizeof(real_t);
+    } else if (dim == 3) {
+      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
+      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nbvar);
+      total_mem_size += isize*jsize*ksize*nbvar * 2 * sizeof(real_t);
+    }
+    
   }
-  
+
   /*
    * initialize hydro array at t=0
    */
@@ -324,8 +350,9 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   std::cout << "Mood degree : " << degree << "\n";
   std::cout << "Mood polynomial coefficients : " << ncoefs << "\n";
   std::cout << "Time integration is :\n";
-  std::cout << "Forward Euler : " << !ssprk2_enabled << "\n";
-  std::cout << "SSPRK2        : " <<  ssprk2_enabled << "\n";
+  std::cout << "Forward Euler : " << forward_euler_enabled << "\n";
+  std::cout << "SSPRK2        : " << ssprk2_enabled << "\n";
+  std::cout << "SSPRK3        : " << ssprk3_enabled << "\n";
   std::cout << "##########################" << "\n";
 
   // print parameters on screen
@@ -682,7 +709,8 @@ void SolverHydroMood<dim,degree>::next_iteration_impl()
 {
 
   if (m_iteration % 10 == 0) {
-    std::cout << "time step=" << m_iteration << " (dt=" << m_dt << ")" << std::endl;
+    //std::cout << "time step=" << m_iteration << " (dt=" << m_dt << ")" << std::endl;
+    printf("time step=%7d (dt=% 10.8f t=% 10.8f)\n",m_iteration,m_dt, m_t);
   }
   
   // output
@@ -748,10 +776,19 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   // start main computation
   timers[TIMER_NUM_SCHEME]->start();
 
-  if (ssprk2_enabled)
+  if (ssprk2_enabled) {
+    
     time_int_ssprk2(data_in, data_out, dt);
-  else
+    
+  } else if (ssprk3_enabled) {
+    
+    time_int_ssprk3(data_in, data_out, dt);
+    
+  } else {
+    
     time_int_forward_euler(data_in, data_out, dt);
+    
+  }
   
   timers[TIMER_NUM_SCHEME]->stop();
   
@@ -890,6 +927,9 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 
   Kokkos::deep_copy(U_RK1, data_in);
   
+  // ==============================================
+  // first step : U_RK1 = U_n + dt * fluxes(U_n)
+  // ==============================================
   // compute reconstruction polynomial coefficients of data_in
   {
     
@@ -952,9 +992,11 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // ==================
-  // second step
-  // ==================
+  make_boundaries(U_RK1);
+
+  // ==================================================================
+  // second step : U_{n+1} = 0.5 * (U_n + U_RK1 + dt * fluxes(U_RK1) )
+  // ==================================================================
   // compute reconstruction polynomial coefficients of U_RK1
   {
     
@@ -1011,6 +1053,218 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
   }  
   
 } // SolverHydroMood::time_int_ssprk2
+
+// =======================================================
+// =======================================================
+// ///////////////////////////////////////////
+// SSP RK3 time integration
+// ///////////////////////////////////////////
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in, 
+						  DataArray data_out, 
+						  real_t dt)
+{
+
+  real_t dtdx;
+  real_t dtdy;
+  real_t dtdz;
+  
+  dtdx = dt / params.dx;
+  dtdy = dt / params.dy;
+  dtdz = dt / params.dz;
+
+  Kokkos::deep_copy(U_RK1, data_in);
+
+  // ==============================================
+  // first step : U_RK1 = U_n + dt * fluxes(U_n)
+  // ==============================================
+  // compute reconstruction polynomial coefficients of data_in
+  {
+    
+    ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
+      functor(params, monomialMap.data, data_in, PolyCoefs, stencil, geomMatrixPI_view);
+    Kokkos::parallel_for(nbCells,functor);
+
+    // for (int icoef=0; icoef<ncoefs; ++icoef)
+    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
+
+  }
+
+  // compute fluxes to update data_in
+  {
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(params, monomialMap.data,
+							data_in, PolyCoefs,
+							Fluxes_x,
+							Fluxes_y,
+							Fluxes_z,
+							stencil,
+							geomMatrixPI_view,
+							QUAD_LOC_2D,
+							QUAD_LOC_3D,
+							dtdx, dtdy, dtdz);
+    Kokkos::parallel_for(nbCells, functor);
+
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+  }
+
+  // flag cells for which fluxes will need to be recomputed
+  // because attemp to update leads to physically invalid values
+  // (negative density or pressure)
+  {  
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params, monomialMap.data,
+						      data_in,
+						      MoodFlags,
+						      Fluxes_x,
+						      Fluxes_y,
+						      Fluxes_z);
+    Kokkos::parallel_for(nbCells, functor);
+    //save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
+  }
+  
+  // recompute fluxes arround flagged cells
+  {
+    RecomputeFluxesFunctor<dim,degree> functor(params, monomialMap.data,
+					       data_in, MoodFlags,
+					       Fluxes_x, Fluxes_y, Fluxes_z,
+					       dtdx, dtdy, dtdz);
+    Kokkos::parallel_for(nbCells, functor);
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
+  }
+
+  // update: U_RK1 = data_in + dt*fluxes
+  {
+    UpdateFunctor<dim> functor(params, data_in, U_RK1,
+			       Fluxes_x, Fluxes_y, Fluxes_z);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  make_boundaries(U_RK1);
+  
+  // =====================================================================
+  // second step : U_RK2 = 0.25 * (3 * U_n + U_RK1 + dt * fluxes(U_RK1) )
+  // =====================================================================
+  // compute reconstruction polynomial coefficients of U_RK1
+  {
+    
+    ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
+      functor(params, monomialMap.data, U_RK1, PolyCoefs, stencil, geomMatrixPI_view);
+    Kokkos::parallel_for(nbCells,functor);
+
+  }
+
+  // compute fluxes (U_RK1)
+  {
+    
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(params, monomialMap.data,
+							U_RK1, PolyCoefs,
+							Fluxes_x,
+							Fluxes_y,
+							Fluxes_z,
+							stencil,
+							geomMatrixPI_view,
+							QUAD_LOC_2D,
+							QUAD_LOC_3D,
+							dtdx, dtdy, dtdz);
+    Kokkos::parallel_for(nbCells, functor);
+
+  }
+
+  // flag cells for which fluxes will need to be recomputed
+  // because attemp to update leads to physically invalid values
+  // (negative density or pressure)
+  {  
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params, monomialMap.data,
+						      U_RK1,
+						      MoodFlags,
+						      Fluxes_x,
+						      Fluxes_y,
+						      Fluxes_z);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // recompute fluxes arround flagged cells
+  {
+    RecomputeFluxesFunctor<dim,degree> functor(params, monomialMap.data,
+					       U_RK1, MoodFlags,
+					       Fluxes_x, Fluxes_y, Fluxes_z,
+					       dtdx, dtdy, dtdz);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // actual update
+  // U_RK2 =  3/4 U_n + 1/4 U_RK1 + 1/4 * dt * Flux(U_RK1) 
+  {
+    UpdateFunctor_weight<dim> functor(params, data_in, U_RK1, U_RK2,
+				      Fluxes_x, Fluxes_y, Fluxes_z,
+				      0.75, 0.25, 0.25);
+    Kokkos::parallel_for(nbCells, functor);
+  }  
+
+  make_boundaries(U_RK2);
+
+  // ============================================================================
+  // thrird step : U_{n+1} = 1/3 * ( U_n + 2 * U_RK2 + 2 * dt * fluxes(U_RK2) )
+  // ============================================================================
+  // compute reconstruction polynomial coefficients of U_RK2
+  {
+    
+    ComputeReconstructionPolynomialFunctor<dim,degree,stencilId>
+      functor(params, monomialMap.data, U_RK2, PolyCoefs, stencil, geomMatrixPI_view);
+    Kokkos::parallel_for(nbCells,functor);
+
+  }
+
+  // compute fluxes (U_RK2)
+  {
+    
+    ComputeFluxesFunctor<dim,degree, stencilId> functor(params, monomialMap.data,
+							U_RK2, PolyCoefs,
+							Fluxes_x,
+							Fluxes_y,
+							Fluxes_z,
+							stencil,
+							geomMatrixPI_view,
+							QUAD_LOC_2D,
+							QUAD_LOC_3D,
+							dtdx, dtdy, dtdz);
+    Kokkos::parallel_for(nbCells, functor);
+
+  }
+
+  // flag cells for which fluxes will need to be recomputed
+  // because attemp to update leads to physically invalid values
+  // (negative density or pressure)
+  {  
+    ComputeMoodFlagsUpdateFunctor<dim,degree> functor(params, monomialMap.data,
+						      U_RK2,
+						      MoodFlags,
+						      Fluxes_x,
+						      Fluxes_y,
+						      Fluxes_z);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // recompute fluxes arround flagged cells
+  {
+    RecomputeFluxesFunctor<dim,degree> functor(params, monomialMap.data,
+					       U_RK2, MoodFlags,
+					       Fluxes_x, Fluxes_y, Fluxes_z,
+					       dtdx, dtdy, dtdz);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // actual update
+  // U_{n+1} =  1/3 U_n + 2/3 U_RK2 + 2/3 * dt * Flux(U_RK2) 
+  {
+    UpdateFunctor_weight<dim> functor(params, data_in, U_RK2, data_out,
+				      Fluxes_x, Fluxes_y, Fluxes_z,
+				      1.0/3, 2.0/3, 2.0/3);
+    Kokkos::parallel_for(nbCells, functor);
+  }  
+
+} // SolverHydroMood::time_int_ssprk3
 
 // =======================================================
 // =======================================================
