@@ -14,6 +14,11 @@
 
 // init conditions
 #include "shared/BlastParams.h"
+#include "shared/KHParams.h"
+
+// kokkos random numbers
+#include <Kokkos_Random.hpp>
+
 
 namespace mood {
 
@@ -433,6 +438,252 @@ public:
   real_t       xt, yt;
   
 }; // class InitFourQuadrantFunctor
+
+/**
+ * Kelvin-Helmholtz instability initi conditions functor.
+ *
+ * See http://www.astro.princeton.edu/~jstone/Athena/tests/kh/kh.html
+ *
+ * See also article by Robertson et al:
+ * "Computational Eulerian hydrodynamics and Galilean invariance", 
+ * B.E. Robertson et al, Mon. Not. R. Astron. Soc., 401, 2463-2476, (2010).
+ *
+ */
+template<int dim, int degree>
+class InitKelvinHelmholtzFunctor : public MoodBaseFunctor<dim,degree>
+{
+
+public:
+  using typename MoodBaseFunctor<dim,degree>::DataArray;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+  
+  InitKelvinHelmholtzFunctor(HydroParams params,
+			     MonomMap    monomMap,
+			     KHParams    khParams,
+			     DataArray   Udata) :
+    MoodBaseFunctor<dim,degree>(params,monomMap),
+    khParams(khParams),
+    Udata(Udata),
+    rand_pool(khParams.seed)
+  {};
+  
+  ~InitKelvinHelmholtzFunctor() {};
+  
+  /*
+   * 2D version.
+   */
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  {
+
+    // get random number state
+    rand_type rand_gen = rand_pool.get_state();
+    
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ghostWidth = this->params.ghostWidth;
+    
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+
+    const real_t xmax = this->params.xmax;
+    const real_t ymax = this->params.ymax;
+
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    
+    const real_t gamma0 = this->params.settings.gamma0;
+
+    const real_t d_in  = khParams.d_in;
+    const real_t d_out = khParams.d_out;
+    const real_t vflow_in  = khParams.vflow_in;
+    const real_t vflow_out = khParams.vflow_out;
+    const real_t ampl      = khParams.amplitude;
+    const real_t pressure  = khParams.pressure;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+
+    // normalized coordinates in [0,1]
+    real_t xn = (x-xmin)/(xmax-xmin);
+    real_t yn = (y-ymin)/(ymax-ymin);
+    
+    if (khParams.p_rand) {
+      
+      if ( yn < 0.25 or yn > 0.75) {
+
+	Udata(i,j,ID) = d_out;
+	Udata(i,j,IU) = d_out * (vflow_out + ampl * (rand_gen.drand() - 0.5));
+	Udata(i,j,IV) = d_out * (0.0       + ampl * (rand_gen.drand() - 0.5));;
+	Udata(i,j,IP) = pressure/(gamma0-1.0) +
+	  0.5*(Udata(i,j,IU)*Udata(i,j,IU) +
+	       Udata(i,j,IV)*Udata(i,j,IV))/Udata(i,j,ID);
+	
+      } else {
+	
+	Udata(i,j,ID) = d_in;
+	Udata(i,j,IU) = d_in * (vflow_in + ampl * (rand_gen.drand() - 0.5));
+	Udata(i,j,IV) = d_in * (0.0      + ampl * (rand_gen.drand() - 0.5));
+	Udata(i,j,IP) = pressure/(gamma0-1.0) +
+	  0.5*(Udata(i,j,IU)*Udata(i,j,IU) +
+	       Udata(i,j,IV)*Udata(i,j,IV))/Udata(i,j,ID);
+	
+      }
+      
+    } else if (khParams.p_sine_rob) {
+
+      const int    n     = khParams.mode;
+      const real_t w0    = khParams.w0;
+      const real_t delta = khParams.delta;
+      const double y1 = 0.25;
+      const double y2 = 0.75;
+      const double rho1 = d_in;
+      const double rho2 = d_out;
+      const double v1 = vflow_in;
+      const double v2 = vflow_out;
+
+      const double ramp = 
+	1.0 / ( 1.0 + exp( 2*(y-y1)/delta ) ) +
+	1.0 / ( 1.0 + exp( 2*(y2-y)/delta ) );
+      
+      Udata(i,j,ID) = rho1 + ramp*(rho2-rho1);
+      Udata(i,j,IU) = Udata(i,j,ID) * (v1 + ramp*(v2-v1));
+      Udata(i,j,IV) = Udata(i,j,ID) * w0 * sin(n*M_PI*x);
+      Udata(i,j,IP) = pressure / (gamma0-1.0) +
+	0.5*(Udata(i,j,IU)*Udata(i,j,IU) +
+	     Udata(i,j,IV)*Udata(i,j,IV))/Udata(i,j,ID);
+
+    }
+   
+    // free random number
+    rand_pool.free_state(rand_gen);
+    
+  } // end operator () - 2d
+
+  /*
+   * 3D version.
+   */
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+    // get random number generator state
+    rand_type rand_gen = rand_pool.get_state();
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
+    
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t zmin = this->params.zmin;
+    const real_t xmax = this->params.xmax;
+    const real_t ymax = this->params.ymax;
+    const real_t zmax = this->params.zmax;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
+    
+    const real_t gamma0 = this->params.settings.gamma0;
+    
+    const real_t d_in  = khParams.d_in;
+    const real_t d_out = khParams.d_out;
+    const real_t vflow_in  = khParams.vflow_in;
+    const real_t vflow_out = khParams.vflow_out;
+    const real_t ampl      = khParams.amplitude;
+    const real_t pressure  = khParams.pressure;
+
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
+    
+    // normalized coordinates in [0,1]
+    real_t xn = (x-xmin)/(xmax-xmin);
+    real_t yn = (y-ymin)/(ymax-ymin);
+    real_t zn = (z-zmin)/(zmax-zmin);
+
+    if ( khParams.p_rand) {
+      
+      if ( zn < 0.25 or zn > 0.75 ) {
+	
+	Udata(i,j,k,ID) = d_out;
+	Udata(i,j,k,IU) = d_out * (vflow_out + ampl * (rand_gen.drand() - 0.5));
+	Udata(i,j,k,IV) = d_out * (0.0       + ampl * (rand_gen.drand() - 0.5));;
+	Udata(i,j,k,IW) = d_out * (0.0       + ampl * (rand_gen.drand() - 0.5));;
+	Udata(i,j,k,IP) = pressure/(gamma0-1.0) +
+	  0.5*(Udata(i,j,k,IU)*Udata(i,j,k,IU) +
+	       Udata(i,j,k,IV)*Udata(i,j,k,IV) +
+	       Udata(i,j,k,IW)*Udata(i,j,k,IW))/Udata(i,j,k,ID);
+	
+      } else {
+	
+	Udata(i,j,k,ID) = d_in;
+	Udata(i,j,k,IU) = d_in * (vflow_in  + ampl * (rand_gen.drand() - 0.5));
+	Udata(i,j,k,IV) = d_in * (0.0       + ampl * (rand_gen.drand() - 0.5));;
+	Udata(i,j,k,IW) = d_in * (0.0       + ampl * (rand_gen.drand() - 0.5));;
+	Udata(i,j,k,IP) = pressure/(gamma0-1.0) +
+	  0.5 * (Udata(i,j,k,IU)*Udata(i,j,k,IU) +
+		 Udata(i,j,k,IV)*Udata(i,j,k,IV) +
+		 Udata(i,j,k,IW)*Udata(i,j,k,IW) ) / Udata(i,j,k,ID);
+	
+      }
+      
+    } else if (khParams.p_sine_rob) {
+
+      const int    n     = khParams.mode;
+      const real_t w0    = khParams.w0;
+      const real_t delta = khParams.delta;
+
+      const double z1 = 0.25;
+      const double z2 = 0.75;
+
+      const double rho1 = d_in;
+      const double rho2 = d_out;
+
+      const double v1x = vflow_in;
+      const double v2x = vflow_out;
+
+      const double v1y = vflow_in/2;
+      const double v2y = vflow_out/2;
+
+      const double ramp = 
+	1.0 / ( 1.0 + exp( 2*(z-z1)/delta ) ) +
+	1.0 / ( 1.0 + exp( 2*(z2-z)/delta ) );
+      
+      Udata(i,j,k,ID) = rho1 + ramp*(rho2-rho1);
+      Udata(i,j,k,IU) = Udata(i,j,k,ID) * (v1x + ramp*(v2x-v1x));
+      Udata(i,j,k,IV) = Udata(i,j,k,ID) * (v1y + ramp*(v2y-v1y));
+      Udata(i,j,k,IW) = Udata(i,j,k,ID) * w0 * sin(n*M_PI*x) * sin(n*M_PI*y);
+      Udata(i,j,k,IP) = pressure / (gamma0-1.0) +
+	0.5 * (Udata(i,j,k,IU)*Udata(i,j,k,IU) +
+	       Udata(i,j,k,IV)*Udata(i,j,k,IV) +
+	       Udata(i,j,k,IW)*Udata(i,j,k,IW) ) / Udata(i,j,k,ID);
+    }
+
+    // free random number
+    rand_pool.free_state(rand_gen);
+    
+  } // end operator () - 3d
+  
+  DataArray        Udata;
+  KHParams         khParams;
+
+  // random number generator
+  Kokkos::Random_XorShift64_Pool<DEVICE> rand_pool;
+  typedef typename Kokkos::Random_XorShift64_Pool<DEVICE>::generator_type rand_type;
+  
+}; // class InitKelvinHelmholtzFunctor
 
 } // namespace mood
 

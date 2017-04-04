@@ -44,6 +44,7 @@
 
 // for init condition
 #include "shared/BlastParams.h"
+#include "shared/KHParams.h"
 
 namespace mood {
 
@@ -182,7 +183,8 @@ public:
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
-
+  void init_kelvin_helmholtz(DataArray Udata);
+  
   void save_solution_impl();
 
   // time integration
@@ -334,6 +336,11 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   } else if ( !m_problem_name.compare("four_quadrant") ) {
 
     init_four_quadrant(U);
+
+  } else if ( !m_problem_name.compare("kelvin-helmholtz") or
+	      !m_problem_name.compare("kelvin_helmholtz")) {
+
+    init_kelvin_helmholtz(U);
 
   } else {
 
@@ -1406,6 +1413,28 @@ void SolverHydroMood<dim,degree>::init_four_quadrant(DataArray Udata)
   Kokkos::parallel_for(nbCells, functor);
     
 } // init_four_quadrant
+
+// =======================================================
+// =======================================================
+/**
+ * Hydrodynamical Kelvin-Helmholtz instability test.
+ * 
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::init_kelvin_helmholtz(DataArray Udata)
+{
+
+  KHParams khParams = KHParams(configMap);
+
+  printf("TAMERE############################################");
+  
+  InitKelvinHelmholtzFunctor<dim,degree> functor(params,
+						 monomialMap.data,
+						 khParams,
+						 Udata);
+  Kokkos::parallel_for(nbCells, functor);
+
+} // SolverHydroMood::init_kelvin_helmholtz
 
 // =======================================================
 // =======================================================
