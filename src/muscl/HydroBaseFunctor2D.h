@@ -1,10 +1,10 @@
 #ifndef HYDRO_BASE_FUNCTOR_2D_H_
 #define HYDRO_BASE_FUNCTOR_2D_H_
 
-#include "kokkos_shared.h"
+#include "shared/kokkos_shared.h"
 
-#include "HydroParams.h"
-#include "HydroState.h"
+#include "shared/HydroParams.h"
+#include "shared/HydroState.h"
 
 namespace ppkMHD { namespace muscl {
 

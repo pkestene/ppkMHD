@@ -3,16 +3,16 @@
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
-#include <math_constants.h>
+#include <math_constants.h> // for cuda math constants, e.g. CUDART_INF
 #endif // __CUDA_ARCH__
 
-#include "kokkos_shared.h"
+#include "shared/kokkos_shared.h"
 #include "HydroBaseFunctor2D.h"
-#include "RiemannSolvers.h"
+#include "shared/RiemannSolvers.h"
 
 // init conditions
-#include "BlastParams.h"
-#include "initRiemannConfig2d.h"
+#include "shared/BlastParams.h"
+#include "shared/initRiemannConfig2d.h"
 
 namespace ppkMHD { namespace muscl {
 

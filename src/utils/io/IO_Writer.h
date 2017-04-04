@@ -4,11 +4,11 @@
 #include <map>
 #include <string>
 
-#include <kokkos_shared.h>
+#include <shared/kokkos_shared.h>
 //class HydroParams;
 //class ConfigMap;
-#include <HydroParams.h>
-#include <config/ConfigMap.h>
+#include <shared/HydroParams.h>
+#include <utils/config/ConfigMap.h>
 
 #include "IO_WriterBase.h"
 
@@ -40,19 +40,22 @@ public:
   //! override base class method
   virtual void save_data(DataArray2d             Udata,
 			 DataArray2d::HostMirror Uhost,
-			 int iStep);
+			 int iStep,
+			 std::string debug_name);
 
   //! override base class method
   virtual void save_data(DataArray3d             Udata,
 			 DataArray3d::HostMirror Uhost,
-			 int iStep);
+			 int iStep,
+			 std::string debug_name);
 
   //! public interface to save data.
   //! template specializations go to implementation file.
   template<class DataArray>
   void save_data_impl(DataArray                      Udata,
 		      typename DataArray::HostMirror Uhost,
-		      int iStep) {}
+		      int iStep,
+		      std::string debug_name) {}
     
   //! names of variables to save (inherited from Solver)
   std::map<int, std::string>& variables_names;

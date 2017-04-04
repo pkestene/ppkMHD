@@ -4,6 +4,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_View.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 #include "real_type.h"
 

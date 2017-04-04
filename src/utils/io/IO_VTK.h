@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-#include <kokkos_shared.h>
+#include <shared/kokkos_shared.h>
 class HydroParams;
 class ConfigMap;
 
@@ -16,13 +16,18 @@ namespace ppkMHD { namespace io {
 // To make sure OpenMP and CUDA version give the same
 // results, we transpose the OpenMP data.
 // ///////////////////////////////////////////////////////
+/**
+ * \param[in] Udata device data to save
+ * \param[in,out] Uhost host data temporary array before saving to file
+ */
 void save_VTK_2D(DataArray2d             Udata,
 		 DataArray2d::HostMirror Uhost,
 		 HydroParams& params,
 		 ConfigMap& configMap,
 		 int nbvar,
 		 const std::map<int, std::string>& variables_names,
-		 int iStep);
+		 int iStep,
+		 std::string debug_name);
 
 // ///////////////////////////////////////////////////////
 // output routine (VTK file format, ASCII, VtkImageData)
@@ -36,7 +41,8 @@ void save_VTK_3D(DataArray3d             Udata,
 		 ConfigMap& configMap,
 		 int nbvar,
 		 const std::map<int, std::string>& variables_names,
-		 int iStep);
+		 int iStep,
+		 std::string debug_name);
 
 } // namespace io
 

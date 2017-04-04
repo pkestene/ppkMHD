@@ -11,5 +11,4 @@ add_library(io OBJECT
 
 target_include_directories(io
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src/shared
-  ${CMAKE_SOURCE_DIR}/src/utils)
+  ${CMAKE_SOURCE_DIR}/src)

@@ -1,18 +1,18 @@
 #ifndef SOLVER_BASE_H_
 #define SOLVER_BASE_H_
 
-#include "HydroParams.h"
-#include "config/ConfigMap.h"
-#include "kokkos_shared.h"
+#include "shared/HydroParams.h"
+#include "utils/config/ConfigMap.h"
+#include "shared/kokkos_shared.h"
 
 #include <map>
 #include <memory> // for std::unique_ptr
 
 // for timer
 #ifdef CUDA
-#include "CudaTimer.h"
+#include "utils/time/CudaTimer.h"
 #else
-#include "OpenMPTimer.h"
+#include "utils/time/OpenMPTimer.h"
 #endif
 
 namespace ppkMHD { namespace io {
@@ -130,6 +130,16 @@ public:
   void save_data(DataArray3d             U,
 		 DataArray3d::HostMirror Uh,
 		 int iStep);
+  
+  void save_data_debug(DataArray2d             U,
+		       DataArray2d::HostMirror Uh,
+		       int iStep,
+		       std::string debug_name);
+
+  void save_data_debug(DataArray3d             U,
+		       DataArray3d::HostMirror Uh,
+		       int iStep,
+		       std::string debug_name);
   
 protected:
 

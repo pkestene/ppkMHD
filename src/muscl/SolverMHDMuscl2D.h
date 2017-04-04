@@ -4,9 +4,9 @@
 #ifndef SOLVER_MHD_MUSCL_2D_H_
 #define SOLVER_MHD_MUSCL_2D_H_
 
-#include "SolverBase.h"
-#include "HydroParams.h"
-#include "kokkos_shared.h"
+#include "shared/SolverBase.h"
+#include "shared/HydroParams.h"
+#include "shared/kokkos_shared.h"
 
 namespace ppkMHD {
 
@@ -89,10 +89,6 @@ public:
   void init_orszag_tang(DataArray Udata);
 
   void save_solution_impl();
-
-  // host routines (save data to file, device data are copied into host
-  // inside this routine)
-  void saveVTK(DataArray Udata, int iStep, std::string name);
   
   int isize, jsize, ijsize;
   

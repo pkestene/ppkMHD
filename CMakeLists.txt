@@ -77,6 +77,20 @@ if (USE_VTK)
   endIF()
 endif(USE_VTK)
 
+
+# Eigen3 (for MOOD) -- not mature enought to be used with nvcc_wrapper,
+# even on host code, I was not able to build code with nvcc_wrapper
+#find_package(Eigen3)
+
+# LAPACK / LAPACKE (for MOOD) - for DGEQRF and DTRSM (on host, not device)
+#set(BLA_VENDOR "OpenBLAS")
+#find_package(BLAS REQUIRED)
+find_package(OpenBLAS)
+find_package(LAPACKE REQUIRED)
+if ( NOT LAPACKE_FOUND )
+  message(FATAL_ERROR "Package LAPACKE required, but not found!")
+endif( NOT LAPACKE_FOUND )
+
 #
 # common flags
 #

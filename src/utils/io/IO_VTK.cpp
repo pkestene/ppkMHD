@@ -1,7 +1,7 @@
 #include "IO_VTK.h"
 
-#include <HydroParams.h>
-#include <config/ConfigMap.h>
+#include <shared/HydroParams.h>
+#include <utils/config/ConfigMap.h>
 
 namespace ppkMHD { namespace io {
 
@@ -21,7 +21,8 @@ void save_VTK_2D(DataArray2d             Udata,
 		 ConfigMap& configMap,
 		 int nbvar,
 		 const std::map<int, std::string>& variables_names,
-		 int iStep)
+		 int iStep,
+		 std::string debug_name)
 {
 
   const int nx = params.nx;
@@ -60,7 +61,11 @@ void save_VTK_2D(DataArray2d             Udata,
   stepNum << iStep;
   
   // concatenate file prefix + file number + suffix
-  std::string filename     = outputDir + "/" + outputPrefix+"_"+stepNum.str() + ".vti";
+  std::string filename;
+  if ( debug_name.empty() )
+    filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vti";
+  else
+    filename = outputDir + "/" + outputPrefix + "_" + debug_name + "_" + stepNum.str() + ".vti";
   
   // open file 
   std::fstream outFile;
@@ -134,7 +139,8 @@ void save_VTK_3D(DataArray3d             Udata,
 		 ConfigMap& configMap,
 		 int nbvar,
 		 const std::map<int, std::string>& variables_names,
-		 int iStep)
+		 int iStep,
+		 std::string debug_name)
 {
 
   const int nx = params.nx;
@@ -179,7 +185,11 @@ void save_VTK_3D(DataArray3d             Udata,
   stepNum << iStep;
   
   // concatenate file prefix + file number + suffix
-  std::string filename     = outputDir + "/" + outputPrefix+"_"+stepNum.str() + ".vti";
+  std::string filename;
+  if ( debug_name.empty() )
+    filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vti";
+  else
+    filename = outputDir + "/" + outputPrefix + "_" + debug_name + "_" + stepNum.str() + ".vti";
   
   // open file 
   std::fstream outFile;

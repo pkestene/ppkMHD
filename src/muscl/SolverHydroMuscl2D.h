@@ -4,9 +4,9 @@
 #ifndef SOLVER_HYDRO_MUSCL_2D_H_
 #define SOLVER_HYDRO_MUSCL_2D_H_
 
-#include "SolverBase.h"
-#include "HydroParams.h"
-#include "kokkos_shared.h"
+#include "shared/SolverBase.h"
+#include "shared/HydroParams.h"
+#include "shared/kokkos_shared.h"
 
 namespace ppkMHD {
 
@@ -42,7 +42,7 @@ public:
   /* implementation 0 */
   DataArray Fluxes_x; /*!< implementation 0 */
   DataArray Fluxes_y; /*!< implementation 0 */
-  
+
   /* implementation 1 only */
   DataArray Slopes_x; /*!< implementation 1 only */
   DataArray Slopes_y; /*!< implementation 1 only */
@@ -81,10 +81,6 @@ public:
   void init_four_quadrant(DataArray Udata);
 
   void save_solution_impl();
-
-  // host routines (save data to file, device data are copied into host
-  // inside this routine)
-  void saveVTK(DataArray Udata, int iStep, std::string name);
   
   int isize, jsize, ijsize;
   

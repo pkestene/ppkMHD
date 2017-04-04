@@ -1,7 +1,7 @@
 #ifndef BLAST_PARAMS_H_
 #define BLAST_PARAMS_H_
 
-#include "config/ConfigMap.h"
+#include "utils/config/ConfigMap.h"
 
 struct BlastParams {
 
