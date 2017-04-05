@@ -3,6 +3,11 @@
 #######################
 set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/BlastParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/KHParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/WedgeParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/initRiemannConfig2d.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctors.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctorsWedge.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroState.h
@@ -10,6 +15,7 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/real_type.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverBase.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverBase.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/RiemannSolvers.h
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.h
   )
