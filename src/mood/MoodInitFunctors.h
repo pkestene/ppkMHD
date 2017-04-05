@@ -685,6 +685,139 @@ public:
   
 }; // class InitKelvinHelmholtzFunctor
 
+/*************************************************/
+/*************************************************/
+/*************************************************/
+/**
+ * Wedge (double Mach reflection) initial condition functor.
+ *
+ * See http://amroc.sourceforge.net/examples/euler/2d/html/ramp_n.htm
+ *
+ */
+template<int dim, int degree>
+class InitWedgeFunctor : public MoodBaseFunctor<dim,degree>
+{
+  
+public:
+  using typename MoodBaseFunctor<dim,degree>::DataArray;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+  
+  InitWedgeFunctor(HydroParams params,
+		   MonomMap    monomMap,
+		   WedgeParams wparams,
+		   DataArray   Udata) :
+    MoodBaseFunctor<dim,degree>(params,monomMap),
+    Udata(Udata),
+    wparams(wparams)
+  {};
+  
+  ~InitWedgeFunctor() {};
+
+  /*
+   * 2D version.
+   */
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ghostWidth = this->params.ghostWidth;
+    
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    
+    const real_t gamma0 = this->params.settings.gamma0;
+
+    const real_t slope_f = this->wparams.slope_f;
+    const real_t x_f     = this->wparams.x_f;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    
+    if ( y > slope_f*(x-x_f) ) {
+    
+      Udata(i  ,j  , ID) = wparams.rho1;
+      Udata(i  ,j  , IP) = wparams.e_tot1;
+      Udata(i  ,j  , IU) = wparams.rho_u1;
+      Udata(i  ,j  , IV) = wparams.rho_v1;
+      
+    } else {
+      
+      Udata(i  ,j  , ID) = wparams.rho2;
+      Udata(i  ,j  , IP) = wparams.e_tot2;
+      Udata(i  ,j  , IU) = wparams.rho_u2;
+      Udata(i  ,j  , IV) = wparams.rho_v2;
+      
+    }
+    
+  } // end operator () - 2d
+
+  /*
+   * 3D version.
+   */
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
+    
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t zmin = this->params.zmin;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
+    
+    const real_t gamma0 = this->params.settings.gamma0;
+    
+    const real_t slope_f = this->wparams.slope_f;
+    const real_t x_f     = this->wparams.x_f;
+
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
+    
+    if ( y > slope_f*(x-x_f) ) {
+    
+      Udata(i  ,j  ,k  , ID) = wparams.rho1;
+      Udata(i  ,j  ,k  , IP) = wparams.e_tot1;
+      Udata(i  ,j  ,k  , IU) = wparams.rho_u1;
+      Udata(i  ,j  ,k  , IV) = wparams.rho_v1;
+      Udata(i  ,j  ,k  , IW) = wparams.rho_w1;
+
+    } else {
+    
+      Udata(i  ,j  ,k  , ID) = wparams.rho2;
+      Udata(i  ,j  ,k  , IP) = wparams.e_tot2;
+      Udata(i  ,j  ,k  , IU) = wparams.rho_u2;
+      Udata(i  ,j  ,k  , IV) = wparams.rho_v2;
+      Udata(i  ,j  ,k  , IW) = wparams.rho_w2;
+
+    }
+    
+  } // end operator () - 3d
+  
+  DataArray   Udata;
+  WedgeParams wparams;
+  
+}; // class InitWedgeFunctor
+
 } // namespace mood
 
 #endif // MOOD_INIT_FUNCTORS_H_

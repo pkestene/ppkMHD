@@ -16,6 +16,7 @@
 #include "shared/HydroParams.h"
 #include "shared/kokkos_shared.h"
 #include "shared/BoundariesFunctors.h"
+#include "shared/BoundariesFunctorsWedge.h"
 #include "shared/initRiemannConfig2d.h"
 
 // mood
@@ -42,9 +43,10 @@
 // for IO
 #include <utils/io/IO_Writer.h>
 
-// for init condition
+// for specific init / border conditions
 #include "shared/BlastParams.h"
 #include "shared/KHParams.h"
+#include "shared/WedgeParams.h"
 
 namespace mood {
 
@@ -184,6 +186,7 @@ public:
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
   void init_kelvin_helmholtz(DataArray Udata);
+  void init_wedge(DataArray Udata);
   
   void save_solution_impl();
 
@@ -342,6 +345,10 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
 
     init_kelvin_helmholtz(U);
 
+  } else if ( !m_problem_name.compare("wedge") ) {
+
+    init_wedge(U);
+    
   } else {
 
     std::cout << "Problem : " << m_problem_name
@@ -1286,26 +1293,54 @@ void SolverHydroMood<dim,degree>::make_boundaries(typename std::enable_if<dim_==
   
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
+
+  // wedge has a different border condition
+  if (!m_problem_name.compare("wedge")) {
+
+    WedgeParams wparams(configMap, m_t);
+
+    // call device functor
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_XMIN> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_XMAX> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_YMIN> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_YMAX> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  } else {
+
+    // call device functor
+    {
+      MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+    {
+      MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  }
   
-  // call device functor
-  {
-    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  
-  {
-    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-      
 } // SolverHydroMood::make_boundaries
 
 template<int dim, int degree>
@@ -1433,6 +1468,23 @@ void SolverHydroMood<dim,degree>::init_kelvin_helmholtz(DataArray Udata)
   Kokkos::parallel_for(nbCells, functor);
 
 } // SolverHydroMood::init_kelvin_helmholtz
+
+// =======================================================
+// =======================================================
+/**
+ * 
+ * 
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::init_wedge(DataArray Udata)
+{
+
+  WedgeParams wparams(configMap, 0.0);
+  
+  InitWedgeFunctor<dim,degree> functor(params, monomialMap.data, wparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
+  
+} // init_wedge
 
 // =======================================================
 // =======================================================
