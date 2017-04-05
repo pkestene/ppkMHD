@@ -1426,8 +1426,6 @@ void SolverHydroMood<dim,degree>::init_kelvin_helmholtz(DataArray Udata)
 
   KHParams khParams = KHParams(configMap);
 
-  printf("TAMERE############################################");
-  
   InitKelvinHelmholtzFunctor<dim,degree> functor(params,
 						 monomialMap.data,
 						 khParams,
