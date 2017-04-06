@@ -91,6 +91,8 @@ if ( NOT LAPACKE_FOUND )
   message(FATAL_ERROR "Package LAPACKE required, but not found!")
 endif( NOT LAPACKE_FOUND )
 
+find_package(PAPI)
+
 #
 # common flags
 #

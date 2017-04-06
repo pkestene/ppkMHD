@@ -20,6 +20,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/muscl)
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils)
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/utils/config)
+if (PAPI_FOUND)
+  include_directories(${PAPI_INCLUDE_DIR})
+endif()
 
 #
 # ppkMHD executable
@@ -27,7 +30,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(EXE_NAME "${PROJECT_NAME}")
 add_executable(${EXE_NAME}
   $<TARGET_OBJECTS:config>
-  $<TARGET_OBJECTS:time>
+  $<TARGET_OBJECTS:monitoring>
   $<TARGET_OBJECTS:io>
   $<TARGET_OBJECTS:muscl>
   $<TARGET_OBJECTS:mood>
@@ -45,4 +48,4 @@ target_include_directories(${EXE_NAME}
 
 set_target_properties(${EXE_NAME} PROPERTIES
   LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(${EXE_NAME} kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(${EXE_NAME} kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})

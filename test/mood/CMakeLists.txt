@@ -87,7 +87,7 @@ add_executable(test_mood_functor
   $<TARGET_OBJECTS:config>
   $<TARGET_OBJECTS:shared>
   $<TARGET_OBJECTS:io>
-  $<TARGET_OBJECTS:time>
+  $<TARGET_OBJECTS:monitoring>
   test_mood_functor.cpp)
 target_include_directories(test_mood_functor
   PUBLIC
@@ -103,7 +103,7 @@ add_executable(test_mood_functor_flux
   $<TARGET_OBJECTS:config>
   $<TARGET_OBJECTS:shared>
   $<TARGET_OBJECTS:io>
-  $<TARGET_OBJECTS:time>
+  $<TARGET_OBJECTS:monitoring>
   test_mood_functor_flux.cpp)
 target_include_directories(test_mood_functor_flux
   PUBLIC
