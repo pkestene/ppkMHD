@@ -78,7 +78,8 @@ int main(int argc, char *argv[])
 							params,
 							configMap);
 
-  solver->save_solution();
+  if (params.nOutput != 0)
+    solver->save_solution();
   
   // start computation
   std::cout << "Start computation....\n";
