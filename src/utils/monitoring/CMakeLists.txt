@@ -6,6 +6,14 @@ set (monitoring_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/CudaTimer.h
   )
 
+if (PAPI_FOUND)
+  list (APPEND monitoring_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/PapiInfo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PapiInfo.cpp
+    )
+endif()
+    
+
 add_library(monitoring OBJECT
   ${monitoring_SRCS}
   )

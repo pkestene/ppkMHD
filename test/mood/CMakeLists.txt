@@ -95,7 +95,7 @@ target_include_directories(test_mood_functor
   )
 #set_target_properties(test_reconstruct PROPERTIES
 #  LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(test_mood_functor kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(test_mood_functor kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})
 
 ##############################################
 add_executable(test_mood_functor_flux
@@ -111,7 +111,7 @@ target_include_directories(test_mood_functor_flux
   )
 #set_target_properties(test_reconstruct PROPERTIES
 #  LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(test_mood_functor_flux kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(test_mood_functor_flux kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})
 
 ##############################################
 # add_executable(test_kokkos_eigen
