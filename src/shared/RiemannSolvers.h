@@ -202,6 +202,127 @@ void riemann_approx(const HydroState& qleft,
 } // riemann_approx
 
 /** 
+ * Riemann solver, equivalent to riemann_llf in RAMSES (see file
+ * godunov_utils.f90 in RAMSES).
+ * 
+ * LLF = Local Lax-Friedrich.
+ *
+ * Reference : E.F. Toro, Riemann solvers and numerical methods for
+ * fluid dynamics, Springer, chapter 10 (The HLL and HLLC Riemann solver).
+ *
+ * @param[in] qleft  : input left state
+ * @param[in] qright : input right state
+ * @param[out] qgdnv : output Godunov state
+ * @param[out] flux  : output flux
+ */
+template<class HydroState>
+KOKKOS_INLINE_FUNCTION
+void riemann_llf(const HydroState& qleft,
+		 const HydroState& qright,
+		 HydroState& qgdnv,
+		 HydroState& flux,
+		 const HydroParams& params)
+{
+
+  // 1D LLF Riemann solver
+  
+  // constants
+  real_t gamma0 = params.settings.gamma0;
+  real_t smallr = params.settings.smallr;
+  real_t smallp = params.settings.smallp;
+
+  const real_t entho = ONE_F / (gamma0 - ONE_F);
+  
+  //============================
+  // Compute maximum wave speed
+  //============================
+  real_t rl=FMAX(qleft [ID],smallr);
+  real_t ul=     qleft [IU];
+  real_t pl=FMAX(qleft [IP],rl*smallp);
+  
+  real_t rr=FMAX(qright[ID],smallr);
+  real_t ur=     qright[IU];
+  real_t pr=FMAX(qright[IP],rr*smallp);
+  
+  real_t cl= SQRT(gamma0*pl/rl);
+  real_t cr= SQRT(gamma0*pr/rr);
+  
+  real_t cmax = FMAX(FABS(ul)+cl,FABS(ur)+cr);
+  
+  // Compute average velocity
+  qgdnv[IU] = HALF_F*(qleft[IU]+qright[IU]);
+
+  //================================
+  // Compute conservative variables
+  //================================
+  HydroState uleft, uright;
+  // mass density
+  uleft [ID] = qleft [ID];
+  uright[ID] = qright[ID];
+
+  // total energy
+  uleft [IP] = qleft [IP]*entho + HALF_F*qleft [ID]*qleft [IU]*qleft [IU];
+  uright[IP] = qright[IP]*entho + HALF_F*qright[ID]*qright[IU]*qright[IU];
+
+  uleft [IP] += HALF_F*qleft [ID]*qleft [IV]*qleft [IV];
+  uright[IP] += HALF_F*qright[ID]*qright[IV]*qright[IV];
+  
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    uleft [IP] += HALF_F*qleft [ID]*qleft [IW]*qleft [IW];
+    uright[IP] += HALF_F*qright[ID]*qright[IW]*qright[IW];
+  }
+
+  // normal momentum
+  uleft [IU] = qleft [ID]*qleft [IU];
+  uright[IU] = qright[ID]*qright[IU];
+  
+  // transverse momentum
+  uleft [IV] = qleft [ID]*qleft [IV];
+  uright[IV] = qright[ID]*qright[IV];
+  
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    uleft [IW] = qleft [ID]*qleft [IW];
+    uright[IW] = qright[ID]*qright[IW];
+  }
+  
+  //===============================
+  // Compute left and right fluxes
+  //===============================
+  HydroState fleft, fright;
+  // mass density
+  fleft [ID] = uleft [IU];
+  fright[ID] = uright[IU];
+
+  // total energy
+  fleft [IP] = qleft [IU] * ( uleft [IP] + qleft [IP]);
+  fright[IP] = qright[IU] * ( uright[IP] + qright[IP]);
+
+  // normal momentum
+  fleft [IU] = qleft [IP] +   uleft [IU] * qleft [IU];
+  fright[IU] = qright[IP] +   uright[IU] * qright[IU];
+  
+  // transverse momentum
+  fleft [IV] = fleft [ID] * qleft [IV];
+  fright[IV] = fright[ID] * qright[IV];
+  
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    fleft [IW] = fleft [ID] * qleft [IW];
+    fright[IW] = fright[ID] * qright[IW];
+  }
+
+  //==============================
+  // Compute Lax-Friedrich fluxes
+  //==============================
+  for (int nVar=0; nVar < HYDRO_2D_NBVAR; nVar++) {
+    flux[nVar] = HALF_F * ( fleft[nVar] + fright[nVar] - cmax*(uright[nVar] - uleft[nVar]) );
+  }
+  if (std::is_same<HydroState,HydroState3d>::value) {
+    flux[IW] = HALF_F * ( fleft[IW] + fright[IW] - cmax*(uright[IW] - uleft[IW]) );
+  }
+
+} // riemann_llf
+
+/** 
  * Riemann solver, equivalent to riemann_hll in RAMSES (see file
  * godunov_utils.f90 in RAMSES).
  * 
@@ -468,6 +589,10 @@ void riemann_hydro(const HydroState3d& qleft,
   } else if (params.riemannSolverType == RIEMANN_HLLC) {
     
     riemann_hllc<HydroState3d>  (qleft,qright,qgdnv,flux,params);
+
+  } else if (params.riemannSolverType == RIEMANN_LLF) {
+    
+    riemann_llf<HydroState3d>  (qleft,qright,qgdnv,flux,params);
 
   }
   
