@@ -363,6 +363,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   std::cout << "Problem (init condition) is " << m_problem_name << "\n";
   std::cout << "Mood degree : " << degree << "\n";
   std::cout << "Mood polynomial coefficients : " << ncoefs << "\n";
+  std::cout << "StencilId is " << StencilUtils::get_stencil_name(stencil.stencilId) << "\n";
+  std::cout << "Number of quadrature points : " << QUADRATURE_NUM_POINTS[stencilId] << "\n";
   std::cout << "Time integration is :\n";
   std::cout << "Forward Euler : " << forward_euler_enabled << "\n";
   std::cout << "SSPRK2        : " << ssprk2_enabled << "\n";
