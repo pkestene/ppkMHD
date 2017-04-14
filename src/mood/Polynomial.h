@@ -26,6 +26,39 @@ inline constexpr T power(const T base, unsigned int const exponent)
 }
 
 /**
+ * This is so ugly; must find a portable efficient way of  computing pow(double,int)
+ */
+template<class T>
+inline T mypow(const T base, unsigned int const exponent)
+{
+
+  if (exponent==0)
+    return static_cast<T>(1);
+  else if (exponent==1)
+    return base;
+  else if (exponent==2)
+    return base*base;
+  else if (exponent==3)
+    return power<T>(base,3);
+  else if (exponent==4)
+    return power<T>(base,4);
+  else if (exponent==5)
+    return power<T>(base,5);
+  else if (exponent==6)
+    return power<T>(base,6);
+  else if (exponent==7)
+    return power<T>(base,7);
+  else if (exponent==8)
+    return power<T>(base,8);
+  else if (exponent==9)
+    return power<T>(base,9);
+
+  return 0;
+  
+} // mypow
+
+
+/**
  * A minimal base functor for evaluating a bi-or-tri variate polynomial.
  *
  * Polynomial coefficients are supposed to be provided on a per thread basis.
@@ -74,6 +107,7 @@ public:
 	int e[2] = {monomMap(i,0),
 		    monomMap(i,1)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
+	//result += coefs[i] * mypow(x,e[0]) * mypow(y,e[1]);
       }
 
       
@@ -98,7 +132,7 @@ public:
 		    monomMap(i,1),
 		    monomMap(i,2)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
-	
+	//result += coefs[i] * mypow(x,e[0]) * mypow(y,e[1]) * mypow(z,e[2]);
       }
       
     }
