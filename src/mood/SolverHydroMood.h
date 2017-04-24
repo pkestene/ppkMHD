@@ -187,6 +187,7 @@ public:
   void init_four_quadrant(DataArray Udata);
   void init_kelvin_helmholtz(DataArray Udata);
   void init_wedge(DataArray Udata);
+  void init_isentropic_vortex(DataArray Udata);
   
   void save_solution_impl();
 
@@ -348,6 +349,10 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   } else if ( !m_problem_name.compare("wedge") ) {
 
     init_wedge(U);
+    
+  } else if ( !m_problem_name.compare("isentropic_vortex") ) {
+
+    init_isentropic_vortex(U);
     
   } else {
 
@@ -1487,6 +1492,24 @@ void SolverHydroMood<dim,degree>::init_wedge(DataArray Udata)
   Kokkos::parallel_for(nbCells, functor);
   
 } // init_wedge
+
+// =======================================================
+// =======================================================
+/**
+ * Isentropic vortex advection test.
+ * https://www.cfd-online.com/Wiki/2-D_vortex_in_isentropic_flow
+ * https://hal.archives-ouvertes.fr/hal-01485587/document
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::init_isentropic_vortex(DataArray Udata)
+{
+
+  IsentropicVortexParams iparams(configMap);
+  
+  InitIsentropicVortexFunctor<dim,degree> functor(params, monomialMap.data, iparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
+  
+} // init_isentropic_vortex
 
 // =======================================================
 // =======================================================

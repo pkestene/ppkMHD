@@ -15,6 +15,7 @@
 // init conditions
 #include "shared/BlastParams.h"
 #include "shared/KHParams.h"
+#include "shared/IsentropicVortexParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
@@ -817,6 +818,133 @@ public:
   WedgeParams wparams;
   
 }; // class InitWedgeFunctor
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+/**
+ * Isentropic Vortex advection functor.
+ *
+ * https://www.cfd-online.com/Wiki/2-D_vortex_in_isentropic_flow
+ * https://hal.archives-ouvertes.fr/hal-01485587/document
+ *
+ */
+template<int dim, int degree>
+class InitIsentropicVortexFunctor : public MoodBaseFunctor<dim,degree>
+{
+
+public:
+  using typename MoodBaseFunctor<dim,degree>::DataArray;
+  using MonomMap = typename mood::MonomialMap<dim,degree>::MonomMap;
+  
+  InitIsentropicVortexFunctor(HydroParams params,
+			      MonomMap    monomMap,
+			      IsentropicVortexParams iparams,
+			      DataArray   Udata) :
+    MoodBaseFunctor<dim,degree>(params,monomMap),
+    Udata(Udata),
+    iparams(iparams)  {};
+  
+  ~InitIsentropicVortexFunctor() {};
+
+  /*
+   * 2D version.
+   */
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ghostWidth = this->params.ghostWidth;
+    
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    
+    const real_t gamma0 = this->params.settings.gamma0;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+
+    const real_t vortex_x = this->iparams.vortex_x;
+    const real_t vortex_y = this->iparams.vortex_y;
+    
+    real_t xp = x - vortex_x;
+    real_t yp = y - vortex_y;
+    
+
+    // if (tmp > 0.5) {
+    //   Udata(i  ,j  , ID) = 1.0;
+    //   Udata(i  ,j  , IP) = 1.0/(gamma0-1.0);
+    //   Udata(i  ,j  , IU) = 0.0;
+    //   Udata(i  ,j  , IV) = 0.0;
+    // } else {
+    //   Udata(i  ,j  , ID) = 0.125;
+    //   Udata(i  ,j  , IP) = 0.14/(gamma0-1.0);
+    //   Udata(i  ,j  , IU) = 0.0;
+    //   Udata(i  ,j  , IV) = 0.0;
+    // }
+    
+  } // end operator () - 2d
+
+  /*
+   * 3D version.
+   */
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
+    
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t zmin = this->params.zmin;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
+    
+    const real_t gamma0 = this->params.settings.gamma0;
+    
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
+    
+    real_t tmp = x + y + z;
+    if (tmp > 0.5 && tmp < 2.5) {
+      Udata(i  ,j  ,k  , ID) = 1.0;
+      Udata(i  ,j  ,k  , IP) = 1.0/(gamma0-1.0);
+      Udata(i  ,j  ,k  , IU) = 0.0;
+      Udata(i  ,j  ,k  , IV) = 0.0;
+      Udata(i  ,j  ,k  , IW) = 0.0;
+    } else {
+      Udata(i  ,j  ,k  , ID) = 0.125;
+      Udata(i  ,j  ,k  , IP) = 0.14/(gamma0-1.0);
+      Udata(i  ,j  ,k  , IU) = 0.0;
+      Udata(i  ,j  ,k  , IV) = 0.0;
+      Udata(i  ,j  ,k  , IW) = 0.0;	    
+    }
+    
+  } // end operator () - 3d
+  
+  DataArray              Udata;
+  IsentropicVortexParams iparams;
+  
+}; // class InitIsentropicVortexFunctor
 
 } // namespace mood
 
