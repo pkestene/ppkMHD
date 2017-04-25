@@ -904,8 +904,8 @@ public:
     Udata(i  ,j  , IV) = rho*(v_a + dv);
     //Udata(i  ,j  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
     Udata(i  ,j  , IP) = rho*T/(gamma0-1.0) +
-      rho*(u_a + du)*(u_a + du) +
-      rho*(v_a + dv)*(v_a + dv) ;
+      0.5*rho*(u_a + du)*(u_a + du) +
+      0.5*rho*(v_a + dv)*(v_a + dv) ;
     
   } // end operator () - 2d
 
@@ -975,9 +975,9 @@ public:
     Udata(i  ,j  ,k  , IV) = rho*(v_a + dv);
     Udata(i  ,j  ,k  , IV) = rho*(w_a     );
     Udata(i  ,j  ,k  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
-      rho*(u_a + du)*(u_a + du) +
-      rho*(v_a + dv)*(v_a + dv) +
-      rho*(w_a     )*(w_a     );
+      0.5*rho*(u_a + du)*(u_a + du) +
+      0.5*rho*(v_a + dv)*(v_a + dv) +
+      0.5*rho*(w_a     )*(w_a     );
 
   } // end operator () - 3d
   
