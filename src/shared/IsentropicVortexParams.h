@@ -20,6 +20,9 @@ struct IsentropicVortexParams {
   real_t vortex_x;
   real_t vortex_y;
   real_t vortex_z;
+
+  // vortex strength
+  real_t beta;
   
   IsentropicVortexParams(ConfigMap& configMap)
   {
@@ -39,11 +42,11 @@ struct IsentropicVortexParams {
     v_a  = configMap.getFloat("isentropic_vortex","vy_ambient", 1.0);
     w_a  = configMap.getFloat("isentropic_vortex","vz_ambient", 1.0);
 
-    
     vortex_x = configMap.getFloat("isentropic_vortex","center_x", (xmin+xmax)/2);
     vortex_y = configMap.getFloat("isentropic_vortex","center_y", (ymin+ymax)/2);
     vortex_z = configMap.getFloat("isentropic_vortex","center_z", (zmin+zmax)/2);
-    
+
+    beta = configMap.getFloat("isentropic_vortex","strength",5.0);
   }
 
 }; // struct IsentropicVortexParams

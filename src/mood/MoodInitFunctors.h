@@ -828,6 +828,7 @@ public:
  * https://www.cfd-online.com/Wiki/2-D_vortex_in_isentropic_flow
  * https://hal.archives-ouvertes.fr/hal-01485587/document
  *
+ * Gas law: P = rho T = rho^gamma
  */
 template<int dim, int degree>
 class InitIsentropicVortexFunctor : public MoodBaseFunctor<dim,degree>
@@ -873,24 +874,38 @@ public:
     real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
 
+    // ambient flow
+    const real_t rho_a = this->iparams.rho_a;
+    const real_t p_a   = this->iparams.p_a;
+    const real_t T_a   = this->iparams.T_a;
+    const real_t u_a   = this->iparams.u_a;
+    const real_t v_a   = this->iparams.v_a;
+    //const real_t w_a   = this->iparams.w_a;
+    
+    // vortex center
     const real_t vortex_x = this->iparams.vortex_x;
     const real_t vortex_y = this->iparams.vortex_y;
-    
+
+    // relative coordinates versus vortex center
     real_t xp = x - vortex_x;
     real_t yp = y - vortex_y;
+    real_t r  = sqrt(xp*xp + yp*yp);
     
+    const real_t beta = this->iparams.beta;
 
-    // if (tmp > 0.5) {
-    //   Udata(i  ,j  , ID) = 1.0;
-    //   Udata(i  ,j  , IP) = 1.0/(gamma0-1.0);
-    //   Udata(i  ,j  , IU) = 0.0;
-    //   Udata(i  ,j  , IV) = 0.0;
-    // } else {
-    //   Udata(i  ,j  , ID) = 0.125;
-    //   Udata(i  ,j  , IP) = 0.14/(gamma0-1.0);
-    //   Udata(i  ,j  , IU) = 0.0;
-    //   Udata(i  ,j  , IV) = 0.0;
-    // }
+    real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+    real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+    
+    real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
+    real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
+    
+    Udata(i  ,j  , ID) = rho;
+    Udata(i  ,j  , IU) = rho*(u_a + du);
+    Udata(i  ,j  , IV) = rho*(v_a + dv);
+    //Udata(i  ,j  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
+    Udata(i  ,j  , IP) = rho*T/(gamma0-1.0) +
+      rho*(u_a + du)*(u_a + du) +
+      rho*(v_a + dv)*(v_a + dv) ;
     
   } // end operator () - 2d
 
@@ -924,21 +939,46 @@ public:
     real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
     real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
     
-    real_t tmp = x + y + z;
-    if (tmp > 0.5 && tmp < 2.5) {
-      Udata(i  ,j  ,k  , ID) = 1.0;
-      Udata(i  ,j  ,k  , IP) = 1.0/(gamma0-1.0);
-      Udata(i  ,j  ,k  , IU) = 0.0;
-      Udata(i  ,j  ,k  , IV) = 0.0;
-      Udata(i  ,j  ,k  , IW) = 0.0;
-    } else {
-      Udata(i  ,j  ,k  , ID) = 0.125;
-      Udata(i  ,j  ,k  , IP) = 0.14/(gamma0-1.0);
-      Udata(i  ,j  ,k  , IU) = 0.0;
-      Udata(i  ,j  ,k  , IV) = 0.0;
-      Udata(i  ,j  ,k  , IW) = 0.0;	    
-    }
+    // ambient flow
+    const real_t rho_a = this->iparams.rho_a;
+    const real_t p_a   = this->iparams.p_a;
+    const real_t T_a   = this->iparams.T_a;
+    const real_t u_a   = this->iparams.u_a;
+    const real_t v_a   = this->iparams.v_a;
+    const real_t w_a   = this->iparams.w_a;
     
+    // vortex center
+    const real_t vortex_x = this->iparams.vortex_x;
+    const real_t vortex_y = this->iparams.vortex_y;
+
+    // relative coordinates versus vortex center
+    real_t xp = x - vortex_x;
+    real_t yp = y - vortex_y;
+    real_t r  = sqrt(xp*xp + yp*yp);
+    
+    const real_t beta = this->iparams.beta;
+
+    real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+    real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+    
+    real_t T = T_a - (gamma0-1)*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
+    real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
+    
+    Udata(i  ,j  ,k  , ID) = rho;
+    Udata(i  ,j  ,k  , IP) = rho*T/(gamma0-1.0);
+    Udata(i  ,j  ,k  , IU) = u_a + du;
+    Udata(i  ,j  ,k  , IV) = v_a + dv;
+    Udata(i  ,j  ,k  , IW) = w_a;
+    
+    Udata(i  ,j  ,k  , ID) = rho;
+    Udata(i  ,j  ,k  , IU) = rho*(u_a + du);
+    Udata(i  ,j  ,k  , IV) = rho*(v_a + dv);
+    Udata(i  ,j  ,k  , IV) = rho*(w_a     );
+    Udata(i  ,j  ,k  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
+      rho*(u_a + du)*(u_a + du) +
+      rho*(v_a + dv)*(v_a + dv) +
+      rho*(w_a     )*(w_a     );
+
   } // end operator () - 3d
   
   DataArray              Udata;
