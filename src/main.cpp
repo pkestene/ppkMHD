@@ -95,6 +95,10 @@ int main(int argc, char *argv[])
   // end of computation
   solver->timers[TIMER_TOTAL]->stop();
 
+  // save last time step
+  if (params.nOutput != 0)
+    solver->save_solution();
+  
   // print monitoring information
   {    
     real_t t_tot   = solver->timers[TIMER_TOTAL]->elapsed();
