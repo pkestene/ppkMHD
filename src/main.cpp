@@ -98,6 +98,8 @@ int main(int argc, char *argv[])
   // save last time step
   if (params.nOutput != 0)
     solver->save_solution();
+
+  printf("final time is %f\n", solver->m_t);
   
   // print monitoring information
   {    
