@@ -290,8 +290,8 @@ void riemann_llf(const HydroState& qleft,
   //===============================
   HydroState fleft, fright;
   // mass density
-  fleft [ID] = uleft [IU];
-  fright[ID] = uright[IU];
+  fleft [ID] = uleft [ID] * qleft [IU];
+  fright[ID] = uright[ID] * qright[IU];
 
   // total energy
   fleft [IP] = qleft [IU] * ( uleft [IP] + qleft [IP]);
@@ -406,7 +406,7 @@ void riemann_hll(const HydroState& qleft,
   fleft [IU] = qleft [IP] +   uleft [IU] * qleft [IU];
   fright[IU] = qright[IP] +   uright[IU] * qright[IU];
   
-    // Other advected quantities
+  // Other advected quantities
   fleft [IV] = fleft [ID] * qleft [IV];
   fright[IV] = fright[ID] * qright[IV];
   if (std::is_same<HydroState,HydroState3d>::value) {
@@ -566,6 +566,10 @@ void riemann_hydro(const HydroState2d& qleft,
   } else if (params.riemannSolverType == RIEMANN_HLLC) {
     
     riemann_hllc<HydroState2d>  (qleft,qright,qgdnv,flux,params);
+
+  } else if (params.riemannSolverType == RIEMANN_LLF) {
+    
+    riemann_llf<HydroState2d>  (qleft,qright,qgdnv,flux,params);
 
   }
   
