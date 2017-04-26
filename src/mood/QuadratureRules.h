@@ -35,8 +35,8 @@ using QuadLoc_3d_h_t = QuadLoc_3d_t::HostMirror;
 constexpr int QUADRATURE_NUM_POINTS[STENCIL_TOTAL_NUMBER] =
   {1,  /* STENCIL_2D_DEGREE1 */
    2,  /* STENCIL_2D_DEGREE2 */
-   2,  /* STENCIL_2D_DEGREE3 */
-   2,  /* STENCIL_2D_DEGREE3_V2 */
+   3,  /* STENCIL_2D_DEGREE3 */
+   3,  /* STENCIL_2D_DEGREE3_V2 */
    3,  /* STENCIL_2D_DEGREE4 */
    3,  /* STENCIL_2D_DEGREE5 */
    1,  /* STENCIL_3D_DEGREE1 */
