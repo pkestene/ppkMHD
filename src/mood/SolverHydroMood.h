@@ -173,6 +173,11 @@ public:
   void time_int_ssprk3(DataArray data_in, 
 		       DataArray data_out, 
 		       real_t dt);
+
+  //! time integration using SSP RK4
+  void time_int_ssprk54(DataArray data_in, 
+			DataArray data_out, 
+			real_t dt);
   
 
   template<int dim_=dim>
@@ -195,6 +200,7 @@ public:
   bool forward_euler_enabled;
   bool ssprk2_enabled;
   bool ssprk3_enabled;
+  bool ssprk54_enabled;
   
   int isize, jsize, ksize, nbCells;
 
@@ -226,7 +232,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   geomMatrix(stencil_size-1,ncoefs-1),
   forward_euler_enabled(true),
   ssprk2_enabled(false),
-  ssprk3_enabled(false)
+  ssprk3_enabled(false),
+  ssprk54_enabled(false)
 {
 
   if (dim==3)
@@ -301,6 +308,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   forward_euler_enabled = configMap.getBool("mood", "forward_euler", true);
   ssprk2_enabled        = configMap.getBool("mood", "ssprk2", false);
   ssprk3_enabled        = configMap.getBool("mood", "ssprk3", false);
+  ssprk54_enabled        = configMap.getBool("mood", "ssprk54", false);
 
   if (ssprk2_enabled) {
 
@@ -322,6 +330,20 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
       U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
       U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nbvar);
       total_mem_size += isize*jsize*ksize*nbvar * 2 * sizeof(real_t);
+    }
+    
+  } else if (ssprk54_enabled) {
+
+    if (dim == 2) {
+      U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
+      U_RK2 = DataArray("U_RK2",isize, jsize, nbvar);
+      U_RK3 = DataArray("U_RK3",isize, jsize, nbvar);
+      total_mem_size += isize*jsize*nbvar * 3 * sizeof(real_t);
+    } else if (dim == 3) {
+      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
+      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nbvar);
+      U_RK3 = DataArray("U_RK3",isize, jsize, ksize, nbvar);
+      total_mem_size += isize*jsize*ksize*nbvar * 3 * sizeof(real_t);
     }
     
   }
@@ -374,6 +396,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   std::cout << "Forward Euler : " << forward_euler_enabled << "\n";
   std::cout << "SSPRK2        : " << ssprk2_enabled << "\n";
   std::cout << "SSPRK3        : " << ssprk3_enabled << "\n";
+  std::cout << "SSPRK54       : " << ssprk54_enabled << "\n";
   std::cout << "##########################" << "\n";
 
   // print parameters on screen
@@ -719,6 +742,10 @@ double SolverHydroMood<dim,degree>::compute_dt_local()
     
   dt = params.settings.cfl/invDt;
 
+  // rescale dt to match the space order degree+1
+  if (degree >= 2 and ssprk3_enabled)
+    dt = pow(dt, (degree+1.0)/3.0);
+  
   return dt;
 
 } // SolverHydroMood::compute_dt_local
@@ -804,6 +831,10 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   } else if (ssprk3_enabled) {
     
     time_int_ssprk3(data_in, data_out, dt);
+    
+  } else if (ssprk54_enabled) {
+    
+    time_int_ssprk54(data_in, data_out, dt);
     
   } else {
     
@@ -932,6 +963,22 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
 // ///////////////////////////////////////////
 // SSP RK2 time integration
 // ///////////////////////////////////////////
+/**
+ * Strong Stability Preserving Runge-Kutta integration, 2th order.
+ *
+ * See http://epubs.siam.org/doi/pdf/10.1137/S0036142901389025
+ * A NEW CLASS OF OPTIMAL HIGH-ORDER STRONG-STABILITY-PRESERVING
+ * TIME DISCRETIZATION METHODS
+ * RAYMOND J. SPITERI AND STEVEN J. RUUTH,
+ * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
+ *
+ * SSP-RK22 (2 stages, 2nd order).
+ *
+ * The cfl coefficient is 1, i.e.
+ *
+ * Dt <= cfl Dt_FE
+ * where Dt_FE is the forward Euler Dt
+ */
 template<int dim, int degree>
 void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in, 
 						  DataArray data_out, 
@@ -1080,6 +1127,24 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 // ///////////////////////////////////////////
 // SSP RK3 time integration
 // ///////////////////////////////////////////
+/**
+ * Strong Stability Preserving Runge-Kutta integration, 3th order.
+ *
+ * See http://epubs.siam.org/doi/pdf/10.1137/S0036142901389025
+ * A NEW CLASS OF OPTIMAL HIGH-ORDER STRONG-STABILITY-PRESERVING
+ * TIME DISCRETIZATION METHODS
+ * RAYMOND J. SPITERI AND STEVEN J. RUUTH,
+ * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
+ *
+ * SSP-RK33 (3 stages, 3nd order).
+ *
+ * Note: This scheme is also call TVD-RK3
+ *
+ * The cfl coefficient is 1, i.e.
+ *
+ * Dt <= cfl Dt_FE
+ * where Dt_FE is the forward Euler Dt
+ */
 template<int dim, int degree>
 void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in, 
 						  DataArray data_out, 
@@ -1163,9 +1228,9 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
 
   make_boundaries(U_RK1);
   
-  // =====================================================================
-  // second step : U_RK2 = 0.25 * (3 * U_n + U_RK1 + dt * fluxes(U_RK1) )
-  // =====================================================================
+  // ========================================================================
+  // second step : U_RK2 = 3/4 * U_n + 1/4 * U_RK1 + 1/4 * dt * fluxes(U_RK1)
+  // ========================================================================
   // compute reconstruction polynomial coefficients of U_RK1
   {
     
@@ -1226,7 +1291,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
   make_boundaries(U_RK2);
 
   // ============================================================================
-  // thrird step : U_{n+1} = 1/3 * ( U_n + 2 * U_RK2 + 2 * dt * fluxes(U_RK2) )
+  // thrird step : U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 + 2/3 * dt * fluxes(U_RK2)
   // ============================================================================
   // compute reconstruction polynomial coefficients of U_RK2
   {
@@ -1286,6 +1351,48 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
   }  
 
 } // SolverHydroMood::time_int_ssprk3
+
+// =======================================================
+// =======================================================
+// ///////////////////////////////////////////
+// SSP RK54 time integration
+// ///////////////////////////////////////////
+/**
+ * Strong Stability Preserving Runge-Kutta integration, 4th order, 5 stages.
+ *
+ * See http://epubs.siam.org/doi/pdf/10.1137/S0036142901389025
+ * A NEW CLASS OF OPTIMAL HIGH-ORDER STRONG-STABILITY-PRESERVING
+ * TIME DISCRETIZATION METHODS
+ * RAYMOND J. SPITERI AND STEVEN J. RUUTH,
+ * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
+ *
+ * This scheme is call SSP-RK54
+ * 
+ * It has been proved that no 4th order RK, 4 stages SSP-RK scheme
+ * exists with positive coefficients (Goettlib and Shu, Total variation
+ * diminishing Runge-Kutta schemes, Math. Comp., 67 (1998), pp. 73–85.).
+ * This means a SSP-RK44 scheme will have negative coefficients, and we need to
+ * have a flux operator backward in time stable.
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::time_int_ssprk54(DataArray data_in, 
+						   DataArray data_out, 
+						   real_t dt)
+{
+
+  real_t dtdx;
+  real_t dtdy;
+  real_t dtdz;
+  
+  dtdx = dt / params.dx;
+  dtdy = dt / params.dy;
+  dtdz = dt / params.dz;
+
+  Kokkos::deep_copy(U_RK1, data_in);
+
+  std::cout << "SSP-RK54 is currently unimplemented\n";
+  
+} // SolverHydroMood::time_int_ssprk54
 
 // =======================================================
 // =======================================================
