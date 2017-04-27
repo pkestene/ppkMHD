@@ -829,6 +829,10 @@ public:
  * https://hal.archives-ouvertes.fr/hal-01485587/document
  *
  * Gas law: P = rho T = rho^gamma
+ *
+ * TO BE MODIFIED: use quadrature rule to provide a higher order approximation
+ * of the finite volume init condition.
+ *
  */
 template<int dim, int degree>
 class InitIsentropicVortexFunctor : public MoodBaseFunctor<dim,degree>
