@@ -848,10 +848,200 @@ public:
 			      DataArray   Udata) :
     MoodBaseFunctor<dim,degree>(params,monomMap),
     Udata(Udata),
-    iparams(iparams)  {};
-  
+    iparams(iparams),
+    rho_a(iparams.rho_a),
+    p_a(iparams.p_a),
+    T_a(iparams.T_a),
+    u_a(iparams.u_a),
+    v_a(iparams.v_a),
+    w_a(iparams.w_a),
+    vortex_x(iparams.vortex_x),
+    vortex_y(iparams.vortex_y),
+    beta(iparams.beta),
+    gamma0(params.settings.gamma0)
+  {};
+
   ~InitIsentropicVortexFunctor() {};
 
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_T(real_t x, real_t y) const
+  {
+    // relative coordinates versus vortex center
+    real_t xp = x - vortex_x;
+    real_t yp = y - vortex_y;
+    real_t r  = sqrt(xp*xp + yp*yp);
+
+    real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
+
+    return T;
+  } // compute_T
+
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_rho(real_t x, real_t y) const
+  {
+    // compute temperature
+    real_t T = compute_T(x,y);
+    
+    return rho_a*pow(T/T_a,1.0/(gamma0-1));
+  } // compute_rho
+  
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_u(real_t x, real_t y) const
+  {
+
+    // relative coordinates versus vortex center
+    real_t xp = x - vortex_x;
+    real_t yp = y - vortex_y;
+    real_t r  = sqrt(xp*xp + yp*yp);
+    
+    real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+
+    return u_a+du;
+  } // compute_u
+
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_v(real_t x, real_t y) const
+  {
+
+    // relative coordinates versus vortex center
+    real_t xp = x - vortex_x;
+    real_t yp = y - vortex_y;
+    real_t r  = sqrt(xp*xp + yp*yp);
+    
+    real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+
+    return v_a+dv;
+  } // compute_v
+
+  KOKKOS_INLINE_FUNCTION
+  void compute_HydroState_with_quadrature(real_t x, real_t y, int nQuadPts,
+					  HydroState2d& q) const
+  {
+
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+
+    real_t rho, u, v, e, T;
+
+    // use Gauss-Legendre Quadrature to compute integral over
+    // [x-dx/2, x+dx/2]
+    // [y-dy/2, y+dy/2]
+
+    if (nQuadPts == 1) {
+      // compute rho, rhou, rhov, e
+
+      T   = compute_T(x,y);
+      rho = compute_rho(x,y);
+      u   = compute_u(x,y);
+      v   = compute_v(x,y);
+      e   = rho*T/(gamma0-1) + 0.5*rho*(u*u + v*v + w_a*w_a);
+      
+      q[ID] = rho;
+      q[IU] = rho*u;
+      q[IV] = rho*v;
+      q[IP] = e;
+
+    } else if (nQuadPts == 2) {
+
+      q[ID] = 0.0;
+      q[IU] = 0.0;
+      q[IV] = 0.0;
+      q[IP] = 0.0;
+      
+      real_t pos_x[nQuadPts] = { x-0.5*dx*1.0/sqrt(3.0),
+				 x+0.5*dx*1.0/sqrt(3.0) };
+      real_t pos_y[nQuadPts] = { y-0.5*dy*1.0/sqrt(3.0),
+				 y+0.5*dy*1.0/sqrt(3.0) };
+
+      real_t weights[nQuadPts] = {0.5, 0.5};
+
+      for (int jj=0; jj<nQuadPts; ++jj)
+	for (int ii=0; ii<nQuadPts; ++ii) {
+
+	  T   = compute_T  (pos_x[ii],pos_y[jj]);
+	  rho = compute_rho(pos_x[ii],pos_y[jj]);
+	  u   = compute_u  (pos_x[ii],pos_y[jj]);
+	  v   = compute_v  (pos_x[ii],pos_y[jj]);
+	  e   = rho*T/(gamma0-1) + 0.5*rho*(u*u + v*v + w_a*w_a);
+	  
+	  q[ID] += rho*weights[ii]*weights[jj];
+	  q[IU] += rho*u*weights[ii]*weights[jj];
+	  q[IV] += rho*v*weights[ii]*weights[jj];
+	  q[IP] += e*weights[ii]*weights[jj];
+	  
+	}
+    } else if (nQuadPts == 3) {
+
+      q[ID] = 0.0;
+      q[IU] = 0.0;
+      q[IV] = 0.0;
+      q[IP] = 0.0;
+      
+      real_t pos_x[nQuadPts] = { x-0.5*dx*sqrt(3.0)/sqrt(5.0),
+				 x,
+				 x+0.5*dx*sqrt(3.0)/sqrt(5.0) };
+      real_t pos_y[nQuadPts] = { y-0.5*dy*sqrt(3.0)/sqrt(5.0),
+				 y,
+				 y+0.5*dy*sqrt(3.0)/sqrt(5.0) };
+
+      real_t weights[nQuadPts] = {2.5/9, 4.0/9, 2.5/9};
+
+      for (int jj=0; jj<nQuadPts; ++jj)
+	for (int ii=0; ii<nQuadPts; ++ii) {
+
+	  T   = compute_T  (pos_x[ii],pos_y[jj]);
+	  rho = compute_rho(pos_x[ii],pos_y[jj]);
+	  u   = compute_u  (pos_x[ii],pos_y[jj]);
+	  v   = compute_v  (pos_x[ii],pos_y[jj]);
+	  e   = rho*T/(gamma0-1) + 0.5*rho*(u*u + v*v + w_a*w_a);
+	  
+	  q[ID] += rho  *weights[ii]*weights[jj];
+	  q[IU] += rho*u*weights[ii]*weights[jj];
+	  q[IV] += rho*v*weights[ii]*weights[jj];
+	  q[IP] += e    *weights[ii]*weights[jj];
+	  
+	}
+    } else if (nQuadPts == 4) {
+
+      q[ID] = 0.0;
+      q[IU] = 0.0;
+      q[IV] = 0.0;
+      q[IP] = 0.0;
+      
+      real_t pos_x[nQuadPts] = { x-0.5*dx*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
+				 x+0.5*dx*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
+				 x-0.5*dx*sqrt(3.0/7+2.0/7*sqrt(6.0/5)),
+				 x+0.5*dx*sqrt(3.0/7+2.0/7*sqrt(6.0/5)) };
+      
+      real_t pos_y[nQuadPts] = { y-0.5*dy*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
+				 y+0.5*dy*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
+				 y-0.5*dy*sqrt(3.0/7+2.0/7*sqrt(6.0/5)),
+				 y+0.5*dy*sqrt(3.0/7+2.0/7*sqrt(6.0/5)) };
+
+      real_t weights[nQuadPts] = {0.5*(0.5+sqrt(30.0)/36),
+				  0.5*(0.5+sqrt(30.0)/36),
+				  0.5*(0.5-sqrt(30.0)/36),
+				  0.5*(0.5-sqrt(30.0)/36) };
+
+      for (int jj=0; jj<nQuadPts; ++jj)
+	for (int ii=0; ii<nQuadPts; ++ii) {
+
+	  T   = compute_T  (pos_x[ii],pos_y[jj]);
+	  rho = compute_rho(pos_x[ii],pos_y[jj]);
+	  u   = compute_u  (pos_x[ii],pos_y[jj]);
+	  v   = compute_v  (pos_x[ii],pos_y[jj]);
+	  e   = rho*T/(gamma0-1) + 0.5*rho*(u*u + v*v + w_a*w_a);
+	  
+	  q[ID] += rho  *weights[ii]*weights[jj];
+	  q[IU] += rho*u*weights[ii]*weights[jj];
+	  q[IV] += rho*v*weights[ii]*weights[jj];
+	  q[IP] += e    *weights[ii]*weights[jj];
+	  
+	}
+    }   
+    
+  } // compute_HydroState_with_quadrature
+  
   /*
    * 2D version.
    */
@@ -869,47 +1059,23 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
-    const real_t gamma0 = this->params.settings.gamma0;
-    
+        
     int i,j;
     index2coord(index,i,j,isize,jsize);
+
+    const int nQuadPts = this->iparams.nQuadPts;
     
+    // center of current cell
     real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
 
-    // ambient flow
-    const real_t rho_a = this->iparams.rho_a;
-    const real_t p_a   = this->iparams.p_a;
-    const real_t T_a   = this->iparams.T_a;
-    const real_t u_a   = this->iparams.u_a;
-    const real_t v_a   = this->iparams.v_a;
-    //const real_t w_a   = this->iparams.w_a;
+    HydroState2d q;
+    compute_HydroState_with_quadrature(x,y,nQuadPts,q);
     
-    // vortex center
-    const real_t vortex_x = this->iparams.vortex_x;
-    const real_t vortex_y = this->iparams.vortex_y;
-
-    // relative coordinates versus vortex center
-    real_t xp = x - vortex_x;
-    real_t yp = y - vortex_y;
-    real_t r  = sqrt(xp*xp + yp*yp);
-    
-    const real_t beta = this->iparams.beta;
-
-    real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
-    real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
-    
-    real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
-    real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
-    
-    Udata(i  ,j  , ID) = rho;
-    Udata(i  ,j  , IU) = rho*(u_a + du);
-    Udata(i  ,j  , IV) = rho*(v_a + dv);
-    //Udata(i  ,j  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
-    Udata(i  ,j  , IP) = rho*T/(gamma0-1.0) +
-      0.5*rho*(u_a + du)*(u_a + du) +
-      0.5*rho*(v_a + dv)*(v_a + dv) ;
+    Udata(i  ,j  , ID) = q[ID];
+    Udata(i  ,j  , IU) = q[IU];
+    Udata(i  ,j  , IV) = q[IV];
+    Udata(i  ,j  , IP) = q[IP];
     
   } // end operator () - 2d
 
@@ -934,60 +1100,46 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
-    const real_t gamma0 = this->params.settings.gamma0;
-    
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
+    const int nQuadPts = this->iparams.nQuadPts;
+
     real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
     real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
     
-    // ambient flow
-    const real_t rho_a = this->iparams.rho_a;
-    const real_t p_a   = this->iparams.p_a;
-    const real_t T_a   = this->iparams.T_a;
-    const real_t u_a   = this->iparams.u_a;
-    const real_t v_a   = this->iparams.v_a;
-    const real_t w_a   = this->iparams.w_a;
-    
-    // vortex center
-    const real_t vortex_x = this->iparams.vortex_x;
-    const real_t vortex_y = this->iparams.vortex_y;
-
-    // relative coordinates versus vortex center
-    real_t xp = x - vortex_x;
-    real_t yp = y - vortex_y;
-    real_t r  = sqrt(xp*xp + yp*yp);
-    
-    const real_t beta = this->iparams.beta;
-
-    real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
-    real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
-    
-    real_t T = T_a - (gamma0-1)*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
-    real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
-    
-    Udata(i  ,j  ,k  , ID) = rho;
-    Udata(i  ,j  ,k  , IP) = rho*T/(gamma0-1.0);
-    Udata(i  ,j  ,k  , IU) = u_a + du;
-    Udata(i  ,j  ,k  , IV) = v_a + dv;
-    Udata(i  ,j  ,k  , IW) = w_a;
-    
-    Udata(i  ,j  ,k  , ID) = rho;
-    Udata(i  ,j  ,k  , IU) = rho*(u_a + du);
-    Udata(i  ,j  ,k  , IV) = rho*(v_a + dv);
-    Udata(i  ,j  ,k  , IV) = rho*(w_a     );
-    Udata(i  ,j  ,k  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
-      0.5*rho*(u_a + du)*(u_a + du) +
-      0.5*rho*(v_a + dv)*(v_a + dv) +
-      0.5*rho*(w_a     )*(w_a     );
+    HydroState2d q;
+    compute_HydroState_with_quadrature(x,y,nQuadPts,q);
+        
+    Udata(i  ,j  ,k  , ID) = q[ID];
+    Udata(i  ,j  ,k  , IU) = q[IU];
+    Udata(i  ,j  ,k  , IV) = q[IV];
+    Udata(i  ,j  ,k  , IW) = q[ID]*w_a;
+    Udata(i  ,j  ,k  , IP) = q[IW];
 
   } // end operator () - 3d
   
   DataArray              Udata;
   IsentropicVortexParams iparams;
+
+  // ambient flow
+  const real_t rho_a;
+  const real_t p_a;
+  const real_t T_a;
+  const real_t u_a;
+  const real_t v_a;
+  const real_t w_a;
   
+  // vortex center
+  const real_t vortex_x;
+  const real_t vortex_y;
+
+  const real_t beta;
+
+  // specific heat ratio
+  const real_t gamma0;
+
 }; // class InitIsentropicVortexFunctor
 
 } // namespace mood

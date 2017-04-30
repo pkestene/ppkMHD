@@ -1612,7 +1612,7 @@ void SolverHydroMood<dim,degree>::init_isentropic_vortex(DataArray Udata)
 {
 
   IsentropicVortexParams iparams(configMap);
-  
+
   InitIsentropicVortexFunctor<dim,degree> functor(params, monomialMap.data, iparams, Udata);
   Kokkos::parallel_for(nbCells, functor);
   

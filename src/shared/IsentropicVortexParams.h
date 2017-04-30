@@ -23,6 +23,9 @@ struct IsentropicVortexParams {
 
   // vortex strength
   real_t beta;
+
+  // number of quadrature points (used to compute initial cell-averaged values)
+  int nQuadPts;
   
   IsentropicVortexParams(ConfigMap& configMap)
   {
@@ -47,6 +50,8 @@ struct IsentropicVortexParams {
     vortex_z = configMap.getFloat("isentropic_vortex","center_z", (zmin+zmax)/2);
 
     beta = configMap.getFloat("isentropic_vortex","strength",5.0);
+
+    nQuadPts = configMap.getInteger("isentropic_vortex", "num_quadrature_points",4);
   }
 
 }; // struct IsentropicVortexParams
