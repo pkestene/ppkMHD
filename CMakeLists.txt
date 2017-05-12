@@ -10,7 +10,6 @@ option (USE_DOUBLE "build with double precision" ON)
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
-list(APPEND CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -O3)
 
 
 #
