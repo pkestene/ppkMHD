@@ -17,6 +17,17 @@ void print_current_date(std::ostream& stream)
   /* Format and print the time, "ddd yyyy-mm-dd hh:mm:ss zzz" */
   std::tm tm = *std::localtime(&now);
   
+  // old versions of g++ don't have std::put_time,
+  // so we provide a slight work arround
+#if defined(__GNUC__) && (__GNUC__ < 5)
+
+  char foo[64];
+
+  if(0 < std::strftime(foo, sizeof(foo), "%Y-%m-%d %H:%M:%S %Z", &tm)) 
+    stream << "-- " << foo << "\n";
+
+#else
+
   std::stringstream ss;
   ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S %Z");
 
@@ -24,5 +35,7 @@ void print_current_date(std::ostream& stream)
   //const char *cstr = tmp.c_str();
 
   stream << "-- " << tmp << "\n";
-  
+
+#endif
+
 } // print_current_date
