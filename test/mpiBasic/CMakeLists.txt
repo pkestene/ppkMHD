@@ -5,14 +5,14 @@ macro(MPI_TEST_ADD_EXEC test_name)
   set(EXE_NAME ${test_name})
   add_executable(${EXE_NAME}
     ${EXE_NAME}.cpp
-    $<TARGET_OBJECTS:time>
-    $<TARGET_OBJECTS:mpiUtils>
     )
   
   target_include_directories(${EXE_NAME}
     PUBLIC
     ${CMAKE_SOURCE_DIR}/src/utils/mpiUtils
     )
+  target_link_libraries(${EXE_NAME}
+    time mpiUtils)
 endmacro(MPI_TEST_ADD_EXEC)
 
 

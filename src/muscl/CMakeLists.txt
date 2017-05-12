@@ -18,12 +18,17 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.h
   )
 
-add_library(muscl OBJECT
+add_library(muscl
   ${muscl_SRCS}
   )
 target_include_directories(muscl
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/kokkos/core/src
+  ${CMAKE_SOURCE_DIR}/kokkos/containers/src
+  ${CMAKE_SOURCE_DIR}/kokkos/algorithms/src
+  ${CMAKE_BINARY_DIR}/kokkos
   ) 
-#set_target_properties(muscl PROPERTIES
-#  COMPILE_FLAGS "${KOKKOS_CPPFLAGS} ${KOKKOS_CXXFLAGS}")
+target_link_libraries(muscl
+  kokkos
+  )

@@ -6,6 +6,6 @@ set (time_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/CudaTimer.h
   )
 
-add_library(time OBJECT
+add_library(time
   ${time_SRCS}
   )
