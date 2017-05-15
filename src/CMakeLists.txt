@@ -30,4 +30,4 @@ target_include_directories(${EXE_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
-target_link_libraries(${EXE_NAME} mood muscl shared io time config solver_factory kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(${EXE_NAME} solver_factory shared mood muscl io time config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})

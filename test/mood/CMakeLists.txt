@@ -73,9 +73,7 @@ target_include_directories(test_mood_functor
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
-#set_target_properties(test_reconstruct PROPERTIES
-#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(test_mood_functor mood shared io time config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(test_mood_functor shared mood io time config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
 add_executable(test_mood_functor_flux
@@ -84,9 +82,7 @@ target_include_directories(test_mood_functor_flux
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
-#set_target_properties(test_reconstruct PROPERTIES
-#  LINK_FLAGS "${KOKKOS_LDFLAGS}")
-target_link_libraries(test_mood_functor_flux mood shared io time config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(test_mood_functor_flux shared mood io time config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 
 ##############################################
 # add_executable(test_kokkos_eigen
