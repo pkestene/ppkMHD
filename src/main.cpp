@@ -78,7 +78,8 @@ int main(int argc, char *argv[])
 							params,
 							configMap);
 
-  solver->save_solution();
+  if (params.nOutput != 0)
+    solver->save_solution();
   
   // start computation
   std::cout << "Start computation....\n";
@@ -94,6 +95,12 @@ int main(int argc, char *argv[])
   // end of computation
   solver->timers[TIMER_TOTAL]->stop();
 
+  // save last time step
+  if (params.nOutput != 0)
+    solver->save_solution();
+
+  printf("final time is %f\n", solver->m_t);
+  
   // print monitoring information
   {    
     real_t t_tot   = solver->timers[TIMER_TOTAL]->elapsed();

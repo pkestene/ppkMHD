@@ -96,6 +96,8 @@ void HydroParams::setup(ConfigMap &configMap)
   std::string riemannSolverStr = std::string(configMap.getString("hydro","riemann", "approx"));
   if ( !riemannSolverStr.compare("approx") ) {
     riemannSolverType = RIEMANN_APPROX;
+  } else if ( !riemannSolverStr.compare("llf") ) {
+    riemannSolverType = RIEMANN_LLF;
   } else if ( !riemannSolverStr.compare("hll") ) {
     riemannSolverType = RIEMANN_HLL;
   } else if ( !riemannSolverStr.compare("hllc") ) {

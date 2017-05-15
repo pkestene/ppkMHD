@@ -12,6 +12,7 @@
 
 // init conditions
 #include "shared/BlastParams.h"
+#include "shared/IsentropicVortexParams.h"
 #include "shared/initRiemannConfig2d.h"
 
 namespace ppkMHD { namespace muscl {
@@ -1169,6 +1170,78 @@ public:
   real_t xt, yt;
   
 }; // InitFourQuadrantFunctor2D
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+class InitIsentropicVortexFunctor2D : public HydroBaseFunctor2D {
+
+public:
+  InitIsentropicVortexFunctor2D(HydroParams params,
+				IsentropicVortexParams iparams,
+				DataArray2d Udata) :
+    HydroBaseFunctor2D(params), iparams(iparams), Udata(Udata)  {};
+  
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+    const real_t xmin = params.xmin;
+    const real_t ymin = params.ymin;
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    
+    const real_t gamma0 = params.settings.gamma0;
+  
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+
+    // ambient flow
+    const real_t rho_a = this->iparams.rho_a;
+    const real_t p_a   = this->iparams.p_a;
+    const real_t T_a   = this->iparams.T_a;
+    const real_t u_a   = this->iparams.u_a;
+    const real_t v_a   = this->iparams.v_a;
+    //const real_t w_a   = this->iparams.w_a;
+    
+    // vortex center
+    const real_t vortex_x = this->iparams.vortex_x;
+    const real_t vortex_y = this->iparams.vortex_y;
+
+    // relative coordinates versus vortex center
+    real_t xp = x - vortex_x;
+    real_t yp = y - vortex_y;
+    real_t r  = sqrt(xp*xp + yp*yp);
+    
+    const real_t beta = this->iparams.beta;
+
+    real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+    real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+    
+    real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
+    real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
+    
+    Udata(i  ,j  , ID) = rho;
+    Udata(i  ,j  , IU) = rho*(u_a + du);
+    Udata(i  ,j  , IV) = rho*(v_a + dv);
+    //Udata(i  ,j  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
+    Udata(i  ,j  , IP) = rho*T/(gamma0-1.0) +
+      0.5*rho*(u_a + du)*(u_a + du) +
+      0.5*rho*(v_a + dv)*(v_a + dv) ;
+    
+  } // end operator ()
+  
+  DataArray2d Udata;
+  IsentropicVortexParams iparams;
+  
+}; // InitIsentropicVortexFunctor2D
 
 } // namespace muscl
 

@@ -79,6 +79,7 @@ public:
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
+  void init_isentropic_vortex(DataArray Udata);
 
   void save_solution_impl();
   

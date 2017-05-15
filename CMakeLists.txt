@@ -91,6 +91,12 @@ if ( NOT LAPACKE_FOUND )
   message(FATAL_ERROR "Package LAPACKE required, but not found!")
 endif( NOT LAPACKE_FOUND )
 
+find_package(PAPI)
+if (NOT PAPI_FOUND)
+  set(PAPI_INCLUDE_DIR "")
+  set(PAPI_LIBRARY "")
+endif(NOT PAPI_FOUND)
+
 #
 # common flags
 #

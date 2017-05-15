@@ -96,6 +96,11 @@ SolverBase::compute_dt()
 #else
 
   m_dt = compute_dt_local();
+
+  // correct m_dt if necessary
+  if (m_t+m_dt > m_tEnd) {
+    m_dt = m_tEnd - m_t;
+  }
   
 #endif
   

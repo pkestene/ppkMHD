@@ -10,9 +10,9 @@
 
 // for timer
 #ifdef CUDA
-#include "utils/time/CudaTimer.h"
+#include "utils/monitoring/CudaTimer.h"
 #else
-#include "utils/time/OpenMPTimer.h"
+#include "utils/monitoring/OpenMPTimer.h"
 #endif
 
 namespace ppkMHD { namespace io {

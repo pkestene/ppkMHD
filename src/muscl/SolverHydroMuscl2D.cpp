@@ -21,6 +21,7 @@
 
 // for init condition
 #include "shared/BlastParams.h"
+#include "shared/IsentropicVortexParams.h"
 
 
 namespace ppkMHD {
@@ -98,6 +99,10 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
   } else if ( !m_problem_name.compare("four_quadrant") ) {
 
     init_four_quadrant(U);
+
+  } else if ( !m_problem_name.compare("isentropic_vortex") ) {
+
+    init_isentropic_vortex(U);
 
   } else {
 
@@ -415,6 +420,23 @@ void SolverHydroMuscl2D::init_four_quadrant(DataArray Udata)
   Kokkos::parallel_for(ijsize, functor);
   
 } // init_four_quadrant
+
+// =======================================================
+// =======================================================
+/**
+ * Isentropic vortex advection test.
+ * https://www.cfd-online.com/Wiki/2-D_vortex_in_isentropic_flow
+ * https://hal.archives-ouvertes.fr/hal-01485587/document
+ */
+void SolverHydroMuscl2D::init_isentropic_vortex(DataArray Udata)
+{
+
+  IsentropicVortexParams iparams(configMap);
+  
+  InitIsentropicVortexFunctor2D functor(params, iparams, Udata);
+  Kokkos::parallel_for(ijsize, functor);
+  
+} // init_isentropic_vortex
 
 // =======================================================
 // =======================================================

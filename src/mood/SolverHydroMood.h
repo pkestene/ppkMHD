@@ -16,6 +16,7 @@
 #include "shared/HydroParams.h"
 #include "shared/kokkos_shared.h"
 #include "shared/BoundariesFunctors.h"
+#include "shared/BoundariesFunctorsWedge.h"
 #include "shared/initRiemannConfig2d.h"
 
 // mood
@@ -42,8 +43,10 @@
 // for IO
 #include <utils/io/IO_Writer.h>
 
-// for init condition
+// for specific init / border conditions
 #include "shared/BlastParams.h"
+#include "shared/KHParams.h"
+#include "shared/WedgeParams.h"
 
 namespace mood {
 
@@ -170,6 +173,11 @@ public:
   void time_int_ssprk3(DataArray data_in, 
 		       DataArray data_out, 
 		       real_t dt);
+
+  //! time integration using SSP RK4
+  void time_int_ssprk54(DataArray data_in, 
+			DataArray data_out, 
+			real_t dt);
   
 
   template<int dim_=dim>
@@ -182,13 +190,17 @@ public:
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
-
+  void init_kelvin_helmholtz(DataArray Udata);
+  void init_wedge(DataArray Udata);
+  void init_isentropic_vortex(DataArray Udata);
+  
   void save_solution_impl();
 
   // time integration
   bool forward_euler_enabled;
   bool ssprk2_enabled;
   bool ssprk3_enabled;
+  bool ssprk54_enabled;
   
   int isize, jsize, ksize, nbCells;
 
@@ -220,7 +232,8 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   geomMatrix(stencil_size-1,ncoefs-1),
   forward_euler_enabled(true),
   ssprk2_enabled(false),
-  ssprk3_enabled(false)
+  ssprk3_enabled(false),
+  ssprk54_enabled(false)
 {
 
   if (dim==3)
@@ -295,6 +308,7 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   forward_euler_enabled = configMap.getBool("mood", "forward_euler", true);
   ssprk2_enabled        = configMap.getBool("mood", "ssprk2", false);
   ssprk3_enabled        = configMap.getBool("mood", "ssprk3", false);
+  ssprk54_enabled        = configMap.getBool("mood", "ssprk54", false);
 
   if (ssprk2_enabled) {
 
@@ -318,6 +332,20 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
       total_mem_size += isize*jsize*ksize*nbvar * 2 * sizeof(real_t);
     }
     
+  } else if (ssprk54_enabled) {
+
+    if (dim == 2) {
+      U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
+      U_RK2 = DataArray("U_RK2",isize, jsize, nbvar);
+      U_RK3 = DataArray("U_RK3",isize, jsize, nbvar);
+      total_mem_size += isize*jsize*nbvar * 3 * sizeof(real_t);
+    } else if (dim == 3) {
+      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
+      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nbvar);
+      U_RK3 = DataArray("U_RK3",isize, jsize, ksize, nbvar);
+      total_mem_size += isize*jsize*ksize*nbvar * 3 * sizeof(real_t);
+    }
+    
   }
 
   /*
@@ -335,6 +363,19 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
 
     init_four_quadrant(U);
 
+  } else if ( !m_problem_name.compare("kelvin-helmholtz") or
+	      !m_problem_name.compare("kelvin_helmholtz")) {
+
+    init_kelvin_helmholtz(U);
+
+  } else if ( !m_problem_name.compare("wedge") ) {
+
+    init_wedge(U);
+    
+  } else if ( !m_problem_name.compare("isentropic_vortex") ) {
+
+    init_isentropic_vortex(U);
+    
   } else {
 
     std::cout << "Problem : " << m_problem_name
@@ -349,10 +390,13 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   std::cout << "Problem (init condition) is " << m_problem_name << "\n";
   std::cout << "Mood degree : " << degree << "\n";
   std::cout << "Mood polynomial coefficients : " << ncoefs << "\n";
+  std::cout << "StencilId is " << StencilUtils::get_stencil_name(stencil.stencilId) << "\n";
+  std::cout << "Number of quadrature points : " << QUADRATURE_NUM_POINTS[stencilId] << "\n";
   std::cout << "Time integration is :\n";
   std::cout << "Forward Euler : " << forward_euler_enabled << "\n";
   std::cout << "SSPRK2        : " << ssprk2_enabled << "\n";
   std::cout << "SSPRK3        : " << ssprk3_enabled << "\n";
+  std::cout << "SSPRK54       : " << ssprk54_enabled << "\n";
   std::cout << "##########################" << "\n";
 
   // print parameters on screen
@@ -698,6 +742,10 @@ double SolverHydroMood<dim,degree>::compute_dt_local()
     
   dt = params.settings.cfl/invDt;
 
+  // rescale dt to match the space order degree+1
+  if (degree >= 2 and ssprk3_enabled)
+    dt = pow(dt, (degree+1.0)/3.0);
+  
   return dt;
 
 } // SolverHydroMood::compute_dt_local
@@ -783,6 +831,10 @@ void SolverHydroMood<dim,degree>::time_integration_impl(DataArray data_in,
   } else if (ssprk3_enabled) {
     
     time_int_ssprk3(data_in, data_out, dt);
+    
+  } else if (ssprk54_enabled) {
+    
+    time_int_ssprk54(data_in, data_out, dt);
     
   } else {
     
@@ -911,6 +963,22 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
 // ///////////////////////////////////////////
 // SSP RK2 time integration
 // ///////////////////////////////////////////
+/**
+ * Strong Stability Preserving Runge-Kutta integration, 2th order.
+ *
+ * See http://epubs.siam.org/doi/pdf/10.1137/S0036142901389025
+ * A NEW CLASS OF OPTIMAL HIGH-ORDER STRONG-STABILITY-PRESERVING
+ * TIME DISCRETIZATION METHODS
+ * RAYMOND J. SPITERI AND STEVEN J. RUUTH,
+ * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
+ *
+ * SSP-RK22 (2 stages, 2nd order).
+ *
+ * The cfl coefficient is 1, i.e.
+ *
+ * Dt <= cfl Dt_FE
+ * where Dt_FE is the forward Euler Dt
+ */
 template<int dim, int degree>
 void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in, 
 						  DataArray data_out, 
@@ -1059,6 +1127,24 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 // ///////////////////////////////////////////
 // SSP RK3 time integration
 // ///////////////////////////////////////////
+/**
+ * Strong Stability Preserving Runge-Kutta integration, 3th order.
+ *
+ * See http://epubs.siam.org/doi/pdf/10.1137/S0036142901389025
+ * A NEW CLASS OF OPTIMAL HIGH-ORDER STRONG-STABILITY-PRESERVING
+ * TIME DISCRETIZATION METHODS
+ * RAYMOND J. SPITERI AND STEVEN J. RUUTH,
+ * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
+ *
+ * SSP-RK33 (3 stages, 3nd order).
+ *
+ * Note: This scheme is also call TVD-RK3
+ *
+ * The cfl coefficient is 1, i.e.
+ *
+ * Dt <= cfl Dt_FE
+ * where Dt_FE is the forward Euler Dt
+ */
 template<int dim, int degree>
 void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in, 
 						  DataArray data_out, 
@@ -1142,9 +1228,9 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
 
   make_boundaries(U_RK1);
   
-  // =====================================================================
-  // second step : U_RK2 = 0.25 * (3 * U_n + U_RK1 + dt * fluxes(U_RK1) )
-  // =====================================================================
+  // ========================================================================
+  // second step : U_RK2 = 3/4 * U_n + 1/4 * U_RK1 + 1/4 * dt * fluxes(U_RK1)
+  // ========================================================================
   // compute reconstruction polynomial coefficients of U_RK1
   {
     
@@ -1205,7 +1291,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
   make_boundaries(U_RK2);
 
   // ============================================================================
-  // thrird step : U_{n+1} = 1/3 * ( U_n + 2 * U_RK2 + 2 * dt * fluxes(U_RK2) )
+  // thrird step : U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 + 2/3 * dt * fluxes(U_RK2)
   // ============================================================================
   // compute reconstruction polynomial coefficients of U_RK2
   {
@@ -1268,6 +1354,48 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
 
 // =======================================================
 // =======================================================
+// ///////////////////////////////////////////
+// SSP RK54 time integration
+// ///////////////////////////////////////////
+/**
+ * Strong Stability Preserving Runge-Kutta integration, 4th order, 5 stages.
+ *
+ * See http://epubs.siam.org/doi/pdf/10.1137/S0036142901389025
+ * A NEW CLASS OF OPTIMAL HIGH-ORDER STRONG-STABILITY-PRESERVING
+ * TIME DISCRETIZATION METHODS
+ * RAYMOND J. SPITERI AND STEVEN J. RUUTH,
+ * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
+ *
+ * This scheme is call SSP-RK54
+ * 
+ * It has been proved that no 4th order RK, 4 stages SSP-RK scheme
+ * exists with positive coefficients (Goettlib and Shu, Total variation
+ * diminishing Runge-Kutta schemes, Math. Comp., 67 (1998), pp. 73–85.).
+ * This means a SSP-RK44 scheme will have negative coefficients, and we need to
+ * have a flux operator backward in time stable.
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::time_int_ssprk54(DataArray data_in, 
+						   DataArray data_out, 
+						   real_t dt)
+{
+
+  real_t dtdx;
+  real_t dtdy;
+  real_t dtdz;
+  
+  dtdx = dt / params.dx;
+  dtdy = dt / params.dy;
+  dtdz = dt / params.dz;
+
+  Kokkos::deep_copy(U_RK1, data_in);
+
+  std::cout << "SSP-RK54 is currently unimplemented\n";
+  
+} // SolverHydroMood::time_int_ssprk54
+
+// =======================================================
+// =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
@@ -1279,26 +1407,54 @@ void SolverHydroMood<dim,degree>::make_boundaries(typename std::enable_if<dim_==
   
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
+
+  // wedge has a different border condition
+  if (!m_problem_name.compare("wedge")) {
+
+    WedgeParams wparams(configMap, m_t);
+
+    // call device functor
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_XMIN> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_XMAX> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_YMIN> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D_wedge<FACE_YMAX> functor(params, wparams, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  } else {
+
+    // call device functor
+    {
+      MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+    {
+      MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    {
+      MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  }
   
-  // call device functor
-  {
-    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  
-  {
-    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-      
 } // SolverHydroMood::make_boundaries
 
 template<int dim, int degree>
@@ -1406,6 +1562,61 @@ void SolverHydroMood<dim,degree>::init_four_quadrant(DataArray Udata)
   Kokkos::parallel_for(nbCells, functor);
     
 } // init_four_quadrant
+
+// =======================================================
+// =======================================================
+/**
+ * Hydrodynamical Kelvin-Helmholtz instability test.
+ * 
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::init_kelvin_helmholtz(DataArray Udata)
+{
+
+  KHParams khParams = KHParams(configMap);
+
+  InitKelvinHelmholtzFunctor<dim,degree> functor(params,
+						 monomialMap.data,
+						 khParams,
+						 Udata);
+  Kokkos::parallel_for(nbCells, functor);
+
+} // SolverHydroMood::init_kelvin_helmholtz
+
+// =======================================================
+// =======================================================
+/**
+ * 
+ * 
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::init_wedge(DataArray Udata)
+{
+
+  WedgeParams wparams(configMap, 0.0);
+  
+  InitWedgeFunctor<dim,degree> functor(params, monomialMap.data, wparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
+  
+} // init_wedge
+
+// =======================================================
+// =======================================================
+/**
+ * Isentropic vortex advection test.
+ * https://www.cfd-online.com/Wiki/2-D_vortex_in_isentropic_flow
+ * https://hal.archives-ouvertes.fr/hal-01485587/document
+ */
+template<int dim, int degree>
+void SolverHydroMood<dim,degree>::init_isentropic_vortex(DataArray Udata)
+{
+
+  IsentropicVortexParams iparams(configMap);
+
+  InitIsentropicVortexFunctor<dim,degree> functor(params, monomialMap.data, iparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
+  
+} // init_isentropic_vortex
 
 // =======================================================
 // =======================================================
