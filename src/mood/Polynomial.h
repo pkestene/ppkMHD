@@ -107,7 +107,6 @@ public:
 	int e[2] = {monomMap(i,0),
 		    monomMap(i,1)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
-	//result += coefs[i] * mypow(x,e[0]) * mypow(y,e[1]);
       }
 
       
@@ -132,7 +131,7 @@ public:
 		    monomMap(i,1),
 		    monomMap(i,2)};
 	result += coefs[i] * pow(x,e[0]) * pow(y,e[1]) * pow(z,e[2]);
-	//result += coefs[i] * mypow(x,e[0]) * mypow(y,e[1]) * mypow(z,e[2]);
+	
       }
       
     }

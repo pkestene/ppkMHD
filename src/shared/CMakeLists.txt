@@ -20,7 +20,7 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.h
   )
 
-add_library(shared OBJECT
+add_library(shared
   ${shared_SRCS}
   )
 target_include_directories(shared
@@ -29,7 +29,14 @@ target_include_directories(shared
   ${CMAKE_SOURCE_DIR}/src/utils
   ${CMAKE_SOURCE_DIR}/src/utils/time
   ${CMAKE_SOURCE_DIR}/src/utils/io
+  ${CMAKE_SOURCE_DIR}/kokkos/core/src
+  ${CMAKE_SOURCE_DIR}/kokkos/containers/src
+  ${CMAKE_SOURCE_DIR}/kokkos/algorithms/src
+  ${CMAKE_BINARY_DIR}/kokkos
   ) 
+target_link_libraries(shared
+  kokkos
+  )
 
 #######################
 ### SOLVER FACTORY ####
@@ -38,7 +45,7 @@ set (solver_factory_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverFactory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverFactory.h
   )
-add_library(solver_factory OBJECT
+add_library(solver_factory
   ${solver_factory_SRCS}
   )
 target_include_directories(solver_factory
@@ -46,3 +53,6 @@ target_include_directories(solver_factory
   ${CMAKE_SOURCE_DIR}/src
   ${CMAKE_SOURCE_DIR}/src/muscl
 )
+target_link_libraries(solver_factory
+  kokkos
+  )

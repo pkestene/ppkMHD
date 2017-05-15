@@ -5,10 +5,14 @@ set (io_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK.cpp
   )
 
-add_library(io OBJECT
+add_library(io
   ${io_SRCS}
   )
 
 target_include_directories(io
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src)
+  ${CMAKE_SOURCE_DIR}/src
+  )
+target_link_libraries(io
+  kokkos
+  )

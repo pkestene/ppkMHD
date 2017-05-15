@@ -14,6 +14,6 @@ if (PAPI_FOUND)
 endif()
     
 
-add_library(monitoring OBJECT
+add_library(monitoring
   ${monitoring_SRCS}
   )

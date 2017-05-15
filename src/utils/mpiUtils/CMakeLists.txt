@@ -11,6 +11,6 @@ set (mpiUtils_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/MpiCommCart.cpp
   )
 
-add_library(mpiUtils OBJECT
+add_library(mpiUtils
   ${mpiUtils_SRCS}
   )

@@ -25,11 +25,21 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroMood.h
   )
 
-add_library(mood OBJECT
+add_library(mood
   ${mood_SRCS}
+  )
+target_compile_options(mood
+  PUBLIC ${KOKKOS_CXX_FLAGS}
   )
 target_include_directories(mood
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/kokkos/core/src
+  ${CMAKE_SOURCE_DIR}/kokkos/containers/src
+  ${CMAKE_SOURCE_DIR}/kokkos/algorithms/src
+  ${CMAKE_BINARY_DIR}/kokkos
   ${LAPACKE_INCLUDE_DIR}
+  )
+target_link_libraries(mood
+  kokkos
   )

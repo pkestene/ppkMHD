@@ -948,12 +948,15 @@ public:
       q[IV] = 0.0;
       q[IP] = 0.0;
       
-      real_t pos_x[nQuadPts] = { x-0.5*dx*1.0/sqrt(3.0),
-				 x+0.5*dx*1.0/sqrt(3.0) };
-      real_t pos_y[nQuadPts] = { y-0.5*dy*1.0/sqrt(3.0),
-				 y+0.5*dy*1.0/sqrt(3.0) };
+      real_t pos_x[2]; //nQuadPts];
+      pos_x[0] = x-0.5*dx*1.0/sqrt(3.0);
+      pos_x[1] = x+0.5*dx*1.0/sqrt(3.0);
+      
+      real_t pos_y[2]; //nQuadPts];
+      pos_y[0] = y-0.5*dy*1.0/sqrt(3.0);
+      pos_y[1] = y+0.5*dy*1.0/sqrt(3.0);
 
-      real_t weights[nQuadPts] = {0.5, 0.5};
+      real_t weights[2] = {0.5, 0.5};
 
       for (int jj=0; jj<nQuadPts; ++jj)
 	for (int ii=0; ii<nQuadPts; ++ii) {
@@ -977,14 +980,17 @@ public:
       q[IV] = 0.0;
       q[IP] = 0.0;
       
-      real_t pos_x[nQuadPts] = { x-0.5*dx*sqrt(3.0)/sqrt(5.0),
-				 x,
-				 x+0.5*dx*sqrt(3.0)/sqrt(5.0) };
-      real_t pos_y[nQuadPts] = { y-0.5*dy*sqrt(3.0)/sqrt(5.0),
-				 y,
-				 y+0.5*dy*sqrt(3.0)/sqrt(5.0) };
+      real_t pos_x[3]; //nQuadPts];
+      pos_x[0] = x-0.5*dx*sqrt(3.0)/sqrt(5.0);
+      pos_x[1] = x;
+      pos_x[2] = x+0.5*dx*sqrt(3.0)/sqrt(5.0);
+      
+      real_t pos_y[3]; //nQuadPts];
+      pos_y[0] = y-0.5*dy*sqrt(3.0)/sqrt(5.0);
+      pos_y[1] = y;
+      pos_y[2] = y+0.5*dy*sqrt(3.0)/sqrt(5.0);
 
-      real_t weights[nQuadPts] = {2.5/9, 4.0/9, 2.5/9};
+      real_t weights[3] = {2.5/9, 4.0/9, 2.5/9};
 
       for (int jj=0; jj<nQuadPts; ++jj)
 	for (int ii=0; ii<nQuadPts; ++ii) {
@@ -1008,21 +1014,24 @@ public:
       q[IV] = 0.0;
       q[IP] = 0.0;
       
-      real_t pos_x[nQuadPts] = { x-0.5*dx*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
-				 x+0.5*dx*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
-				 x-0.5*dx*sqrt(3.0/7+2.0/7*sqrt(6.0/5)),
-				 x+0.5*dx*sqrt(3.0/7+2.0/7*sqrt(6.0/5)) };
+      real_t pos_x[4];
+      pos_x[0] = x-0.5*dx*sqrt(3.0/7-2.0/7*sqrt(6.0/5));
+      pos_x[1] = x+0.5*dx*sqrt(3.0/7-2.0/7*sqrt(6.0/5));
+      pos_x[2] = x-0.5*dx*sqrt(3.0/7+2.0/7*sqrt(6.0/5));
+      pos_x[3] = x+0.5*dx*sqrt(3.0/7+2.0/7*sqrt(6.0/5));
       
-      real_t pos_y[nQuadPts] = { y-0.5*dy*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
-				 y+0.5*dy*sqrt(3.0/7-2.0/7*sqrt(6.0/5)),
-				 y-0.5*dy*sqrt(3.0/7+2.0/7*sqrt(6.0/5)),
-				 y+0.5*dy*sqrt(3.0/7+2.0/7*sqrt(6.0/5)) };
-
-      real_t weights[nQuadPts] = {0.5*(0.5+sqrt(30.0)/36),
-				  0.5*(0.5+sqrt(30.0)/36),
-				  0.5*(0.5-sqrt(30.0)/36),
-				  0.5*(0.5-sqrt(30.0)/36) };
-
+      real_t pos_y[4];
+      pos_y[0] = y-0.5*dy*sqrt(3.0/7-2.0/7*sqrt(6.0/5));
+      pos_y[1] = y+0.5*dy*sqrt(3.0/7-2.0/7*sqrt(6.0/5));
+      pos_y[2] = y-0.5*dy*sqrt(3.0/7+2.0/7*sqrt(6.0/5));
+      pos_y[3] = y+0.5*dy*sqrt(3.0/7+2.0/7*sqrt(6.0/5));
+      
+      real_t weights[4];
+      weights[0] = 0.5*(0.5+sqrt(30.0)/36);
+      weights[1] = 0.5*(0.5+sqrt(30.0)/36);
+      weights[2] = 0.5*(0.5-sqrt(30.0)/36);
+      weights[3] = 0.5*(0.5-sqrt(30.0)/36);
+      
       for (int jj=0; jj<nQuadPts; ++jj)
 	for (int ii=0; ii<nQuadPts; ++ii) {
 
