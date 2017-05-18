@@ -17,11 +17,6 @@
  *
  * We already have introduced Cartesian topology inside this
  * framework.
- * As for now (5 october 2010), the question is what the best way to
- * go ? 
- * 1. stick with the standard c++ API
- * 2. go on improving our own Teuchos-inspired C++ wrapping which is 
- * MPI-implementation agnostic (i.e. independant from anything).
  *
  * \date 27 sept 2010
  * \author Pierre Kestener
@@ -51,7 +46,7 @@
 int main(int argc, char* argv[]) 
 {
   int myRank, numTasks, namelength;
-  char processor_name[MPI_MAX_PROCESSOR_NAME+1];
+  char processor_name[MPI_MAX_PROCESSOR_NAME];
 
   int source, dest, outbuf, i, tag=1;
   int inbuf[N_NEIGHBORS_2D]={MPI_PROC_NULL,MPI_PROC_NULL,MPI_PROC_NULL,MPI_PROC_NULL,};
@@ -70,7 +65,7 @@ int main(int argc, char* argv[])
   myRank = worldComm.getRank();
   numTasks = worldComm.getNProc();
 
-  MPI::Get_processor_name(processor_name,namelength);
+  int mpierr = ::MPI_Get_processor_name(processor_name,&namelength);
   
   // print warning
   if ( myRank == 0 ) {
@@ -82,7 +77,7 @@ int main(int argc, char* argv[])
     std::cout << "contain the same information !\n\n";
   }
 
-    // 2D CARTESIAN MPI MESH
+  // 2D CARTESIAN MPI MESH
   if (numTasks == SIZE_2D) {
   
     // create the cartesian topology

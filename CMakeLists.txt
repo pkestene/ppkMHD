@@ -107,6 +107,9 @@ endif()
 if (USE_DOUBLE)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_DOUBLE" )
 endif()
+if (USE_MPI)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MPI" )
+endif()
 
 #
 # sources
