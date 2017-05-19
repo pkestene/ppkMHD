@@ -28,33 +28,39 @@ void HydroParams::setup(ConfigMap &configMap)
   std::string solver_name = configMap.getString("run", "solver_name", "unknown");
   if ( !solver_name.compare("Hydro_Muscl_2D") ) {
     
+    dimType = TWO_D;
     nbvar = 4;
     ghostWidth = 2;
     
   } else if ( !solver_name.compare("Hydro_Muscl_3D")) {
 
+    dimType = THREE_D;
     nbvar = 5;
     ghostWidth = 2;
     
   } else if ( !solver_name.compare("MHD_Muscl_2D") ) {
 
+    dimType = TWO_D;
     nbvar = 8;
     ghostWidth = 3;
     
   } else if ( !solver_name.compare("MHD_Muscl_3D") ) {
 
+    dimType = THREE_D;
     nbvar = 8;
     ghostWidth = 3;
     
   } else if ( solver_name.find("Hydro_Mood_2D") != std::string::npos ) {
 
     mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
+    dimType = TWO_D;
     nbvar = 4;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
     
   } else if ( !solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
 
     mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
+    dimType = THREE_D;
     nbvar = 5;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
     
@@ -78,12 +84,12 @@ void HydroParams::setup(ConfigMap &configMap)
   ymax = configMap.getFloat("mesh", "ymax", 1.0);
   zmax = configMap.getFloat("mesh", "zmax", 1.0);
 
-  boundary_type_xmin  = static_cast<int>(configMap.getInteger("mesh","boundary_type_xmin", BC_DIRICHLET));
-  boundary_type_xmax  = static_cast<int>(configMap.getInteger("mesh","boundary_type_xmax", BC_DIRICHLET));
-  boundary_type_ymin  = static_cast<int>(configMap.getInteger("mesh","boundary_type_ymin", BC_DIRICHLET));
-  boundary_type_ymax  = static_cast<int>(configMap.getInteger("mesh","boundary_type_ymax", BC_DIRICHLET));
-  boundary_type_zmin  = static_cast<int>(configMap.getInteger("mesh","boundary_type_zmin", BC_DIRICHLET));
-  boundary_type_zmax  = static_cast<int>(configMap.getInteger("mesh","boundary_type_zmax", BC_DIRICHLET));
+  boundary_type_xmin  = static_cast<BoundaryConditionType>(configMap.getInteger("mesh","boundary_type_xmin", BC_DIRICHLET));
+  boundary_type_xmax  = static_cast<BoundaryConditionType>(configMap.getInteger("mesh","boundary_type_xmax", BC_DIRICHLET));
+  boundary_type_ymin  = static_cast<BoundaryConditionType>(configMap.getInteger("mesh","boundary_type_ymin", BC_DIRICHLET));
+  boundary_type_ymax  = static_cast<BoundaryConditionType>(configMap.getInteger("mesh","boundary_type_ymax", BC_DIRICHLET));
+  boundary_type_zmin  = static_cast<BoundaryConditionType>(configMap.getInteger("mesh","boundary_type_zmin", BC_DIRICHLET));
+  boundary_type_zmax  = static_cast<BoundaryConditionType>(configMap.getInteger("mesh","boundary_type_zmax", BC_DIRICHLET));
 
   settings.gamma0         = configMap.getFloat("hydro","gamma0", 1.4);
   settings.cfl            = configMap.getFloat("hydro", "cfl", 0.5);

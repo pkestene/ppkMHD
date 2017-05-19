@@ -40,8 +40,8 @@ struct HydroSettings {
   
 }; // struct HydroSettings
 
-/*
- * Hydro Parameters (declaration)
+/**
+ * Hydro Parameters (declaration).
  */
 struct HydroParams {
   
@@ -57,6 +57,8 @@ struct HydroParams {
   int nz;     /*!< logical size along Z (without ghost cells).*/
   int ghostWidth;  
   int nbvar;  /*!< number of variables in HydroState / MHDState. */
+  DimensionType dimType; //!< 2D or 3D.
+
   int imin;   /*!< index minimum at X border*/
   int imax;   /*!< index maximum at X border*/
   int jmin;   /*!< index minimum at Y border*/
@@ -78,12 +80,12 @@ struct HydroParams {
   real_t dy;       /*!< y resolution */
   real_t dz;       /*!< z resolution */
   
-  int boundary_type_xmin;
-  int boundary_type_xmax;
-  int boundary_type_ymin;
-  int boundary_type_ymax;
-  int boundary_type_zmin;
-  int boundary_type_zmax;
+  BoundaryConditionType boundary_type_xmin;
+  BoundaryConditionType boundary_type_xmax;
+  BoundaryConditionType boundary_type_ymin;
+  BoundaryConditionType boundary_type_ymax;
+  BoundaryConditionType boundary_type_zmin;
+  BoundaryConditionType boundary_type_zmax;
   
   // IO parameters
   bool ioVTK;   /*!< enable VTK  output file format (using VTI).*/
@@ -100,23 +102,25 @@ struct HydroParams {
 
   HydroParams() :
     nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true),
-    nx(0), ny(0), nz(0), ghostWidth(2), nbvar(4),
+    nx(0), ny(0), nz(0), ghostWidth(2), nbvar(4), dimType(TWO_D),
     imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0),
     isize(0), jsize(0), ksize(0),
     xmin(0.0), xmax(1.0), ymin(0.0), ymax(1.0), zmin(0.0), zmax(1.0),
     dx(0.0), dy(0.0), dz(0.0),
-    boundary_type_xmin(1),
-    boundary_type_xmax(1),
-    boundary_type_ymin(1),
-    boundary_type_ymax(1),
-    boundary_type_zmin(1),
-    boundary_type_zmax(1),
+    boundary_type_xmin(BC_UNDEFINED),
+    boundary_type_xmax(BC_UNDEFINED),
+    boundary_type_ymin(BC_UNDEFINED),
+    boundary_type_ymax(BC_UNDEFINED),
+    boundary_type_zmin(BC_UNDEFINED),
+    boundary_type_zmax(BC_UNDEFINED),
     ioVTK(true), ioHDF5(false),
     settings(),
     niter_riemann(10), riemannSolverType(),
     implementationVersion(0) {}
 
-  void setup(ConfigMap& map);
+  virtual ~HydroParams() {}
+  
+  virtual void setup(ConfigMap& map);
   void init();
   void print();
   

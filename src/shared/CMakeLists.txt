@@ -20,6 +20,14 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.h
   )
 
+if (USE_MPI)
+  set (shared_SRCS
+    ${shared_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/HydroParamsMpi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HydroParamsMpi.h
+    )
+endif()
+
 add_library(shared
   ${shared_SRCS}
   )

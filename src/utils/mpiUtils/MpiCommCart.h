@@ -64,12 +64,12 @@ namespace hydroSimu {
     N_NEIGHBORS_3D = 6
   };
 
-  //! direction
-  enum Dir {
-    DIR_X=0, 
-    DIR_Y=1, 
-    DIR_Z=2
-  };
+  // //! direction
+  // enum Dir {
+  //   DIR_X=0, 
+  //   DIR_Y=1, 
+  //   DIR_Z=2
+  // };
 
   //!@}
 

@@ -34,3 +34,6 @@ target_include_directories(${EXE_NAME}
   )
 
 target_link_libraries(${EXE_NAME} solver_factory shared mood muscl io monitoring config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+if (USE_MPI)
+  target_link_libraries(${EXE_NAME} mpiUtils)
+endif()
