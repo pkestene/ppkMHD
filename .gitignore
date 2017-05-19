@@ -5,4 +5,5 @@ build_openmp
 build_openmp_new
 build_cuda
 build_cuda_new
-
+build_cuda_mpi
+build_openmp_mpi
