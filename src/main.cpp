@@ -18,7 +18,7 @@
 
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
-#include "shared/HydroParamsMpi.h" // read parameter file
+//#include "shared/HydroParamsMpi.h" // read parameter file
 #include <mpi.h>
 #endif // USE_MPI
 
@@ -97,21 +97,7 @@ int main(int argc, char *argv[])
   ConfigMap configMap(input_file);
 
   // test: create a HydroParams object
-#ifdef USE_MPI
-  HydroParams params = HydroParamsMpi();
-    // {
-    //   int rank, nRanks;
-    //   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    //   MPI_Comm_size(MPI_COMM_WORLD, &nRanks);
-    //   std::cout << "I'm MPI task #" << rank << " (with topology coords : " <<
-    // 	params.myMpiPos[0] << " " <<
-    // 	params.myMpiPos[1] << " " <<
-    // 	params.myMpiPos[2] << "\n";
-      
-    // }
-#else
   HydroParams params = HydroParams();
-#endif
   params.setup(configMap);
   
   // retrieve solver name from settings

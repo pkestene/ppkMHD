@@ -12,10 +12,15 @@
 #include "shared/real_type.h"
 #include "utils/config/ConfigMap.h"
 
+#include <vector>
 #include <stdbool.h>
 #include <string>
 
 #include "shared/enums.h"
+
+#ifdef USE_MPI
+#include "utils/mpiUtils/MpiCommCart.h"
+#endif // USE_MPI
 
 struct HydroSettings {
 
@@ -45,6 +50,10 @@ struct HydroSettings {
  */
 struct HydroParams {
   
+#ifdef USE_MPI
+  using MpiCommCart = hydroSimu::MpiCommCart;
+#endif // USE_MPI
+  
   // run parameters
   int    nStepmax;   /*!< maximun number of time steps. */
   real_t tEnd;       /*!< end of simulation time. */
@@ -70,28 +79,28 @@ struct HydroParams {
   int jsize;  /*!< total size (in cell unit) along Y direction with ghosts.*/
   int ksize;  /*!< total size (in cell unit) along Z direction with ghosts.*/
 
-  real_t xmin;
-  real_t xmax;
-  real_t ymin;
-  real_t ymax;
-  real_t zmin;
-  real_t zmax;
-  real_t dx;       /*!< x resolution */
-  real_t dy;       /*!< y resolution */
-  real_t dz;       /*!< z resolution */
+  real_t xmin; /*!< domain bound */
+  real_t xmax; /*!< domain bound */
+  real_t ymin; /*!< domain bound */
+  real_t ymax; /*!< domain bound */
+  real_t zmin; /*!< domain bound */
+  real_t zmax; /*!< domain bound */
+  real_t dx;   /*!< x resolution */
+  real_t dy;   /*!< y resolution */
+  real_t dz;   /*!< z resolution */
   
-  BoundaryConditionType boundary_type_xmin;
-  BoundaryConditionType boundary_type_xmax;
-  BoundaryConditionType boundary_type_ymin;
-  BoundaryConditionType boundary_type_ymax;
-  BoundaryConditionType boundary_type_zmin;
-  BoundaryConditionType boundary_type_zmax;
+  BoundaryConditionType boundary_type_xmin; /*!< boundary condition */
+  BoundaryConditionType boundary_type_xmax; /*!< boundary condition */
+  BoundaryConditionType boundary_type_ymin; /*!< boundary condition */
+  BoundaryConditionType boundary_type_ymax; /*!< boundary condition */
+  BoundaryConditionType boundary_type_zmin; /*!< boundary condition */
+  BoundaryConditionType boundary_type_zmax; /*!< boundary condition */
   
   // IO parameters
   bool ioVTK;   /*!< enable VTK  output file format (using VTI).*/
   bool ioHDF5;  /*!< enable HDF5 output file format.*/
   
-  // hydro settings (will be passed to device functions)
+  //! hydro settings (gamma0, ...) to be passed to Kokkos device functions
   HydroSettings settings;
   
   int niter_riemann;  /*!< number of iteration usd in quasi-exact riemann solver*/
@@ -100,6 +109,37 @@ struct HydroParams {
   // other parameters
   int implementationVersion=0; /*!< triggers which implementation to use (currently 3 versions)*/
 
+#ifdef USE_MPI
+  //! size of the MPI cartesian grid
+  int mx,my,mz;
+  
+  //! MPI communicator in a cartesian virtual topology
+  MpiCommCart *communicator;
+  
+  //! number of dimension
+  int nDim;
+  
+  //! MPI rank of current process
+  int myRank;
+  
+  //! number of MPI processes
+  int nProcs;
+  
+  //! MPI cartesian coordinates inside MPI topology
+  std::vector<int> myMpiPos;
+  
+  //! number of MPI process neighbors (4 in 2D and 6 in 3D)
+  int nNeighbors;
+  
+  //! MPI rank of adjacent MPI processes
+  std::vector<int> neighborsRank;
+  
+  //! boundary condition type with adjacent domains (corresponding to
+  //! neighbor MPI processes)
+  std::vector<BoundaryConditionType> neighborsBC;
+
+#endif // USE_MPI
+  
   HydroParams() :
     nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true),
     nx(0), ny(0), nz(0), ghostWidth(2), nbvar(4), dimType(TWO_D),
@@ -116,11 +156,22 @@ struct HydroParams {
     ioVTK(true), ioHDF5(false),
     settings(),
     niter_riemann(10), riemannSolverType(),
-    implementationVersion(0) {}
+    implementationVersion(0)
+#ifdef USE_MPI
+    // init MPI-specific parameters...
+#endif // USE_MPI
+  {}
 
   virtual ~HydroParams() {}
-  
+
+  //! This is the genuine initialiation / setup (fed by parameter file)
   virtual void setup(ConfigMap& map);
+
+#ifdef USE_MPI
+  //! Initialize MPI-specific parameters
+  void setup_mpi(ConfigMap& map);
+#endif // USE_MPI
+  
   void init();
   void print();
   

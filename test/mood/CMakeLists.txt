@@ -76,6 +76,9 @@ target_include_directories(test_mood_functor
   ${CMAKE_SOURCE_DIR}/src
   )
 target_link_libraries(test_mood_functor shared mood io monitoring config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})
+if (USE_MPI)
+  target_link_libraries(test_mood_functor mpiUtils)
+endif()
 
 ##############################################
 add_executable(test_mood_functor_flux
@@ -85,6 +88,9 @@ target_include_directories(test_mood_functor_flux
   ${CMAKE_SOURCE_DIR}/src
   )
 target_link_libraries(test_mood_functor_flux shared mood io monitoring config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})
+if (USE_MPI)
+  target_link_libraries(test_mood_functor_flux mpiUtils)
+endif()
 
 ##############################################
 # add_executable(test_kokkos_eigen
