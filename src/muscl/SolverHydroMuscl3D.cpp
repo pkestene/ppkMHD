@@ -10,6 +10,11 @@
 
 // the actual computational functors called in HydroRun
 #include "HydroRunFunctors3D.h"
+
+// Init conditions functors
+#include "muscl/HydroInitFunctors3D.h"
+
+// border conditions functors
 #include "shared/BoundariesFunctors.h"
 
 // Kokkos

@@ -4,6 +4,8 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors3D.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/HydroInitFunctors2D.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/HydroInitFunctors3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDBaseFunctor2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDBaseFunctor3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDRunFunctors2D.h

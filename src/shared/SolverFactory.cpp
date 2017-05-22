@@ -2,8 +2,9 @@
 
 #include "shared/SolverBase.h"
 
-#include "muscl/SolverHydroMuscl2D.h"
-#include "muscl/SolverHydroMuscl3D.h"
+//#include "muscl/SolverHydroMuscl2D.h"
+//#include "muscl/SolverHydroMuscl3D.h"
+#include "muscl/SolverHydroMuscl.h"
 #include "muscl/SolverMHDMuscl2D.h"
 #include "muscl/SolverMHDMuscl3D.h"
 
@@ -20,8 +21,10 @@ SolverFactory::SolverFactory()
   /*
    * Register some possible Solver/UserDataManager.
    */
-  registerSolver("Hydro_Muscl_2D", &SolverHydroMuscl2D::create);
-  registerSolver("Hydro_Muscl_3D", &SolverHydroMuscl3D::create);
+  //registerSolver("Hydro_Muscl_2D", &SolverHydroMuscl2D::create);
+  //registerSolver("Hydro_Muscl_3D", &SolverHydroMuscl3D::create);
+  registerSolver("Hydro_Muscl_2D", &muscl::SolverHydroMuscl<2>::create);
+  registerSolver("Hydro_Muscl_3D", &muscl::SolverHydroMuscl<3>::create);
   registerSolver("MHD_Muscl_2D",   &SolverMHDMuscl2D::create);
   registerSolver("MHD_Muscl_3D",   &SolverMHDMuscl3D::create);
 
