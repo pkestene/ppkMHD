@@ -59,6 +59,19 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
 		     std::string debug_name);
 
 /**
+ * \param[in] Udata device data to save
+ * \param[in,out] Uhost host data temporary array before saving to file
+ */
+void save_VTK_3D_mpi(DataArray3d             Udata,
+		     DataArray3d::HostMirror Uhost,
+		     HydroParams& params,
+		     ConfigMap& configMap,
+		     int nbvar,
+		     const std::map<int, std::string>& variables_names,
+		     int iStep,
+		     std::string debug_name);
+
+/**
  * Write Parallel VTI header. 
  * Must be done by a single MPI process.
  *

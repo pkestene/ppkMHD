@@ -389,6 +389,10 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
   
   const int ghostWidth = params.ghostWidth;
 
+  const real_t dx = params.dx;
+  const real_t dy = params.dy;
+  const real_t dz = dx;
+  
   const int isize = params.isize;
   const int jsize = params.jsize;
   const int nbCells = isize*jsize;
@@ -399,14 +403,6 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
   xmax=params.myMpiPos[0]*nx+nx;
   ymin=params.myMpiPos[1]*ny   ;
   ymax=params.myMpiPos[1]*ny+ny;
-  // if (params.myMpiPos[0] == 0) {
-  //   xmin = 0;
-  //   xmax = nx-1;
-  // }
-  // if (params.myMpiPos[1] == 0) {
-  //   ymin = 0;
-  //   ymax = ny-1;
-  // }
   
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
@@ -478,7 +474,7 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
 	  << xmin << " " << xmax << " " 
 	  << ymin << " " << ymax << " " 
 	  << 0    << " " << 0    << ""
-	  << "\" Origin=\"0 0 0\" Spacing=\"1 1 1\">" << std::endl;
+	  << "\" Origin=\"0 0 0\" Spacing=\"" << dx << " " << dy << " " << dz << "\">" << std::endl;
   outFile << "  <Piece Extent=\"" 
 	  << xmin << " " << xmax << " " 
 	  << ymin << " " << ymax << " " 
@@ -603,6 +599,10 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 
   const int ghostWidth = params.ghostWidth;
 
+  const real_t dx = params.dx;
+  const real_t dy = params.dy;
+  const real_t dz = params.dz;
+
   const int isize = params.isize;
   const int jsize = params.jsize;
   const int ksize = params.ksize;
@@ -610,27 +610,13 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
   const int nbCells = isize*jsize*ksize;
 
   int xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0;
-  xmin=params.myMpiPos[0]*nx   -1;
-  xmax=params.myMpiPos[0]*nx+nx-1;
-  ymin=params.myMpiPos[1]*ny   -1;
-  ymax=params.myMpiPos[1]*ny+ny-1;
-  zmin=params.myMpiPos[2]*nz   -1;
-  zmax=params.myMpiPos[2]*nz+nz-1;
+  xmin=params.myMpiPos[0]*nx   ;
+  xmax=params.myMpiPos[0]*nx+nx;
+  ymin=params.myMpiPos[1]*ny   ;
+  ymax=params.myMpiPos[1]*ny+ny;
+  zmin=params.myMpiPos[2]*nz   ;
+  zmax=params.myMpiPos[2]*nz+nz;
 
-  // To Be CHECKED !!!
-  if (params.myMpiPos[0] == 0) {
-    xmin = 0;
-    xmax = nx-1;
-  }
-  if (params.myMpiPos[1] == 0) {
-    ymin = 0;
-    ymax = ny-1;
-  }
-  if (params.myMpiPos[2] == 0) {
-    zmin = 0;
-    zmax = nz-1;
-  }
-  
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
   
@@ -701,7 +687,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 	  << xmin << " " << xmax << " " 
 	  << ymin << " " << ymax << " " 
 	  << zmin << " " << zmax << ""
-	  << "\" Origin=\"0 0 0\" Spacing=\"1 1 1\">" << std::endl;
+	  << "\" Origin=\"0 0 0\" Spacing=\"" << dx << " " << dy << " " << dz << "\">" << std::endl;
   outFile << "  <Piece Extent=\"" 
 	  << xmin << " " << xmax << " " 
 	  << ymin << " " << ymax << " " 
@@ -780,7 +766,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
       unsigned int nbOfWords = nx*ny*nz*sizeof(real_t);
       for (int iVar=0; iVar<nbvar; iVar++) {
 	outFile.write((char *)&nbOfWords,sizeof(unsigned int));
-	for (int j=jmin+ghostWidth; j<=jmax-ghostWidth; j++) {
+	for (int k=kmin+ghostWidth; k<=kmax-ghostWidth; k++) {
 	  for (int j=jmin+ghostWidth; j<=jmax-ghostWidth; j++) {
 	    for (int i=imin+ghostWidth; i<=imax-ghostWidth; i++) {
 	      real_t tmp = Uhost(i, j, k, iVar);
@@ -845,6 +831,10 @@ void write_pvti_header(std::string headerFilename,
   const int my = params.my;
   const int mz = params.mz;
 
+  const real_t dx = params.dx;
+  const real_t dy = params.dy;
+  const real_t dz = (dimType == THREE_D) ? params.dz : params.dx;
+
   // open pvti header file
   outHeader.open (headerFilename.c_str(), std::ios_base::out);
   
@@ -854,17 +844,20 @@ void write_pvti_header(std::string headerFilename,
   else
     outHeader << "<VTKFile type=\"PImageData\" version=\"0.1\" byte_order=\"LittleEndian\"" << compressor << ">" << std::endl;
   outHeader << "  <PImageData WholeExtent=\"";
-  outHeader << 0 << " " << mx*nx-1 << " ";
-  outHeader << 0 << " " << my*ny-1 << " ";
-  outHeader << 0 << " " << mz*nz-1 << "\" GhostLevel=\"0\" Origin=\"0 0 0\" Spacing=\"1 1 1\">" << std::endl;
-  outHeader << "    <PPointData Scalars=\"Scalars_\">" << std::endl;
+  outHeader << 0 << " " << mx*nx << " ";
+  outHeader << 0 << " " << my*ny << " ";
+  outHeader << 0 << " " << mz*nz << "\" GhostLevel=\"0\" "
+	    << "Origin=\"0 0 0\" "
+	    << "Spacing=\"" << dx << " " << dy << " " << dz << "\">"
+	    << std::endl;
+  outHeader << "    <PCellData Scalars=\"Scalars_\">" << std::endl;
   for (int iVar=0; iVar<nbvar; iVar++) {
     if (useDouble) 
       outHeader << "      <PDataArray type=\"Float64\" Name=\""<< varNames.at(iVar)<<"\"/>" << std::endl;
     else
       outHeader << "      <PDataArray type=\"Float32\" Name=\""<< varNames.at(iVar)<<"\"/>" << std::endl;	  
   }
-  outHeader << "    </PPointData>" << std::endl;
+  outHeader << "    </PCellData>" << std::endl;
   
   // one piece per MPI process
   if (dimType == TWO_D) {
@@ -882,14 +875,14 @@ void write_pvti_header(std::string headerFilename,
       // pieces in first line of column are different (due to the special
       // pvti file format with overlapping by 1 cell)
       if (coords[0] == 0)
-	outHeader << 0 << " " << nx-1 << " ";
+	outHeader << 0 << " " << nx << " ";
       else
-	outHeader << coords[0]*nx-1 << " " << coords[0]*nx+nx-1 << " ";
+	outHeader << coords[0]*nx << " " << coords[0]*nx+nx << " ";
       if (coords[1] == 0)
-	outHeader << 0 << " " << ny-1 << " ";
+	outHeader << 0 << " " << ny << " ";
       else
-	outHeader << coords[1]*ny-1 << " " << coords[1]*ny+ny-1 << " ";
-      outHeader << 0 << " " << 0 << "\" Source=\"";
+	outHeader << coords[1]*ny << " " << coords[1]*ny+ny << " ";
+      outHeader << 0 << " " << 1 << "\" Source=\"";
       outHeader << pieceFilename << "\"/>" << std::endl;
     } 
   } else { // THREE_D
@@ -905,19 +898,19 @@ void write_pvti_header(std::string headerFilename,
       outHeader << " <Piece Extent=\"";
       
       if (coords[0] == 0)
-	outHeader << 0 << " " << nx-1 << " ";
+	outHeader << 0 << " " << nx << " ";
       else
-	outHeader << coords[0]*nx-1 << " " << coords[0]*nx+nx-1 << " ";
+	outHeader << coords[0]*nx << " " << coords[0]*nx+nx << " ";
       
       if (coords[1] == 0)
-	outHeader << 0 << " " << ny-1 << " ";
+	outHeader << 0 << " " << ny << " ";
       else
-	outHeader << coords[1]*ny-1 << " " << coords[1]*ny+ny-1 << " ";
+	outHeader << coords[1]*ny << " " << coords[1]*ny+ny << " ";
       
       if (coords[2] == 0)
-	outHeader << 0 << " " << nz-1 << " ";
+	outHeader << 0 << " " << nz << " ";
       else
-	outHeader << coords[2]*nz-1 << " " << coords[2]*nz+nz-1 << " ";
+	outHeader << coords[2]*nz << " " << coords[2]*nz+nz << " ";
       
       outHeader << "\" Source=\"";
       outHeader << pieceFilename << "\"/>" << std::endl;
