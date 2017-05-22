@@ -12,7 +12,9 @@ add_subdirectory(shared)
 add_subdirectory(muscl)
 
 # Hydro solver using high order MOOD solver
-add_subdirectory(mood)
+if(USE_MOOD)
+  add_subdirectory(mood)
+endif()
 
 # include header for main application
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -33,7 +35,12 @@ target_include_directories(${EXE_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
-target_link_libraries(${EXE_NAME} solver_factory shared mood muscl io monitoring config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+target_link_libraries(${EXE_NAME} solver_factory config kokkos hwloc dl muscl shared monitoring io)
+
+if (USE_MOOD)
+  target_link_libraries(${EXE_NAME} mood ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+endif()
+
 if (USE_MPI)
   target_link_libraries(${EXE_NAME} mpiUtils)
 endif()

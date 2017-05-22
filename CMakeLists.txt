@@ -6,6 +6,7 @@ project(ppkMHD CXX C)
 option (USE_MPI "Activate / want MPI build" ON)
 option (USE_VTK "Activate / want VTK build" OFF)
 option (USE_DOUBLE "build with double precision" ON)
+option (USE_MOOD "build MOOD numerical schemes" OFF)
 
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
@@ -136,6 +137,11 @@ endif()
 if (USE_DOUBLE)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_DOUBLE" )
 endif()
+
+if (USE_MOOD)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MOOD" )
+endif()
+
 if (USE_MPI)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MPI" )
 endif()

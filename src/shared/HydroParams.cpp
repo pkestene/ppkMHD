@@ -7,8 +7,10 @@
 
 #include "config/inih/ini.h" // our INI file reader
 
+#ifdef USE_MOOD
 #include "mood/Stencil.h"
 #include "mood/StencilUtils.h"
+#endif // USE_MOOD
 
 using namespace hydroSimu;
 
@@ -54,17 +56,21 @@ void HydroParams::setup(ConfigMap &configMap)
     
   } else if ( solver_name.find("Hydro_Mood_2D") != std::string::npos ) {
 
+#ifdef USE_MOOD
     mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
     dimType = TWO_D;
     nbvar = 4;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+#endif // USE_MOOD
     
   } else if ( !solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
 
+#ifdef USE_MOOD
     mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
     dimType = THREE_D;
     nbvar = 5;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+#endif // USE_MOOD
     
   } else {
 

@@ -1,13 +1,17 @@
 add_subdirectory(kokkos)
 
-add_subdirectory(mood)
+if(USE_MOOD)
+  add_subdirectory(mood)
 
-add_subdirectory(lapack)
+  add_subdirectory(lapack)
+endif()
+
+add_subdirectory(io)
 
 if(USE_MPI)
   add_subdirectory(mpiBasic)
 endif(USE_MPI)
 
-if (PAPI_FOUND)
+if(PAPI_FOUND)
   add_subdirectory(papi)
 endif(PAPI_FOUND)
