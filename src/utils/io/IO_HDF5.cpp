@@ -34,10 +34,7 @@ static std::string current_date()
   
   return ss.str();
 
-
 #endif
-
-
 
 } // current_date
 
@@ -58,7 +55,7 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
   const int ghostWidth = params.ghostWidth;
 
   const int dimType = params.dimType;
-  
+
   // data size actually written on disk
   int nxg = nx;
   int nyg = ny;
@@ -325,6 +322,9 @@ void save_HDF5_2D(DataArray2d             Udata,
 
   const bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
 
+  // copy device data to host
+  Kokkos::deep_copy(Uhost, Udata);
+
   herr_t status;
     
   // make filename string
@@ -447,6 +447,19 @@ void save_HDF5_2D(DataArray2d             Udata,
   // write density
   hid_t dataset_id = H5Dcreate2(file_id, "/density", dataType, dataspace_file, 
 				H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
+
+  // Some adjustement needed to take into account that strides / layout need
+  // to be checked at runtime
+  
+  // printf("KKKK %d %d %d\n",
+  // 	 Uhost.dimension_0(),
+  // 	 Uhost.dimension_1(),
+  // 	 Uhost.dimension_2());
+  // printf("KKKK %d %d %d\n",
+  // 	 Uhost.stride_0(),
+  // 	 Uhost.stride_1(),
+  // 	 Uhost.stride_2());
+  
   if (dimType == TWO_D)
     data = &(Uhost(0,0,ID));
   else
