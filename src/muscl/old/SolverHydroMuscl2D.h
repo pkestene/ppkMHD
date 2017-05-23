@@ -62,9 +62,9 @@ public:
   //! numerical scheme
   void godunov_unsplit(real_t dt);
   
-  void godunov_unsplit_cpu(DataArray data_in, 
-			   DataArray data_out, 
-			   real_t dt);
+  void godunov_unsplit_impl(DataArray data_in, 
+			    DataArray data_out, 
+			    real_t dt);
   
   void convertToPrimitives(DataArray Udata);
   
@@ -76,6 +76,8 @@ public:
   void make_boundaries(DataArray Udata);
 
   // host routines (initialization)
+  void init(DataArray Udata);
+  
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
@@ -83,7 +85,7 @@ public:
 
   void save_solution_impl();
   
-  int isize, jsize, ijsize;
+  int isize, jsize, nbCells;
   
 }; // class SolverHydroMuscl2D
 

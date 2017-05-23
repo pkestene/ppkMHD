@@ -49,13 +49,16 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
   Slopes_x(), Slopes_y(),
   isize(params.isize),
   jsize(params.jsize),
-  ijsize(params.isize*params.jsize)
+  nbCells(params.isize*params.jsize)
 {
 
-  m_nCells = ijsize;
+  nbCells = params.isize*params.jsize;
+  m_nCells = nbCells;
 
   int nbvar = params.nbvar;
   
+  long long int total_mem_size = 0;
+
   /*
    * memory allocation (use sizes with ghosts included).
    *
@@ -68,11 +71,15 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
   U2    = DataArray("U2",isize, jsize, nbvar);
   Q     = DataArray("Q", isize, jsize, nbvar);
 
+  total_mem_size += isize*jsize*nbvar * sizeof(real_t) * 3;// 1+1+1 for U+U2+Q
+  
   if (params.implementationVersion == 0) {
 
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
     
+    total_mem_size += isize*jsize*nbvar * sizeof(real_t) * 2;// 1+1 for Fluxes_x+Fluxes_y
+
   } else if (params.implementationVersion == 1) {
 
     Slopes_x = DataArray("Slope_x", isize, jsize, nbvar);
@@ -81,42 +88,23 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
     // direction splitting (only need one flux array)
     Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
     Fluxes_y = Fluxes_x;
-    
-  } 
-  
-  // default riemann solver
-  // riemann_solver_fn = &SolverHydroMuscl2D::riemann_approx;
-  // if (!riemannSolverStr.compare("hllc"))
-  //   riemann_solver_fn = &SolverHydroMuscl2D::riemann_hllc;
-  
-  /*
-   * initialize hydro array at t=0
-   */
-  if ( !m_problem_name.compare("implode") ) {
 
-    init_implode(U);
-
-  } else if ( !m_problem_name.compare("blast") ) {
-
-    init_blast(U);
-
-  } else if ( !m_problem_name.compare("four_quadrant") ) {
-
-    init_four_quadrant(U);
-
-  } else if ( !m_problem_name.compare("isentropic_vortex") ) {
-
-    init_isentropic_vortex(U);
-
-  } else {
-
-    std::cout << "Problem : " << m_problem_name
-	      << " is not recognized / implemented."
-	      << std::endl;
-    std::cout <<  "Use default - implode" << std::endl;
-    init_implode(U);
+    total_mem_size += isize*jsize*nbvar * sizeof(real_t) * 3;// 1+1+1 for Slopes_x+Slopes_y+Fluxes_x
 
   }
+    
+  // perform init condition
+  init(U);
+
+  // initialize boundaries
+  make_boundaries(U);
+
+  // initialize time step
+  compute_dt();
+
+  // copy U into U2
+  Kokkos::deep_copy(U2,U);
+
   std::cout << "##########################" << "\n";
   std::cout << "Solver is " << m_solver_name << "\n";
   std::cout << "Problem (init condition) is " << m_problem_name << "\n";
@@ -125,15 +113,6 @@ SolverHydroMuscl2D::SolverHydroMuscl2D(HydroParams& params,
   // print parameters on screen
   params.print();
   std::cout << "##########################" << "\n";
-
-  // initialize time step
-  compute_dt();
-
-  // initialize boundaries
-  make_boundaries(U);
-
-  // copy U into U2
-  Kokkos::deep_copy(U2,U);
 
 } // SolverHydroMuscl2D::SolverHydroMuscl2D
 
@@ -170,7 +149,7 @@ double SolverHydroMuscl2D::compute_dt_local()
 
   // call device functor
   ComputeDtFunctor2D computeDtFunctor(params, Udata);
-  Kokkos::parallel_reduce(ijsize, computeDtFunctor, invDt);
+  Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
 
@@ -219,9 +198,9 @@ void SolverHydroMuscl2D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
-    godunov_unsplit_cpu(U , U2, dt);
+    godunov_unsplit_impl(U , U2, dt);
   } else {
-    godunov_unsplit_cpu(U2, U , dt);
+    godunov_unsplit_impl(U2, U , dt);
   }
   
 } // SolverHydroMuscl2D::godunov_unsplit
@@ -231,9 +210,9 @@ void SolverHydroMuscl2D::godunov_unsplit(real_t dt)
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in, 
-					     DataArray data_out, 
-					     real_t dt)
+void SolverHydroMuscl2D::godunov_unsplit_impl(DataArray data_in, 
+					      DataArray data_out, 
+					      real_t dt)
 {
 
   real_t dtdx;
@@ -264,7 +243,7 @@ void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in,
       ComputeAndStoreFluxesFunctor2D functor(params, Q,
 					     Fluxes_x, Fluxes_y,
 					     dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
       //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
       //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
     }
@@ -273,14 +252,14 @@ void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in,
     {
       UpdateFunctor2D functor(params, data_out,
 			      Fluxes_x, Fluxes_y);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
   } else if (params.implementationVersion == 1) {
 
     // call device functor to compute slopes
     ComputeSlopesFunctor2D computeSlopesFunctor(params, Q, Slopes_x, Slopes_y);
-    Kokkos::parallel_for(ijsize, computeSlopesFunctor);
+    Kokkos::parallel_for(nbCells, computeSlopesFunctor);
 
     // now trace along X axis
     {
@@ -288,13 +267,13 @@ void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in,
 						    Slopes_x, Slopes_y,
 						    Fluxes_x,
 						    dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
     // and update along X axis
     {
       UpdateDirFunctor2D<XDIR> functor(params, data_out, Fluxes_x);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
     // now trace along Y axis
@@ -303,20 +282,20 @@ void SolverHydroMuscl2D::godunov_unsplit_cpu(DataArray data_in,
 						    Slopes_x, Slopes_y,
 						    Fluxes_y,
 						    dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
     // and update along Y axis
     {
       UpdateDirFunctor2D<YDIR> functor(params, data_out, Fluxes_y);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
   } // end params.implementationVersion == 1
   
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // SolverHydroMuscl2D::godunov_unsplit_cpu
+} // SolverHydroMuscl2D::godunov_unsplit_impl
 
 // =======================================================
 // =======================================================
@@ -328,7 +307,7 @@ void SolverHydroMuscl2D::convertToPrimitives(DataArray Udata)
 
   // call device functor
   ConvertToPrimitivesFunctor2D convertToPrimitivesFunctor(params, Udata, Q);
-  Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
+  Kokkos::parallel_for(nbCells, convertToPrimitivesFunctor);
   
 } // SolverHydroMuscl2D::convertToPrimitives
 
@@ -367,6 +346,45 @@ void SolverHydroMuscl2D::make_boundaries(DataArray Udata)
 // =======================================================
 // =======================================================
 /**
+ * Wrapper to call the actual init condition routine.
+ */
+void SolverHydroMuscl2D::init(DataArray Udata)
+{
+
+  /*
+   * initialize hydro array at t=0
+   */
+  if ( !m_problem_name.compare("implode") ) {
+
+    init_implode(Udata);
+
+  } else if ( !m_problem_name.compare("blast") ) {
+
+    init_blast(Udata);
+
+  } else if ( !m_problem_name.compare("four_quadrant") ) {
+
+    init_four_quadrant(Udata);
+
+  } else if ( !m_problem_name.compare("isentropic_vortex") ) {
+
+    init_isentropic_vortex(Udata);
+
+  } else {
+
+    std::cout << "Problem : " << m_problem_name
+	      << " is not recognized / implemented."
+	      << std::endl;
+    std::cout <<  "Use default - implode" << std::endl;
+    init_implode(Udata);
+
+  }
+
+} // SolverHydroMuscl2D::init
+
+// =======================================================
+// =======================================================
+/**
  * Hydrodynamical Implosion Test.
  * http://www.astro.princeton.edu/~jstone/Athena/tests/implode/Implode.html
  */
@@ -374,7 +392,7 @@ void SolverHydroMuscl2D::init_implode(DataArray Udata)
 {
 
   InitImplodeFunctor2D functor(params, Udata);
-  Kokkos::parallel_for(ijsize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // init_implode
 
@@ -390,7 +408,7 @@ void SolverHydroMuscl2D::init_blast(DataArray Udata)
   BlastParams blastParams = BlastParams(configMap);
   
   InitBlastFunctor2D functor(params, blastParams, Udata);
-  Kokkos::parallel_for(ijsize, functor);
+  Kokkos::parallel_for(nbCells, functor);
 
 } // SolverHydroMuscl2D::init_blast
 
@@ -421,7 +439,7 @@ void SolverHydroMuscl2D::init_four_quadrant(DataArray Udata)
   InitFourQuadrantFunctor2D functor(params, Udata, configNumber,
 				    U0, U1, U2, U3,
 				    xt, yt);
-  Kokkos::parallel_for(ijsize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // init_four_quadrant
 
@@ -438,7 +456,7 @@ void SolverHydroMuscl2D::init_isentropic_vortex(DataArray Udata)
   IsentropicVortexParams iparams(configMap);
   
   InitIsentropicVortexFunctor2D functor(params, iparams, Udata);
-  Kokkos::parallel_for(ijsize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // init_isentropic_vortex
 
