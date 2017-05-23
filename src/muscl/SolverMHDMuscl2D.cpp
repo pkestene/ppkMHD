@@ -10,6 +10,11 @@
 
 // the actual computational functors called in SolverMHDMuscl2D
 #include "muscl/MHDRunFunctors2D.h"
+
+// init condition functors
+#include "muscl/MHDInitFunctors2D.h"
+
+// border condition functors
 #include "shared/BoundariesFunctors.h"
 
 // Kokkos
