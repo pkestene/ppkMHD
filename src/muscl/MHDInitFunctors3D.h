@@ -12,6 +12,8 @@
 // init conditions
 #include "shared/BlastParams.h"
 
+#include "muscl/OrszagTangInit.h"
+
 namespace ppkMHD { namespace muscl {
 
 /*************************************************/
@@ -172,10 +174,6 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-enum OrszagTang_init_type {
-  INIT_ALL_VAR_BUT_ENERGY = 0,
-  INIT_ENERGY = 1
-};
 template<OrszagTang_init_type ot_type>
 class InitOrszagTangFunctor3D : public MHDBaseFunctor3D {
 

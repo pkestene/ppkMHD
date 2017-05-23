@@ -11,8 +11,8 @@
 
 // init conditions
 #include "shared/BlastParams.h"
-#include "shared/IsentropicVortexParams.h"
-#include "shared/initRiemannConfig2d.h"
+
+#include "muscl/OrszagTangInit.h"
 
 #ifndef SQR
 #define SQR(x) ((x)*(x))
@@ -161,10 +161,6 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-enum OrszagTang_init_type {
-  INIT_ALL_VAR_BUT_ENERGY = 0,
-  INIT_ENERGY = 1
-};
 template<OrszagTang_init_type ot_type>
 class InitOrszagTangFunctor2D : public MHDBaseFunctor2D {
 

@@ -1,4 +1,4 @@
-#include <string> 
+#include <string>
 #include <cstdio>
 #include <cstdbool>
 #include <sstream>
@@ -50,10 +50,10 @@ SolverMHDMuscl2D::SolverMHDMuscl2D(HydroParams& params, ConfigMap& configMap) :
   Emf(),
   isize(params.isize),
   jsize(params.jsize),
-  ijsize(params.isize*params.jsize)
+  nbCells(params.isize*params.jsize)
 {
 
-  m_nCells = ijsize;
+  m_nCells = nbCells;
 
   int nbvar = params.nbvar;
 
@@ -166,7 +166,7 @@ double SolverMHDMuscl2D::compute_dt_local()
 
   // call device functor
   ComputeDtFunctor2D_MHD computeDtFunctor(params, Udata);
-  Kokkos::parallel_reduce(ijsize, computeDtFunctor, invDt);
+  Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
 
@@ -215,9 +215,9 @@ void SolverMHDMuscl2D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
-    godunov_unsplit_cpu(U , U2, dt);
+    godunov_unsplit_impl(U , U2, dt);
   } else {
-    godunov_unsplit_cpu(U2, U , dt);
+    godunov_unsplit_impl(U2, U , dt);
   }
   
 } // SolverMHDMuscl2D::godunov_unsplit
@@ -227,9 +227,9 @@ void SolverMHDMuscl2D::godunov_unsplit(real_t dt)
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void SolverMHDMuscl2D::godunov_unsplit_cpu(DataArray data_in, 
-					   DataArray data_out, 
-					   real_t dt)
+void SolverMHDMuscl2D::godunov_unsplit_impl(DataArray data_in, 
+					    DataArray data_out, 
+					    real_t dt)
 {
 
   real_t dtdx;
@@ -268,20 +268,20 @@ void SolverMHDMuscl2D::godunov_unsplit_cpu(DataArray data_in,
     {
       UpdateFunctor2D_MHD functor(params, data_out,
 				  Fluxes_x, Fluxes_y, dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
     // actual update with emf
     {
       UpdateEmfFunctor2D functor(params, data_out,
 				 Emf, dtdx, dtdy);
-      Kokkos::parallel_for(ijsize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
   }
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // SolverMHDMuscl2D::godunov_unsplit_cpu
+} // SolverMHDMuscl2D::godunov_unsplit_impl
 
 // =======================================================
 // =======================================================
@@ -293,7 +293,7 @@ void SolverMHDMuscl2D::convertToPrimitives(DataArray Udata)
 
   // call device functor
   ConvertToPrimitivesFunctor2D_MHD convertToPrimitivesFunctor(params, Udata, Q);
-  Kokkos::parallel_for(ijsize, convertToPrimitivesFunctor);
+  Kokkos::parallel_for(nbCells, convertToPrimitivesFunctor);
   
 } // SolverMHDMuscl2D::convertToPrimitives
 
@@ -320,7 +320,7 @@ void SolverMHDMuscl2D::computeTrace(DataArray Udata, real_t dt)
 						QEdge_RT, QEdge_RB,
 						QEdge_LT, QEdge_LB,
 						dtdx, dtdy);
-  Kokkos::parallel_for(ijsize, computeTraceFunctor);
+  Kokkos::parallel_for(nbCells, computeTraceFunctor);
   
 } // SolverMHDMuscl2D::computeTrace
 
@@ -342,7 +342,7 @@ void SolverMHDMuscl2D::computeFluxesAndStore(real_t dt)
 				 Qp_x, Qp_y,
 				 Fluxes_x, Fluxes_y,
 				 dtdx, dtdy);
-  Kokkos::parallel_for(ijsize, computeFluxesAndStoreFunctor);
+  Kokkos::parallel_for(nbCells, computeFluxesAndStoreFunctor);
   
 } // computeFluxesAndStore
 
@@ -364,7 +364,7 @@ void SolverMHDMuscl2D::computeEmfAndStore(real_t dt)
 			      QEdge_LT, QEdge_LB,
 			      Emf,
 			      dtdx, dtdy);
-  Kokkos::parallel_for(ijsize, computeEmfAndStoreFunctor);
+  Kokkos::parallel_for(nbCells, computeEmfAndStoreFunctor);
   
 } // computeEmfAndStore
 
@@ -411,7 +411,7 @@ void SolverMHDMuscl2D::make_boundaries(DataArray Udata)
 // {
 
 //   InitImplodeFunctor functor(params, Udata);
-//   Kokkos::parallel_for(ijsize, functor);
+//   Kokkos::parallel_for(nbCells, functor);
   
 // } // init_implode
 
@@ -427,7 +427,7 @@ void SolverMHDMuscl2D::init_blast(DataArray Udata)
   BlastParams blastParams = BlastParams(configMap);
   
   InitBlastFunctor2D_MHD functor(params, blastParams, Udata);
-  Kokkos::parallel_for(ijsize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // SolverMHDMuscl2D::init_blast
 
@@ -443,13 +443,13 @@ void SolverMHDMuscl2D::init_orszag_tang(DataArray Udata)
   // init all vars but energy
   {
     InitOrszagTangFunctor2D<INIT_ALL_VAR_BUT_ENERGY> functor(params, Udata);
-    Kokkos::parallel_for(ijsize, functor);
+    Kokkos::parallel_for(nbCells, functor);
   }
 
   // init energy
   {
     InitOrszagTangFunctor2D<INIT_ENERGY> functor(params, Udata);
-    Kokkos::parallel_for(ijsize, functor);
+    Kokkos::parallel_for(nbCells, functor);
   }  
   
 } // init_orszag_tang

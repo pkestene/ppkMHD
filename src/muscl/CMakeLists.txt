@@ -6,6 +6,7 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroRunFunctors3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroInitFunctors2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroInitFunctors3D.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/OrszagTangInit.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDBaseFunctor2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDBaseFunctor3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDRunFunctors2D.h
@@ -14,10 +15,12 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/MHDInitFunctors3D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroMuscl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroMuscl.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl2D.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl2D.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl2D.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl2D.h
+  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.h
   )
 
 add_library(muscl

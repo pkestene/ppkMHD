@@ -89,9 +89,9 @@ public:
   //! numerical scheme
   void godunov_unsplit(real_t dt);
   
-  void godunov_unsplit_cpu(DataArray data_in, 
-			   DataArray data_out, 
-			   real_t dt);
+  void godunov_unsplit_impl(DataArray data_in, 
+			    DataArray data_out, 
+			    real_t dt);
   
   void convertToPrimitives(DataArray Udata);
 
@@ -112,7 +112,7 @@ public:
 
   void save_solution_impl();
   
-  int isize, jsize, ksize, ijsize, ijksize;
+  int isize, jsize, ksize, ijsize, nbCells;
   
 }; // class SolverMHDMuscl3D
 

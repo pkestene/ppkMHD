@@ -55,10 +55,10 @@ SolverMHDMuscl3D::SolverMHDMuscl3D(HydroParams& params, ConfigMap& configMap) :
   jsize(params.jsize),
   ksize(params.ksize),
   ijsize(params.isize*params.jsize),
-  ijksize(params.isize*params.jsize*params.ksize)
+  nbCells(params.isize*params.jsize*params.ksize)
 {
 
-  m_nCells = ijksize;
+  m_nCells = nbCells;
 
   int nbvar = params.nbvar;
 
@@ -191,7 +191,7 @@ double SolverMHDMuscl3D::compute_dt_local()
 
   // call device functor
   ComputeDtFunctor3D_MHD computeDtFunctor(params, Udata);
-  Kokkos::parallel_reduce(ijksize, computeDtFunctor, invDt);
+  Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
 
@@ -240,9 +240,9 @@ void SolverMHDMuscl3D::godunov_unsplit(real_t dt)
 {
   
   if ( m_iteration % 2 == 0 ) {
-    godunov_unsplit_cpu(U , U2, dt);
+    godunov_unsplit_impl(U , U2, dt);
   } else {
-    godunov_unsplit_cpu(U2, U , dt);
+    godunov_unsplit_impl(U2, U , dt);
   }
   
 } // SolverMHDMuscl3D::godunov_unsplit
@@ -252,9 +252,9 @@ void SolverMHDMuscl3D::godunov_unsplit(real_t dt)
 // ///////////////////////////////////////////
 // Actual CPU computation of Godunov scheme
 // ///////////////////////////////////////////
-void SolverMHDMuscl3D::godunov_unsplit_cpu(DataArray data_in, 
-				 DataArray data_out, 
-				 real_t dt)
+void SolverMHDMuscl3D::godunov_unsplit_impl(DataArray data_in, 
+					    DataArray data_out, 
+					    real_t dt)
 {
 
   real_t dtdx;
@@ -301,20 +301,20 @@ void SolverMHDMuscl3D::godunov_unsplit_cpu(DataArray data_in,
     {
       UpdateFunctor3D_MHD functor(params, data_out,
 				  Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
-      Kokkos::parallel_for(ijksize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
 
     // actual update with emf
     {
       UpdateEmfFunctor3D functor(params, data_out,
 				 Emf, dtdx, dtdy, dtdz);
-      Kokkos::parallel_for(ijksize, functor);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
   }
   timers[TIMER_NUM_SCHEME]->stop();
   
-} // SolverMHDMuscl3D::godunov_unsplit_cpu
+} // SolverMHDMuscl3D::godunov_unsplit_impl
 
 // =======================================================
 // =======================================================
@@ -326,7 +326,7 @@ void SolverMHDMuscl3D::convertToPrimitives(DataArray Udata)
 
   // call device functor
   ConvertToPrimitivesFunctor3D_MHD functor(params, Udata, Q);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // SolverMHDMuscl3D::convertToPrimitives
 
@@ -340,7 +340,7 @@ void SolverMHDMuscl3D::computeElectricField(DataArray Udata)
 
   // call device functor
   ComputeElecFieldFunctor3D functor(params, Udata, Q, ElecField);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // SolverMHDMuscl3D::computeElectricField
 
@@ -354,7 +354,7 @@ void SolverMHDMuscl3D::computeMagSlopes(DataArray Udata)
 
   // call device functor
   ComputeMagSlopesFunctor3D functor(params, Udata, DeltaA, DeltaB, DeltaC);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // SolverMHDMuscl3D::computeMagSlopes
 
@@ -385,7 +385,7 @@ void SolverMHDMuscl3D::computeTrace(DataArray Udata, real_t dt)
 				    QEdge_RT2, QEdge_RB2, QEdge_LT2, QEdge_LB2,
 				    QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3,
 				    dtdx, dtdy, dtdz);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // SolverMHDMuscl3D::computeTrace
 
@@ -408,7 +408,7 @@ void SolverMHDMuscl3D::computeFluxesAndStore(real_t dt)
 	    Qp_x, Qp_y, Qp_z,
 	    Fluxes_x, Fluxes_y, Fluxes_z,
 	    dtdx, dtdy, dtdz);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // computeFluxesAndStore
 
@@ -431,7 +431,7 @@ void SolverMHDMuscl3D::computeEmfAndStore(real_t dt)
 				      QEdge_RT3, QEdge_RB3, QEdge_LT3, QEdge_LB3,
 				      Emf,
 				      dtdx, dtdy, dtdz);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // computeEmfAndStore
 
@@ -492,7 +492,7 @@ void SolverMHDMuscl3D::make_boundaries(DataArray Udata)
 // {
 
 //   InitImplodeFunctor functor(params, Udata);
-//   Kokkos::parallel_for(ijksize, functor);
+//   Kokkos::parallel_for(nbCells, functor);
   
 // } // init_implode
 
@@ -508,7 +508,7 @@ void SolverMHDMuscl3D::init_blast(DataArray Udata)
   BlastParams blastParams = BlastParams(configMap);
   
   InitBlastFunctor3D_MHD functor(params, blastParams, Udata);
-  Kokkos::parallel_for(ijksize, functor);
+  Kokkos::parallel_for(nbCells, functor);
 
 } // SolverMHDMuscl3D::init_blast
 
@@ -524,13 +524,13 @@ void SolverMHDMuscl3D::init_orszag_tang(DataArray Udata)
   // init all vars but energy
   {
     InitOrszagTangFunctor3D<INIT_ALL_VAR_BUT_ENERGY> functor(params, Udata);
-    Kokkos::parallel_for(ijksize, functor);
+    Kokkos::parallel_for(nbCells, functor);
   }
 
   // init energy
   {
     InitOrszagTangFunctor3D<INIT_ENERGY> functor(params, Udata);
-    Kokkos::parallel_for(ijksize, functor);
+    Kokkos::parallel_for(nbCells, functor);
   }  
   
 } // init_orszag_tang
