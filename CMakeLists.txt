@@ -7,6 +7,7 @@ option (USE_MPI "Activate / want MPI build" ON)
 option (USE_VTK "Activate / want VTK build" OFF)
 option (USE_DOUBLE "build with double precision" ON)
 option (USE_MOOD "build MOOD numerical schemes" OFF)
+option (USE_HDF5 "build HDF5 input/output support" OFF)
 
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
@@ -53,10 +54,12 @@ include(${PROJECT_SOURCE_DIR}/cmake/initKokkosModulePath.cmake)
 #message (STATUS "Just printing CMAKE_MODULE_PATH " ${CMAKE_MODULE_PATH})
 #include(kokkos)
 
-#
+#####################################################################
 # External packages: MPI, ...
-#
+#####################################################################
 
+
+#####################################################################
 #find_package(MPI REQUIRED)
 find_package(MPI)
 if (USE_MPI)
@@ -89,9 +92,11 @@ if (USE_MPI)
 endif()
 
 
+#####################################################################
 # VTK configuration tips, see
 # /usr/lib/cmake/vtk-6.2/VTKConfig.cmake
 # /usr/lib/cmake/vtk-6.2/UseVTK.cmake
+#####################################################################
 find_package(VTK)
 if (USE_VTK)
 
@@ -106,11 +111,36 @@ if (USE_VTK)
   endIF()
 endif(USE_VTK)
 
+#####################################################################
+# HDF5
+#####################################################################
+# prefer using parallel HDF5 when build with mpi
+if (USE_MPI)
+  set(HDF5_PREFER_PARALLEL TRUE)
+endif(USE_MPI)
 
+if (USE_HDF5)
+  find_package(HDF5)
+  if(HDF5_FOUND)
+    include_directories(${HDF5_INCLUDE_DIR})
+    set(my_hdf5_libs hdf5 hdf5_cpp)
+    set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_HDF5")
+    if (HDF5_IS_PARALLEL)
+      set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_HDF5_PARALLEL")
+    endif()
+  endif(HDF5_FOUND)
+endif(USE_HDF5)
+  
+#####################################################################
+# Eigen3
+#####################################################################
 # Eigen3 (for MOOD) -- not mature enought to be used with nvcc_wrapper,
 # even on host code, I was not able to build code with nvcc_wrapper
 #find_package(Eigen3)
 
+#####################################################################
+# Lapack with C interface --> OpenBLAS
+#####################################################################
 # LAPACK / LAPACKE (for MOOD) - for DGEQRF and DTRSM (on host, not device)
 #set(BLA_VENDOR "OpenBLAS")
 #find_package(BLAS REQUIRED)
@@ -120,6 +150,9 @@ if ( NOT LAPACKE_FOUND )
   message(FATAL_ERROR "Package LAPACKE required, but not found!")
 endif( NOT LAPACKE_FOUND )
 
+#####################################################################
+# PAPI for performance conuters
+#####################################################################
 find_package(PAPI)
 if (NOT PAPI_FOUND)
   set(PAPI_INCLUDE_DIR "")
@@ -152,3 +185,17 @@ endif()
 add_subdirectory(kokkos)
 add_subdirectory(test)
 add_subdirectory(src)
+
+############################ PRINT CONFIGURE STATUS ############################
+
+message(STATUS "")
+message(STATUS "****************** ${PROJECT_NAME} Settings ******************")
+
+message(STATUS "MPI      enabled : ${USE_MPI}")
+message(STATUS "CUDA     enabled : ${KOKKOS_ENABLE_CUDA}")
+message(STATUS "HDF5     enabled : ${USE_HDF5}")
+message(STATUS "MOOD     enabled : ${USE_MOOD}")
+message(STATUS "DOUBLE precision : ${USE_DOUBLE}")
+
+message(STATUS "****************** *************** ******************")
+
