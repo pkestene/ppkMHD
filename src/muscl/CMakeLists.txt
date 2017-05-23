@@ -17,10 +17,6 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroMuscl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl2D.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl2D.h
-  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl3D.h
   )
 
 add_library(muscl
