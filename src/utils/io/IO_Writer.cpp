@@ -48,7 +48,11 @@ void IO_Writer::save_data_impl<DataArray2d>(DataArray2d             Udata,
 
   if (vtk_enabled) {
     
+#ifdef USE_MPI
+    save_VTK_2D_mpi(Udata, Uhost, params, configMap, params.nbvar, variables_names, iStep, debug_name);
+#else
     save_VTK_2D(Udata, Uhost, params, configMap, params.nbvar, variables_names, iStep, debug_name);
+#endif // USE_MPI
 
   }
 
@@ -73,7 +77,11 @@ void IO_Writer::save_data_impl<DataArray3d>(DataArray3d             Udata,
 
   if (vtk_enabled) {
 
+#ifdef USE_MPI
+    save_VTK_3D_mpi(Udata, Uhost, params, configMap, params.nbvar, variables_names, iStep, debug_name);
+#else
     save_VTK_3D(Udata, Uhost, params, configMap, params.nbvar, variables_names, iStep, debug_name);
+#endif // USE_MPI
     
   }
 
