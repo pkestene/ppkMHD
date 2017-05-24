@@ -22,6 +22,10 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+#ifdef USE_HDF5
+#include "utils/io/IO_HDF5.h"
+#endif // USE_HDF5
+
 // ===============================================================
 // ===============================================================
 // ===============================================================
@@ -129,6 +133,15 @@ int main(int argc, char *argv[])
   if (params.nOutput != 0)
     solver->save_solution();
 
+  // write Xdmf wrapper file if necessary
+#ifdef USE_HDF5
+  bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
+  bool outputHdf5Enabled = configMap.getBool("output","hdf5_enabled",false);
+  if (outputHdf5Enabled) {
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, solver->m_iteration, false, ghostIncluded);
+  }
+#endif // USE_HDF5
+  
   printf("final time is %f\n", solver->m_t);
   
   // print monitoring information

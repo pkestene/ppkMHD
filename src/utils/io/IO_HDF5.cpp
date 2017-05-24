@@ -42,7 +42,6 @@ std::string current_date()
 // =======================================================
 void writeXdmfForHdf5Wrapper(HydroParams& params,
 			     ConfigMap& configMap,
-			     bool mhdEnabled,
 			     int totalNumberOfSteps,
 			     bool singleStep,
 			     bool ghostIncluded)
@@ -56,6 +55,8 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
 
   const int dimType = params.dimType;
 
+  const bool mhdEnabled = params.mhdEnabled;
+  
   // data size actually written on disk
   int nxg = nx;
   int nyg = ny;
@@ -99,6 +100,9 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
   int startStep=0;
   int stopStep =totalNumberOfSteps;
   int deltaStep=params.nOutput;
+  if (deltaStep = -1)
+    deltaStep=1;
+  
   if (singleStep) {
     startStep = totalNumberOfSteps;
     stopStep  = totalNumberOfSteps+1;
