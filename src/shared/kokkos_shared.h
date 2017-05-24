@@ -21,6 +21,11 @@
 # define DEVICE Kokkos::OpenMP
 #endif
 
+enum KokkosLayout {
+  KOKKOS_LAYOUT_LEFT,
+  KOKKOS_LAYOUT_RIGHT
+};
+
 // last index is hydro variable
 // n-1 first indexes are space (i,j,k,....)
 typedef Kokkos::View<real_t***, DEVICE>   DataArray2d;

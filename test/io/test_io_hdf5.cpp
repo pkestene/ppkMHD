@@ -172,6 +172,8 @@ int main(int argc, char* argv[])
   // ==== 2D test ====
   // =================
   if (params.nz == 1) {
+
+    std::cout << "2D test\n";
     
     DataArray2d     data("data",params.isize,params.jsize,HYDRO_2D_NBVAR);
     DataArray2dHost data_host = Kokkos::create_mirror(data);
@@ -184,7 +186,10 @@ int main(int argc, char* argv[])
 // #ifdef USE_MPI
 //     ppkMHD::io::save_HDF5_2D_mpi(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
 // #else
-    ppkMHD::io::save_HDF5_2D(data, data_host, params, configMap, false, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    //ppkMHD::io::save_HDF5<DataArray2d>(data, data_host, params, configMap, false, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+
+    ppkMHD::io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, false, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    writer.save();
     //#endif
     
   }
@@ -192,23 +197,27 @@ int main(int argc, char* argv[])
   // =================
   // ==== 3D test ====
   // =================
-//   if (params.nz > 1) {
+  if (params.nz > 1) {
     
-//     DataArray3d     data("data",params.isize,params.jsize,params.ksize,HYDRO_3D_NBVAR);
-//     DataArray3dHost data_host = Kokkos::create_mirror(data);
+    std::cout << "3D test\n";
 
-//     // create fake data
-//     InitData<3> functor(params, data);
-//     Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
+    DataArray3d     data("data",params.isize,params.jsize,params.ksize,HYDRO_3D_NBVAR);
+    DataArray3dHost data_host = Kokkos::create_mirror(data);
 
-//     // save to file
+    // create fake data
+    InitData<3> functor(params, data);
+    Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
+
+    // save to file
 // #ifdef USE_MPI
 //     ppkMHD::io::save_HDF5_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
 // #else
-//     ppkMHD::io::save_HDF5_3D(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
-// #endif
+    ppkMHD::io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, false, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+    writer.save();
+
+    // #endif
     
-//   }
+  }
 
  
 #ifdef CUDA
