@@ -46,10 +46,18 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
 			     bool singleStep)
 {
 
+  // domain (no-MPI) or sub-domain sizes (MPI)
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
 
+#ifdef USE_MPI
+  // sub-domain decomposition sizes
+  const int mx = params.mx;
+  const int my = params.my;
+  const int mz = params.mz;
+#endif
+  
   const int ghostWidth = params.ghostWidth;
 
   const int dimType = params.dimType;
@@ -57,17 +65,67 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
   const bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
 
   const bool mhdEnabled = params.mhdEnabled;
-  
+
+#ifdef USE_MPI
+  // global sizes
+  int nxg = mx*nx;
+  int nyg = my*ny;
+  int nzg = mz*nz;
+#else  
   // data size actually written on disk
   int nxg = nx;
   int nyg = ny;
   int nzg = nz;
+#endif // USE_MPI
+
   if (ghostIncluded) {
-    nxg += 2*ghostWidth;
-    nyg += 2*ghostWidth;
-    nzg += 2*ghostWidth;
+    nxg += (2*ghostWidth);
+    nyg += (2*ghostWidth);
+    nzg += (2*ghostWidth);
   }
 
+#ifdef USE_MPI
+  /*
+   * The follwing only makes sense in MPI: is allghostIncluded is true,
+   * every sub-domain dumps its own local ghosts (might be usefull for debug,
+   * at least it was useful in ramsesGPU for the shearing box border condition
+   * debug).
+   */
+  bool allghostIncluded = configMap.getBool("output","allghostIncluded",false);
+  if (allghostIncluded) {
+    nxg = mx*(nx+2*ghostWidth);
+    nyg = my*(ny+2*ghostWidth);
+    nzg = mz*(nz+2*ghostWidth);
+  }
+
+  /*
+   * Let MPIIO underneath hdf5 re-assemble the pieces and provides a single 
+   * nice file. Thanks parallel HDF5 !
+   */
+  bool reassembleInFile = configMap.getBool("output", "reassembleInFile", true);
+  if (!reassembleInFile) {
+    if (dimType==TWO_D) {
+      if (allghostIncluded or ghostIncluded) {
+	nxg = (nx+2*ghostWidth);
+	nyg = (ny+2*ghostWidth)*mx*my;
+      } else {
+	nxg = nx;
+	nyg = ny*mx*my;
+      }
+    } else {
+      if (allghostIncluded or ghostIncluded) {
+	nxg = nx+2*ghostWidth;
+	nyg = ny+2*ghostWidth;
+	nzg = (nz+2*ghostWidth)*mx*my*mz;
+      } else {
+	nxg = nx;
+	nyg = ny;
+	nzg = nz*mx*my*mz;
+      }
+    }
+  }
+#endif // USE_MPI
+  
   // get data type as a string for Xdmf
   std::string dataTypeName;
   if (sizeof(real_t) == sizeof(float))
