@@ -43,8 +43,7 @@ std::string current_date()
 void writeXdmfForHdf5Wrapper(HydroParams& params,
 			     ConfigMap& configMap,
 			     int totalNumberOfSteps,
-			     bool singleStep,
-			     bool ghostIncluded)
+			     bool singleStep)
 {
 
   const int nx = params.nx;
@@ -54,6 +53,8 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
   const int ghostWidth = params.ghostWidth;
 
   const int dimType = params.dimType;
+
+  const bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
 
   const bool mhdEnabled = params.mhdEnabled;
   

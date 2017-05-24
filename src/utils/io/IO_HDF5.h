@@ -55,8 +55,7 @@ std::string current_date();
 void writeXdmfForHdf5Wrapper(HydroParams& params,
 			     ConfigMap& configMap,
 			     int totalNumberOfSteps,
-			     bool singleStep,
-			     bool ghostIncluded);
+			     bool singleStep);
 
 // =======================================================
 // =======================================================

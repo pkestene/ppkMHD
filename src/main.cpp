@@ -135,10 +135,9 @@ int main(int argc, char *argv[])
 
   // write Xdmf wrapper file if necessary
 #ifdef USE_HDF5
-  bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
   bool outputHdf5Enabled = configMap.getBool("output","hdf5_enabled",false);
   if (outputHdf5Enabled) {
-    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, solver->m_iteration, false, ghostIncluded);
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, solver->m_iteration, false);
   }
 #endif // USE_HDF5
   
