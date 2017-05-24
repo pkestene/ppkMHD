@@ -873,7 +873,7 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
     Kokkos::parallel_for(nbCells,functor);
 
     // for (int icoef=0; icoef<ncoefs; ++icoef)
-    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
+    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, m_t, "poly"+std::to_string(icoef));
 
   }
 
@@ -893,8 +893,8 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
   // 							      QUAD_LOC_2D);
   //     Kokkos::parallel_for(nbCells,functor);
 
-  //     save_data_debug(RecState1, Uhost, m_times_saved, "RecState1");
-  //     save_data_debug(RecState2, Uhost, m_times_saved, "RecState2");
+  //     save_data_debug(RecState1, Uhost, m_times_saved, m_t, "RecState1");
+  //     save_data_debug(RecState2, Uhost, m_times_saved, m_t, "RecState2");
       
   //   } else {
   //   }
@@ -916,8 +916,8 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
 							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, m_t, "flux_x");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, m_t, "flux_y");
   }
 
   //for (int iRecomp=0; iRecomp<5; ++iRecomp) {
@@ -933,7 +933,7 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
 						      Fluxes_y,
 						      Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
-    //save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
+    //save_data_debug(MoodFlags, Uhost, m_times_saved, m_t, "mood_flags");
   }
   
   // recompute fluxes arround flagged cells
@@ -943,8 +943,8 @@ void SolverHydroMood<dim,degree>::time_int_forward_euler(DataArray data_in,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, m_t, "flux_x_after");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, m_t, "flux_y_after");
   }
   //}
 
@@ -1006,7 +1006,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
     Kokkos::parallel_for(nbCells,functor);
 
     // for (int icoef=0; icoef<ncoefs; ++icoef)
-    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
+    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, m_t, "poly"+std::to_string(icoef));
 
   }
 
@@ -1024,8 +1024,8 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, m_t, "flux_x");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, m_t, "flux_y");
   }
 
   // flag cells for which fluxes will need to be recomputed
@@ -1039,7 +1039,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 						      Fluxes_y,
 						      Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
-    //save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
+    //save_data_debug(MoodFlags, Uhost, m_times_saved, m_t, "mood_flags");    
   }
   
   // recompute fluxes arround flagged cells
@@ -1049,8 +1049,8 @@ void SolverHydroMood<dim,degree>::time_int_ssprk2(DataArray data_in,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, m_t, "flux_x_after");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, m_t, "flux_y_after");
   }
 
   // update: U_RK1 = data_in + dt*fluxes
@@ -1172,7 +1172,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
     Kokkos::parallel_for(nbCells,functor);
 
     // for (int icoef=0; icoef<ncoefs; ++icoef)
-    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, "poly"+std::to_string(icoef));
+    //   save_data_debug(PolyCoefs[icoef], Uhost, m_times_saved-1, m_t, "poly"+std::to_string(icoef));
 
   }
 
@@ -1190,8 +1190,8 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
 							dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
 
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, m_t, "flux_x");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, m_t, "flux_y");
   }
 
   // flag cells for which fluxes will need to be recomputed
@@ -1205,7 +1205,7 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
 						      Fluxes_y,
 						      Fluxes_z);
     Kokkos::parallel_for(nbCells, functor);
-    //save_data_debug(MoodFlags, Uhost, m_times_saved, "mood_flags");    
+    //save_data_debug(MoodFlags, Uhost, m_times_saved, m_t, "mood_flags");
   }
   
   // recompute fluxes arround flagged cells
@@ -1215,8 +1215,8 @@ void SolverHydroMood<dim,degree>::time_int_ssprk3(DataArray data_in,
 					       Fluxes_x, Fluxes_y, Fluxes_z,
 					       dtdx, dtdy, dtdz);
     Kokkos::parallel_for(nbCells, functor);
-    //save_data_debug(Fluxes_x, Uhost, m_times_saved, "flux_x_after");
-    //save_data_debug(Fluxes_y, Uhost, m_times_saved, "flux_y_after");
+    //save_data_debug(Fluxes_x, Uhost, m_times_saved, m_t, "flux_x_after");
+    //save_data_debug(Fluxes_y, Uhost, m_times_saved, m_t, "flux_y_after");
   }
 
   // update: U_RK1 = data_in + dt*fluxes
@@ -1626,9 +1626,9 @@ void SolverHydroMood<dim,degree>::save_solution_impl()
 
   timers[TIMER_IO]->start();
   if (m_iteration % 2 == 0)
-    save_data(U,  Uhost, m_times_saved);
+    save_data(U,  Uhost, m_times_saved, m_t);
   else
-    save_data(U2, Uhost, m_times_saved);
+    save_data(U2, Uhost, m_times_saved, m_t);
   
   timers[TIMER_IO]->stop();
     

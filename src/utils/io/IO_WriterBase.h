@@ -20,11 +20,13 @@ public:
   virtual void save_data(DataArray2d             Udata,
 			 DataArray2d::HostMirror Uhost,
 			 int iStep,
+			 real_t time,
 			 std::string debug_name) {};
 
   virtual void save_data(DataArray3d             Udata,
 			 DataArray3d::HostMirror Uhost,
 			 int iStep,
+			 real_t time,
 			 std::string debug_name) {};
 
 }; // class IO_WriterBase

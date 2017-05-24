@@ -47,12 +47,14 @@ void HydroParams::setup(ConfigMap &configMap)
     dimType = TWO_D;
     nbvar = 8;
     ghostWidth = 3;
+    mhdEnabled = true;
     
   } else if ( !solver_name.compare("MHD_Muscl_3D") ) {
 
     dimType = THREE_D;
     nbvar = 8;
     ghostWidth = 3;
+    mhdEnabled = true;
     
   } else if ( solver_name.find("Hydro_Mood_2D") != std::string::npos ) {
 

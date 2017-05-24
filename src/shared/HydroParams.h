@@ -59,6 +59,7 @@ struct HydroParams {
   real_t tEnd;       /*!< end of simulation time. */
   int    nOutput;    /*!< number of time steps between 2 consecutive outputs. */
   bool   enableOutput; /*!< enable output file write. */
+  bool   mhdEnabled;
   
   // geometry parameters
   int nx;     /*!< logical size along X (without ghost cells).*/
@@ -141,7 +142,7 @@ struct HydroParams {
 #endif // USE_MPI
   
   HydroParams() :
-    nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true),
+    nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true), mhdEnabled(false),
     nx(0), ny(0), nz(0), ghostWidth(2), nbvar(4), dimType(TWO_D),
     imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0),
     isize(0), jsize(0), ksize(0),

@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 // #else
     //ppkMHD::io::save_HDF5<DataArray2d>(data, data_host, params, configMap, false, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
 
-    ppkMHD::io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, false, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    ppkMHD::io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     //#endif
     
@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
 // #ifdef USE_MPI
 //     ppkMHD::io::save_HDF5_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
 // #else
-    ppkMHD::io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, false, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+    ppkMHD::io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
 
     // #endif

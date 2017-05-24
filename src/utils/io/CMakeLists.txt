@@ -24,3 +24,9 @@ target_include_directories(io
 target_link_libraries(io
   kokkos
   )
+if (USE_HDF5)
+  target_link_libraries(io
+    ${HDF5_LIBRARIES}
+    )
+endif()
+  

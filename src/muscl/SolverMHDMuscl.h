@@ -527,9 +527,9 @@ void SolverMHDMuscl<dim>::save_solution_impl()
 
   timers[TIMER_IO]->start();
   if (m_iteration % 2 == 0)
-    save_data(U,  Uhost, m_times_saved);
+    save_data(U,  Uhost, m_times_saved, m_t);
   else
-    save_data(U2, Uhost, m_times_saved);
+    save_data(U2, Uhost, m_times_saved, m_t);
   
   timers[TIMER_IO]->stop();
     

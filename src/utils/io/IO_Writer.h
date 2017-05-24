@@ -12,10 +12,6 @@
 
 #include "IO_WriterBase.h"
 
-#include "IO_VTK.h"
-//#include "IO_HDF5.h"
-//#include "IO_Pnetcdf.h"
-
 namespace ppkMHD { namespace io {
 
 /**
@@ -41,12 +37,14 @@ public:
   virtual void save_data(DataArray2d             Udata,
 			 DataArray2d::HostMirror Uhost,
 			 int iStep,
+			 real_t time,
 			 std::string debug_name);
 
   //! override base class method
   virtual void save_data(DataArray3d             Udata,
 			 DataArray3d::HostMirror Uhost,
 			 int iStep,
+			 real_t time,
 			 std::string debug_name);
 
   //! public interface to save data.
@@ -55,6 +53,7 @@ public:
   void save_data_impl(DataArray                      Udata,
 		      typename DataArray::HostMirror Uhost,
 		      int iStep,
+		      real_t time,
 		      std::string debug_name) {}
     
   //! names of variables to save (inherited from Solver)
@@ -65,7 +64,6 @@ public:
   bool pnetcdf_enabled;
   
 }; // class IO_Writer
-
 
 } // namespace io
 

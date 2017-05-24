@@ -76,14 +76,13 @@ public:
 	    DataArrayHost Uhost,
 	    HydroParams& params,
 	    ConfigMap& configMap,
-	    bool mhdEnabled,
 	    int nbvar,
 	    const std::map<int, std::string>& variables_names,
 	    int iStep,
 	    real_t totalTime,
 	    std::string debug_name) :
     Udata(Udata), Uhost(Uhost), params(params), configMap(configMap),
-    mhdEnabled(mhdEnabled), nbvar(nbvar), variables_names(variables_names),
+    nbvar(nbvar), variables_names(variables_names),
     iStep(iStep), totalTime(totalTime), debug_name(debug_name)
   {};
   ~Save_HDF5() {};
@@ -155,6 +154,8 @@ public:
 
     const bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
 
+    const bool mhdEnabled = params.mhdEnabled;
+    
     // copy device data to host
     Kokkos::deep_copy(Uhost, Udata);
 
@@ -459,7 +460,6 @@ public:
   DataArrayHost Uhost;
   HydroParams& params;
   ConfigMap& configMap;
-  bool mhdEnabled;
   int nbvar;
   const std::map<int, std::string>& variables_names;
   int iStep;

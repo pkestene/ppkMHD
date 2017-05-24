@@ -220,9 +220,10 @@ SolverBase::should_save_solution()
 void
 SolverBase::save_data(DataArray2d             U,
 		      DataArray2d::HostMirror Uh,
-		      int iStep)
+		      int iStep,
+		      real_t time)
 {
-  m_io_writer->save_data(U, Uh, iStep, "");
+  m_io_writer->save_data(U, Uh, iStep, time, "");
 }
 
 // =======================================================
@@ -230,9 +231,10 @@ SolverBase::save_data(DataArray2d             U,
 void
 SolverBase::save_data(DataArray3d             U,
 		      DataArray3d::HostMirror Uh,
-		      int iStep)
+		      int iStep,
+		      real_t time)
 {
-  m_io_writer->save_data(U, Uh, iStep, "");
+  m_io_writer->save_data(U, Uh, iStep, time, "");
 }
 
 // =======================================================
@@ -241,9 +243,10 @@ void
 SolverBase::save_data_debug(DataArray2d             U,
 			    DataArray2d::HostMirror Uh,
 			    int iStep,
+			    real_t time,
 			    std::string debug_name)
 {
-  m_io_writer->save_data(U, Uh, iStep, debug_name);
+  m_io_writer->save_data(U, Uh, iStep, time, debug_name);
 }
 
 // =======================================================
@@ -252,9 +255,10 @@ void
 SolverBase::save_data_debug(DataArray3d             U,
 			    DataArray3d::HostMirror Uh,
 			    int iStep,
+			    real_t time,
 			    std::string debug_name)
 {
-  m_io_writer->save_data(U, Uh, iStep, debug_name);
+  m_io_writer->save_data(U, Uh, iStep, time, debug_name);
 }
 
 } // namespace ppkMHD

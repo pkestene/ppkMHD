@@ -5,6 +5,7 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/BlastParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/KHParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/WedgeParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/IsentropicVortexParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/initRiemannConfig2d.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctorsWedge.h
@@ -13,11 +14,14 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroState.h
   ${CMAKE_CURRENT_SOURCE_DIR}/kokkos_shared.h
   ${CMAKE_CURRENT_SOURCE_DIR}/real_type.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/enums.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverBase.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverBase.h
   ${CMAKE_CURRENT_SOURCE_DIR}/RiemannSolvers.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/RiemannSolvers_MHD.h
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mhd_utils.h
   )
 
 add_library(shared
