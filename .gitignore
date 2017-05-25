@@ -6,4 +6,7 @@ build_openmp_new
 build_cuda
 build_cuda_new
 build_cuda_mpi
+build_cuda_debug
+build_cuda_nompi
 build_openmp_mpi
+build_openmp_debug
