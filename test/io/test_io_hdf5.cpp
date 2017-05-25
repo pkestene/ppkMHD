@@ -50,8 +50,13 @@ public:
     const int nx = params.nx;
     const int ny = params.ny;
 
+#ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif    
     
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
@@ -82,9 +87,15 @@ public:
     const int ny = params.ny;
     const int nz = params.nz;
 
+#ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
     const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif    
     
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
@@ -183,14 +194,15 @@ int main(int argc, char* argv[])
     Kokkos::parallel_for(params.isize*params.jsize, functor);
 
     // save to file
-// #ifdef USE_MPI
-//     ppkMHD::io::save_HDF5_2D_mpi(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
-// #else
-    //ppkMHD::io::save_HDF5<DataArray2d>(data, data_host, params, configMap, false, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
-
+#ifdef USE_MPI
+    ppkMHD::io::Save_HDF5_mpi<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    writer.save();
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+#else
     ppkMHD::io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
-    //#endif
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+#endif
     
   }
 
@@ -209,13 +221,15 @@ int main(int argc, char* argv[])
     Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
 
     // save to file
-// #ifdef USE_MPI
-//     ppkMHD::io::save_HDF5_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
-// #else
+#ifdef USE_MPI
+    ppkMHD::io::Save_HDF5_mpi<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+    writer.save();
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+#else
     ppkMHD::io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
-
-    // #endif
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+#endif
     
   }
 

@@ -58,9 +58,14 @@ void IO_Writer::save_data_impl<DataArray2d>(DataArray2d             Udata,
 
   if (hdf5_enabled) {
 
+#ifdef USE_MPI
+    ppkMHD::io::Save_HDF5_mpi<TWO_D> writer(Udata, Uhost, params, configMap, HYDRO_2D_NBVAR, variables_names, iStep, time, debug_name);
+    writer.save();
+#else
     ppkMHD::io::Save_HDF5<TWO_D> writer(Udata, Uhost, params, configMap, HYDRO_2D_NBVAR, variables_names, iStep, time, debug_name);
     writer.save();
-
+#endif // USE_MPI
+    
   }
   
 } // IO_Writer::save_data_impl
@@ -87,9 +92,14 @@ void IO_Writer::save_data_impl<DataArray3d>(DataArray3d             Udata,
 
   if (hdf5_enabled) {
 
+#ifdef USE_MPI
+    ppkMHD::io::Save_HDF5_mpi<THREE_D> writer(Udata, Uhost, params, configMap, HYDRO_3D_NBVAR, variables_names, iStep, time, debug_name);
+    writer.save();
+#else
     ppkMHD::io::Save_HDF5<THREE_D> writer(Udata, Uhost, params, configMap, HYDRO_3D_NBVAR, variables_names, iStep, time, debug_name);
     writer.save();
-
+#endif // USE_MPI
+    
   }
 
   
