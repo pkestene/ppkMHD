@@ -5,8 +5,14 @@
 #include <shared/HydroState.h>
 
 #include "IO_VTK.h"
+
+#ifdef USE_HDF5
 #include "IO_HDF5.h"
-//#include "IO_Pnetcdf.h"
+#endif
+
+#ifdef USE_PNETCDF
+#include "IO_PNETCDF.h"
+#endif // USE_PNETCDF
 
 namespace ppkMHD { namespace io {
 
@@ -56,8 +62,9 @@ void IO_Writer::save_data_impl<DataArray2d>(DataArray2d             Udata,
 
   }
 
+#ifdef USE_HDF5
   if (hdf5_enabled) {
-
+    
 #ifdef USE_MPI
     ppkMHD::io::Save_HDF5_mpi<TWO_D> writer(Udata, Uhost, params, configMap, HYDRO_2D_NBVAR, variables_names, iStep, time, debug_name);
     writer.save();
@@ -67,6 +74,14 @@ void IO_Writer::save_data_impl<DataArray2d>(DataArray2d             Udata,
 #endif // USE_MPI
     
   }
+#endif // USE_HDF5
+
+#ifdef USE_PNETCDF
+  if (pnetcdf_enabled) {
+    ppkMHD::io::Save_PNETCDF<TWO_D> writer(Udata, Uhost, params, configMap, HYDRO_2D_NBVAR, variables_names, iStep, time, debug_name);
+    writer.save();    
+  }
+#endif // USE_PNETCDF
   
 } // IO_Writer::save_data_impl
 
@@ -90,6 +105,7 @@ void IO_Writer::save_data_impl<DataArray3d>(DataArray3d             Udata,
     
   }
 
+#ifdef USE_HDF5
   if (hdf5_enabled) {
 
 #ifdef USE_MPI
@@ -101,7 +117,14 @@ void IO_Writer::save_data_impl<DataArray3d>(DataArray3d             Udata,
 #endif // USE_MPI
     
   }
+#endif // USE_HDF5
 
+#ifdef USE_PNETCDF
+  if (pnetcdf_enabled) {
+    ppkMHD::io::Save_PNETCDF<THREE_D> writer(Udata, Uhost, params, configMap, HYDRO_2D_NBVAR, variables_names, iStep, time, debug_name);
+    writer.save();    
+  }
+#endif // USE_PNETCDF
   
 } // IO_Writer::save_data_impl
 

@@ -15,6 +15,15 @@ if(USE_HDF5)
     )
 endif(USE_HDF5)
 
+if(USE_MPI)
+  if(USE_PNETCDF)
+  set (io_SRCS
+    ${io_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/IO_PNETCDF.h
+    )    
+  endif(USE_PNETCDF)
+endif(USE_MPI)
+
 add_library(io
   ${io_SRCS}
   )
@@ -29,6 +38,12 @@ target_link_libraries(io
 if (USE_HDF5)
   target_link_libraries(io
     ${HDF5_LIBRARIES}
+    )
+endif()
+
+if (USE_PNETCDF)
+  target_link_libraries(io
+    ${PNETCDF_LIBRARIES}
     )
 endif()
   
