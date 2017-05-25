@@ -33,14 +33,9 @@
 #include "utils/mpiUtils/MpiComm.h"
 #endif // USE_MPI
 
-namespace ppkMHD { namespace io {
+#include "IO_common.h"
 
-// =======================================================
-// =======================================================
-/**
- * Return current date in a string.
- */
-std::string current_date();
+namespace ppkMHD { namespace io {
 
 // =======================================================
 // =======================================================
