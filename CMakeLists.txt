@@ -8,6 +8,7 @@ option (USE_VTK "Activate / want VTK build" OFF)
 option (USE_DOUBLE "build with double precision" ON)
 option (USE_MOOD "build MOOD numerical schemes" OFF)
 option (USE_HDF5 "build HDF5 input/output support" OFF)
+option (USE_PNETCDF "build PNETCDF input/output support (MPI required)" OFF)
 
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
@@ -132,6 +133,19 @@ if (USE_HDF5)
 endif(USE_HDF5)
   
 #####################################################################
+# PNETCDF
+#####################################################################
+if (USE_MPI)
+  if (USE_PNETCDF)
+    find_package(PNETCDF)
+    if (PNETCDF_FOUND)
+      set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_PNETCDF")
+      include_directories(${PNETCDF_INCLUDE_DIRS})
+    endif(PNETCDF_FOUND)
+  endif(USE_PNETCDF)
+endif(USE_MPI)
+
+#####################################################################
 # Eigen3
 #####################################################################
 # Eigen3 (for MOOD) -- not mature enought to be used with nvcc_wrapper,
@@ -194,6 +208,7 @@ message(STATUS "****************** ${PROJECT_NAME} Settings ******************")
 message(STATUS "MPI      enabled : ${USE_MPI}")
 message(STATUS "CUDA     enabled : ${KOKKOS_ENABLE_CUDA}")
 message(STATUS "HDF5     enabled : ${USE_HDF5}")
+message(STATUS "PNETCDF  enabled : ${USE_PNETCDF}")
 message(STATUS "MOOD     enabled : ${USE_MOOD}")
 message(STATUS "DOUBLE precision : ${USE_DOUBLE}")
 
