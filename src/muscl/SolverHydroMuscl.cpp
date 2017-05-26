@@ -22,6 +22,37 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
   
+#ifdef USE_MPI
+
+  // 1. copy boundary to MPI buffer
+  // 2. send/recv buffer
+  // 3. test if BC is BC_PERIODIC / BC_COPY then ... else ..
+  if (myMpiPos[IX] == 0) {
+    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  
+  if (myMpiPos[IX] == mx-1) {
+    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  params.communicator->synchronize();
+  
+  if (myMpiPos[IY] == 0) {
+    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  if (myMpiPos[IY] == my-1) {
+    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  params.communicator->synchronize();
+
+#else
   // call device functor
   {
     MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
@@ -40,6 +71,7 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
     MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
+#endif // USE_MPI
   
 } // SolverHydroMuscl<2>::make_boundaries
 
