@@ -38,6 +38,17 @@ public:
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
     
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
     const real_t dx = params.dx;
@@ -48,8 +59,8 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
-    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
     
     real_t tmp = x+y;
     if (tmp > 0.5 && tmp < 1.5) {
@@ -97,8 +108,20 @@ public:
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
     
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
+
     const real_t dx = params.dx;
     const real_t dy = params.dy;
     
@@ -118,8 +141,8 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
-    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
     real_t d2 = 
       (x-blast_center_x)*(x-blast_center_x)+
@@ -188,6 +211,17 @@ public:
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
     
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+
     const double xmin = params.xmin;
     const double ymin = params.ymin;
         
@@ -205,8 +239,8 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
-    double xPos = xmin + dx/2 + (i-ghostWidth)*dx;
-    double yPos = ymin + dy/2 + (j-ghostWidth)*dy;
+    double xPos = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    double yPos = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
     
     if(j < jsize  &&
        i < isize ) {
@@ -257,8 +291,8 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
-    //double xPos = xmin + dx/2 + (i-ghostWidth)*dx;
-    //double yPos = ymin + dy/2 + (j-ghostWidth)*dy;
+    //double xPos = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    //double yPos = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
         
     if (i<isize-1 and j<jsize-1) {
       Udata(i,j,IP)  = p0 / (gamma0-1.0) +

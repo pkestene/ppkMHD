@@ -9,6 +9,9 @@
 #include "shared/kokkos_shared.h"
 #include "MHDBaseFunctor3D.h"
 
+// some utils
+#include "shared/utils.h"
+
 // init conditions
 #include "shared/BlastParams.h"
 
@@ -35,9 +38,24 @@ public:
     const int ksize = params.ksize;
     const int ghostWidth = params.ghostWidth;
     
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+    const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;
+
     const real_t dx = params.dx;
     const real_t dy = params.dy;
     const real_t dz = params.dz;
@@ -47,9 +65,9 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
-    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
-    real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
     
     real_t tmp = x+y+z;
     if (tmp > 0.5 && tmp < 2.5) {
@@ -104,9 +122,24 @@ public:
     const int ksize = params.ksize;
     const int ghostWidth = params.ghostWidth;
     
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+    const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;
+
     const real_t dx = params.dx;
     const real_t dy = params.dy;
     const real_t dz = params.dz;
@@ -129,9 +162,9 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
-    real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
-    real_t z = zmin + dz/2 + (k-ghostWidth)*dz;
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
 
     real_t d2 = 
       (x-blast_center_x)*(x-blast_center_x)+
@@ -202,13 +235,29 @@ public:
     const int ksize = params.ksize;
     const int ghostWidth = params.ghostWidth;
     
-    const double xmin = params.xmin;
-    const double ymin = params.ymin;
-    //const double zmin = params.zmin;
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+    const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
+    const real_t xmin = params.xmin;
+    const real_t ymin = params.ymin;
+    const real_t zmin = params.zmin;
+    UNUSED(zmin);
         
     const double dx = params.dx;
     const double dy = params.dy;
-    //const double dz = params.dz;
+    const double dz = params.dz;
+    UNUSED(dz);
     
     const real_t gamma0 = params.settings.gamma0;
     
@@ -221,10 +270,10 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
-    double xPos = xmin + dx/2 + (i-ghostWidth)*dx;
-    double yPos = ymin + dy/2 + (j-ghostWidth)*dy;
-    //double zPos = zmin + dz/2 + (k-ghostWidth)*dz;
-    
+    double xPos = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    double yPos = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+    //double zPos = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
+        
     // density
     Udata(i,j,k,ID) = d0;
     
