@@ -21,31 +21,34 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
 {
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
+
+  const int mx = params.mx;
+  const int my = params.my;
   
 #ifdef USE_MPI
 
   // 1. copy boundary to MPI buffer
   // 2. send/recv buffer
   // 3. test if BC is BC_PERIODIC / BC_COPY then ... else ..
-  if (myMpiPos[IX] == 0) {
+  if (params.myMpiPos[IX] == 0) {
     MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   } else {
   }
   
-  if (myMpiPos[IX] == mx-1) {
+  if (params.myMpiPos[IX] == mx-1) {
     MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   } else {
   }
   params.communicator->synchronize();
   
-  if (myMpiPos[IY] == 0) {
+  if (params.myMpiPos[IY] == 0) {
     MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   } else {
   }
-  if (myMpiPos[IY] == my-1) {
+  if (params.myMpiPos[IY] == my-1) {
     MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   } else {
