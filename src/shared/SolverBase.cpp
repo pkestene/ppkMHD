@@ -1,8 +1,8 @@
 #include "SolverBase.h"
 
-#include "utils.h"
+#include "shared/utils.h"
 
-#include <io/IO_Writer.h>
+#include "utils/io/IO_Writer.h"
 
 namespace ppkMHD {
 
