@@ -8,6 +8,8 @@
 #include "muscl/SolverHydroMuscl.h"
 #include "shared/HydroParams.h"
 
+#include "shared/mpiBorderUtils.h"
+
 namespace ppkMHD { namespace muscl {
 
 // =======================================================
@@ -27,7 +29,12 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
   
 #ifdef USE_MPI
 
+  // ======
+  // XDIR
+  // ======
   // 1. copy boundary to MPI buffer
+  
+
   // 2. send/recv buffer
   // 3. test if BC is BC_PERIODIC / BC_COPY then ... else ..
   if (params.myMpiPos[IX] == 0) {
