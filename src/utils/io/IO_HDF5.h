@@ -12,9 +12,10 @@
   std::cerr << "HDF5 :" << mesg << std::endl;
 
 #define HDF5_CHECK(val, mesg) do {				\
-    if (!val) {							\
+    if (val<0) {						\
       std::cerr << "*** HDF5 ERROR ***\n";			\
-      std::cerr << "    HDF5_CHECK (" << mesg << ") failed\n";	\
+      std::cerr << "    HDF5_CHECK (" << mesg << ") failed with status : " \
+		<< status << "\n";				\
     }								\
   } while(0)
 
