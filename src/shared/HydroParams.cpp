@@ -12,7 +12,9 @@
 #include "mood/StencilUtils.h"
 #endif // USE_MOOD
 
+#ifdef USE_MPI
 using namespace hydroSimu;
+#endif // USE_MPI
 
 // =======================================================
 // =======================================================

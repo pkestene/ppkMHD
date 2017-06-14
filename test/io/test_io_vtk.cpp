@@ -50,8 +50,13 @@ public:
     const int nx = params.nx;
     const int ny = params.ny;
 
+#ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif // USE_MPI
     
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
@@ -82,9 +87,15 @@ public:
     const int ny = params.ny;
     const int nz = params.nz;
 
+#ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
     const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif // USE_MPI
     
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;

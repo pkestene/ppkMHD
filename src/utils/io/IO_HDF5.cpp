@@ -125,8 +125,8 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
   // for each time step write a <grid> </grid> item
   int startStep=0;
   int stopStep =totalNumberOfSteps;
-  int deltaStep=params.nOutput;
-  if (deltaStep = -1)
+  int deltaStep=1;
+  if (params.nOutput == -1)
     deltaStep=1;
   
   if (singleStep) {
@@ -149,7 +149,7 @@ void writeXdmfForHdf5Wrapper(HydroParams& params,
 
     xdmfFile << "    <Grid Name=\"" << baseName << "\" GridType=\"Uniform\">" << std::endl;
     xdmfFile << "    <Time Value=\"" << iStep << "\" />"                      << std::endl;
-      
+
     // topology CoRectMesh
     if (dimType == TWO_D) 
       xdmfFile << "      <Topology TopologyType=\"2DCoRectMesh\" NumberOfElements=\"" << nyg << " " << nxg << "\"/>" << std::endl;

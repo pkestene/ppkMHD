@@ -27,6 +27,7 @@
 //class HydroParams;
 //class ConfigMap;
 #include "shared/HydroParams.h"
+#include "shared/utils.h"
 #include "utils/config/ConfigMap.h"
 
 #ifdef USE_MPI
@@ -85,7 +86,7 @@ public:
   ~Save_HDF5() {};
 
   template<DimensionType d_ = d>
-  void copy_buffer(typename std::enable_if<d_==TWO_D, real_t>::type *data,
+  void copy_buffer(typename std::enable_if<d_==TWO_D, real_t>::type *& data,
 		   int isize, int jsize, int ksize, int nvar, KokkosLayout layout)
   {
     if (layout == KOKKOS_LAYOUT_RIGHT) { // transpose array to make data contiguous in memory
@@ -96,13 +97,13 @@ public:
 	}
       }
     } else {
-      data = &(Uhost(0,0,nvar));
+      data = Uhost.ptr_on_device() + isize*jsize*nvar;
     }
 
   } // copy_buffer
 
   template<DimensionType d_=d>
-  void copy_buffer(typename std::enable_if<d_==THREE_D, real_t>::type *data,
+  void copy_buffer(typename std::enable_if<d_==THREE_D, real_t>::type *& data,
 		   int isize, int jsize, int ksize, int nvar, KokkosLayout layout)
   {
     if (layout == KOKKOS_LAYOUT_RIGHT) { // transpose array to make data contiguous in memory
@@ -116,7 +117,7 @@ public:
       }
       
     } else {
-      data = &(Uhost(0,0,0,nvar));
+      data = Uhost.ptr_on_device() + isize*jsize*ksize*nvar;
     }
 
   } // copy_buffer / 3D
@@ -163,7 +164,8 @@ public:
     if (Uhost.stride_0()>1)
       layout = KOKKOS_LAYOUT_RIGHT;
   
-    herr_t status;
+    herr_t status = 0;
+    UNUSED(status);
     
     // make filename string
     std::string outputDir    = configMap.getString("output", "outputDir", "./");
@@ -269,10 +271,12 @@ public:
 
     if (dimType == TWO_D) {
       const hsize_t chunk_size2D[2] = {(hsize_t) ny, (hsize_t) nx};
-      H5Pset_chunk (propList_create_id, 2, chunk_size2D);
+      status = H5Pset_chunk (propList_create_id, 2, chunk_size2D);
+      HDF5_CHECK(status, "Can not set hdf5 chunck sizes");
     } else { // THREE_D
       const hsize_t chunk_size3D[3] = {(hsize_t) nz, (hsize_t) ny, (hsize_t) nx};
-      H5Pset_chunk (propList_create_id, 3, chunk_size3D);
+      status = H5Pset_chunk (propList_create_id, 3, chunk_size3D);
+      HDF5_CHECK(status, "Can not set hdf5 chunck sizes");
     }
     H5Pset_shuffle (propList_create_id);
     H5Pset_deflate (propList_create_id, compressionLevel);
@@ -292,14 +296,14 @@ public:
       else
 	data = new real_t[isize*jsize*ksize];
 
-    }
+    }      
   
     // write density
     hid_t dataset_id = H5Dcreate2(file_id, "/density", dataType, dataspace_file, 
 				  H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
     copy_buffer(data, isize, jsize, ksize, ID, layout);
     status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-  
+    
     // write total energy
     dataset_id = H5Dcreate2(file_id, "/energy", dataType, dataspace_file, 
 			    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
@@ -448,7 +452,7 @@ public:
     H5Fflush(file_id, H5F_SCOPE_LOCAL);
     H5Fclose(file_id);
 
-    (void) status;
+    //(void) status;
   
   } // save
 
@@ -495,7 +499,7 @@ public:
   ~Save_HDF5_mpi() {};
 
   template<DimensionType d_ = d>
-  void copy_buffer(typename std::enable_if<d_==TWO_D, real_t>::type *data,
+  void copy_buffer(typename std::enable_if<d_==TWO_D, real_t>::type *& data,
 		   int isize, int jsize, int ksize, int nvar, KokkosLayout layout)
   {
     if (layout == KOKKOS_LAYOUT_RIGHT) { // transpose array to make data contiguous in memory
@@ -506,13 +510,13 @@ public:
 	}
       }
     } else {
-      data = &(Uhost(0,0,nvar));
+      data = Uhost.ptr_on_device() + isize*jsize*nvar;
     }
 
   } // copy_buffer
 
   template<DimensionType d_ = d>
-  void copy_buffer(typename std::enable_if<d_==THREE_D, real_t>::type *data,
+  void copy_buffer(typename std::enable_if<d_==THREE_D, real_t>::type *& data,
 		   int isize, int jsize, int ksize, int nvar, KokkosLayout layout)
   {
     if (layout == KOKKOS_LAYOUT_RIGHT) { // transpose array to make data contiguous in memory
@@ -526,7 +530,7 @@ public:
       }
       
     } else {
-      data = &(Uhost(0,0,0,nvar));
+      data = Uhost.ptr_on_device() + isize*jsize*ksize*nvar;
     }
 
   } // copy_buffer / 3D
@@ -647,7 +651,9 @@ public:
     // Create a new file using property list with parallel I/O access.
     MPI_Info mpi_info     = MPI_INFO_NULL;
     hid_t    propList_create_id = H5Pcreate(H5P_FILE_ACCESS);
-    H5Pset_fapl_mpio(propList_create_id, params.communicator->getComm(), mpi_info);
+    status = H5Pset_fapl_mpio(propList_create_id, params.communicator->getComm(), mpi_info);
+    HDF5_CHECK(status, "Can not access MPI IO parameters");
+    
     hid_t    file_id  = H5Fcreate(hdf5FilenameFull.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, propList_create_id);
     H5Pclose(propList_create_id);
 

@@ -366,6 +366,7 @@ void save_VTK_3D(DataArray3d             Udata,
 
 } // end save_VTK_3D
 
+#ifdef USE_MPI
 // =======================================================
 // =======================================================
 void save_VTK_2D_mpi(DataArray2d             Udata,
@@ -925,6 +926,7 @@ void write_pvti_header(std::string headerFilename,
   // end writing pvti header
   
 } // write_pvti_header
+#endif // USE_MPI
 
 } // namespace io
 

@@ -45,6 +45,7 @@ void save_VTK_3D(DataArray3d             Udata,
 		 std::string debug_name);
 
 
+#ifdef USE_MPI
 /**
  * \param[in] Udata device data to save
  * \param[in,out] Uhost host data temporary array before saving to file
@@ -82,7 +83,7 @@ void write_pvti_header(std::string headerFilename,
 		       int nbvar,
 		       const std::map<int, std::string>& varNames,
 		       int iStep);
-
+#endif // USE_MPI
 
 } // namespace io
 
