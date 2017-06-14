@@ -141,7 +141,7 @@ public:
   DataArray b;
   int       ghostWidth;
   
-}; // class
+}; // class CopyBorderBuf_To_DataArray
 
 /**
  * \class CopyDataArray_To_BorderBuf

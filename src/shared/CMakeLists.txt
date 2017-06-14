@@ -24,6 +24,13 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mhd_utils.h
   )
 
+# if (USE_MPI)
+#   set (shared_SRCS
+#     ${shared_SRCS}
+#     ${CMAKE_CURRENT_SOURCE_DIR}/shared/mpiBorderUtils.h
+#     )
+# endif()
+
 add_library(shared
   ${shared_SRCS}
   )

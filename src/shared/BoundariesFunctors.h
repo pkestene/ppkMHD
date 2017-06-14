@@ -421,7 +421,7 @@ public:
 /*************************************************/
 /**
  * Three boundary conditions:
- * - reflective : normal velocity + nomarl magfield inverted
+ * - reflective : normal velocity + normal magfield inverted
  * - outflow
  * - periodic
  */
