@@ -147,6 +147,11 @@ public:
 
   void make_boundaries_serial(DataArray2d Udata, bool mhd_enabled);
   void make_boundaries_serial(DataArray3d Udata, bool mhd_enabled);
+
+#ifdef USE_MPI
+  void make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled);
+  void make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled);
+#endif // USE_MPI
   
 protected:
 

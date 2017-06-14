@@ -381,6 +381,77 @@ SolverBase::make_boundaries_serial(DataArray3d Udata, bool mhd_enabled)
   
 } // SolverBase::make_boundaries_serial - 3d
 
+#ifdef USE_MPI
+// =======================================================
+// =======================================================
+void
+SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
+{
+
+  const int ghostWidth=params.ghostWidth;
+  int nbIter = ghostWidth*std::max(params.isize,params.jsize);
+
+  const int mx = params.mx;
+  const int my = params.my;
+
+  // ======
+  // XDIR
+  // ======
+  // 1. copy boundary to MPI buffer
+  
+
+  // 2. send/recv buffer
+  // 3. test if BC is BC_PERIODIC / BC_COPY then ... else ..
+  if (params.myMpiPos[IX] == 0) {
+    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  
+  if (params.myMpiPos[IX] == mx-1) {
+    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  params.communicator->synchronize();
+  
+  // ======
+  // YDIR
+  // ======
+  if (params.myMpiPos[IY] == 0) {
+    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  if (params.myMpiPos[IY] == my-1) {
+    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  } else {
+  }
+  params.communicator->synchronize();
+
+} // SolverBase::make_boundaries_mpi - 2d
+
+// =======================================================
+// =======================================================
+void
+SolverBase::make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled)
+{
+
+  const int ghostWidth=params.ghostWidth;
+  
+  int max_size = std::max(params.isize,params.jsize);
+  max_size = std::max(max_size,params.ksize);
+  int nbIter = ghostWidth * max_size * max_size;
+
+  const int mx = params.mx;
+  const int my = params.my;
+  const int mz = params.mz;
+
+} // SolverBase::make_boundaries_mpi - 3d
+
+#endif // USE_MPI
+
 // =======================================================
 // =======================================================
 void
