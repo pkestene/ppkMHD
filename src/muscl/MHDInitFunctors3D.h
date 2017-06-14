@@ -243,12 +243,14 @@ public:
     const int i_mpi = 0;
     const int j_mpi = 0;
     const int k_mpi = 0;
+    UNUSED(k_mpi);
 #endif
 
     const int nx = params.nx;
     const int ny = params.ny;
     const int nz = params.nz;
-
+    UNUSED(nz);
+    
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;

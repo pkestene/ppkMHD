@@ -285,7 +285,7 @@ public:
 
     // ambient flow
     const real_t rho_a = this->iparams.rho_a;
-    const real_t p_a   = this->iparams.p_a;
+    //const real_t p_a   = this->iparams.p_a;
     const real_t T_a   = this->iparams.T_a;
     const real_t u_a   = this->iparams.u_a;
     const real_t v_a   = this->iparams.v_a;

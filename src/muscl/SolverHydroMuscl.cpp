@@ -24,10 +24,10 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(isize,jsize);
 
+#ifdef USE_MPI
+
   const int mx = params.mx;
   const int my = params.my;
-  
-#ifdef USE_MPI
 
   // ======
   // XDIR
