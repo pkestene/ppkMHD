@@ -144,6 +144,9 @@ public:
 		       int iStep,
 		       real_t time,
 		       std::string debug_name);
+
+  void make_boundaries_serial(DataArray2d Udata, bool mhd_enabled);
+  void make_boundaries_serial(DataArray3d Udata, bool mhd_enabled);
   
 protected:
 

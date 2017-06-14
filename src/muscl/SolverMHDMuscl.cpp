@@ -19,28 +19,10 @@ namespace ppkMHD { namespace muscl {
 template<>
 void SolverMHDMuscl<2>::make_boundaries(DataArray Udata)
 {
-  const int ghostWidth=params.ghostWidth;
-  int nbIter = ghostWidth*std::max(isize,jsize);
   
-  // call device functor
-  {
-    MakeBoundariesFunctor2D_MHD<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D_MHD<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
+  bool mhd_enabled = true;
+  make_boundaries_serial(Udata, mhd_enabled);
 
-  {
-    MakeBoundariesFunctor2D_MHD<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D_MHD<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  
 } // SolverMHDMuscl<2>::make_boundaries
 
 // =======================================================
@@ -52,39 +34,9 @@ void SolverMHDMuscl<2>::make_boundaries(DataArray Udata)
 template<>
 void SolverMHDMuscl<3>::make_boundaries(DataArray Udata)
 {
-  const int ghostWidth=params.ghostWidth;
-
-  int max_size = std::max(isize,jsize);
-  max_size = std::max(max_size,ksize);
-  int nbIter = ghostWidth * max_size * max_size;
   
-  // call device functor
-  {
-    MakeBoundariesFunctor3D_MHD<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }  
-  {
-    MakeBoundariesFunctor3D_MHD<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-
-  {
-    MakeBoundariesFunctor3D_MHD<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor3D_MHD<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-
-  {
-    MakeBoundariesFunctor3D_MHD<FACE_ZMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor3D_MHD<FACE_ZMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
+  bool mhd_enabled = true;
+  make_boundaries_serial(Udata, mhd_enabled);
   
 } // SolverMHDMuscl<3>::make_boundaries
 

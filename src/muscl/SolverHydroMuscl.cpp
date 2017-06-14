@@ -63,24 +63,10 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
   params.communicator->synchronize();
 
 #else
-  // call device functor
-  {
-    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
 
-  {
-    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
+  bool mhd_enabled = false;
+  make_boundaries_serial(Udata, mhd_enabled);
+  
 #endif // USE_MPI
   
 } // SolverHydroMuscl<2>::make_boundaries
@@ -94,40 +80,10 @@ void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
 template<>
 void SolverHydroMuscl<3>::make_boundaries(DataArray Udata)
 {
-  const int ghostWidth=params.ghostWidth;
 
-  int max_size = std::max(isize,jsize);
-  max_size = std::max(max_size,ksize);
-  int nbIter = ghostWidth * max_size * max_size;
-  
-  // call device functor
-  {
-    MakeBoundariesFunctor3D<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }  
-  {
-    MakeBoundariesFunctor3D<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
+  bool mhd_enabled = false;
+  make_boundaries_serial(Udata, mhd_enabled);
 
-  {
-    MakeBoundariesFunctor3D<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor3D<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-
-  {
-    MakeBoundariesFunctor3D<FACE_ZMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  {
-    MakeBoundariesFunctor3D<FACE_ZMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-  }
-  
 } // SolverHydroMuscl<3>::make_boundaries
 
 // =======================================================
