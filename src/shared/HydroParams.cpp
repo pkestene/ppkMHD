@@ -150,6 +150,10 @@ void HydroParams::setup(ConfigMap &configMap)
 void HydroParams::setup_mpi(ConfigMap& configMap)
 {
 
+  // runtime determination if we are using float ou double (for MPI communication)
+  data_type = typeid(1.0f).name() == typeid((real_t)1.0f).name() ?
+    hydroSimu::MpiComm::FLOAT : hydroSimu::MpiComm::DOUBLE;
+  
   // MPI parameters :
   mx = configMap.getInteger("mpi", "mx", 1);
   my = configMap.getInteger("mpi", "my", 1);
@@ -184,29 +188,36 @@ void HydroParams::setup_mpi(ConfigMap& configMap)
   // myMpiPos[0] is between 0 and mx-1
   // myMpiPos[1] is between 0 and my-1
   // myMpiPos[2] is between 0 and mz-1
-  myMpiPos.resize(nDim);
-  communicator->getMyCoords(&myMpiPos[0]);
-    
+  //myMpiPos.resize(nDim);
+  {
+    int mpiPos[3] = {0,0,0};
+    communicator->getMyCoords(&mpiPos[0]);
+    myMpiPos[0] = mpiPos[0];
+    myMpiPos[1] = mpiPos[1];
+    myMpiPos[2] = mpiPos[2];
+  }
+  
   /*
    * compute MPI ranks of our neighbors and 
    * set default boundary condition types
    */
   if (dimType == TWO_D) {
     nNeighbors = N_NEIGHBORS_2D;
-    neighborsRank.resize(nNeighbors);
     neighborsRank[X_MIN] = communicator->getNeighborRank<X_MIN>();
     neighborsRank[X_MAX] = communicator->getNeighborRank<X_MAX>();
     neighborsRank[Y_MIN] = communicator->getNeighborRank<Y_MIN>();
     neighborsRank[Y_MAX] = communicator->getNeighborRank<Y_MAX>();
+    neighborsRank[Z_MIN] = 0;
+    neighborsRank[Z_MAX] = 0;
     
-    neighborsBC.resize(nNeighbors);
     neighborsBC[X_MIN] = BC_COPY;
     neighborsBC[X_MAX] = BC_COPY;
     neighborsBC[Y_MIN] = BC_COPY;
     neighborsBC[Y_MAX] = BC_COPY;
+    neighborsBC[Z_MIN] = BC_UNDEFINED;
+    neighborsBC[Z_MAX] = BC_UNDEFINED;
   } else {
     nNeighbors = N_NEIGHBORS_3D;
-    neighborsRank.resize(nNeighbors);
     neighborsRank[X_MIN] = communicator->getNeighborRank<X_MIN>();
     neighborsRank[X_MAX] = communicator->getNeighborRank<X_MAX>();
     neighborsRank[Y_MIN] = communicator->getNeighborRank<Y_MIN>();
@@ -214,7 +225,6 @@ void HydroParams::setup_mpi(ConfigMap& configMap)
     neighborsRank[Z_MIN] = communicator->getNeighborRank<Z_MIN>();
     neighborsRank[Z_MAX] = communicator->getNeighborRank<Z_MAX>();
     
-    neighborsBC.resize(nNeighbors);
     neighborsBC[X_MIN] = BC_COPY;
     neighborsBC[X_MAX] = BC_COPY;
     neighborsBC[Y_MIN] = BC_COPY;

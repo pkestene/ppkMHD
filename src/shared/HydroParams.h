@@ -111,6 +111,10 @@ struct HydroParams {
   int implementationVersion=0; /*!< triggers which implementation to use (currently 3 versions)*/
 
 #ifdef USE_MPI
+  //! runtime determination if we are using float ou double (for MPI communication)
+  //! initialized in constructor to either MpiComm::FLOAT or MpiComm::DOUBLE
+  int data_type;
+
   //! size of the MPI cartesian grid
   int mx,my,mz;
   
@@ -127,17 +131,17 @@ struct HydroParams {
   int nProcs;
   
   //! MPI cartesian coordinates inside MPI topology
-  std::vector<int> myMpiPos;
+  Kokkos::Array<int,3> myMpiPos;
   
   //! number of MPI process neighbors (4 in 2D and 6 in 3D)
   int nNeighbors;
   
   //! MPI rank of adjacent MPI processes
-  std::vector<int> neighborsRank;
+  Kokkos::Array<int,6> neighborsRank;
   
   //! boundary condition type with adjacent domains (corresponding to
   //! neighbor MPI processes)
-  std::vector<BoundaryConditionType> neighborsBC;
+  Kokkos::Array<BoundaryConditionType,6> neighborsBC;
 
 #endif // USE_MPI
   

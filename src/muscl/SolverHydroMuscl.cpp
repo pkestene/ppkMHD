@@ -21,15 +21,15 @@ namespace ppkMHD { namespace muscl {
 template<>
 void SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
 {
-  const int ghostWidth=params.ghostWidth;
-  int nbIter = ghostWidth*std::max(isize,jsize);
+
+  bool mhd_enabled = false;
 
 #ifdef USE_MPI
 
+  make_boundaries_mpi(Udata, mhd_enabled);
 
 #else
 
-  bool mhd_enabled = false;
   make_boundaries_serial(Udata, mhd_enabled);
   
 #endif // USE_MPI
@@ -47,7 +47,16 @@ void SolverHydroMuscl<3>::make_boundaries(DataArray Udata)
 {
 
   bool mhd_enabled = false;
+
+#ifdef USE_MPI
+
+  make_boundaries_mpi(Udata, mhd_enabled);
+
+#else
+
   make_boundaries_serial(Udata, mhd_enabled);
+  
+#endif // USE_MPI
 
 } // SolverHydroMuscl<3>::make_boundaries
 

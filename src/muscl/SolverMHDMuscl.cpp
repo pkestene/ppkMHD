@@ -21,7 +21,16 @@ void SolverMHDMuscl<2>::make_boundaries(DataArray Udata)
 {
   
   bool mhd_enabled = true;
+  
+#ifdef USE_MPI
+
+  make_boundaries_mpi(Udata, mhd_enabled);
+
+#else
+
   make_boundaries_serial(Udata, mhd_enabled);
+  
+#endif // USE_MPI
 
 } // SolverMHDMuscl<2>::make_boundaries
 
@@ -36,7 +45,16 @@ void SolverMHDMuscl<3>::make_boundaries(DataArray Udata)
 {
   
   bool mhd_enabled = true;
+
+#ifdef USE_MPI
+
+  make_boundaries_mpi(Udata, mhd_enabled);
+
+#else
+
   make_boundaries_serial(Udata, mhd_enabled);
+  
+#endif // USE_MPI
   
 } // SolverMHDMuscl<3>::make_boundaries
 

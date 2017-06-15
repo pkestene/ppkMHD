@@ -55,6 +55,7 @@ public:
 
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
+    const int nbvar = U.dimension_2();
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
@@ -70,14 +71,14 @@ public:
     
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       
-      for (int nVar=0; nVar<U.nvar(); ++nVar)
+      for (int nVar=0; nVar<nbvar; ++nVar)
 	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
 	  U(offset+offset_i  ,j,nVar) = b(offset_i,j,nVar);
 	}
       
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
       
-      for (int nVar=0; nVar<U.nvar(); ++nVar)
+      for (int nVar=0; nVar<nbvar; ++nVar)
 	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
 	  U(i,offset+offset_j  ,nVar) = b(i,offset_j,nVar);
 	}
@@ -94,6 +95,7 @@ public:
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
     const int ksize = U.dimension_2();
+    const int nbvar = U.dimension_3();
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
     
@@ -111,7 +113,7 @@ public:
     
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       	
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
 	  U(offset+offset_i  ,j,k,nVar) = b(offset_i,j,k,nVar);
 	}
@@ -119,7 +121,7 @@ public:
       
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
       
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
 	  U(i,offset+offset_j  ,k,nVar) = b(i,offset_j,k,nVar);
 	}
@@ -127,7 +129,7 @@ public:
       
     } else if (boundaryLoc == ZMIN or boundaryLoc == ZMAX) {
       
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_k=0; offset_k<ghostWidth; ++offset_k) {
 	  U(i,j,offset+offset_k  ,nVar) = b(i,j,offset_k,nVar);
 	}
@@ -180,6 +182,7 @@ public:
     
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
+    const int nbvar = U.dimension_2();
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
@@ -197,7 +200,7 @@ public:
      */      
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
 	  b(offset_i,j,nVar) = U(offset+offset_i  ,j,nVar);
 	}
@@ -205,7 +208,7 @@ public:
       
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
 
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
 	  b(i,offset_j,nVar) = U(i,offset+offset_j  ,nVar);
 	}
@@ -223,6 +226,7 @@ public:
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
     const int ksize = U.dimension_2();
+    const int nbvar = U.dimension_3();
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
@@ -243,7 +247,7 @@ public:
      */      
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
 	  b(offset_i,j,k,nVar) = U(offset+offset_i  ,j,k,nVar);
 	}
@@ -251,7 +255,7 @@ public:
 	
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
 
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
 	  b(i,offset_j,k,nVar) = U(i,offset+offset_j  ,k,nVar);
 	}
@@ -259,7 +263,7 @@ public:
       
     } else if (boundaryLoc == ZMIN or boundaryLoc == ZMAX) {
 
-      for (int nVar=0; nVar<U.nvar(); ++nVar) {
+      for (int nVar=0; nVar<nbvar; ++nVar) {
 	for (int offset_k=0; offset_k<ghostWidth; ++offset_k) {
 	  b(i,j,offset_k,nVar) = U(i,j,offset+offset_k  ,nVar);
 	}

@@ -149,15 +149,55 @@ public:
   void make_boundaries_serial(DataArray3d Udata, bool mhd_enabled);
 
 #ifdef USE_MPI
-  void make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled);
-  void make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled);
+  virtual void make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled);
+  virtual void make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled);
+
+  void copy_boundaries(DataArray2d Udata, Direction dir);
+  void copy_boundaries(DataArray3d Udata, Direction dir);
+
+  void transfert_boundaries_2d(Direction dir);
+  void transfert_boundaries_3d(Direction dir);
+
+  void copy_boundaries_back(DataArray2d Udata, BoundaryLocation loc);
+  void copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc);
+
 #endif // USE_MPI
   
 protected:
 
   //! io writer
   io::IO_WriterBase*       m_io_writer;
+
+#ifdef USE_MPI
+  //! \defgroup BorderBuffer data arrays for border exchange handling
+  //! we assume that we use a cuda-aware version of OpenMPI / MVAPICH
+  //! @{
+  DataArray2d borderBufSend_xmin_2d;
+  DataArray2d borderBufSend_xmax_2d;
+  DataArray2d borderBufSend_ymin_2d;
+  DataArray2d borderBufSend_ymax_2d;
   
+  DataArray2d borderBufRecv_xmin_2d;
+  DataArray2d borderBufRecv_xmax_2d;
+  DataArray2d borderBufRecv_ymin_2d;
+  DataArray2d borderBufRecv_ymax_2d;
+
+  DataArray3d borderBufSend_xmin_3d;
+  DataArray3d borderBufSend_xmax_3d;
+  DataArray3d borderBufSend_ymin_3d;
+  DataArray3d borderBufSend_ymax_3d;
+  DataArray3d borderBufSend_zmin_3d;
+  DataArray3d borderBufSend_zmax_3d;
+  
+  DataArray3d borderBufRecv_xmin_3d;
+  DataArray3d borderBufRecv_xmax_3d;
+  DataArray3d borderBufRecv_ymin_3d;
+  DataArray3d borderBufRecv_ymax_3d;
+  DataArray3d borderBufRecv_zmin_3d;
+  DataArray3d borderBufRecv_zmax_3d;
+  //! @}
+#endif // USE_MPI
+
 }; // class SolverBase
 
 } // namespace ppkMHD
