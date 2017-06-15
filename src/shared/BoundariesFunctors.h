@@ -4,6 +4,10 @@
 #include "HydroParams.h"    // for HydroParams
 #include "kokkos_shared.h"  // for Data arrays
 
+#ifdef USE_MPI
+#include "utils/mpiUtils/mpiEnums.h"
+#endif // USE_MPI
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
@@ -42,10 +46,20 @@ public:
     int i0, j0;
     int iVar;
     
-    if (faceId == FACE_XMIN) {
+#ifdef USE_MPI
+  using namespace hydroSimu;
+#endif
+
+  if (faceId == FACE_XMIN) {
       
       // boundary xmin
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MIN];
+      if (boundary_type == BC_COPY || boundary_type == BC_PERIODIC)
+	return;
+#else
       boundary_type = params.boundary_type_xmin;
+#endif
 
       j = index / ghostWidth;
       i = index - j*ghostWidth;
@@ -75,8 +89,14 @@ public:
     if (faceId == FACE_XMAX) {
       
       // boundary xmax
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MAX];
+      if (boundary_type == BC_COPY || boundary_type == BC_PERIODIC)
+	return;
+#else
       boundary_type = params.boundary_type_xmax;
-
+#endif
+      
       j = index / ghostWidth;
       i = index - j*ghostWidth;
       i += (nx+ghostWidth);
@@ -105,8 +125,14 @@ public:
     if (faceId == FACE_YMIN) {
       
       // boundary ymin
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MIN];
+      if (boundary_type == BC_COPY || boundary_type == BC_PERIODIC)
+	return;
+#else
       boundary_type = params.boundary_type_ymin;
-
+#endif
+      
       i = index / ghostWidth;
       j = index - i*ghostWidth;
 
@@ -133,8 +159,14 @@ public:
     if (faceId == FACE_YMAX) {
 
       // boundary ymax
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MAX];
+      if (boundary_type == BC_COPY || boundary_type == BC_PERIODIC)
+	return;
+#else
       boundary_type = params.boundary_type_ymax;
-
+#endif
+      
       i = index / ghostWidth;
       j = index - i*ghostWidth;
       j += (ny+ghostWidth);
@@ -212,6 +244,10 @@ public:
     int i0, j0, k0;
     int iVar;
     
+#ifdef USE_MPI
+  using namespace hydroSimu;
+#endif
+
     if (faceId == FACE_XMIN) {
       
       // boundary xmin (index = i + j * ghostWidth + k * ghostWidth*jsize)
@@ -219,8 +255,12 @@ public:
       j = (index - k*ghostWidth*jsize) / ghostWidth;
       i = index - j*ghostWidth - k*ghostWidth*jsize;
       
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MIN];
+#else
       boundary_type = params.boundary_type_xmin;
-
+#endif
+      
       if(k >= kmin && k <= kmax &&
 	 j >= jmin && j <= jmax &&
 	 i >= 0    && i <ghostWidth) {
@@ -254,7 +294,11 @@ public:
 
       i += (nx+ghostWidth);
       
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MAX];
+#else
       boundary_type = params.boundary_type_xmax;
+#endif
       
       if(k >= kmin          && k <= kmax &&
 	 j >= jmin          && j <= jmax &&
@@ -285,7 +329,11 @@ public:
       j = (index - k*isize*ghostWidth) / isize;
       i = index - j*isize - k*isize*ghostWidth;
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MIN];
+#else
       boundary_type = params.boundary_type_ymin;
+#endif
       
       if(k >= kmin && k <= kmax       && 
 	 j >= 0    && j <  ghostWidth &&
@@ -319,8 +367,12 @@ public:
 
       j += (ny+ghostWidth);
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MAX];
+#else
       boundary_type = params.boundary_type_ymax;
-
+#endif
+      
       if(k >= kmin           && k <= kmax              &&
 	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
 	 i >= imin           && i <= imax) {
@@ -351,7 +403,11 @@ public:
       j = (index - k*isize*jsize) / isize;
       i = index - j*isize - k*isize*jsize;
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Z_MIN];
+#else
       boundary_type = params.boundary_type_zmin;
+#endif
       
       if(k >= 0    && k <  ghostWidth &&
 	 j >= jmin && j <= jmax       &&
@@ -385,8 +441,12 @@ public:
 
       k += (nz+ghostWidth);
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Z_MAX];
+#else
       boundary_type = params.boundary_type_zmax;
-
+#endif
+      
       if(k >= nz+ghostWidth && k <= nz+2*ghostWidth-1 &&
 	 j >= jmin          && j <= jmax              &&
 	 i >= imin          && i <= imax) {
@@ -456,14 +516,22 @@ public:
     int i0, j0;
     int iVar;
 
+#ifdef USE_MPI
+  using namespace hydroSimu;
+#endif
+
     if (faceId == FACE_XMIN) {
       
       // boundary xmin
       j = index / ghostWidth;
       i = index - j*ghostWidth;
       
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MIN];
+#else
       boundary_type = params.boundary_type_xmin;
-
+#endif
+      
       if(j >= jmin && j <= jmax    &&
 	 i >= 0    && i <ghostWidth) {
 	
@@ -494,7 +562,11 @@ public:
       i = index - j*ghostWidth;
       i += (nx+ghostWidth);
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MAX];
+#else
       boundary_type = params.boundary_type_xmax;
+#endif
       
       if(j >= jmin          && j <= jmax             &&
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
@@ -524,8 +596,12 @@ public:
       i = index / ghostWidth;
       j = index - i*ghostWidth;
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MIN];
+#else
       boundary_type = params.boundary_type_ymin;
-
+#endif
+      
       if(i >= imin && i <= imax    &&
 	 j >= 0    && j <ghostWidth) {
 	
@@ -554,7 +630,11 @@ public:
       j = index - i*ghostWidth;
       j += (ny+ghostWidth);
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MAX];
+#else
       boundary_type = params.boundary_type_ymax;
+#endif
       
       if(i >= imin          && i <= imax              &&
 	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
@@ -627,14 +707,22 @@ public:
     int i0, j0, k0;
     int iVar;
     
+#ifdef USE_MPI
+  using namespace hydroSimu;
+#endif
+
     if (faceId == FACE_XMIN) {
       // boundary xmin (index = i + j * ghostWidth + k * ghostWidth*jsize)
       k = index / (ghostWidth*jsize);
       j = (index - k*ghostWidth*jsize) / ghostWidth;
       i = index - j*ghostWidth - k*ghostWidth*jsize;
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MIN];
+#else
       boundary_type = params.boundary_type_xmin;
-
+#endif
+      
       if(k >= kmin && k <= kmax &&
 	 j >= jmin && j <= jmax &&
 	 i >= 0    && i <ghostWidth) {
@@ -669,7 +757,11 @@ public:
 
       i += (nx+ghostWidth);
       
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[X_MAX];
+#else
       boundary_type = params.boundary_type_xmax;
+#endif
       
       if(k >= kmin          && k <= kmax &&
 	 j >= jmin          && j <= jmax &&
@@ -701,7 +793,11 @@ public:
       j = (index - k*isize*ghostWidth) / isize;
       i = index - j*isize - k*isize*ghostWidth;
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MIN];
+#else
       boundary_type = params.boundary_type_ymin;
+#endif
       
       if(k >= kmin && k <= kmax       && 
 	 j >= 0    && j <  ghostWidth &&
@@ -736,8 +832,12 @@ public:
 
       j += (ny+ghostWidth);
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Y_MAX];
+#else
       boundary_type = params.boundary_type_ymax;
-
+#endif
+      
       if(k >= kmin           && k <= kmax              &&
 	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
 	 i >= imin           && i <= imax) {
@@ -769,7 +869,11 @@ public:
       j = (index - k*isize*jsize) / isize;
       i = index - j*isize - k*isize*jsize;
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Z_MIN];
+#else
       boundary_type = params.boundary_type_zmin;
+#endif
       
       if(k >= 0    && k <  ghostWidth &&
 	 j >= jmin && j <= jmax       &&
@@ -804,8 +908,12 @@ public:
 
       k += (nz+ghostWidth);
 
+#ifdef USE_MPI
+      boundary_type = params.neighborsBC[Z_MAX];
+#else
       boundary_type = params.boundary_type_zmax;
-
+#endif
+      
       if(k >= nz+ghostWidth && k <= nz+2*ghostWidth-1 &&
 	 j >= jmin          && j <= jmax              &&
 	 i >= imin          && i <= imax) {

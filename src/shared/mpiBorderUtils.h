@@ -183,9 +183,16 @@ public:
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
     const int nbvar = U.dimension_2();
+    const int    gw = ghostWidth;
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+    //index2coord(index,i,j,isize,jsize);
 
+    if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
+      index2coord(index,i,j,gw,jsize);
+    } else {
+      index2coord(index,i,j,isize,gw);
+    }
+    
     /*
      * Proceed with copy
      */

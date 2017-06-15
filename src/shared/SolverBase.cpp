@@ -455,7 +455,7 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
   // ======
   copy_boundaries(Udata,XDIR);
   transfert_boundaries_2d(XDIR);
-
+    
   if (params.neighborsBC[X_MIN] == BC_COPY ||
       params.neighborsBC[X_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, XMIN);
@@ -471,7 +471,7 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
     MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
-
+  
   params.communicator->synchronize();
   
   // ======
@@ -479,7 +479,7 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
   // ======
   copy_boundaries(Udata,YDIR);
   transfert_boundaries_2d(YDIR);
-
+  
   if (params.neighborsBC[Y_MIN] == BC_COPY ||
       params.neighborsBC[Y_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, YMIN);
@@ -495,9 +495,9 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
     MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
-
+  
   params.communicator->synchronize();
-
+  
 } // SolverBase::make_boundaries_mpi - 2d
 
 // =======================================================
@@ -560,6 +560,8 @@ SolverBase::copy_boundaries(DataArray2d Udata, Direction dir)
     }
     
   }
+
+  Kokkos::fence();
   
 } // SolverBase::copy_boundaries - 2d
 
@@ -617,7 +619,9 @@ SolverBase::copy_boundaries(DataArray3d Udata, Direction dir)
     }
     
   }
-  
+
+  Kokkos::fence();
+
 } // SolverBase::copy_boundaries - 3d
 
 // =======================================================
