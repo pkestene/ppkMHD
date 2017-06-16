@@ -145,10 +145,11 @@ public:
 		       real_t time,
 		       std::string debug_name);
   
-  //void make_boundary(DataArray2d Udata, FaceIdType faceId);
+  virtual void make_boundary(DataArray2d Udata, FaceIdType faceId, bool mhd_enabled);
+  virtual void make_boundary(DataArray3d Udata, FaceIdType faceId, bool mhd_enabled);
   
-  void make_boundaries_serial(DataArray2d Udata, bool mhd_enabled);
-  void make_boundaries_serial(DataArray3d Udata, bool mhd_enabled);
+  virtual void make_boundaries_serial(DataArray2d Udata, bool mhd_enabled);
+  virtual void make_boundaries_serial(DataArray3d Udata, bool mhd_enabled);
 
 #ifdef USE_MPI
   virtual void make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled);

@@ -299,55 +299,198 @@ SolverBase::save_data_debug(DataArray2d             U,
 // =======================================================
 // =======================================================
 void
-SolverBase::make_boundaries_serial(DataArray2d Udata, bool mhd_enabled)
+SolverBase::make_boundary(DataArray2d Udata, FaceIdType faceId, bool mhd_enabled)
 {
 
   const int ghostWidth=params.ghostWidth;
   int nbIter = ghostWidth*std::max(params.isize,params.jsize);
 
-  if (mhd_enabled) {
+  if (faceId == FACE_XMIN) {
+
+    if (mhd_enabled) {
     
-    // call device functor
-    {
       MakeBoundariesFunctor2D_MHD<FACE_XMIN> functor(params, Udata);
       Kokkos::parallel_for(nbIter, functor);
-    }
-    {
-      MakeBoundariesFunctor2D_MHD<FACE_XMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-    {
-      MakeBoundariesFunctor2D_MHD<FACE_YMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    {
-      MakeBoundariesFunctor2D_MHD<FACE_YMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-  } else {
-    
-    // call device functor
-    {
+            
+    } else {
+
       MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
       Kokkos::parallel_for(nbIter, functor);
+
     }
-    {
+
+  }
+    
+  if (faceId == FACE_XMAX) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor2D_MHD<FACE_XMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
       MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
       Kokkos::parallel_for(nbIter, functor);
+
     }
+
+  }
+
+  if (faceId == FACE_YMIN) {
+
+    if (mhd_enabled) {
     
-    {
+      MakeBoundariesFunctor2D_MHD<FACE_YMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
       MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
       Kokkos::parallel_for(nbIter, functor);
+
     }
-    {
+
+  }
+
+  if (faceId == FACE_YMAX) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor2D_MHD<FACE_YMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
       MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
       Kokkos::parallel_for(nbIter, functor);
+
     }
-    
+
   }
+  
+} // SolverBase::make_boundary - 2d
+
+// =======================================================
+// =======================================================
+void
+SolverBase::make_boundary(DataArray3d Udata, FaceIdType faceId, bool mhd_enabled)
+{
+  
+  const int ghostWidth=params.ghostWidth;
+  
+  int max_size = std::max(params.isize,params.jsize);
+  max_size = std::max(max_size,params.ksize);
+  int nbIter = ghostWidth * max_size * max_size;
+
+  if (faceId == FACE_XMIN) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor3D_MHD<FACE_XMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
+      MakeBoundariesFunctor3D<FACE_XMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+
+    }
+
+  }
+    
+  if (faceId == FACE_XMAX) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor3D_MHD<FACE_XMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
+      MakeBoundariesFunctor3D<FACE_XMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+
+    }
+
+  }
+
+  if (faceId == FACE_YMIN) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor3D_MHD<FACE_YMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
+      MakeBoundariesFunctor3D<FACE_YMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+
+    }
+
+  }
+
+  if (faceId == FACE_YMAX) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor3D_MHD<FACE_YMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
+      MakeBoundariesFunctor3D<FACE_YMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+
+    }
+
+  }
+
+  if (faceId == FACE_ZMIN) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor3D_MHD<FACE_ZMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
+      MakeBoundariesFunctor3D<FACE_ZMIN> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+
+    }
+
+  }
+
+  if (faceId == FACE_ZMAX) {
+
+    if (mhd_enabled) {
+    
+      MakeBoundariesFunctor3D_MHD<FACE_ZMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+            
+    } else {
+
+      MakeBoundariesFunctor3D<FACE_ZMAX> functor(params, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+
+    }
+
+  }
+
+} // SolverBase::make_boundary - 3d
+
+// =======================================================
+// =======================================================
+void
+SolverBase::make_boundaries_serial(DataArray2d Udata, bool mhd_enabled)
+{
+
+  make_boundary(Udata, FACE_XMIN, mhd_enabled);
+  make_boundary(Udata, FACE_XMAX, mhd_enabled);
+  make_boundary(Udata, FACE_YMIN, mhd_enabled);
+  make_boundary(Udata, FACE_YMAX, mhd_enabled);
   
 } // SolverBase::make_boundaries_serial - 2d
   
@@ -357,74 +500,13 @@ void
 SolverBase::make_boundaries_serial(DataArray3d Udata, bool mhd_enabled)
 {
 
-  const int ghostWidth=params.ghostWidth;
-  
-  int max_size = std::max(params.isize,params.jsize);
-  max_size = std::max(max_size,params.ksize);
-  int nbIter = ghostWidth * max_size * max_size;
-  
-  if (mhd_enabled) {
-
-    // call device functor
-    {
-      MakeBoundariesFunctor3D_MHD<FACE_XMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }  
-    {
-      MakeBoundariesFunctor3D_MHD<FACE_XMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
+  make_boundary(Udata, FACE_XMIN, mhd_enabled);
+  make_boundary(Udata, FACE_XMAX, mhd_enabled);
+  make_boundary(Udata, FACE_YMIN, mhd_enabled);
+  make_boundary(Udata, FACE_YMAX, mhd_enabled);
+  make_boundary(Udata, FACE_ZMIN, mhd_enabled);
+  make_boundary(Udata, FACE_ZMAX, mhd_enabled);
     
-    {
-      MakeBoundariesFunctor3D_MHD<FACE_YMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    {
-      MakeBoundariesFunctor3D_MHD<FACE_YMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-    {
-      MakeBoundariesFunctor3D_MHD<FACE_ZMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    {
-      MakeBoundariesFunctor3D_MHD<FACE_ZMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-  } else {
-  
-    // call device functor
-    {
-      MakeBoundariesFunctor3D<FACE_XMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }  
-    {
-      MakeBoundariesFunctor3D<FACE_XMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-    {
-      MakeBoundariesFunctor3D<FACE_YMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    {
-      MakeBoundariesFunctor3D<FACE_YMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-    {
-      MakeBoundariesFunctor3D<FACE_ZMIN> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    {
-      MakeBoundariesFunctor3D<FACE_ZMAX> functor(params, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-    }
-    
-  }
-  
 } // SolverBase::make_boundaries_serial - 3d
 
 #ifdef USE_MPI
@@ -433,12 +515,6 @@ SolverBase::make_boundaries_serial(DataArray3d Udata, bool mhd_enabled)
 void
 SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
 {
-
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int ghostWidth=params.ghostWidth;
-  
-  int nbIter = ghostWidth*std::max(isize,jsize);
 
   using namespace hydroSimu;
   
@@ -457,16 +533,14 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
       params.neighborsBC[X_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, XMIN);
   } else {
-    MakeBoundariesFunctor2D<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_XMIN, mhd_enabled);
   }
   
   if (params.neighborsBC[X_MAX] == BC_COPY ||
       params.neighborsBC[X_MAX] == BC_PERIODIC) {
     copy_boundaries_back(Udata, XMAX);
   } else {
-    MakeBoundariesFunctor2D<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_XMAX, mhd_enabled);
   }
   
   params.communicator->synchronize();
@@ -481,16 +555,14 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
       params.neighborsBC[Y_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, YMIN);
   } else {
-    MakeBoundariesFunctor2D<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_YMIN, mhd_enabled);
   }
   
   if (params.neighborsBC[Y_MAX] == BC_COPY ||
       params.neighborsBC[Y_MAX] == BC_PERIODIC) {
     copy_boundaries_back(Udata, YMAX);
   } else {
-    MakeBoundariesFunctor2D<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_YMAX, mhd_enabled);
   }
   
   params.communicator->synchronize();
@@ -503,15 +575,6 @@ void
 SolverBase::make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled)
 {
   
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int ksize = params.ksize;
-  const int ghostWidth=params.ghostWidth;
-  
-  int max_size = std::max(isize,jsize);
-  max_size = std::max(max_size,ksize);
-  int nbIter = ghostWidth * max_size * max_size;
-
   using namespace hydroSimu;
 
   // ======
@@ -524,16 +587,14 @@ SolverBase::make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled)
       params.neighborsBC[X_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, XMIN);
   } else {
-    MakeBoundariesFunctor3D<FACE_XMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_XMIN, mhd_enabled);
   }
   
   if (params.neighborsBC[X_MAX] == BC_COPY ||
       params.neighborsBC[X_MAX] == BC_PERIODIC) {
     copy_boundaries_back(Udata, XMAX);
   } else {
-    MakeBoundariesFunctor3D<FACE_XMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_XMAX, mhd_enabled);
   }
   
   params.communicator->synchronize();
@@ -548,16 +609,14 @@ SolverBase::make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled)
       params.neighborsBC[Y_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, YMIN);
   } else {
-    MakeBoundariesFunctor3D<FACE_YMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_YMIN, mhd_enabled);
   }
   
   if (params.neighborsBC[Y_MAX] == BC_COPY ||
       params.neighborsBC[Y_MAX] == BC_PERIODIC) {
     copy_boundaries_back(Udata, YMAX);
   } else {
-    MakeBoundariesFunctor3D<FACE_YMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_YMAX, mhd_enabled);
   }
   
   params.communicator->synchronize();
@@ -572,16 +631,14 @@ SolverBase::make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled)
       params.neighborsBC[Z_MIN] == BC_PERIODIC) {
     copy_boundaries_back(Udata, ZMIN);
   } else {
-    MakeBoundariesFunctor3D<FACE_ZMIN> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_ZMIN, mhd_enabled);
   }
   
   if (params.neighborsBC[Z_MAX] == BC_COPY ||
       params.neighborsBC[Z_MAX] == BC_PERIODIC) {
     copy_boundaries_back(Udata, ZMAX);
   } else {
-    MakeBoundariesFunctor3D<FACE_ZMAX> functor(params, Udata);
-    Kokkos::parallel_for(nbIter, functor);
+    make_boundary(Udata, FACE_ZMAX, mhd_enabled);
   }
   
   params.communicator->synchronize();
