@@ -440,9 +440,6 @@ SolverBase::make_boundaries_mpi(DataArray2d Udata, bool mhd_enabled)
   
   int nbIter = ghostWidth*std::max(isize,jsize);
 
-  const int mx = params.mx;
-  const int my = params.my;
-
   using namespace hydroSimu;
   
   // for each direction:
@@ -506,18 +503,88 @@ void
 SolverBase::make_boundaries_mpi(DataArray3d Udata, bool mhd_enabled)
 {
   
-  // const int isize = params.isize;
-  // const int jsize = params.jsize;
-  // const int ksize = params.ksize;
-  // const int ghostWidth=params.ghostWidth;
+  const int isize = params.isize;
+  const int jsize = params.jsize;
+  const int ksize = params.ksize;
+  const int ghostWidth=params.ghostWidth;
   
-  // int max_size = std::max(isize,jsize);
-  // max_size = std::max(max_size,ksize);
-  // int nbIter = ghostWidth * max_size * max_size;
+  int max_size = std::max(isize,jsize);
+  max_size = std::max(max_size,ksize);
+  int nbIter = ghostWidth * max_size * max_size;
 
-  // const int mx = params.mx;
-  // const int my = params.my;
-  // const int mz = params.mz;
+  using namespace hydroSimu;
+
+  // ======
+  // XDIR
+  // ======
+  copy_boundaries(Udata,XDIR);
+  transfert_boundaries_3d(XDIR);
+  
+  if (params.neighborsBC[X_MIN] == BC_COPY ||
+      params.neighborsBC[X_MIN] == BC_PERIODIC) {
+    copy_boundaries_back(Udata, XMIN);
+  } else {
+    MakeBoundariesFunctor3D<FACE_XMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+  
+  if (params.neighborsBC[X_MAX] == BC_COPY ||
+      params.neighborsBC[X_MAX] == BC_PERIODIC) {
+    copy_boundaries_back(Udata, XMAX);
+  } else {
+    MakeBoundariesFunctor3D<FACE_XMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+  
+  params.communicator->synchronize();
+
+  // ======
+  // YDIR
+  // ======
+  copy_boundaries(Udata,YDIR);
+  transfert_boundaries_3d(YDIR);
+  
+  if (params.neighborsBC[Y_MIN] == BC_COPY ||
+      params.neighborsBC[Y_MIN] == BC_PERIODIC) {
+    copy_boundaries_back(Udata, YMIN);
+  } else {
+    MakeBoundariesFunctor3D<FACE_YMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+  
+  if (params.neighborsBC[Y_MAX] == BC_COPY ||
+      params.neighborsBC[Y_MAX] == BC_PERIODIC) {
+    copy_boundaries_back(Udata, YMAX);
+  } else {
+    MakeBoundariesFunctor3D<FACE_YMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+  
+  params.communicator->synchronize();
+
+  // ======
+  // ZDIR
+  // ======
+  copy_boundaries(Udata,ZDIR);
+  transfert_boundaries_3d(ZDIR);
+  
+  if (params.neighborsBC[Z_MIN] == BC_COPY ||
+      params.neighborsBC[Z_MIN] == BC_PERIODIC) {
+    copy_boundaries_back(Udata, ZMIN);
+  } else {
+    MakeBoundariesFunctor3D<FACE_ZMIN> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+  
+  if (params.neighborsBC[Z_MAX] == BC_COPY ||
+      params.neighborsBC[Z_MAX] == BC_PERIODIC) {
+    copy_boundaries_back(Udata, ZMAX);
+  } else {
+    MakeBoundariesFunctor3D<FACE_ZMAX> functor(params, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+  
+  params.communicator->synchronize();
 
 } // SolverBase::make_boundaries_mpi - 3d
 
@@ -630,11 +697,6 @@ void
 SolverBase::transfert_boundaries_2d(Direction dir)
 {
 
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  //const int ksize = params.ksize;
-  const int gw    = params.ghostWidth;
-
   const int data_type = params.data_type;
 
   using namespace hydroSimu;
@@ -646,37 +708,35 @@ SolverBase::transfert_boundaries_2d(Direction dir)
   // two borders to send, two borders to receive
 
   if (dir == XDIR) {
-    
-    const int size = gw * jsize;
+
     params.communicator->sendrecv(borderBufSend_xmin_2d.ptr_on_device(),
-				  size,
+				  borderBufSend_xmin_2d.size(),
 				  data_type, params.neighborsRank[X_MIN], 111,
 				  borderBufRecv_xmax_2d.ptr_on_device(),
-				  size,
+				  borderBufRecv_xmax_2d.size(),
 				  data_type, params.neighborsRank[X_MAX], 111);
     
     params.communicator->sendrecv(borderBufSend_xmax_2d.ptr_on_device(),
-				  size,
+				  borderBufSend_xmax_2d.size(),
 				  data_type, params.neighborsRank[X_MAX], 111,
 				  borderBufRecv_xmin_2d.ptr_on_device(),
-				  size,
+				  borderBufRecv_xmin_2d.size(),
 				  data_type, params.neighborsRank[X_MIN], 111);
     
   } else if (dir == YDIR) {
 
-    const int size = isize * gw;
     params.communicator->sendrecv(borderBufSend_ymin_2d.ptr_on_device(),
-				  size,
+				  borderBufSend_ymin_2d.size(),
 				  data_type, params.neighborsRank[Y_MIN], 211,
 				  borderBufRecv_ymax_2d.ptr_on_device(),
-				  size,
+				  borderBufRecv_ymax_2d.size(),
 				  data_type, params.neighborsRank[Y_MAX], 211);
     
     params.communicator->sendrecv(borderBufSend_ymax_2d.ptr_on_device(),
-				  size,
+				  borderBufSend_ymax_2d.size(),
 				  data_type, params.neighborsRank[Y_MAX], 211,
 				  borderBufRecv_ymin_2d.ptr_on_device(),
-				  size,
+				  borderBufRecv_ymin_2d.size(),
 				  data_type, params.neighborsRank[Y_MIN], 211);
   }
   
@@ -688,64 +748,56 @@ void
 SolverBase::transfert_boundaries_3d(Direction dir)
 {
 
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int ksize = params.ksize;
-  const int gw    = params.ghostWidth;
-
   const int data_type = params.data_type;
 
   using namespace hydroSimu;
 
   if (dir == XDIR) {
 
-    const int size = gw * jsize * jsize;
     params.communicator->sendrecv(borderBufSend_xmin_3d.ptr_on_device(),
-				  size,
+				  borderBufSend_xmin_3d.size(),
 				  data_type, params.neighborsRank[X_MIN], 111,
 				  borderBufRecv_xmax_3d.ptr_on_device(),
-				  size,
+				  borderBufRecv_xmax_3d.size(),
 				  data_type, params.neighborsRank[X_MAX], 111);
     
     params.communicator->sendrecv(borderBufSend_xmax_3d.ptr_on_device(),
-				  size,
+				  borderBufSend_xmax_3d.size(),
 				  data_type, params.neighborsRank[X_MAX], 111,
 				  borderBufRecv_xmin_3d.ptr_on_device(),
-				  size,
+				  borderBufRecv_xmin_3d.size(),
 				  data_type, params.neighborsRank[X_MIN], 111);
 
   } else if (dir == YDIR) {
 
-    const int size = isize * gw * ksize;
     params.communicator->sendrecv(borderBufSend_ymin_3d.ptr_on_device(),
-				  size,
+				  borderBufSend_ymin_3d.size(),
 				  data_type, params.neighborsRank[Y_MIN], 211,
 				  borderBufRecv_ymax_3d.ptr_on_device(),
-				  size,
+				  borderBufRecv_ymax_3d.size(),
 				  data_type, params.neighborsRank[Y_MAX], 211);
     
     params.communicator->sendrecv(borderBufSend_ymax_3d.ptr_on_device(),
-				  size,
+				  borderBufSend_ymax_3d.size(),
 				  data_type, params.neighborsRank[Y_MAX], 211,
 				  borderBufRecv_ymin_3d.ptr_on_device(),
-				  size,
+				  borderBufRecv_ymin_3d.size(),
 				  data_type, params.neighborsRank[Y_MIN], 211);
 
   } else if (dir == ZDIR) {
 
-    const int size = isize * jsize * gw;
     params.communicator->sendrecv(borderBufSend_zmin_3d.ptr_on_device(),
-				  size,
+				  borderBufSend_zmin_3d.size(),
 				  data_type, params.neighborsRank[Z_MIN], 311,
 				  borderBufRecv_zmax_3d.ptr_on_device(),
-				  size,
+				  borderBufRecv_zmax_3d.size(),
 				  data_type, params.neighborsRank[Z_MAX], 311);
     
     params.communicator->sendrecv(borderBufSend_zmax_3d.ptr_on_device(),
-				  size,
+				  borderBufSend_zmax_3d.size(),
 				  data_type, params.neighborsRank[Z_MAX], 311,
 				  borderBufRecv_zmin_3d.ptr_on_device(),
-				  size,
+				  borderBufRecv_zmin_3d.size(),
 				  data_type, params.neighborsRank[Z_MIN], 311);
 
   }
@@ -808,6 +860,85 @@ SolverBase::copy_boundaries_back(DataArray2d Udata, BoundaryLocation loc)
   }
   
 } // SolverBase::copy_boundaries_back - 2d
+
+// =======================================================
+// =======================================================
+void
+SolverBase::copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc)
+{
+
+  const int isize = params.isize;
+  const int jsize = params.jsize;
+  const int ksize = params.ksize;
+  const int gw    = params.ghostWidth;
+
+  if (loc == XMIN) {
+    
+    const int nbIter = gw * jsize * ksize;
+    
+    {
+      CopyBorderBuf_To_DataArray<XMIN, THREE_D> functor(Udata, borderBufRecv_xmin_3d, gw);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  }
+
+  if (loc == XMAX) {
+
+    const int nbIter = gw * jsize * ksize;
+    
+    {
+      CopyBorderBuf_To_DataArray<XMAX, THREE_D> functor(Udata, borderBufRecv_xmax_3d, gw);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+  }
+
+  if (loc == YMIN) {
+    
+    const int nbIter = isize * gw * ksize;
+    
+    {
+      CopyBorderBuf_To_DataArray<YMIN, THREE_D> functor(Udata, borderBufRecv_ymin_3d, gw);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  }
+
+  if (loc == YMAX) {
+    
+    const int nbIter = isize * gw * ksize;
+
+    {
+      CopyBorderBuf_To_DataArray<YMAX, THREE_D> functor(Udata, borderBufRecv_ymax_3d, gw);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+  }
+  
+  if (loc == ZMIN) {
+    
+    const int nbIter = isize * jsize * gw;
+    
+    {
+      CopyBorderBuf_To_DataArray<ZMIN, THREE_D> functor(Udata, borderBufRecv_zmin_3d, gw);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+
+  }
+
+  if (loc == ZMAX) {
+    
+    const int nbIter = isize * jsize * gw;
+
+    {
+      CopyBorderBuf_To_DataArray<ZMAX, THREE_D> functor(Udata, borderBufRecv_zmax_3d, gw);
+      Kokkos::parallel_for(nbIter, functor);
+    }
+    
+  }
+  
+} // SolverBase::copy_boundaries_back - 3d
 
 #endif // USE_MPI
 

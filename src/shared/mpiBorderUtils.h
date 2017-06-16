@@ -52,13 +52,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dimType_==TWO_D, int>::type&  index) const
   {
-
+    
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
     const int nbvar = U.dimension_2();
     int i,j;
-    index2coord(index,i,j,isize,jsize);
-
 
     /*
      * Proceed with copy.
@@ -71,17 +69,21 @@ public:
     
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       
+      //j = index / ghostWidth;
+      //i = index - j*ghostWidth;
+      index2coord(index,i,j,ghostWidth,jsize);
+
       for (int nVar=0; nVar<nbvar; ++nVar)
-	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
-	  U(offset+offset_i  ,j,nVar) = b(offset_i,j,nVar);
-	}
-      
+	U(offset+i  ,j,nVar) = b(i,j,nVar);
+            
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
       
+      //i = index / ghostWidth;
+      //j = index - i*ghostWidth;
+      index2coord(index,i,j,isize,ghostWidth);
+
       for (int nVar=0; nVar<nbvar; ++nVar)
-	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
-	  U(i,offset+offset_j  ,nVar) = b(i,offset_j,nVar);
-	}
+	U(i,offset+j  ,nVar) = b(i,j,nVar);
       
     }
     
@@ -97,7 +99,6 @@ public:
     const int ksize = U.dimension_2();
     const int nbvar = U.dimension_3();
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
     
     /*
      * Proceed with copy.
@@ -113,26 +114,26 @@ public:
     
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       	
+      index2coord(index,i,j,k,ghostWidth,jsize,ksize);
+      
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
-	  U(offset+offset_i  ,j,k,nVar) = b(offset_i,j,k,nVar);
-	}
+	U(offset+i  ,j,k,nVar) = b(i,j,k,nVar);
       }
       
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
       
+      index2coord(index,i,j,k,isize,ghostWidth,ksize);
+
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
-	  U(i,offset+offset_j  ,k,nVar) = b(i,offset_j,k,nVar);
-	}
+	U(i,offset+j,k,nVar) = b(i,j,k,nVar);
       }
       
     } else if (boundaryLoc == ZMIN or boundaryLoc == ZMAX) {
       
+      index2coord(index,i,j,k,isize,jsize,ghostWidth);
+
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_k=0; offset_k<ghostWidth; ++offset_k) {
-	  U(i,j,offset+offset_k  ,nVar) = b(i,j,offset_k,nVar);
-	}
+	U(i,j,offset+k  ,nVar) = b(i,j,k,nVar);
       }
       
     }
@@ -151,6 +152,9 @@ public:
  * Copy array border to a border buffer (to be sent by MPI communications) 
  * Here we assume U is a <b>DataArray</b>. 
  * \sa copyBorderBufSendToHostArray
+ *
+ * When used with 2d Array, we just use the index to access border data.
+ * For 3d data Array, we need to map the correct location, by using index2coord.
  *
  * template parameters:
  * @tparam boundaryLoc : boundary location in source Array
@@ -183,16 +187,8 @@ public:
     const int isize = U.dimension_0();
     const int jsize = U.dimension_1();
     const int nbvar = U.dimension_2();
-    const int    gw = ghostWidth;
     int i,j;
-    //index2coord(index,i,j,isize,jsize);
 
-    if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
-      index2coord(index,i,j,gw,jsize);
-    } else {
-      index2coord(index,i,j,isize,gw);
-    }
-    
     /*
      * Proceed with copy
      */
@@ -207,18 +203,22 @@ public:
      */      
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       
+      //j = index / ghostWidth;
+      //i = index - j*ghostWidth;
+      index2coord(index,i,j,ghostWidth,jsize);
+      
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
-	  b(offset_i,j,nVar) = U(offset+offset_i  ,j,nVar);
-	}
+	b(i,j,nVar) = U(offset+i  ,j,nVar);
       }
       
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
 
+      //i = index / ghostWidth;
+      //j = index - i*ghostWidth;
+      index2coord(index,i,j,isize,ghostWidth);
+
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
-	  b(i,offset_j,nVar) = U(i,offset+offset_j  ,nVar);
-	}
+	b(i,j,nVar) = U(i,offset+j  ,nVar);
       }
 
     }
@@ -234,8 +234,18 @@ public:
     const int jsize = U.dimension_1();
     const int ksize = U.dimension_2();
     const int nbvar = U.dimension_3();
+    const int    gw = ghostWidth;
+
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+
+    // compute i,j,k
+    if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
+      index2coord(index,i,j,k,   gw,jsize,ksize);
+    } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
+      index2coord(index,i,j,k,isize,   gw,ksize);
+    } else {
+      index2coord(index,i,j,k,isize,jsize,   gw);
+    }
 
     /*
      * Proceed with copy
@@ -255,25 +265,19 @@ public:
     if (boundaryLoc == XMIN or boundaryLoc == XMAX) {
       
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_i=0; offset_i<ghostWidth; ++offset_i) {
-	  b(offset_i,j,k,nVar) = U(offset+offset_i  ,j,k,nVar);
-	}
+	b(i,j,k,nVar) = U(offset+i,j,k,nVar);
       }
 	
     } else if (boundaryLoc == YMIN or boundaryLoc == YMAX) {
 
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_j=0; offset_j<ghostWidth; ++offset_j) {
-	  b(i,offset_j,k,nVar) = U(i,offset+offset_j  ,k,nVar);
-	}
+	b(i,j,k,nVar) = U(i,offset+j,k,nVar);
       }
       
     } else if (boundaryLoc == ZMIN or boundaryLoc == ZMAX) {
 
       for (int nVar=0; nVar<nbvar; ++nVar) {
-	for (int offset_k=0; offset_k<ghostWidth; ++offset_k) {
-	  b(i,j,offset_k,nVar) = U(i,j,offset+offset_k  ,nVar);
-	}
+	b(i,j,k,nVar) = U(i,j,offset+k,nVar);
       }
       
     } // end (boundaryLoc == ZMIN or boundaryLoc == ZMAX)
