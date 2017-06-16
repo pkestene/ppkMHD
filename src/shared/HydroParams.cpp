@@ -61,7 +61,11 @@ void HydroParams::setup(ConfigMap &configMap)
   } else if ( solver_name.find("Hydro_Mood_2D") != std::string::npos ) {
 
 #ifdef USE_MOOD
-    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
+    // create the list of valid mood schemes names
+    std::array<std::string,mood::STENCIL_TOTAL_NUMBER> solver_names = mood::make_valid_solver_names();
+
+    
+    mood::STENCIL_ID stencilId = mood::get_stencilId_from_solver_name(solver_name, solver_names);
     dimType = TWO_D;
     nbvar = 4;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
@@ -70,7 +74,10 @@ void HydroParams::setup(ConfigMap &configMap)
   } else if ( !solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
 
 #ifdef USE_MOOD
-    mood::STENCIL_ID stencilId = mood::StencilUtils::get_stencilId_from_solver_name(solver_name);
+    // create the list of valid mood schemes names
+    std::array<std::string,mood::STENCIL_TOTAL_NUMBER> solver_names = mood::make_valid_solver_names();
+
+    mood::STENCIL_ID stencilId = mood::get_stencilId_from_solver_name(solver_name, solver_names);
     dimType = THREE_D;
     nbvar = 5;
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
