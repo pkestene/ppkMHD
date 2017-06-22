@@ -115,9 +115,9 @@ private:
     // init 1d solution points
     if (sdm_sol_pts_type == SDM_SOL_GAUSS_CHEBYSHEV) {
       
-      //for (int i=1; i<N; i++)
+      //for (int i=1; i<=N; i++)
       //  solution_pts_1d_host(i-1) = 0.5 * (1 - cos(M_PI*(2*i-1)/2/N));
-      for (int i=0; i<N-1; i++)
+      for (int i=0; i<N; i++)
 	solution_pts_1d_host(i) = 0.5 * (1 - cos(M_PI*(2*i+1)/2/N));
       
     }
