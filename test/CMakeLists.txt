@@ -4,7 +4,7 @@ if(USE_MOOD)
   add_subdirectory(mood)
 
   add_subdirectory(lapack)
-endif()
+endif(USE_MOOD)
 
 add_subdirectory(io)
 
@@ -15,3 +15,7 @@ endif(USE_MPI)
 if(PAPI_FOUND)
   add_subdirectory(papi)
 endif(PAPI_FOUND)
+
+if(USE_SDM)
+  add_subdirectory(sdm)
+endif(USE_SDM)
