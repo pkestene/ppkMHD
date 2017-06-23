@@ -21,7 +21,7 @@ enum SDM_SOLUTION_POINTS_TYPE {
  */
 enum SDM_FLUX_POINTS_TYPE {
   
-  SDM_FLUX_GAUSS_LEGENDRE = 0, // roots of P_{n-1} + the 2 end points
+  SDM_FLUX_GAUSS_LEGENDRE = 0, // roots of P_{n-1} + the 2 end points 0 and 1
   SDM_FLUX_GAUSS_CHEBYSHEV = 1,
   
 }; // enum SDM_FLUX_POINTS_TYPE
@@ -33,6 +33,17 @@ enum SDM_FLUX_POINTS_TYPE {
  *
  * - solution points location (Gauss-Chebyshev quadrature points)
  * - flux points (Gauss-Legendre or Chebyshev-Gauss-Lobatto)
+ * 
+ * This class also holds some Lagrange polynomial matrix, because we
+ * want to interpolate at flux points using the Lagrange polynomial basis 
+ * at solution points, and conversely interpolate at solution points using 
+ * Lagrange polynomial basis at flux points.
+ * 
+ * Interpolation is done direction by direction, so we only need 1D Lagrange basis.
+ * When using Lagrange points at solution points, the Lagrange matrix is N by N+1, 
+ * made of N+1 columns (one for each interpolated flux point) of length N (because
+ * there is exactly N different Lagrange polynomials, one for each solution point).
+ * 
  *
  * \tparam dim is dimension of space (2 or 3).
  *
@@ -60,19 +71,60 @@ public:
   using PointsArray2DHost = PointsArray2D::HostMirror;
   using PointsArray3DHost = PointsArray3D::HostMirror;
   using PointsArrayHost   = typename PointsArray::HostMirror;
-  
+
+  //! Lagrange interpolation matrix type
+  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
+
   SDM_Geometry() {};
   ~SDM_Geometry() {};
 
-  PointsArray1D     solution_pts_1d;
-  PointsArray1DHost solution_pts_1d_host;
-  PointsArray       solution_pts;
+  /**
+   * Number of solution points (per direction).
+   *
+   * Notice that the total number of solution points is N^d in dimension dim.
+   */
+  int N;
 
+  /**
+   * \defgroup location-point arrays
+   */
+  /**@{*/
+
+  //! location of solution points in reference cell [0,1]^dim, device array
+  PointsArray1D     solution_pts_1d;
+
+  //! location of solution points in reference cell [0,1]^dim, host array
+  PointsArray1DHost solution_pts_1d_host;
+
+  //! dim-dimensional array of solution points location (obtained by tensorial product)
+  PointsArray       solution_pts;
+  
+  //! location of flux points in reference cell [0,1]^dim, device array
   PointsArray1D     flux_pts_1d;
+
+  //! location of flux points in reference cell [0,1]^dim, host array
   PointsArray1DHost flux_pts_1d_host;
+
+  //! dim-dimensional array of flux points location (obtained by tensorial product)
   PointsArray   flux_x_pts;
   PointsArray   flux_y_pts;
   PointsArray   flux_z_pts;
+  /**@}*/
+
+  /**
+   * \defgroup Lagrange-interpolation
+   */
+  /**@{*/
+
+  //! Lagrange matrix to interpolate at flux points
+  LagrangeMatrix sol2flux;
+
+  //! Lagrange matrix to interpolate at solution points
+  LagrangeMatrix flux2sol;
+
+  /**@}*/
+
   
   /**
    * Init solution and flux points locations.
@@ -85,12 +137,12 @@ public:
    * This is where solution_pts
    * and flux_x_pts, flux_y_pts, flux_z_pts are allocated.
    */
-  void init(int N);
+  void init(int N_);
   
 private:
 
   /**
-   * Init SDM_Geometry class 1d point locations.
+   * Init 1d point locations (solution + flux).
    *
    * Solution points and flux points coordinates in reference cell 
    * in units [0,1]^dim
@@ -190,13 +242,23 @@ private:
 
   } // init_1d
 
+public:
+  /**
+   * Create Lagrange interpolation matrix.
+   */
+  void init_lagrange_1d();
+
+  //real_t lagrange_eval_at_solution_point(int i, Kokkos::Array<real_t, N> values);
+
 }; // class SDM_Geometry
 
 // =======================================================
 // =======================================================
 template<>
-void SDM_Geometry<2>::init(int N)
+void SDM_Geometry<2>::init(int N_)
 {
+
+  N = N_;
 
   // first 1d initialization
   init_1d(N, SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
@@ -252,8 +314,10 @@ void SDM_Geometry<2>::init(int N)
 // =======================================================
 // =======================================================
 template<>
-void SDM_Geometry<3>::init(int N)
+void SDM_Geometry<3>::init(int N_)
 {
+
+  N = N_;
 
   // first 1d initialization
   init_1d(N, SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
@@ -328,6 +392,100 @@ void SDM_Geometry<3>::init(int N)
 
 } // SDM_Geometry::init<3>
 
+// =======================================================
+// =======================================================
+template<int dim>
+void SDM_Geometry<dim>::init_lagrange_1d()
+{
+
+  // memory allocation
+
+  // sol2flux has
+  // N   lines : one basis elements per solution points
+  // N+1 cols  : one per interpolated points (flux points)
+  sol2flux = LagrangeMatrix("sol2flux",N,N+1);
+
+  LagrangeMatrixHost sol2flux_h = Kokkos::create_mirror(sol2flux);
+
+  // create i,j entries in Lagrange matrix
+  // i is i-th Lagrange polynomial (solution)
+  // j is the location of interpolated point (flux)
+  for (int j=0; j<N+1; ++j) {
+
+    real_t x_j = flux_pts_1d_host(j);
+    
+    for (int i=0; i<N; ++i) {
+
+      real_t x_i = solution_pts_1d_host(i);
+      
+      /*
+       * Lagrange polynomial (solution points basis)
+       *
+       * l_i(x) = \Pi_{k \neq i} \frac{x-x_k}{x_i-x_k}
+       */
+      real_t l = 1.0;
+
+      // k spans Lagrange basis, number of solution points
+      for (int k=0; k<N; ++k) {
+	real_t x_k = solution_pts_1d_host(k);
+	if (k != i) {
+	  l *= (x_j-x_k)/(x_i-x_k);
+	}
+      }
+
+      // copy l into matrix
+      sol2flux_h(i,j) = l;
+      
+    } // end for i
+
+  } // end for j
+
+  Kokkos::deep_copy(sol2flux,sol2flux_h);
+
+  
+  // flux2sol has
+  // N+1 lines : one basis elements per flux points
+  // N   cols  : one per interpolated points (solution points)
+  flux2sol = LagrangeMatrix("flux2sol",N+1,N);
+  
+  LagrangeMatrixHost flux2sol_h = Kokkos::create_mirror(flux2sol);
+
+  // create i,j entries in Lagrange matrix flux2sol
+  // i is i-th Lagrange polynomial (flux)
+  // j is the location of interpolated point (solution)
+  for (int j=0; j<N; ++j) {
+
+    real_t x_j = solution_pts_1d_host(j);
+    
+    for (int i=0; i<N+1; ++i) {
+
+      real_t x_i = flux_pts_1d_host(i);
+      
+      /*
+       * Lagrange polynomial (flux points basis)
+       *
+       * l_i(x) = \Pi_{k \neq i} \frac{x-x_k}{x_i-x_k}
+       */
+      real_t l = 1.0;
+
+      // k spans Lagrange basis, number of flux points
+      for (int k=0; k<N+1; ++k) {
+	real_t x_k = flux_pts_1d_host(k);
+	if (k != i) {
+	  l *= (x_j-x_k)/(x_i-x_k);
+	}
+      }
+
+      // copy l into matrix
+      flux2sol_h(i,j) = l;
+      
+    } // end for i
+
+  } // end for j
+
+  Kokkos::deep_copy(flux2sol,flux2sol_h);
+  
+} // SDM_Geometry::init_lagrange_1d
 
 } // namespace sdm
 
