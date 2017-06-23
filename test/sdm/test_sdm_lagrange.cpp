@@ -43,14 +43,21 @@ real_t f_4(real_t x)
   return  2*x*x*x*x - 4*x*x + 7*x + 3;
 }
 
-//! 5rd order polynomial
+//! 5th order polynomial
 real_t f_5(real_t x)
 {
   return 2.5*x*x*x*x*x - 16*x*x + x + 1;
 }
 
+//! 6th order polynomial
+real_t f_6(real_t x)
+{
+  return 5*x*x*x*x*x*x - 16*x*x*x - x - 5;
+}
+
 using f_t = real_t (*)(real_t);
 
+// select polynomial for exact reconstruction
 f_t select_polynomial(int& N) {
 
   if (N==1)
@@ -70,6 +77,28 @@ f_t select_polynomial(int& N) {
   return f_3;
   
 }
+
+// select polynomial for non-exact reconstruction
+f_t select_polynomial_non_exact(int& N) {
+
+  if (N==1)
+    return f_1;
+  else if (N==2)
+    return f_2;
+  else if (N==3)
+    return f_3;
+  else if (N==4)
+    return f_4;
+  else if (N==5)
+    return f_5;
+  else if (N==6)
+    return f_6;
+
+  // default
+  return f_3;
+  
+}
+
 
 
 int main(int argc, char* argv[])
@@ -114,6 +143,7 @@ int main(int argc, char* argv[])
   // remember that with N solution points, one can recontruct exactly
   // polynomials up to degree N-1; so here we test the exact reconstruction.
   f_t f = select_polynomial(N);
+  //f_t f = select_polynomial_non_exact(N);
   
   {
 
