@@ -383,7 +383,11 @@ public:
    */
   void init_lagrange_1d();
 
-  //real_t lagrange_eval_at_solution_point(int i, Kokkos::Array<real_t, N> values);
+  //! eval lagrange interpolation polynomial at a i-th solution point
+  //real_t lagrange_eval_sol(int i, Kokkos::Array<real_t, N+1> values)
+
+  //! eval lagrange interpolation polynomial at a i-th flux point
+  //real_t lagrange_eval_flux(int i, Kokkos::Array<real_t, N> values);
 
 }; // class SDM_Geometry
 
