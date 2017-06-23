@@ -58,7 +58,7 @@ real_t f_6(real_t x)
 using f_t = real_t (*)(real_t);
 
 // select polynomial for exact reconstruction
-f_t select_polynomial(int& N) {
+f_t select_polynomial(int N) {
 
   if (N==1)
     return f_0;
@@ -79,7 +79,7 @@ f_t select_polynomial(int& N) {
 }
 
 // select polynomial for non-exact reconstruction
-f_t select_polynomial_non_exact(int& N) {
+f_t select_polynomial_non_exact(int N) {
 
   if (N==1)
     return f_1;
@@ -99,7 +99,70 @@ f_t select_polynomial_non_exact(int& N) {
   
 }
 
+/*
+ *
+ * Main test using scheme order as template parameter.
+ * order is the number of solution points per direction.
+ *
+ */
+template<int dim,
+	 int N>
+void test_lagrange()
+{
 
+  std::cout << "=========================================================\n";
+
+  // function pointer setup for interpolation values
+  // remember that with N solution points, one can recontruct exactly
+  // polynomials up to degree N-1; so here we test the exact reconstruction.
+  f_t f = select_polynomial(N);
+  //f_t f = select_polynomial_non_exact(N);
+  
+  std::cout << "  Dimnsion is : " << dim << "\n";
+  std::cout << "  Using order : " << N << "\n";
+  std::cout << "  Number of solution points : " << N << "\n";
+  std::cout << "  Number of flux     points : " << N+1 << "\n";
+  
+  sdm::SDM_Geometry<dim,N> sdm_geom;
+
+  sdm_geom.init(0);
+  
+  std::cout << "Solution poins:\n";
+  for (int j=0; j<N; ++j) {
+    for (int i=0; i<N; ++i) {
+      std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
+		<< "," << sdm_geom.solution_pts_1d_host(j) << ") ";
+    }
+    std::cout << "\n";
+  }
+  
+  sdm_geom.init_lagrange_1d();
+  
+  std::cout << "1D lagrange interpolation solution to flux:\n";
+  
+  // create values at solution points:
+  using DataVal = Kokkos::View<real_t*>;
+  DataVal solution_values = DataVal("solution_values",N);
+  DataVal solution_values_h = Kokkos::create_mirror(solution_values);
+  
+  for (int i=0; i<N; ++i)
+    solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
+  
+  for (int j=0; j<N+1; ++j) {
+    
+    // compute interpolated value
+    real_t val=0;
+    for (int k=0; k<N; ++k) {
+      val += solution_values_h(k) * sdm_geom.sol2flux(k,j);
+    }
+    
+    real_t x_j = sdm_geom.flux_pts_1d_host(j);
+    
+    printf("Interpolated value at %f is %f as compared to exact value %f\n",x_j,val, f(x_j));
+    
+  }
+  
+} // test_lagrange
 
 int main(int argc, char* argv[])
 {
@@ -129,74 +192,24 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
   }
 
-  // highest degree / order of the polynomial
-  int N = 2;
-  
-  if (argc>1)
-    N = atoi(argv[1]);
+  std::cout << "=========================================================\n";
+  std::cout << "==== Spectral Difference Lagrange Interpolation test ====\n";
+  std::cout << "=========================================================\n";
 
-  // check
-  if (N<1 or N>6)
-    N=3;
-  
-  // function pointer setup for interpolation values
-  // remember that with N solution points, one can recontruct exactly
-  // polynomials up to degree N-1; so here we test the exact reconstruction.
-  f_t f = select_polynomial(N);
-  //f_t f = select_polynomial_non_exact(N);
-  
+  // testing for multiple value of N in 2 to 6
   {
+    // 2d
+    test_lagrange<2,2>();
+    test_lagrange<2,3>();
+    test_lagrange<2,4>();
+    test_lagrange<2,5>();
+    test_lagrange<2,6>();
 
-    std::cout << "=========================================================\n";
-    std::cout << "==== Spectral Difference Lagrange Interpolation test ====\n";
-    std::cout << "=========================================================\n";
+    // 3d
+    test_lagrange<3,2>();
+    test_lagrange<3,3>();
+    test_lagrange<3,4>();
 
-    std::cout << "  Using order : " << N << "\n";
-    std::cout << "  Number of solution points : " << N << "\n";
-    std::cout << "  Number of flux     points : " << N+1 << "\n";
-    
-    // dim is the number of variable in the multivariate polynomial representation
-    int dim=2;
-
-    sdm::SDM_Geometry<2> sdm_geom;
-
-    sdm_geom.init(N);
-
-    std::cout << "Solution poins:\n";
-    for (int j=0; j<N; ++j) {
-      for (int i=0; i<N; ++i) {
-	std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
-		  << "," << sdm_geom.solution_pts_1d_host(j) << ") ";
-      }
-      std::cout << "\n";
-    }
-
-    sdm_geom.init_lagrange_1d();
-
-    std::cout << "1D lagrange interpolation solution to flux:\n";
-
-    // create values at solution points:
-    using DataVal = Kokkos::View<real_t*>;
-    DataVal solution_values = DataVal("solution_values",N);
-    DataVal solution_values_h = Kokkos::create_mirror(solution_values);
-
-    for (int i=0; i<N; ++i)
-      solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
-
-    for (int j=0; j<N+1; ++j) {
-
-      // compute interpolated value
-      real_t val=0;
-      for (int k=0; k<N; ++k) {
-	val += solution_values_h(k) * sdm_geom.sol2flux(k,j);
-      }
-
-      real_t x_j = sdm_geom.flux_pts_1d_host(j);
-      
-      printf("Interpolated value at %f is %f as compared to exact value %f\n",x_j,val, f(x_j));
-      
-    }
-    
   }
 
   Kokkos::finalize();

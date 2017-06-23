@@ -46,14 +46,26 @@ enum SDM_FLUX_POINTS_TYPE {
  * 
  *
  * \tparam dim is dimension of space (2 or 3).
+ * \tparam order is the scheme order, also equal to N (number of solution points per dim).
+ * order should be in [1,6]
+ *
  *
  * In this code, we are only interested in 2D/3D hexahedral cells.
  */
-template <int dim>
+template <int dim,
+	  int order>
 class SDM_Geometry
 {
 
 public:
+
+  /**
+   * Number of solution points (per direction).
+   *
+   * Notice that the total number of solution points is N^d in dimension dim.
+   */
+  static const int N = order;
+  
   //! for 1D quadrature location
   using PointsArray1D = Kokkos::View<real_t*, DEVICE>;
 
@@ -78,13 +90,6 @@ public:
 
   SDM_Geometry() {};
   ~SDM_Geometry() {};
-
-  /**
-   * Number of solution points (per direction).
-   *
-   * Notice that the total number of solution points is N^d in dimension dim.
-   */
-  int N;
 
   /**
    * \defgroup location-point arrays
@@ -129,15 +134,147 @@ public:
   /**
    * Init solution and flux points locations.
    *
-   * \param[in] N is the order of the scheme
-   *
    * There are N solution points per dimension
    * and N+1 flux points per dimension.
    *
    * This is where solution_pts
    * and flux_x_pts, flux_y_pts, flux_z_pts are allocated.
    */
-  void init(int N_);
+  // =======================================================
+  // ======================================================= 
+  template<int dim_ = dim>
+  void init(const typename std::enable_if<dim_==2, int>::type& dummy)
+  {
+    
+    // first 1d initialization
+    init_1d(SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
+    
+    // =================
+    // Solution points
+    // =================
+    
+    // perform tensor product for solution points
+    
+    // create tensor product solution points locations
+    solution_pts = PointsArray("solution_pts",N,N);
+    PointsArrayHost solution_pts_host = Kokkos::create_mirror(solution_pts);
+    
+    for (int j=0; j<N; ++j) {
+      for (int i=0; i<N; ++i) {
+	solution_pts_host(i,j,0) = solution_pts_1d_host(i);
+	solution_pts_host(i,j,1) = solution_pts_1d_host(j);
+      }
+    }
+    
+    // copy solution point coordinates on DEVICE
+    Kokkos::deep_copy(solution_pts, solution_pts_host);
+    
+    // =================
+    // Flux points
+    // =================
+    
+    flux_x_pts = PointsArray("flux_x_pts",N+1, N  );
+    flux_y_pts = PointsArray("flux_y_pts",N  , N+1);
+    
+    PointsArrayHost flux_x_pts_host = Kokkos::create_mirror(flux_x_pts);
+    PointsArrayHost flux_y_pts_host = Kokkos::create_mirror(flux_y_pts);
+    
+    // flux_x located at the same y-coordinates as the solution points
+    for (int j=0; j<N; ++j) {
+      for (int i=0; i<N+1; ++i) {
+	flux_x_pts_host(i,j,0) = flux_pts_1d_host(i);
+	flux_x_pts_host(i,j,1) = solution_pts_1d_host(j);
+      }
+    }
+    
+    // flux_y located at the same x-coordinates as the solution points
+    for (int j=0; j<N+1; ++j) {
+      for (int i=0; i<N; ++i) {
+	flux_y_pts_host(i,j,0) = solution_pts_1d_host(i);
+	flux_y_pts_host(i,j,1) = flux_pts_1d_host(j);
+      }
+    }
+    
+  } // init for 2D
+
+  // ======================================================= 
+  // =======================================================
+  template<int dim_ = dim>
+  void init(const typename std::enable_if<dim_==3, int>::type& dummy)
+  {
+    
+    // first 1d initialization
+    init_1d(SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
+    
+    // =================
+    // Solution points
+    // =================
+    
+    // perform tensor product for solution points
+    
+    // create tensor product solution points locations
+    solution_pts = PointsArray("solution_pts",N,N,N);
+    PointsArrayHost solution_pts_host = Kokkos::create_mirror(solution_pts);
+    
+    for (int k=0; k<N; ++k) {
+      for (int j=0; j<N; ++j) {
+	for (int i=0; i<N; ++i) {
+	  solution_pts_host(i,j,k,0) = solution_pts_1d_host(i);
+	  solution_pts_host(i,j,k,1) = solution_pts_1d_host(j);
+	  solution_pts_host(i,j,k,2) = solution_pts_1d_host(k);
+	}
+      }
+    }
+    
+    // copy solution point coordinates on DEVICE
+    Kokkos::deep_copy(solution_pts, solution_pts_host);
+    
+    // =================
+    // Flux points
+    // =================
+    
+    flux_x_pts = PointsArray("flux_x_pts",N+1, N  , N  );
+    flux_y_pts = PointsArray("flux_y_pts",N  , N+1, N  );
+    flux_z_pts = PointsArray("flux_z_pts",N  , N  , N+1);
+    
+    PointsArrayHost flux_x_pts_host = Kokkos::create_mirror(flux_x_pts);
+    PointsArrayHost flux_y_pts_host = Kokkos::create_mirror(flux_y_pts);
+    PointsArrayHost flux_z_pts_host = Kokkos::create_mirror(flux_z_pts);
+    
+    // flux_x located at the same y,z-coordinates as the solution points
+    for (int k=0; k<N; ++k) {
+      for (int j=0; j<N; ++j) {
+	for (int i=0; i<N+1; ++i) {
+	  flux_x_pts_host(i,j,k,0) = flux_pts_1d_host(i);
+	  flux_x_pts_host(i,j,k,1) = solution_pts_1d_host(j);
+	  flux_x_pts_host(i,j,k,2) = solution_pts_1d_host(k);
+	}
+      }
+    }
+    
+    // flux_y located at the same x,z-coordinates as the solution points
+    for (int k=0; k<N; ++k) {
+      for (int j=0; j<N+1; ++j) {
+	for (int i=0; i<N; ++i) {
+	  flux_y_pts_host(i,j,k,0) = solution_pts_1d_host(i);
+	  flux_y_pts_host(i,j,k,1) = flux_pts_1d_host(j);
+	  flux_y_pts_host(i,j,k,2) = solution_pts_1d_host(k);
+	}
+      }
+    }
+    
+    // flux_z located at the same y,z-coordinates as the solution points
+    for (int k=0; k<N+1; ++k) {
+      for (int j=0; j<N; ++j) {
+	for (int i=0; i<N; ++i) {
+	  flux_z_pts_host(i,j,k,0) = solution_pts_1d_host(i);
+	  flux_z_pts_host(i,j,k,1) = solution_pts_1d_host(j);
+	  flux_z_pts_host(i,j,k,2) = flux_pts_1d_host(k);
+	}
+      }
+    }
+    
+  } // init for 3D
   
 private:
 
@@ -147,12 +284,10 @@ private:
    * Solution points and flux points coordinates in reference cell 
    * in units [0,1]^dim
    *
-   * \param[in] N is the order of the scheme should be in [1,5].
    * \param[in] sdm_sol_pts_type is the type of quadrature used for solution points
    * \param[in] sdm_flux_pts_type is the type of quadrature used for fluxes points
    */
-  void init_1d(int N,
-	       SDM_SOLUTION_POINTS_TYPE sdm_sol_pts_type,
+  void init_1d(SDM_SOLUTION_POINTS_TYPE sdm_sol_pts_type,
 	       SDM_FLUX_POINTS_TYPE     sdm_flux_pts_type)
   {
 
@@ -254,152 +389,13 @@ public:
 
 // =======================================================
 // =======================================================
-template<>
-void SDM_Geometry<2>::init(int N_)
+template<int dim,
+	 int order>
+void SDM_Geometry<dim,order>::init_lagrange_1d()
 {
-
-  N = N_;
-
-  // first 1d initialization
-  init_1d(N, SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
-
-  // =================
-  // Solution points
-  // =================
   
-  // perform tensor product for solution points
-
-  // create tensor product solution points locations
-  solution_pts = PointsArray("solution_pts",N,N);
-  PointsArrayHost solution_pts_host = Kokkos::create_mirror(solution_pts);
-  
-  for (int j=0; j<N; ++j) {
-    for (int i=0; i<N; ++i) {
-      solution_pts_host(i,j,0) = solution_pts_1d_host(i);
-      solution_pts_host(i,j,1) = solution_pts_1d_host(j);
-    }
-  }
-  
-  // copy solution point coordinates on DEVICE
-  Kokkos::deep_copy(solution_pts, solution_pts_host);
-
-  // =================
-  // Flux points
-  // =================
-  
-  flux_x_pts = PointsArray("flux_x_pts",N+1, N  );
-  flux_y_pts = PointsArray("flux_y_pts",N  , N+1);
-
-  PointsArrayHost flux_x_pts_host = Kokkos::create_mirror(flux_x_pts);
-  PointsArrayHost flux_y_pts_host = Kokkos::create_mirror(flux_y_pts);
-
-  // flux_x located at the same y-coordinates as the solution points
-  for (int j=0; j<N; ++j) {
-    for (int i=0; i<N+1; ++i) {
-      flux_x_pts_host(i,j,0) = flux_pts_1d_host(i);
-      flux_x_pts_host(i,j,1) = solution_pts_1d_host(j);
-    }
-  }
-
-  // flux_y located at the same x-coordinates as the solution points
-  for (int j=0; j<N+1; ++j) {
-    for (int i=0; i<N; ++i) {
-      flux_y_pts_host(i,j,0) = solution_pts_1d_host(i);
-      flux_y_pts_host(i,j,1) = flux_pts_1d_host(j);
-    }
-  }
-  
-} // SDM_Geometry::init<2>
-
-// =======================================================
-// =======================================================
-template<>
-void SDM_Geometry<3>::init(int N_)
-{
-
-  N = N_;
-
-  // first 1d initialization
-  init_1d(N, SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
-
-  // =================
-  // Solution points
-  // =================
-
-  // perform tensor product for solution points
-
-  // create tensor product solution points locations
-  solution_pts = PointsArray("solution_pts",N,N,N);
-  PointsArrayHost solution_pts_host = Kokkos::create_mirror(solution_pts);
-
-  for (int k=0; k<N; ++k) {
-    for (int j=0; j<N; ++j) {
-      for (int i=0; i<N; ++i) {
-	solution_pts_host(i,j,k,0) = solution_pts_1d_host(i);
-	solution_pts_host(i,j,k,1) = solution_pts_1d_host(j);
-	solution_pts_host(i,j,k,2) = solution_pts_1d_host(k);
-      }
-    }
-  }
-
-  // copy solution point coordinates on DEVICE
-  Kokkos::deep_copy(solution_pts, solution_pts_host);
-  
-  // =================
-  // Flux points
-  // =================
-  
-  flux_x_pts = PointsArray("flux_x_pts",N+1, N  , N  );
-  flux_y_pts = PointsArray("flux_y_pts",N  , N+1, N  );
-  flux_z_pts = PointsArray("flux_z_pts",N  , N  , N+1);
-
-  PointsArrayHost flux_x_pts_host = Kokkos::create_mirror(flux_x_pts);
-  PointsArrayHost flux_y_pts_host = Kokkos::create_mirror(flux_y_pts);
-  PointsArrayHost flux_z_pts_host = Kokkos::create_mirror(flux_z_pts);
-
-  // flux_x located at the same y,z-coordinates as the solution points
-  for (int k=0; k<N; ++k) {
-    for (int j=0; j<N; ++j) {
-      for (int i=0; i<N+1; ++i) {
-	flux_x_pts_host(i,j,k,0) = flux_pts_1d_host(i);
-	flux_x_pts_host(i,j,k,1) = solution_pts_1d_host(j);
-	flux_x_pts_host(i,j,k,2) = solution_pts_1d_host(k);
-      }
-    }
-  }
-
-  // flux_y located at the same x,z-coordinates as the solution points
-  for (int k=0; k<N; ++k) {
-    for (int j=0; j<N+1; ++j) {
-      for (int i=0; i<N; ++i) {
-	flux_y_pts_host(i,j,k,0) = solution_pts_1d_host(i);
-	flux_y_pts_host(i,j,k,1) = flux_pts_1d_host(j);
-	flux_y_pts_host(i,j,k,2) = solution_pts_1d_host(k);
-      }
-    }
-  }
-
-  // flux_z located at the same y,z-coordinates as the solution points
-  for (int k=0; k<N+1; ++k) {
-    for (int j=0; j<N; ++j) {
-      for (int i=0; i<N; ++i) {
-	flux_z_pts_host(i,j,k,0) = solution_pts_1d_host(i);
-	flux_z_pts_host(i,j,k,1) = solution_pts_1d_host(j);
-	flux_z_pts_host(i,j,k,2) = flux_pts_1d_host(k);
-      }
-    }
-  }
-
-} // SDM_Geometry::init<3>
-
-// =======================================================
-// =======================================================
-template<int dim>
-void SDM_Geometry<dim>::init_lagrange_1d()
-{
-
   // memory allocation
-
+  
   // sol2flux has
   // N   lines : one basis elements per solution points
   // N+1 cols  : one per interpolated points (flux points)

@@ -12,6 +12,67 @@
 
 #include "sdm/SDM_Geometry.h"
 
+/*
+ *
+ * Main test using scheme order as template parameter.
+ * order is the number of solution points per direction.
+ *
+ */
+template<int N>
+void test_sdm_geom_2d()
+{
+
+  std::cout << "===========\n";
+  std::cout << "=====2D====\n";
+  std::cout << "===========\n";
+  
+  // dim is the number of variable in the multivariate polynomial representation
+  int dim=2;
+  
+  sdm::SDM_Geometry<2,N> sdm_geom;
+  
+  sdm_geom.init(N);
+  
+  for (int j=0; j<N; ++j) {
+    for (int i=0; i<N; ++i) {
+      std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
+		<< "," << sdm_geom.solution_pts_1d_host(j) << ") ";
+    }
+    std::cout << "\n";
+  }    
+  std::cout << "\n";
+
+} // test_sdm_geom_2d<N>
+
+template<int N>
+void test_sdm_geom_3d()
+{
+
+  std::cout << "===========\n";
+  std::cout << "=====3D====\n";
+  std::cout << "===========\n";
+  
+  // dim is the number of variable in the multivariate polynomial representation
+  int dim=3;
+  
+  sdm::SDM_Geometry<3,N> sdm_geom;
+  
+  sdm_geom.init(N);
+  
+  for (int k=0; k<N; ++k) {
+    for (int j=0; j<N; ++j) {
+      for (int i=0; i<N; ++i) {
+	std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
+		  << "," << sdm_geom.solution_pts_1d_host(j)
+		  << "," << sdm_geom.solution_pts_1d_host(k) << ") ";
+      }
+      std::cout << "\n";
+    }
+    std::cout << "\n\n";
+  }
+  
+} // test_sdm_geom_3d<N>
+
 int main(int argc, char* argv[])
 {
 
@@ -40,70 +101,16 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
   }
 
-  // highest degree / order of the polynomial
-  int order = 4;
-  
-  if (argc>1)
-    order = atoi(argv[2]);
 
-  // ===========
-  // 2D test
-  // ===========
+  // instantiate some tests
+  test_sdm_geom_2d<2>();
+  test_sdm_geom_2d<3>();
+  test_sdm_geom_2d<4>();
 
-  {
+  test_sdm_geom_3d<2>();
+  test_sdm_geom_3d<3>();
+  test_sdm_geom_3d<4>();
 
-    std::cout << "===========\n";
-    std::cout << "=====2D====\n";
-    std::cout << "===========\n";
-    
-    // dim is the number of variable in the multivariate polynomial representation
-    int dim=2;
-
-    sdm::SDM_Geometry<2> sdm_geom;
-
-    sdm_geom.init(order);
-
-    for (int j=0; j<order; ++j) {
-      for (int i=0; i<order; ++i) {
-	std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
-		  << "," << sdm_geom.solution_pts_1d_host(j) << ") ";
-      }
-      std::cout << "\n";
-    }
-
-  }    
-
-  // ===========
-  // 3D test
-  // ===========
-
-  {
-    std::cout << "===========\n";
-    std::cout << "=====3D====\n";
-    std::cout << "===========\n";
-
-    // dim is the number of variable in the multivariate polynomial representation
-    int dim=3;
-
-    sdm::SDM_Geometry<3> sdm_geom;
-
-    sdm_geom.init(order);
-
-    for (int k=0; k<order; ++k) {
-      for (int j=0; j<order; ++j) {
-	for (int i=0; i<order; ++i) {
-	  std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
-		    << "," << sdm_geom.solution_pts_1d_host(j)
-		    << "," << sdm_geom.solution_pts_1d_host(k) << ") ";
-	}
-	std::cout << "\n";
-      }
-	std::cout << "\n\n";
-    }
-
-  }    
-
-  
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
