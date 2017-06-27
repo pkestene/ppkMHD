@@ -51,7 +51,7 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   m_variables_names[IB] = "by"; // mag field Y
   m_variables_names[IC] = "bz"; // mag field Z
 
-  m_io_writer = new io::IO_Writer(params, configMap, m_variables_names);
+  m_io_writer = std::make_shared<io::IO_Writer>(params, configMap, m_variables_names);
 
 #ifdef USE_MPI
   const int gw = params.ghostWidth;
@@ -94,7 +94,8 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
 SolverBase::~SolverBase()
 {
 
-  delete m_io_writer;
+  // m_io_writer is now a shared (managed) pointer
+  //delete m_io_writer;
   
 } // SolverBase::~SolverBase
 

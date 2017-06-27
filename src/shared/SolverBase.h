@@ -6,7 +6,7 @@
 #include "shared/kokkos_shared.h"
 
 #include <map>
-#include <memory> // for std::unique_ptr
+#include <memory> // for std::unique_ptr / std::shared_ptr
 
 // for timer
 #ifdef CUDA
@@ -169,7 +169,7 @@ public:
 protected:
 
   //! io writer
-  io::IO_WriterBase*       m_io_writer;
+  std::shared_ptr<io::IO_WriterBase>  m_io_writer;
 
 #ifdef USE_MPI
   //! \defgroup BorderBuffer data arrays for border exchange handling
