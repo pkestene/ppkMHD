@@ -123,9 +123,18 @@ public:
   /**@{*/
 
   //! Lagrange matrix to interpolate at flux points
+  //! N   lines : one basis element per solution points
+  //! N+1 cols  : one per interpolated point (flux points)
+  //! sol2flux(i,j) is the value of the i-th Lagrange polynomial (i-th
+  //! solution point) taken at the j-th flux point.
   LagrangeMatrix sol2flux;
 
   //! Lagrange matrix to interpolate at solution points
+  //! flux2sol matrix has
+  //! N+1 lines : one basis element per flux points
+  //! N   cols  : one per interpolated point (solution points)
+  //! flux2sol(i,j) is the value of the i-th Lagrange polynomial (i-th
+  //! flux point) taken at the i-th solution point.
   LagrangeMatrix flux2sol;
 
   /**@}*/
@@ -383,12 +392,6 @@ public:
    */
   void init_lagrange_1d();
 
-  //! eval lagrange interpolation polynomial at a i-th solution point
-  //real_t lagrange_eval_sol(int i, Kokkos::Array<real_t, N+1> values)
-
-  //! eval lagrange interpolation polynomial at a i-th flux point
-  //real_t lagrange_eval_flux(int i, Kokkos::Array<real_t, N> values);
-
 }; // class SDM_Geometry
 
 // =======================================================
@@ -401,8 +404,8 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
   // memory allocation
   
   // sol2flux has
-  // N   lines : one basis elements per solution points
-  // N+1 cols  : one per interpolated points (flux points)
+  // N   lines : one basis element per solution points
+  // N+1 cols  : one per interpolated point (flux points)
   sol2flux = LagrangeMatrix("sol2flux",N,N+1);
 
   LagrangeMatrixHost sol2flux_h = Kokkos::create_mirror(sol2flux);
@@ -444,8 +447,8 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
 
   
   // flux2sol has
-  // N+1 lines : one basis elements per flux points
-  // N   cols  : one per interpolated points (solution points)
+  // N+1 lines : one basis element per flux points
+  // N   cols  : one per interpolated point (solution points)
   flux2sol = LagrangeMatrix("flux2sol",N+1,N);
   
   LagrangeMatrixHost flux2sol_h = Kokkos::create_mirror(flux2sol);

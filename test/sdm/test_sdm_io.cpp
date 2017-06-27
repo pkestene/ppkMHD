@@ -150,7 +150,9 @@ void test_sdm_io(int argc, char* argv[])
   
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
-    
+
+
+  
 } // test_sdm_io
 
 int main(int argc, char* argv[])
@@ -185,6 +187,13 @@ int main(int argc, char* argv[])
   std::cout << "==== Spectral Difference Lagrange IO  test ====\n";
   std::cout << "===============================================\n";
 
+  if (argc<2) {
+    std::cout << "Please provide a settings file\n";
+    std::cout << "Usage : ./test_sdm_io test.ini\n";
+    return EXIT_FAILURE;
+  }
+    
+  
   // testing for multiple values of N in 2 to 6
   {
     // 2d

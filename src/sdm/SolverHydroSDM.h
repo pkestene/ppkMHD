@@ -23,6 +23,7 @@
 #include "sdm/SDM_Geometry.h"
 
 // sdm functors (where the action takes place)
+#include "sdm/HydroInitFunctors.h"
 //#include "sdm/SDM_DtFunctor.h"
 //#include "sdm/SDM_UpdateFunctors.h"
 
@@ -42,6 +43,15 @@ namespace sdm {
  * \tparam dim dimension of the domain (2 or 3)
  * \tparam N is the number of solution points per direction
  *
+ * The total number of solution points per cells is N^2 in 2D, and N^3 in 3D.
+ * We use row-major format to enumerate DoF (degrees of freedom) inside cell,
+ * i.e. we will define a mapping  
+ * for example in 2D:
+ *    index = DofMap(i,j,iv) computed as i+N*j+N*N*iv
+ * DofMap returns index where one can find the variable iv (e.g. for density
+ * just use ID) of the (i,j) Dof inside a given cell. the pair i,j identifies
+ * a unique Dof among the N^2 Dof in 2D.
+ * 
  */
 template<int dim, int N>
 class SolverHydroSDM : public ppkMHD::SolverBase
@@ -55,7 +65,6 @@ public:
   //! Data array typedef for host memory space
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
-  
   SolverHydroSDM(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroSDM();
 
@@ -68,7 +77,7 @@ public:
 
     return solver;
   }
-  
+
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
   DataArray     U2;    /*!< hydrodynamics conservative variables arrays */
@@ -357,6 +366,8 @@ void SolverHydroSDM<dim,N>::init_sdm_geometry()
 {
 
   // TODO
+  sdm_geom.init(0);
+  sdm_geom.init_lagrange_1d();
   
 } // SolverHydroSDM<dim,N>::init_sdm_geometry
 
@@ -698,8 +709,8 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_implode(DataArray Udata)
 {
 
-  //InitImplodeFunctor<dim,N> functor(params, monomialMap.data, Udata);
-  //Kokkos::parallel_for(nbCells, functor);
+  InitImplodeFunctor<dim,N> functor(params, sdm_geom, Udata);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // init_implode
 
