@@ -104,6 +104,9 @@ public:
 
   //! dim-dimensional array of solution points location (obtained by tensorial product)
   PointsArray       solution_pts;
+
+  //! dim-dimensional array of solution points location on host (for IO routines)
+  PointsArrayHost   solution_pts_host;
   
   //! location of flux points in reference cell [0,1]^dim, device array
   PointsArray1D     flux_pts_1d;
@@ -166,7 +169,7 @@ public:
     
     // create tensor product solution points locations
     solution_pts = PointsArray("solution_pts",N,N);
-    PointsArrayHost solution_pts_host = Kokkos::create_mirror(solution_pts);
+    solution_pts_host = Kokkos::create_mirror(solution_pts);
     
     for (int j=0; j<N; ++j) {
       for (int i=0; i<N; ++i) {
@@ -223,7 +226,7 @@ public:
     
     // create tensor product solution points locations
     solution_pts = PointsArray("solution_pts",N,N,N);
-    PointsArrayHost solution_pts_host = Kokkos::create_mirror(solution_pts);
+    solution_pts_host = Kokkos::create_mirror(solution_pts);
     
     for (int k=0; k<N; ++k) {
       for (int j=0; j<N; ++j) {

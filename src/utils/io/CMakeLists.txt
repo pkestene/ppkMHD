@@ -7,6 +7,14 @@ set (io_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK.cpp
   )
 
+if(USE_SDM)
+  set (io_SRCS
+    ${io_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.cpp
+    )
+endif(USE_SDM)
+
 if(USE_HDF5)
   set (io_SRCS
     ${io_SRCS}

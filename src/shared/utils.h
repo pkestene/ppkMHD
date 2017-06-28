@@ -25,6 +25,7 @@
 #define FUZZYLIMITS(x, a, b) \
     (((x) > ((a) - THRESHOLD)) && ((x) < ((b) + THRESHOLD)))
 
-void print_current_date();
+void        print_current_date(std::ostream& stream);
+std::string get_current_date();
 
 #endif // PPKMHD_UTILS_H
