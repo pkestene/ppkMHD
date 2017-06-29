@@ -48,13 +48,17 @@ public:
 			 std::string debug_name);
 
   //! public interface to save data.
-  //! template specializations go to implementation file.
-  template<class DataArray>
-  void save_data_impl(DataArray                      Udata,
-		      typename DataArray::HostMirror Uhost,
+  virtual void save_data_impl(DataArray2d             Udata,
+		      DataArray2d::HostMirror Uhost,
 		      int iStep,
 		      real_t time,
-		      std::string debug_name) {}
+		      std::string debug_name);
+
+  virtual void save_data_impl(DataArray3d             Udata,
+			      DataArray3d::HostMirror Uhost,
+			      int iStep,
+			      real_t time,
+			      std::string debug_name);
     
   //! names of variables to save (inherited from Solver)
   std::map<int, std::string>& variables_names;

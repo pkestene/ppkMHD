@@ -10,6 +10,8 @@ set (io_SRCS
 if(USE_SDM)
   set (io_SRCS
     ${io_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/IO_Writer_SDM.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/IO_Writer_SDM.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.h
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.cpp
     )

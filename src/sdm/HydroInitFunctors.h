@@ -79,24 +79,16 @@ public:
 	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 
-	x += this->sdm_geom.solution_pts(idx, idy, 0) * dx;
-	y += this->sdm_geom.solution_pts(idx, idy, 0) * dy;
-	  
-	real_t tmp = x+y*y;
+	x += this->sdm_geom.solution_pts_1d(idx) * dx;
+	y += this->sdm_geom.solution_pts_1d(idy) * dy;
+	
+	real_t tmp = x+y;
 	if (tmp > 0.5 && tmp < 1.5) {
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,ID)) = 1.0;
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,IP)) = 1.0/(gamma0-1.0);
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,IU)) = 0.0;
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,IV)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 1.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 1.0/(gamma0-1.0);
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0.0;
 	} else {
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,ID)) = 0.125;
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,IP)) = 0.14/(gamma0-1.0);
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,IU)) = 0.0;
-	  // Udata(i  ,j  , DofMap<2,N>(idx,idy,0,IV)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 0.125;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 0.14/(gamma0-1.0);
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;

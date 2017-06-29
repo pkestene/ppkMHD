@@ -28,7 +28,7 @@
 //#include "sdm/SDM_UpdateFunctors.h"
 
 // for IO
-#include <utils/io/IO_Writer.h>
+#include "utils/io/IO_Writer_SDM.h"
 
 // for specific init / border conditions
 #include "shared/BlastParams.h"
@@ -195,7 +195,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   m_nCells = nbCells;
 
   int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
-  int nbvar = params.nbvar * nb_dof_per_cell;
+  int nb_dof = params.nbvar * nb_dof_per_cell;
 
   long long int total_mem_size = 0;
   
@@ -204,30 +204,30 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    */
   if (dim==2) {
 
-    U     = DataArray("U", isize, jsize, nbvar);
+    U     = DataArray("U", isize, jsize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
-    U2    = DataArray("U2",isize, jsize, nbvar);
+    U2    = DataArray("U2",isize, jsize, nb_dof);
     
-    //Fluxes_x = DataArray("Fluxes_x", isize, jsize, nbvar);
-    //Fluxes_y = DataArray("Fluxes_y", isize, jsize, nbvar);
+    //Fluxes_x = DataArray("Fluxes_x", isize, jsize, nb_dof);
+    //Fluxes_y = DataArray("Fluxes_y", isize, jsize, nb_dof);
 
-    //total_mem_size += isize*jsize*nbvar*4 * sizeof(real_t);
+    //total_mem_size += isize*jsize*nb_dof*4 * sizeof(real_t);
     //total_mem_size += isize*jsize * sizeof(real_t);
-    //total_mem_size += isize*jsize*nbvar * ncoefs * sizeof(real_t);
+    //total_mem_size += isize*jsize*nb_dof * ncoefs * sizeof(real_t);
       
   } else if (dim==3) {
 
-    U     = DataArray("U", isize, jsize, ksize, nbvar);
+    U     = DataArray("U", isize, jsize, ksize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
-    U2    = DataArray("U2",isize, jsize, ksize, nbvar);
+    U2    = DataArray("U2",isize, jsize, ksize, nb_dof);
     
-    //Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nbvar);
-    //Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nbvar);
-    //Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nbvar);
+    //Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nb_dof);
+    //Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nb_dof);
+    //Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nb_dof);
 
-    //total_mem_size += isize*jsize*ksize*nbvar*5 * sizeof(real_t);
+    //total_mem_size += isize*jsize*ksize*nb_dof*5 * sizeof(real_t);
     //total_mem_size += isize*jsize*ksize * sizeof(real_t);
-    //total_mem_size += isize*jsize*ksize*nbvar * ncoefs * sizeof(real_t);
+    //total_mem_size += isize*jsize*ksize*nb_dof * ncoefs * sizeof(real_t);
 
   }
 
@@ -248,37 +248,37 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (ssprk2_enabled) {
 
     if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
-      total_mem_size += isize*jsize*nbvar * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
+      total_mem_size += isize*jsize*nb_dof * sizeof(real_t);
     } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
-      total_mem_size += isize*jsize*ksize*nbvar * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
+      total_mem_size += isize*jsize*ksize*nb_dof * sizeof(real_t);
     }
     
   } else if (ssprk3_enabled) {
 
     if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
-      U_RK2 = DataArray("U_RK2",isize, jsize, nbvar);
-      total_mem_size += isize*jsize*nbvar * 2 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
+      U_RK2 = DataArray("U_RK2",isize, jsize, nb_dof);
+      total_mem_size += isize*jsize*nb_dof * 2 * sizeof(real_t);
     } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
-      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nbvar);
-      total_mem_size += isize*jsize*ksize*nbvar * 2 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
+      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nb_dof);
+      total_mem_size += isize*jsize*ksize*nb_dof * 2 * sizeof(real_t);
     }
     
   } else if (ssprk54_enabled) {
 
     if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, nbvar);
-      U_RK2 = DataArray("U_RK2",isize, jsize, nbvar);
-      U_RK3 = DataArray("U_RK3",isize, jsize, nbvar);
-      total_mem_size += isize*jsize*nbvar * 3 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
+      U_RK2 = DataArray("U_RK2",isize, jsize, nb_dof);
+      U_RK3 = DataArray("U_RK3",isize, jsize, nb_dof);
+      total_mem_size += isize*jsize*nb_dof * 3 * sizeof(real_t);
     } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nbvar);
-      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nbvar);
-      U_RK3 = DataArray("U_RK3",isize, jsize, ksize, nbvar);
-      total_mem_size += isize*jsize*ksize*nbvar * 3 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
+      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nb_dof);
+      U_RK3 = DataArray("U_RK3",isize, jsize, ksize, nb_dof);
+      total_mem_size += isize*jsize*ksize*nb_dof * 3 * sizeof(real_t);
     }
     
   }
@@ -317,6 +317,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 	      << " is not recognized / implemented."
 	      << std::endl;
     std::cout <<  "Use default - Four Quadrant" << std::endl;
+    init_implode(U);
     //init_four_quadrant(U);
 
   }
@@ -346,6 +347,12 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   // copy U into U2
   Kokkos::deep_copy(U2,U);
 
+  // install a new IO_Writer sdm-specific
+  m_io_writer = std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(params,
+								   configMap,
+								   m_variables_names,
+								   sdm_geom);
+  
 } // SolverHydroSDM::SolverHydroSDM
 
 // =======================================================

@@ -27,5 +27,5 @@ target_include_directories(test_sdm_io
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
-target_link_libraries(test_sdm_io shared config io monitoring kokkos hwloc dl)
+target_link_libraries(test_sdm_io config io shared monitoring kokkos hwloc dl)
 
