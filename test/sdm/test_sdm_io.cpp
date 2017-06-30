@@ -197,7 +197,10 @@ int main(int argc, char* argv[])
   // testing for multiple values of N in 2 to 6
   {
     // 2d
-    test_sdm_io<2,4>(argc,argv);
+    //test_sdm_io<2,4>(argc,argv);
+
+    // 3d
+    test_sdm_io<3,4>(argc,argv);
 
   }
 

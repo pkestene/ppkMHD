@@ -21,12 +21,16 @@
 namespace ppkMHD { namespace io {
 
 /**
- * 
+ * Derived IO_Writer specific to Spectral Difference Method needs.
  */
 template<int dim, int N>
 class IO_Writer_SDM : public IO_Writer {
 
 public:
+  // alias to DataArray2d or DataArray3d
+  using DataArray     = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  using DataArrayHost = typename DataArray::HostMirror;
+  
   IO_Writer_SDM(HydroParams& params,
 		ConfigMap& configMap,
 		std::map<int, std::string>& variables_names,
@@ -41,8 +45,8 @@ public:
   sdm::SDM_Geometry<dim,N> sdm_geom;
   
   //! public interface to save data (override base class).
-  void save_data_impl(DataArray2d             Udata,
-		      DataArray2d::HostMirror Uhost,
+  void save_data_impl(DataArray     Udata,
+		      DataArrayHost Uhost,
 		      int iStep,
 		      real_t time,
 		      std::string debug_name)
@@ -81,13 +85,6 @@ public:
     
   } // IO_Writer_SDM::save_data_impl
   
-  
-  // void save_data_impl(DataArray3d             Udata,
-  // 		      DataArray3d::HostMirror Uhost,
-  // 		      int iStep,
-  // 		      real_t time,
-  // 		      std::string debug_name);
-      
 }; // class IO_Writer_SDM
 
 
