@@ -26,6 +26,11 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/SolverHydroSDM.h"
 
+#ifdef USE_MPI
+#include "utils/mpiUtils/GlobalMpiSession.h"
+#include <mpi.h>
+#endif // USE_MPI
+
 //! const polynomial
 real_t f_0(real_t x)
 {
@@ -158,6 +163,11 @@ void test_sdm_io(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
 
+  // Create MPI session if MPI enabled
+#ifdef USE_MPI
+  hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
+#endif // USE_MPI
+
   Kokkos::initialize(argc, argv);
 
   {
@@ -197,10 +207,10 @@ int main(int argc, char* argv[])
   // testing for multiple values of N in 2 to 6
   {
     // 2d
-    //test_sdm_io<2,4>(argc,argv);
+    test_sdm_io<2,4>(argc,argv);
 
     // 3d
-    test_sdm_io<3,4>(argc,argv);
+    //test_sdm_io<3,4>(argc,argv);
 
   }
 

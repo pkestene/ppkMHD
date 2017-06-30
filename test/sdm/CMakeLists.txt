@@ -29,3 +29,6 @@ target_include_directories(test_sdm_io
   )
 target_link_libraries(test_sdm_io config io shared monitoring kokkos hwloc dl)
 
+if (USE_MPI)
+  target_link_libraries(test_sdm_io mpiUtils)
+endif()

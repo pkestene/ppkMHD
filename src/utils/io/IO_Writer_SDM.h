@@ -53,13 +53,9 @@ public:
   {
     
     if (vtk_enabled) {
-      
-#ifdef USE_MPI
-      //save_VTK_2D_mpi(Udata, Uhost, params, configMap, params.nbvar, variables_names, iStep, debug_name);
-#else
+
       save_VTK_SDM<N>(Udata, Uhost, params, configMap, sdm_geom, params.nbvar, variables_names, iStep, time);
-#endif // USE_MPI
-      
+
     }
     
     // #ifdef USE_HDF5
@@ -87,58 +83,6 @@ public:
   
 }; // class IO_Writer_SDM
 
-
-// =======================================================
-// =======================================================
-// template<int dim, int N>
-// void IO_Writer::save_data_impl<dim,N>(DataArray2d             Udata,
-// 				      DataArray2d::HostMirror Uhost,
-// 				      int iStep,
-// 				      real_t time,
-// 				      std::string debug_name);
-
-// =======================================================
-// =======================================================
-// template<int dim, int N>
-// void IO_Writer::save_data_impl<dim,N>(DataArray3d             Udata,
-// 				      DataArray3d::HostMirror Uhost,
-// 				      int iStep,
-// 				      real_t time,
-// 				      std::string debug_name)
-// {
-  
-//   if (vtk_enabled) {
-
-// #ifdef USE_MPI
-//     //save_VTK_3D_mpi(Udata, Uhost, params, configMap, params.nbvar, variables_names, iStep, debug_name);
-// #else
-//     //save_VTK_SDM(Udata, Uhost, params, configMap, sdm_geom, params.nbvar, variables_names, iStep, time);
-// #endif // USE_MPI
-    
-//   }
-
-// // #ifdef USE_HDF5
-// //   if (hdf5_enabled) {
-
-// // #ifdef USE_MPI
-// //     ppkMHD::io::Save_HDF5_mpi<THREE_D> writer(Udata, Uhost, params, configMap, HYDRO_3D_NBVAR, variables_names, iStep, time, debug_name);
-// //     writer.save();
-// // #else
-// //     ppkMHD::io::Save_HDF5<THREE_D> writer(Udata, Uhost, params, configMap, HYDRO_3D_NBVAR, variables_names, iStep, time, debug_name);
-// //     writer.save();
-// // #endif // USE_MPI
-    
-// //   }
-// // #endif // USE_HDF5
-
-// // #ifdef USE_PNETCDF
-// //   if (pnetcdf_enabled) {
-// //     ppkMHD::io::Save_PNETCDF<THREE_D> writer(Udata, Uhost, params, configMap, HYDRO_2D_NBVAR, variables_names, iStep, time, debug_name);
-// //     writer.save();    
-// //   }
-// // #endif // USE_PNETCDF
-  
-// } // IO_Writer_SDM::save_data_impl
 
 } // namespace io
 
