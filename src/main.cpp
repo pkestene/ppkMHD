@@ -18,7 +18,6 @@
 
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
-//#include "shared/HydroParamsMpi.h" // read parameter file
 #include <mpi.h>
 #endif // USE_MPI
 
