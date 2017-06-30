@@ -131,6 +131,7 @@ public:
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
     const real_t zmin = this->params.zmin;
+
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
@@ -151,9 +152,9 @@ public:
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 	  real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
 
-	  x += this->sdm_geom.solution_pts(idx, idy, idz) * dx;
-	  y += this->sdm_geom.solution_pts(idx, idy, idy) * dy;
-	  z += this->sdm_geom.solution_pts(idx, idy, idz) * dz;
+	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
+	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
+	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 	  
 	  real_t tmp = x+y+z;
 	  if (tmp > 0.5 && tmp < 2.5) {
