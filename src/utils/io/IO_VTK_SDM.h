@@ -67,11 +67,17 @@ void write_nodes_location(std::ostream& outFile,
   
   const int ghostWidth = params.ghostWidth;
 
+  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  const char* dataType = useDouble ? "Float64" : "Float32";
+
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "binary";
 
+  // this is only necessary for binary output
+  std::vector<float> vertices;
+  
   outFile << "  <Points>\n";
-  outFile << "    <DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\""
+  outFile << "    <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\""
 	  << ascii_or_binary << "\">\n";
 
   for (int j=0; j<ny; ++j) {
@@ -84,8 +90,7 @@ void write_nodes_location(std::ostream& outFile,
       for (int idy=0; idy<N+1; ++idy) {
 	for (int idx=0; idx<N+1; ++idx) {
 
-	  real_t x;
-	  real_t y;
+	  float x, y;
 
 	  if (idx == 0) {
 	    x = xo;
@@ -112,13 +117,20 @@ void write_nodes_location(std::ostream& outFile,
 	  if (outputVtkAscii) {
 	    outFile << x << " " << y << " " << 0.0 << "\n";
 	  } else {
-	    //outFile << ;
+	    vertices.push_back(x);
+	    vertices.push_back(y);
+	    vertices.push_back(0.0);
 	  }
 	}
       }
       
     } // end for i
   } // end for j
+
+  if (!outputVtkAscii) {
+    outFile.write(reinterpret_cast<char *>( &(vertices[0]) ), sizeof(float)*nx*ny*(N+1)*(N+1)*3);
+    outFile << "\n";
+  }
   
   outFile << "    </DataArray>\n";
   outFile << "  </Points>\n";
@@ -162,8 +174,14 @@ void write_nodes_location(std::ostream& outFile,
   
   const int ghostWidth = params.ghostWidth;
 
+  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  const char* dataType = useDouble ? "Float64" : "Float32";
+
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "binary";
+
+  // this is only necessary for binary output
+  std::vector<float> vertices;
 
   outFile << "  <Points>\n";
   outFile << "    <DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\""
@@ -222,7 +240,9 @@ void write_nodes_location(std::ostream& outFile,
 
 	      } else {
 
-		//outFile << ;
+		vertices.push_back(x);
+		vertices.push_back(y);
+		vertices.push_back(z);
 
 	      }
 	      
@@ -234,6 +254,11 @@ void write_nodes_location(std::ostream& outFile,
     } // end for j
   } // end for k
   
+  if (!outputVtkAscii) {
+    outFile.write((char *) &(vertices[0]), sizeof(float)*nx*ny*nz*(N+1)*(N+1)*(N+1)*3);
+    outFile << "\n";
+  }
+
   outFile << "    </DataArray>\n";
   outFile << "  </Points>\n";
   
@@ -269,8 +294,11 @@ void write_cells_connectivity(std::ostream& outFile,
   
   const int ghostWidth = params.ghostWidth;
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "binary";
+
+  // this is only necessary for binary output
+  std::vector<int> connectivity;
 
   int nbNodesPerCell = (N+1)*(N+1); // in 2D
   int nbSubCells = N*N;
@@ -283,7 +311,7 @@ void write_cells_connectivity(std::ostream& outFile,
   /*
    * CONNECTIVITY
    */
-  outFile << "    <DataArray type=\"Int64\" Name=\"connectivity\" format=\"" << ascii_or_binary << "\""
+  outFile << "    <DataArray type=\"Int32\" Name=\"connectivity\" format=\"" << ascii_or_binary << "\""
 	  << " >\n";
 
   for (int j=0; j<ny; ++j) {
@@ -298,10 +326,19 @@ void write_cells_connectivity(std::ostream& outFile,
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
 
-	  outFile << offset+idx+  (N+1)* idy    << " "
-		  << offset+idx+1+(N+1)* idy << " "
-		  << offset+idx+1+(N+1)*(idy+1) << " "
-		  << offset+idx  +(N+1)*(idy+1) << "\n";
+	  int i0,i1,i2,i3;
+	  i0 = offset+idx+  (N+1)* idy;
+	  i1 = offset+idx+1+(N+1)* idy;
+	  i2 = offset+idx+1+(N+1)*(idy+1);
+	  i3 = offset+idx  +(N+1)*(idy+1);
+	  if (outputVtkAscii) {
+	    outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
+	  } else {
+	    connectivity.push_back(i0);
+	    connectivity.push_back(i1);
+	    connectivity.push_back(i2);
+	    connectivity.push_back(i3);
+	  }
 
 	} // for idx
       } // for idy
@@ -311,18 +348,37 @@ void write_cells_connectivity(std::ostream& outFile,
     } // for i
   } // for j
 
+  if (!outputVtkAscii) {
+    outFile.write((char *) &(connectivity[0]), sizeof(int)*nx*ny*N*N*4);
+    outFile << "\n";
+    connectivity.clear();
+  }
+
   outFile << "    </DataArray>\n";
 
   /*
    * OFFSETS
    */
-  outFile << "    <DataArray type=\"Int64\" Name=\"offsets\" format=\"" << ascii_or_binary << "\""
+  // this is only necessary for binary output
+  std::vector<int> offsets;
+
+  outFile << "    <DataArray type=\"Int32\" Name=\"offsets\" format=\"" << ascii_or_binary << "\""
 	  << " >\n";
 
   // number of nodes per cell is 4 in 2D
   for (int i=1; i<=nx*ny*N*N; ++i) {
-    outFile << 4*i << " ";
+    if (outputVtkAscii) {
+      outFile << 4*i << " ";
+    } else {
+      offsets.push_back(4*i);
+    }
   }
+
+  if (!outputVtkAscii) {
+    outFile.write((char *) &(offsets[0]), sizeof(int)*nx*ny*N*N);
+    offsets.clear();
+  }
+
   outFile << "\n";
   
   outFile << "    </DataArray>\n";
@@ -331,13 +387,23 @@ void write_cells_connectivity(std::ostream& outFile,
   /*
    * CELL TYPES
    */
+  std::vector<unsigned char> celltypes;
   outFile << "    <DataArray type=\"UInt8\" Name=\"types\" format=\"" << ascii_or_binary << "\""
 	  << " >\n";
 
   // 9 means "Quad" - 12 means "Hexahedron"
   for (int i=0; i<nx*ny*N*N; ++i) {
-    outFile << 9 << " ";
+    if (outputVtkAscii)
+      outFile << 9 << " ";
+    else
+      celltypes.push_back(9);
   }
+
+  if (!outputVtkAscii) {
+    outFile.write((char *) &(celltypes[0]), sizeof(unsigned char)*nx*ny*N*N);
+    celltypes.clear();
+  }
+  
   outFile << "\n";
   
   outFile << "    </DataArray>\n";
@@ -496,8 +562,12 @@ void write_cells_data(std::ostream& outFile,
   bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
   const char* dataType = useDouble ? "Float64" : "Float32";
   
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "binary";
+
+  
+  // this is only necessary for binary output
+  std::vector<real_t> cells_data;
 
   /*
    * write cell data.
@@ -518,14 +588,24 @@ void write_cells_data(std::ostream& outFile,
 	// loop over sub-cells
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
-	    outFile << Uhost(gw+i,gw+j, sdm::DofMap<2,N>(idx,idy, 0, iVar)) << " ";
+
+	    real_t data = Uhost(gw+i,gw+j, sdm::DofMap<2,N>(idx,idy, 0, iVar)); 
+	    if (outputVtkAscii)
+	      outFile << data << " ";
+	    else
+	      cells_data.push_back(data);
 	    
 	  } // for idx
 	} // for idy
 	
       } // for i
     } // for j
+
+    if (!outputVtkAscii) {
+      outFile.write((char *) &(cells_data[0]), sizeof(real_t)*nx*ny*N*N);
+      cells_data.clear();
+    }
+
     outFile << "\n";
     
     outFile << "    </DataArray>\n";
