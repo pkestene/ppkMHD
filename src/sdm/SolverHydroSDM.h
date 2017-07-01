@@ -174,7 +174,7 @@ public:
  */
 template<int dim, int N>
 SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
-					     ConfigMap& configMap) :
+				      ConfigMap& configMap) :
   SolverBase(params, configMap),
   U(), Uhost(), U2(),
   Fluxes_x(), Fluxes_y(), Fluxes_z(),
