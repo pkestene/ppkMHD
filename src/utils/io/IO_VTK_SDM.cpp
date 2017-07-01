@@ -41,9 +41,9 @@ void write_vtu_header(std::ostream& outFile,
   
   // write xml data header
   if (isBigEndian()) {
-    outFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"BigEndian\">\n";
+    outFile << "<VTKFile type=\"UnstructuredGrid\" version=\"1.0\" byte_order=\"BigEndian\" header_type=\"UInt64\">\n";
   } else {
-    outFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    outFile << "<VTKFile type=\"UnstructuredGrid\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n";
   }
 
   outFile << "<UnstructuredGrid>\n";
@@ -151,19 +151,19 @@ void write_pvtu_header(std::string headerFilename,
   
   
   if (isBigEndian())
-    outHeader << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"BigEndian\"" << compressor << ">" << std::endl;
+    outHeader << "<VTKFile type=\"PUnstructuredGrid\" version=\"1.0\" byte_order=\"BigEndian\" header_type=\"UInt64\" " << compressor << ">" << std::endl;
   else
-    outHeader << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\"" << compressor << ">" << std::endl;
+    outHeader << "<VTKFile type=\"PUnstructuredGrid\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\" " << compressor << ">" << std::endl;
 
   outHeader << "  <PUnstructuredGrid GhostLevel=\"0\">\n";
 
   outHeader << "    <PPoints>\n";
-  outHeader << "      <PDataArray type=\""<< dataType << "\" NumberOfComponents=\"3\"/>\n";
+  outHeader << "      <PDataArray type=\"Float32\" NumberOfComponents=\"3\"/>\n";
   outHeader << "    </PPoints>\n";
 
   outHeader << "    <PCells>\n";
-  outHeader << "      <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n"; 
-  outHeader << "      <PDataArray type=\"Int32\" Name=\"offsets\"      NumberOfComponents=\"1\"/>\n";
+  outHeader << "      <PDataArray type=\"Int64\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n"; 
+  outHeader << "      <PDataArray type=\"Int64\" Name=\"offsets\"      NumberOfComponents=\"1\"/>\n";
   outHeader << "      <PDataArray type=\"UInt8\" Name=\"types\"        NumberOfComponents=\"1\"/>\n"; 
   outHeader << "    </PCells>\n";
 
