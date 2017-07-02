@@ -171,7 +171,7 @@ public:
 /*************************************************/
 /*************************************************/
 /**
- * Functors to update ghost cells (Hydro 2D).
+ * Functors to update ghost cells (Hydro 3D).
  *
  */
 template <FaceIdType faceId>
@@ -233,7 +233,7 @@ public:
 	    if (iVar==IU) sign=-ONE_F;
 	  } else if( boundary_type == BC_NEUMANN ) {
 	    i0=ghostWidth;
-	} else { // periodic
+	  } else { // periodic
 	    i0=nx+i;
 	  }
 	  
