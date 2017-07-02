@@ -165,6 +165,9 @@ public:
   void copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc);
 
 #endif // USE_MPI
+
+  //! initialize m_io_writer (can be override in a derived class)
+  virtual void init_io_writer();
   
 protected:
 

@@ -88,6 +88,10 @@ public:
   //! fluxes
   DataArray Fluxes_x, Fluxes_y, Fluxes_z;
   
+  /*
+   * Override base class method to initialize IO writer object
+   */
+  void init_io_writer();
 
   /*
    * SDM config
@@ -346,12 +350,6 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   // copy U into U2
   Kokkos::deep_copy(U2,U);
-
-  // install a new IO_Writer sdm-specific
-  m_io_writer = std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(params,
-								   configMap,
-								   m_variables_names,
-								   sdm_geom);
   
 } // SolverHydroSDM::SolverHydroSDM
 
@@ -365,6 +363,20 @@ SolverHydroSDM<dim,N>::~SolverHydroSDM()
 {
 
 } // SolverHydroSDM::~SolverHydroSDM
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::init_io_writer()
+{
+  
+  // install a new IO_Writer sdm-specific
+  m_io_writer = std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(params,
+								   configMap,
+								   m_variables_names,
+								   sdm_geom);
+
+} // SolverHydroSDM<dim,N>::init_io_writer
 
 // =======================================================
 // =======================================================

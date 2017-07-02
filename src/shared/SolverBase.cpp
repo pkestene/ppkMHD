@@ -51,8 +51,10 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   m_variables_names[IB] = "by"; // mag field Y
   m_variables_names[IC] = "bz"; // mag field Z
 
-  m_io_writer = std::make_shared<io::IO_Writer>(params, configMap, m_variables_names);
-
+  // init io writer is/should/must be called outside of constructor
+  // right now we moved that in SolverFactory's method create
+  //init_io_writer();
+  
 #ifdef USE_MPI
   const int gw = params.ghostWidth;
   const int isize = params.isize;
@@ -999,6 +1001,15 @@ SolverBase::copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc)
 } // SolverBase::copy_boundaries_back - 3d
 
 #endif // USE_MPI
+
+// =======================================================
+// =======================================================
+void SolverBase::init_io_writer()
+{
+  
+  m_io_writer = std::make_shared<io::IO_Writer>(params, configMap, m_variables_names);
+
+} // SolverBase::init_io_writer
 
 // =======================================================
 // =======================================================
