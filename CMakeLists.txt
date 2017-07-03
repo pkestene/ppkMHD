@@ -190,6 +190,10 @@ if (USE_MOOD)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MOOD" )
 endif()
 
+if (USE_SDM)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SDM" )
+endif()
+
 if (USE_MPI)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MPI" )
 endif()

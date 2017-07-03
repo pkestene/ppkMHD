@@ -32,3 +32,8 @@ target_link_libraries(test_sdm_io config io shared monitoring kokkos hwloc dl)
 if (USE_MPI)
   target_link_libraries(test_sdm_io mpiUtils)
 endif()
+
+
+# copy input parameter files for testing SDM IO
+configure_file(test_sdm_io_2D.ini test_sdm_io_2D.ini COPYONLY)
+configure_file(test_sdm_io_3D.ini test_sdm_io_3D.ini COPYONLY)
