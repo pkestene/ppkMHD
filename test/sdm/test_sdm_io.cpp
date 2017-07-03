@@ -42,11 +42,23 @@ template<int dim,
 void test_sdm_io(int argc, char* argv[])
 {
 
-  std::cout << "===============================================\n";
-  std::cout << "  Dimension is : " << dim << "\n";
-  std::cout << "  Using order : "  << N   << "\n";
-  std::cout << "  Number of solution points : " << N << "\n";
-  std::cout << "  Number of flux     points : " << N+1 << "\n";
+  int myRank = 0;
+#ifdef USE_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+#endif // USE_MPI
+
+  if (myRank==0) {
+    std::cout << "===============================================\n";
+    std::cout << "===============================================\n";
+    std::cout << "===============================================\n";
+    std::cout << "  Dimension is : " << dim << "\n";
+    std::cout << "  Using order : "  << N   << "\n";
+    std::cout << "  Number of solution points : " << N << "\n";
+    std::cout << "  Number of flux     points : " << N+1 << "\n";
+    std::cout << "===============================================\n";
+    std::cout << "===============================================\n";
+    std::cout << "===============================================\n";
+  }
   
   // read input file
   // read parameter file and initialize parameter
@@ -77,9 +89,15 @@ int main(int argc, char* argv[])
   hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
 #endif // USE_MPI
 
+  int myRank = 0;
+#ifdef USE_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+#endif // USE_MPI
+
+  
   Kokkos::initialize(argc, argv);
 
-  {
+  if (myRank==0) {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
@@ -102,10 +120,12 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
   }
 
-  std::cout << "===============================================\n";
-  std::cout << "==== Spectral Difference Lagrange IO  test ====\n";
-  std::cout << "===============================================\n";
-    
+  if (myRank==0) {
+    std::cout << "===============================================\n";
+    std::cout << "==== Spectral Difference Lagrange IO  test ====\n";
+    std::cout << "===============================================\n";
+  }
+  
   
   // testing for multiple values of N in 2 to 6
   {
