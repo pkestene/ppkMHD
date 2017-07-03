@@ -297,17 +297,24 @@ SolverMHDMuscl<dim>::SolverMHDMuscl(HydroParams& params,
   // compute initialize time step
   compute_dt();
 
-  std::cout << "##########################" << "\n";
-  std::cout << "Solver is " << m_solver_name << "\n";
-  std::cout << "Problem (init condition) is " << m_problem_name << "\n";
-  std::cout << "##########################" << "\n";
+  int myRank=0;
+#ifdef USE_MPI
+  myRank = params.myRank;
+#endif // USE_MPI
 
-  // print parameters on screen
-  params.print();
-  std::cout << "##########################" << "\n";
-  std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n"; 
-  std::cout << "##########################" << "\n";
-
+  if (myRank==0) {
+    std::cout << "##########################" << "\n";
+    std::cout << "Solver is " << m_solver_name << "\n";
+    std::cout << "Problem (init condition) is " << m_problem_name << "\n";
+    std::cout << "##########################" << "\n";
+    
+    // print parameters on screen
+    params.print();
+    std::cout << "##########################" << "\n";
+    std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n"; 
+    std::cout << "##########################" << "\n";
+  }
+  
 } // SolverMHDMuscl::SolverMHDMuscl
 
 // =======================================================
