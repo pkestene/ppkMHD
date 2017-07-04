@@ -13,6 +13,7 @@ enum DimensionType {
 enum VarIndex {
   ID=0,   /*!< ID Density field index */
   IP=1,   /*!< IP Pressure/Energy field index */
+  IE=1,   /*!< IE Energy/Pressure field index */
   IU=2,   /*!< X velocity / momentum index */
   IV=3,   /*!< Y velocity / momentum index */ 
   IW=4,   /*!< Z velocity / momentum index */ 

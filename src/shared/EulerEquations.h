@@ -5,6 +5,7 @@
 #include <array>
 
 #include "shared/real_type.h"
+#include "shared/enums.h"
 
 namespace ppkMHD {
 
@@ -35,16 +36,13 @@ struct EulerEquations<2>
   using HydroState = Kokkos::Array<real_t,nbvar>;
   
   //! enum
-  enum varIDS {
-    ID = 0, // density
-    IP = 1, // Pressure (when used in primitive variables)
-    IE = 1, // Energy
-    IU = 2, // momentum along X
-    IV = 3, // momentum along Y
-    IW = 4, // momentum along Z
-  };
+  // static const int ID = 0; // density
+  // static const int IP = 1; // Pressure (when used in primitive variables)
+  // static const int IE = 1; // Energy
+  // static const int IU = 2; // momentum along X
+  // static const int IV = 3; // momentum along Y
 
-  // velocity gradient tensor number of components
+  //! velocity gradient tensor number of components
   static const int nbvar_grad = 2*2;
   
   //! velocity gradient components
@@ -119,16 +117,42 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_x(GradTensor g, HydroState qprim, Vector f, real_t mu,
+  void flux_v_x(GradTensor g, Vector v, Vector f, real_t mu,
 		HydroState& flux)
   {
     real_t tau_xx = 2*mu*(g[U_X]-ONE_HALF*(g[U_X]+g[V_Y]));
-    real_t tau_xy = mu*(g[V_X]+g[U_Y]);
+    real_t tau_xy =   mu*(g[V_X] + g[U_Y]);
     
     flux[ID] = 0.0;
     flux[IU] = tau_xx;
     flux[IV] = tau_xy;
     flux[IE] = v[IX]*tau_xx + v[IY]*tau_xy + f[IX];
+  };
+  
+  /**
+   * Viscous term as a flux along direction Y.
+   *
+   * \param[in] g is the velocity gradient tensor
+   * \param[in] v is the hydrodynamics velocity vector
+   * \param[in] f is a vector (gradient of diffusive term)
+   * \param[in] mu is dynamics viscosity (mu = rho * nu)
+   * \param[out]
+   *
+   * note that the diffusive term f represents thermal + entropy diffusion 
+   * as in ASH / CHORUS code.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void flux_v_y(GradTensor g, Vector v, Vector f, real_t mu,
+		HydroState& flux)
+  {
+    real_t tau_yy = 2*mu*(g[V_Y]-ONE_HALF*(g[U_X]+g[V_Y]));
+    real_t tau_xy =   mu*(g[V_X] + g[U_Y]);
+    
+    flux[ID] = 0.0;
+    flux[IU] = tau_xy;
+    flux[IV] = tau_yy;
+    flux[IE] = v[IX]*tau_xy + v[IY]*tau_yy + f[IY];
   };
   
 }; //struct EulerEquations<2>
@@ -150,15 +174,37 @@ struct EulerEquations<3>
   using HydroState = Kokkos::Array<real_t,nbvar>;
   
   //! enum
-  enum varIDS {
-    ID = 0, // density
-    IP = 1, // Pressure (when used in primitive variables)
-    IE = 1, // Energy
-    IU = 2, // momentum along X
-    IV = 3, // momentum along Y
-    IW = 4, // momentum along Z
-  };
+  // enum varIDS {
+  //   ID = 0, // density
+  //   IP = 1, // Pressure (when used in primitive variables)
+  //   IE = 1, // Energy
+  //   IU = 2, // momentum along X
+  //   IV = 3, // momentum along Y
+  //   IW = 4, // momentum along Z
+  // };
   
+  //! velocity gradient tensor number of components
+  static const int nbvar_grad = 3*3;
+
+  //! velocity gradient components
+  enum gradientV_IDS {
+    U_X = 0,
+    U_Y = 1,
+    U_Z = 2,
+    V_X = 3,
+    V_Y = 4,
+    V_Z = 5,
+    W_X = 6,
+    W_Y = 7,
+    W_Z = 8
+  };
+
+  //! alias typename to an array holding gradient velocity tensor components
+  using GradTensor = Kokkos::Array<real_t,nbvar_grad>;
+
+  //! just a dim-dimension vector
+  using Vector = Kokkos::Array<real_t,3>;
+
   //! variables names as a std::map
   static std::map<int, std::string>
   get_variable_names()
@@ -233,6 +279,90 @@ struct EulerEquations<3>
     flux[IE] = q[IW]*(q[IE]+p);
   };
   
+  /**
+   * Viscous term as a flux along direction X.
+   *
+   * \param[in] g is the velocity gradient tensor
+   * \param[in] v is the hydrodynamics velocity vector
+   * \param[in] f is a vector (gradient of diffusive term)
+   * \param[in] mu is dynamics viscosity (mu = rho * nu)
+   * \param[out]
+   *
+   * note that the diffusive term f represents thermal + entropy diffusion 
+   * as in ASH / CHORUS code.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void flux_v_x(GradTensor g, Vector v, Vector f, real_t mu,
+		HydroState& flux)
+  {
+    real_t tau_xx = 2*mu*(g[U_X]-ONE_THIRD*(g[U_X]+g[V_Y]+g[W_Z]));
+    real_t tau_yx =   mu*(g[V_X] + g[U_Y]);
+    real_t tau_zx =   mu*(g[W_X] + g[U_Z]);
+    
+    flux[ID] = 0.0;
+    flux[IU] = tau_xx;
+    flux[IV] = tau_yx;
+    flux[IW] = tau_zx;
+    flux[IE] = v[IX]*tau_xx + v[IY]*tau_yx + v[IZ]*tau_zx + f[IX];
+  };
+
+  /**
+   * Viscous term as a flux along direction Y.
+   *
+   * \param[in] g is the velocity gradient tensor
+   * \param[in] v is the hydrodynamics velocity vector
+   * \param[in] f is a vector (gradient of diffusive term)
+   * \param[in] mu is dynamics viscosity (mu = rho * nu)
+   * \param[out]
+   *
+   * note that the diffusive term f represents thermal + entropy diffusion 
+   * as in ASH / CHORUS code.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void flux_v_y(GradTensor g, Vector v, Vector f, real_t mu,
+		HydroState& flux)
+  {
+    real_t tau_xy =   mu*(g[U_Y] + g[V_X]);
+    real_t tau_yy = 2*mu*(g[V_Y]-ONE_THIRD*(g[U_X]+g[V_Y]+g[W_Z]));
+    real_t tau_zy =   mu*(g[W_Y] + g[V_Z]);
+    
+    flux[ID] = 0.0;
+    flux[IU] = tau_xy;
+    flux[IV] = tau_yy;
+    flux[IW] = tau_zy;
+    flux[IE] = v[IX]*tau_xy + v[IY]*tau_yy + v[IZ]*tau_zy + f[IY];
+  };
+
+  /**
+   * Viscous term as a flux along direction Z.
+   *
+   * \param[in] g is the velocity gradient tensor
+   * \param[in] v is the hydrodynamics velocity vector
+   * \param[in] f is a vector (gradient of diffusive term)
+   * \param[in] mu is dynamics viscosity (mu = rho * nu)
+   * \param[out]
+   *
+   * note that the diffusive term f represents thermal + entropy diffusion 
+   * as in ASH / CHORUS code.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void flux_v_z(GradTensor g, Vector v, Vector f, real_t mu,
+		HydroState& flux)
+  {
+    real_t tau_xz =   mu*(g[U_Z] + g[W_X]);
+    real_t tau_yz =   mu*(g[V_Z] + g[W_Y]);
+    real_t tau_zz = 2*mu*(g[W_Z]-ONE_THIRD*(g[U_X]+g[V_Y]+g[W_Z]));
+    
+    flux[ID] = 0.0;
+    flux[IU] = tau_xz;
+    flux[IV] = tau_yz;
+    flux[IW] = tau_zz;
+    flux[IE] = v[IX]*tau_xz + v[IY]*tau_yz + v[IZ]*tau_zz + f[IZ];
+  };
+
 }; //struct EulerEquations<3>
 
 } // namespace ppkMHD

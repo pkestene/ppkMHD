@@ -15,7 +15,7 @@
 #include "shared/EulerEquations.h"
 
 namespace sdm {
-
+  
 } // namespace sdm
 
 #endif //SDM_RUN_FUNCTORS_H_

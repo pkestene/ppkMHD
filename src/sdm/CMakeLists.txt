@@ -1,6 +1,10 @@
 set (sdm_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/sdm_shared.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Geometry.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDMBaseFunctor.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/HydroInitFunctors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroSDM.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Run_Functors.h
   )
 
 add_library(sdm
