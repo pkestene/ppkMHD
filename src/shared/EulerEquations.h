@@ -24,6 +24,9 @@ struct EulerEquations {};
 template <>
 struct EulerEquations<2>
 {
+
+  //! numeric constant 1/2
+  static constexpr real_t ONE_HALF = 0.5;
   
   //! number of variables: density(1) + energy(1) + momentum(2)
   static const int nbvar = 2+2;
@@ -40,6 +43,23 @@ struct EulerEquations<2>
     IV = 3, // momentum along Y
     IW = 4, // momentum along Z
   };
+
+  // velocity gradient tensor number of components
+  static const int nbvar_grad = 2*2;
+  
+  //! velocity gradient components
+  enum gradientV_IDS {
+    U_X = 0,
+    U_Y = 1,
+    V_X = 2,
+    V_Y = 3
+  };
+
+  //! alias typename to an array holding gradient velocity tensor components
+  using GradTensor = Kokkos::Array<real_t,nbvar_grad>;
+
+  //! just a dim-dimension vector
+  using Vector = Kokkos::Array<real_t,2>;
   
   //! variables names as a std::map
   static std::map<int, std::string>
@@ -63,12 +83,12 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_x(HydroState q, real_t p, HydroState& f)
+  void flux_x(HydroState q, real_t p, HydroState& flux)
   {
-    f[ID] = q[ID]*q[IU];
-    f[IU] = q[ID]*q[IU]*q[IU]+p;
-    f[IV] = q[ID]*q[IU]*q[IV];
-    f[IE] = q[IU]*(q[IE]+p);
+    flux[ID] = q[ID]*q[IU];
+    flux[IU] = q[ID]*q[IU]*q[IU]+p;
+    flux[IV] = q[ID]*q[IU]*q[IV];
+    flux[IE] = q[IU]*(q[IE]+p);
   };
 
   /**
@@ -77,14 +97,39 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_y(HydroState q, real_t p, HydroState& f)
+  void flux_y(HydroState q, real_t p, HydroState& flux)
   {
-    f[ID] = q[ID]*q[IV];
-    f[IU] = q[ID]*q[IV]*q[IU];
-    f[IV] = q[ID]*q[IV]*q[IV]+p;
-    f[IE] = q[IV]*(q[IE]+p);
+    flux[ID] = q[ID]*q[IV];
+    flux[IU] = q[ID]*q[IV]*q[IU];
+    flux[IV] = q[ID]*q[IV]*q[IV]+p;
+    flux[IE] = q[IV]*(q[IE]+p);
   };
 
+  /**
+   * Viscous term as a flux along direction X.
+   *
+   * \param[in] g is the velocity gradient tensor
+   * \param[in] v is the hydrodynamics velocity vector
+   * \param[in] f is a vector (gradient of diffusive term)
+   * \param[in] mu is dynamics viscosity (mu = rho * nu)
+   * \param[out]
+   *
+   * note that the diffusive term f represents thermal + entropy diffusion 
+   * as in ASH / CHORUS code.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void flux_v_x(GradTensor g, HydroState qprim, Vector f, real_t mu,
+		HydroState& flux)
+  {
+    real_t tau_xx = 2*mu*(g[U_X]-ONE_HALF*(g[U_X]+g[V_Y]));
+    real_t tau_xy = mu*(g[V_X]+g[U_Y]);
+    
+    flux[ID] = 0.0;
+    flux[IU] = tau_xx;
+    flux[IV] = tau_xy;
+    flux[IE] = v[IX]*tau_xx + v[IY]*tau_xy + f[IX];
+  };
   
 }; //struct EulerEquations<2>
 
@@ -95,6 +140,9 @@ template <>
 struct EulerEquations<3>
 {
   
+  //! numeric constant 1/3
+  static constexpr real_t ONE_THIRD = 1.0/3;
+
   //! number of variables: density(1) + energy(1) + momentum(3)
   static const int nbvar = 2+3;
 
@@ -132,57 +180,57 @@ struct EulerEquations<3>
    * Flux expression in the Euler equations system written in conservative
    * form along direction X.
    *
-   * \param[in] vector of conserved variables
-   * \param[in] pressure (of computed by the fluid equation of state)
+   * \param[in] q vector of conserved variables
+   * \param[in] p pressure (of computed by the fluid equation of state)
    * \param[out] flux vector
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_x(HydroState q, real_t p, HydroState& f)
+  void flux_x(HydroState q, real_t p, HydroState& flux)
   {
-    f[ID] = q[ID]*q[IU];
-    f[IU] = q[ID]*q[IU]*q[IU]+p;
-    f[IV] = q[ID]*q[IU]*q[IV];
-    f[IW] = q[ID]*q[IU]*q[IW];
-    f[IE] = q[IU]*(q[IE]+p);
+    flux[ID] = q[ID]*q[IU];
+    flux[IU] = q[ID]*q[IU]*q[IU]+p;
+    flux[IV] = q[ID]*q[IU]*q[IV];
+    flux[IW] = q[ID]*q[IU]*q[IW];
+    flux[IE] = q[IU]*(q[IE]+p);
   };
 
   /**
    * Flux expression in the Euler equations system written in conservative
    * form along direction Y.
    *
-   * \param[in] vector of conserved variables
-   * \param[in] pressure (of computed by the fluid equation of state)
+   * \param[in] q vector of conserved variables
+   * \param[in] p pressure (of computed by the fluid equation of state)
    * \param[out] flux vector
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_y(HydroState q, real_t p, HydroState& f)
+  void flux_y(HydroState q, real_t p, HydroState& flux)
   {
-    f[ID] = q[ID]*q[IV];
-    f[IU] = q[ID]*q[IV]*q[IU];
-    f[IV] = q[ID]*q[IV]*q[IV]+p;
-    f[IW] = q[ID]*q[IV]*q[IW];
-    f[IE] = q[IV]*(q[IE]+p);
+    flux[ID] = q[ID]*q[IV];
+    flux[IU] = q[ID]*q[IV]*q[IU];
+    flux[IV] = q[ID]*q[IV]*q[IV]+p;
+    flux[IW] = q[ID]*q[IV]*q[IW];
+    flux[IE] = q[IV]*(q[IE]+p);
   };
   
   /**
    * Flux expression in the Euler equations system written in conservative
    * form along direction Z.
    *
-   * \param[in] vector of conserved variables
-   * \param[in] pressure (of computed by the fluid equation of state)
+   * \param[in] q vector of conserved variables
+   * \param[in] p pressure (of computed by the fluid equation of state)
    * \param[out] flux vector
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_z(HydroState q, real_t p, HydroState& f)
+  void flux_z(HydroState q, real_t p, HydroState& flux)
   {
-    f[ID] = q[ID]*q[IW];
-    f[IU] = q[ID]*q[IW]*q[IU];
-    f[IV] = q[ID]*q[IW]*q[IV];
-    f[IW] = q[ID]*q[IW]*q[IW]+p;
-    f[IE] = q[IW]*(q[IE]+p);
+    flux[ID] = q[ID]*q[IW];
+    flux[IU] = q[ID]*q[IW]*q[IU];
+    flux[IV] = q[ID]*q[IW]*q[IV];
+    flux[IW] = q[ID]*q[IW]*q[IW]+p;
+    flux[IE] = q[IW]*(q[IE]+p);
   };
   
 }; //struct EulerEquations<3>
