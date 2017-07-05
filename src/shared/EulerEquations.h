@@ -6,6 +6,7 @@
 
 #include "shared/real_type.h"
 #include "shared/enums.h"
+#include "shared/HydroState.h"
 
 namespace ppkMHD {
 
@@ -33,7 +34,7 @@ struct EulerEquations<2>
   static const int nbvar = 2+2;
 
   //! type alias to a small array holding hydrodynamics state variables
-  using HydroState = Kokkos::Array<real_t,nbvar>;
+  using HydroState = HydroState2d;
   
   //! enum
   // static const int ID = 0; // density
@@ -179,7 +180,7 @@ struct EulerEquations<3>
   static const int nbvar = 2+3;
 
   //! type alias to a small array holding hydrodynamics state variables
-  using HydroState = Kokkos::Array<real_t,nbvar>;
+  using HydroState = HydroState3d;
   
   //! enum
   // enum varIDS {
