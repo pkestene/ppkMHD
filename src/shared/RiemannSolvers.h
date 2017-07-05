@@ -13,7 +13,7 @@ namespace ppkMHD {
   
 /**
  * Compute cell fluxes from the Godunov state
- * \param[in]  qgdnv input Godunov state
+ * \param[in]  qgdnv input primitive variables Godunov state
  * \param[out] flux  output flux vector
  */
 template <class HydroState>
@@ -54,8 +54,8 @@ void cmpflx(const HydroState& qgdnv,
  * Riemann solver, equivalent to riemann_approx in RAMSES (see file
  * godunov_utils.f90 in RAMSES).
  * 
- * @param[in] qleft  : input left state
- * @param[in] qright : input right state
+ * @param[in] qleft  : input left  state (primitive variables)
+ * @param[in] qright : input right state (primitive variables)
  * @param[out] qgdnv : output Godunov state
  * @param[out] flux  : output flux
  */
@@ -210,8 +210,8 @@ void riemann_approx(const HydroState& qleft,
  * Reference : E.F. Toro, Riemann solvers and numerical methods for
  * fluid dynamics, Springer, chapter 10 (The HLL and HLLC Riemann solver).
  *
- * @param[in] qleft  : input left state
- * @param[in] qright : input right state
+ * @param[in] qleft  : input left  state (primitive variables)
+ * @param[in] qright : input right state (primitive variables)
  * @param[out] qgdnv : output Godunov state
  * @param[out] flux  : output flux
  */
@@ -331,8 +331,8 @@ void riemann_llf(const HydroState& qleft,
  * Reference : E.F. Toro, Riemann solvers and numerical methods for
  * fluid dynamics, Springer, chapter 10 (The HLL and HLLC Riemann solver).
  *
- * @param[in] qleft  : input left state
- * @param[in] qright : input right state
+ * @param[in] qleft  : input left  state (primitive variables)
+ * @param[in] qright : input right state (primitive variables)
  * @param[out] qgdnv : output Godunov state
  * @param[out] flux  : output flux
  */
@@ -429,8 +429,8 @@ void riemann_hll(const HydroState& qleft,
 /** 
  * Riemann solver HLLC
  *
- * @param[in] qleft : input left state
- * @param[in] qright : input right state
+ * @param[in] qleft  : input left  state (primitive variables)
+ * @param[in] qright : input right state (primitive variables)
  * @param[out] qgdnv : output Godunov state
  * @param[out] flux  : output flux
  */
