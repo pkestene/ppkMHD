@@ -78,29 +78,37 @@ struct EulerEquations<2>
   /**
    * Flux expression in the Euler equations system written in conservative
    * form along direction X.
+   *
+   * \param[in] q conservative variables \f$ (\rho, \rho u, \rho v, E) \f$
+   * \param[in] p is pressure
+   * \param[out] flux vector \f$ (\rho u, \rho u^2+p, \rho u v, u(E+p) ) \f$
    */
   static
   KOKKOS_INLINE_FUNCTION
   void flux_x(HydroState q, real_t p, HydroState& flux)
   {
-    flux[ID] = q[ID]*q[IU];
-    flux[IU] = q[ID]*q[IU]*q[IU]+p;
-    flux[IV] = q[ID]*q[IU]*q[IV];
-    flux[IE] = q[IU]*(q[IE]+p);
+    flux[ID] = q[IU];                 // rho u
+    flux[IU] = q[IU]*q[IU]/q[ID]+p;   // rho u^2 + p
+    flux[IV] = q[IU]*q[IV]/q[ID];     // rho u v
+    flux[IE] = q[IU]/q[ID]*(q[IE]+p); // u (E+p)      
   };
 
   /**
    * Flux expression in the Euler equations system written in conservative
    * form along direction Y.
+   *
+   * \param[in] q conservative variables \f$ (\rho, \rho u, \rho v, E) \f$
+   * \param[in] p is pressure
+   * \param[out] flux vector \f$ (\rho v, \rho v u, \rho v^2+p, v(E+p) ) \f$
    */
   static
   KOKKOS_INLINE_FUNCTION
   void flux_y(HydroState q, real_t p, HydroState& flux)
   {
-    flux[ID] = q[ID]*q[IV];
-    flux[IU] = q[ID]*q[IV]*q[IU];
-    flux[IV] = q[ID]*q[IV]*q[IV]+p;
-    flux[IE] = q[IV]*(q[IE]+p);
+    flux[ID] = q[IV];                 // rho v
+    flux[IU] = q[IV]*q[IU]/q[ID];     // rho v u
+    flux[IV] = q[IV]*q[IV]/q[ID]+p;   // rho v^2 + p
+    flux[IE] = q[IV]/q[ID]*(q[IE]+p); // v (E+p)
   };
 
   /**
@@ -226,57 +234,64 @@ struct EulerEquations<3>
    * Flux expression in the Euler equations system written in conservative
    * form along direction X.
    *
-   * \param[in] q vector of conserved variables
-   * \param[in] p pressure (of computed by the fluid equation of state)
-   * \param[out] flux vector
+   * \param[in] q conservative var \f$ (\rho, \rho u, \rho v, \rho w, E) \f$
+   * \param[in] p is pressure
+   * \param[out] flux \f$ (\rho u, \rho u^2+p, \rho u v, \rho u w, u(E+p) ) \f$
+   *
    */
   static
   KOKKOS_INLINE_FUNCTION
   void flux_x(HydroState q, real_t p, HydroState& flux)
   {
-    flux[ID] = q[ID]*q[IU];
-    flux[IU] = q[ID]*q[IU]*q[IU]+p;
-    flux[IV] = q[ID]*q[IU]*q[IV];
-    flux[IW] = q[ID]*q[IU]*q[IW];
-    flux[IE] = q[IU]*(q[IE]+p);
+    real_t u = q[IU]/q[ID];
+    
+    flux[ID] =   q[IU];     //   rho u
+    flux[IU] = u*q[IU]+p;   // u rho u + p
+    flux[IV] = u*q[IV];     // u rho v
+    flux[IW] = u*q[IW];     // u rho w
+    flux[IE] = u*(q[IE]+p); // u (E+p)
   };
 
   /**
    * Flux expression in the Euler equations system written in conservative
    * form along direction Y.
    *
-   * \param[in] q vector of conserved variables
-   * \param[in] p pressure (of computed by the fluid equation of state)
-   * \param[out] flux vector
+   * \param[in] q conservative var \f$ (\rho, \rho u, \rho v, \rho w, E) \f$
+   * \param[in] p is pressure
+   * \param[out] flux \f$ (\rho v, \rho v u, \rho v^2+p, \rho v w, v(E+p) ) \f$
    */
   static
   KOKKOS_INLINE_FUNCTION
   void flux_y(HydroState q, real_t p, HydroState& flux)
   {
-    flux[ID] = q[ID]*q[IV];
-    flux[IU] = q[ID]*q[IV]*q[IU];
-    flux[IV] = q[ID]*q[IV]*q[IV]+p;
-    flux[IW] = q[ID]*q[IV]*q[IW];
-    flux[IE] = q[IV]*(q[IE]+p);
+    real_t v = q[IV]/q[ID];
+
+    flux[ID] =   q[IV];     //   rho v
+    flux[IU] = v*q[IU];     // v rho u
+    flux[IV] = v*q[IV]+p;   // v rho v + p
+    flux[IW] = v*q[IW];     // v rho w
+    flux[IE] = v*(q[IE]+p); // v (E+p)
   };
   
   /**
    * Flux expression in the Euler equations system written in conservative
    * form along direction Z.
    *
-   * \param[in] q vector of conserved variables
-   * \param[in] p pressure (of computed by the fluid equation of state)
-   * \param[out] flux vector
+   * \param[in] q conservative var \f$ (\rho, \rho u, \rho v, \rho w, E) \f$
+   * \param[in] p is pressure
+   * \param[out] flux \f$ (\rho v, \rho v u, \rho v^2+p, \rho v w, v(E+p) ) \f$
    */
   static
   KOKKOS_INLINE_FUNCTION
   void flux_z(HydroState q, real_t p, HydroState& flux)
   {
-    flux[ID] = q[ID]*q[IW];
-    flux[IU] = q[ID]*q[IW]*q[IU];
-    flux[IV] = q[ID]*q[IW]*q[IV];
-    flux[IW] = q[ID]*q[IW]*q[IW]+p;
-    flux[IE] = q[IW]*(q[IE]+p);
+    real_t w = q[IW]/q[ID];
+    
+    flux[ID] =   q[IW];     //   rho w
+    flux[IU] = w*q[IU];     // w rho u
+    flux[IV] = w*q[IV];     // w rho v
+    flux[IW] = w*q[IW]+p;   // w rho w + p
+    flux[IE] = w*(q[IE]+p); // w (E+p)
   };
   
   /**
