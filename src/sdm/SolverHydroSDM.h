@@ -86,6 +86,7 @@ public:
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
 
   //! fluxes
+  DataArray Fluxes;
   DataArray Fluxes_x, Fluxes_y, Fluxes_z;
   
   /*
@@ -181,7 +182,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 				      ConfigMap& configMap) :
   SolverBase(params, configMap),
   U(), Uhost(), U2(),
-  Fluxes_x(), Fluxes_y(), Fluxes_z(),
+  Fluxes(), Fluxes_x(), Fluxes_y(), Fluxes_z(),
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
@@ -201,6 +202,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
   int nb_dof = params.nbvar * nb_dof_per_cell;
 
+  // useful for allocating Fluxes, for conservative variables at flux points
+  int nb_dof_flux = dim==2 ? (N+1)*N*params.nbvar : (N+1)*N*N*params.nbvar;
+  
   long long int total_mem_size = 0;
   
   /*
@@ -212,6 +216,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     Uhost = Kokkos::create_mirror(U);
     U2    = DataArray("U2",isize, jsize, nb_dof);
     
+    Fluxes = DataArray("Fluxes", isize, jsize, nb_dof_flux);
     //Fluxes_x = DataArray("Fluxes_x", isize, jsize, nb_dof);
     //Fluxes_y = DataArray("Fluxes_y", isize, jsize, nb_dof);
 
@@ -225,6 +230,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     Uhost = Kokkos::create_mirror(U);
     U2    = DataArray("U2",isize, jsize, ksize, nb_dof);
     
+    Fluxes = DataArray("Fluxes", isize, jsize, ksize, nb_dof_flux);
     //Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nb_dof);
     //Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nb_dof);
     //Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nb_dof);

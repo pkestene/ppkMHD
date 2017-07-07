@@ -161,7 +161,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION
   real_t sol2flux(const solution_values_t& solution_values,
-		  int index)
+		  int index) const
   {
 
     // compute interpolated value
@@ -185,7 +185,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION
   void sol2flux_vector(const solution_values_t& solution_values,
-		       flux_values_t& flux_values)
+		       flux_values_t& flux_values) const
   {
 
     // compute interpolated values
@@ -212,7 +212,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION
   real_t flux2sol(const flux_values_t& flux_values,
-		  int index)
+		  int index) const
   {
 
     // compute interpolated value
@@ -236,7 +236,7 @@ public:
    */
   KOKKOS_INLINE_FUNCTION
   void flux2sol_vector(const flux_values_t& flux_values,
-		       solution_values_t& solution_values)
+		       solution_values_t& solution_values) const
   {
 
     // compute interpolated values
