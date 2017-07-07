@@ -20,7 +20,7 @@ namespace sdm {
 /*************************************************/
 /*************************************************/
 /**
- * This functor takes as an input conservative variables
+ * This functor takes as an input variables
  * at solution points and perform interpolation at flux points.
  *
  * Perform exactly the inverse of Interpolate_At_FluxPoints_Functor.
