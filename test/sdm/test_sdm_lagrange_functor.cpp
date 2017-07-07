@@ -16,6 +16,9 @@
 #include "sdm/HydroInitFunctors.h"
 #include "sdm/SDM_Run_Functors.h"
 
+#include "SDMTestFunctors.h"
+
+
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
 #include <mpi.h>
@@ -77,7 +80,10 @@ void test_lagrange_functor()
 					solver.sdm_geom,
 					solver.U);
     Kokkos::parallel_for(nbCells, functor);
-    
+
+      
+    //solver.save_solution();
+
   }
   
   // call the interpolation functors
@@ -99,7 +105,18 @@ void test_lagrange_functor()
     Kokkos::parallel_for(nbCells, functor);
   }
 
+
+  // perform difference operator
+  {
+
+    sdm::InitTestFunctor<dim,N,1> functor(solver.params,
+					  solver.sdm_geom,
+					  solver.U);
+    Kokkos::parallel_for(nbCells, functor);
+    
+  }
   
+  solver.save_solution();
 
   
 } // test_lagrange_functor
@@ -139,7 +156,7 @@ int main(int argc, char* argv[])
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_lagrange_functor<2,3>();
+    test_lagrange_functor<2,4>();
 
     // 3d
     test_lagrange_functor<3,4>();

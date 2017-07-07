@@ -7,7 +7,7 @@
 #endif // __CUDA_ARCH__
 
 #include "shared/kokkos_shared.h"
-#include "SDMBaseFunctor.h"
+#include "sdm/SDMBaseFunctor.h"
 
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
@@ -80,8 +80,8 @@ public:
 	  // get solution values vector along X direction
 	  for (int idx=0; idx<N; ++idx) {
 	  
-	    sol[ivar] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
-	    
+	    sol[idx] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
+
 	  }
 	  
 	  // interpolate at flux points for this given variable
@@ -90,8 +90,16 @@ public:
 	  // copy back interpolated value
 	  for (int idx=0; idx<N+1; ++idx) {
 	    
-	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[ivar];
+	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idx];
 	    
+	  }
+
+	  if(i==1 and j==1 and ivar==ID) {
+	    printf("DEBUG sol %d | ",idy);
+	    for (int kk=0; kk<N; ++kk) {
+	      printf(" %f",sol[kk]);
+	    }
+	    printf("\n");
 	  }
 	  
 	} // end for ivar
@@ -111,7 +119,7 @@ public:
 	  // get solution values vector along Y direction
 	  for (int idy=0; idy<N; ++idy) {
 	  
-	    sol[ivar] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
+	    sol[idy] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
 	    
 	  }
 	  
@@ -121,7 +129,7 @@ public:
 	  // copy back interpolated value
 	  for (int idy=0; idy<N+1; ++idy) {
 	    
-	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[ivar];
+	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idy];
 	    
 	  }
 	  
@@ -211,7 +219,7 @@ public:
 	  // get values at flux point along X direction
 	  for (int idx=0; idx<N+1; ++idx) {
 	  
-	    flux[ivar] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar));
+	    flux[idx] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar));
 	    
 	  }
 	  
@@ -221,7 +229,7 @@ public:
 	  // copy back interpolated value
 	  for (int idx=0; idx<N; ++idx) {
 	    
-	    UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[ivar];
+	    UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[idx];
 	    
 	  }
 	  
@@ -242,7 +250,7 @@ public:
 	  // get values at flux point along Y direction
 	  for (int idy=0; idy<N+1; ++idy) {
 	  
-	    flux[ivar] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar));
+	    flux[idy] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar));
 	    
 	  }
 	  
@@ -252,7 +260,7 @@ public:
 	  // copy back interpolated value
 	  for (int idy=0; idy<N; ++idy) {
 	    
-	    UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[ivar];
+	    UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[idy];
 	    
 	  }
 	  

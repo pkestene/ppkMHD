@@ -56,6 +56,7 @@ add_executable(test_sdm_lagrange_functor
   test_sdm_lagrange_functor.cpp)
 target_include_directories(test_sdm_lagrange_functor
   PUBLIC
+  .
   ${CMAKE_SOURCE_DIR}/src
   )
 target_link_libraries(test_sdm_lagrange_functor config io shared monitoring kokkos hwloc dl)
