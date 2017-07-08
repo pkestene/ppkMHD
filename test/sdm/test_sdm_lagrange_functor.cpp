@@ -15,6 +15,7 @@
 #include "sdm/SolverHydroSDM.h"
 #include "sdm/HydroInitFunctors.h"
 #include "sdm/SDM_Run_Functors.h"
+//#include "sdm/SDM_Flux_Functors.h"
 
 #include "SDMTestFunctors.h"
 

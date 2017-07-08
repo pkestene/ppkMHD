@@ -29,6 +29,9 @@ struct EulerEquations<2>
 
   //! numeric constant 1/2
   static constexpr real_t ONE_HALF = 0.5;
+
+  //! small pressure safe-guard
+  static constexpr real_t smallp = 1e-7;
   
   //! number of variables: density(1) + energy(1) + momentum(2)
   static const int nbvar = 2+2;
@@ -75,6 +78,57 @@ struct EulerEquations<2>
     return names;
     
   } // get_variable_names
+
+  /**
+   * Compute pressure.
+   *
+   * \param[in] q vector of conservative variables.
+   * \param[in] gamma0
+   *
+   * \return pressure
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_pressure(HydroState& q, real_t gamma0)
+  {
+
+    // 0.5 * rho * (u^2+v^2)
+    real_t ekin = 0.5 * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
+
+    // pressure
+    real_t pressure = (gamma0-1.0)*(q[IE] - ekin);
+    
+    return pressure > smallp*q[ID] ? pressure : smallp*q[ID];
+    
+  } // compute_pressure
+  
+  /**
+   * Convert from conservative to primitive variables.
+   *
+   * \param[in] q vector of conservative variables.
+   * \param[out] q vector of primitive variables.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void convert_to_primitive(const HydroState& q,
+			    HydroState&       w,
+			    real_t            gamma0)
+  {
+
+    // 0.5 * rho * (u^2+v^2)
+    real_t ekin = 0.5 * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
+    
+    // pressure
+    real_t pressure = (gamma0-1.0)*(q[IE] - ekin);
+    
+    pressure = fmax( pressure ,  smallp*q[ID]);
+
+    w[ID] = q[ID];
+    w[IU] = q[IU]/q[ID];
+    w[IV] = q[IV]/q[ID];
+    w[IP] = pressure;
+    
+  } // convert_to_primitive
 
   /**
    * Flux expression in the Euler equations system written in conservative
@@ -176,6 +230,9 @@ struct EulerEquations<3>
   //! numeric constant 1/3
   static constexpr real_t ONE_THIRD = 1.0/3;
 
+  //! small pressure safe-guard
+  static constexpr real_t smallp = 1e-7;
+
   //! number of variables: density(1) + energy(1) + momentum(3)
   static const int nbvar = 2+3;
 
@@ -230,6 +287,58 @@ struct EulerEquations<3>
     return names;
     
   } // get_variable_names
+
+  /**
+   * Compute pressure.
+   *
+   * \param[in] q vector of conservative variables.
+   * \param[in] gamma0
+   *
+   * \return pressure
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_pressure(HydroState& q, real_t gamma0)
+  {
+
+    // 0.5 * rho * (u^2+v^2+w^2)
+    real_t ekin = 0.5 * (q[IU]*q[IU] + q[IV]*q[IV] + q[IW]*q[IW]) / q[ID];
+
+    // pressure
+    real_t pressure = (gamma0-1.0)*(q[IE] - ekin);
+    
+    return pressure > smallp*q[ID] ? pressure : smallp*q[ID];
+    
+  } // compute_pressure
+  
+  /**
+   * Convert from conservative to primitive variables.
+   *
+   * \param[in] q vector of conservative variables.
+   * \param[out] q vector of primitive variables.
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  void convert_to_primitive(const HydroState& q,
+			    HydroState&       w,
+			    real_t            gamma0)
+  {
+
+    // 0.5 * rho * (u^2+v^2+w^2)
+    real_t ekin = 0.5 * (q[IU]*q[IU] + q[IV]*q[IV] + q[IW]*q[IW]) / q[ID];
+    
+    // pressure
+    real_t pressure = (gamma0-1.0)*(q[IE] - ekin);
+    
+    pressure = fmax( pressure ,  smallp*q[ID]);
+
+    w[ID] = q[ID];
+    w[IU] = q[IU]/q[ID];
+    w[IV] = q[IV]/q[ID];
+    w[IV] = q[IW]/q[ID];
+    w[IP] = pressure;
+    
+  } // convert_to_primitive
 
   /**
    * Flux expression in the Euler equations system written in conservative
