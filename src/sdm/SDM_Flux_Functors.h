@@ -44,9 +44,11 @@ public:
     UdataFlux(UdataFlux)
   {};
 
-  /*
-   * 2D version.
-   */
+  // ================================================
+  //
+  // 2D version.
+  //
+  // ================================================
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
@@ -69,6 +71,9 @@ public:
      * first handle interior point, then end points.
      */
     
+    // =========================
+    // ========= DIR X =========
+    // =========================
     // loop over cell DoF's
     if (dir == IX) {
       
@@ -77,7 +82,7 @@ public:
 	// interior points along direction X
 	for (int idx=1; idx<N; ++idx) {
 	  
-	  // for each variables
+	  // retrieve state conservative variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
   
 	    q[ivar] = UdataFlux(i,j, dofMapF(idx,idy,0,ivar));
@@ -120,8 +125,8 @@ public:
 	  
 	  // when idx == 0, get right and left state
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    qR[ivar] = UdataFlux(i  ,j, dofMapF(0,idy,0,ivar));
 	    qL[ivar] = UdataFlux(i-1,j, dofMapF(N,idy,0,ivar));
+	    qR[ivar] = UdataFlux(i  ,j, dofMapF(0,idy,0,ivar));
 	  }
 	  
 	  // convert to primitive
@@ -138,24 +143,22 @@ public:
 	  
 	  // when idx == N
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    qR[ivar] = UdataFlux(i+1,j, dofMapF(0,idy,0,ivar));
 	    qL[ivar] = UdataFlux(i  ,j, dofMapF(N,idy,0,ivar));
+	    qR[ivar] = UdataFlux(i+1,j, dofMapF(0,idy,0,ivar));
 	  }
 
-	  // convert to primitive
+	  // convert to primitive : q-> w
 	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
 	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
 	  
 	  // riemann solver
-	  swapValues( &(wL[IU]), &(wL[IV]) );
-	  swapValues( &(wR[IU]), &(wR[IV]) );
 	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy flux
 	  UdataFlux(i,j, dofMapF(N,idy,0,ID)) = flux[ID];
 	  UdataFlux(i,j, dofMapF(N,idy,0,IE)) = flux[IE];
-	  UdataFlux(i,j, dofMapF(N,idy,0,IU)) = flux[IV];
-	  UdataFlux(i,j, dofMapF(N,idy,0,IV)) = flux[IU];
+	  UdataFlux(i,j, dofMapF(N,idy,0,IU)) = flux[IU];
+	  UdataFlux(i,j, dofMapF(N,idy,0,IV)) = flux[IV];
 	  
 	} // end for idy
 
@@ -163,6 +166,9 @@ public:
       
     } // end for dir IX
 
+    // =========================
+    // ========= DIR Y =========
+    // =========================
     // loop over cell DoF's
     if (dir == IY) {
       
@@ -195,13 +201,80 @@ public:
 	
       } // end for idx
 
+      /*
+       * special treatment for the end points (Riemann solver)
+       */
+
+      // make sure to exclude ghost cells
+      if (j>0 and j<jsize-1) {
+	
+	for (int idx=0; idx<N; ++idx) {
+	  
+	  // conservative state
+	  HydroState qL, qR;
+	  
+	  // primitive state
+	  HydroState wL, wR;
+	  
+	  HydroState qgdnv;
+	  
+	  // when idy == 0, get right and left state
+	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	    qL[ivar] = UdataFlux(i,j-1, dofMapF(idx,N,0,ivar));
+	    qR[ivar] = UdataFlux(i,j  , dofMapF(idx,0,0,ivar));
+	  }
+	  
+	  // convert to primitive : q -> w
+	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	  
+	  // riemann solver
+	  swapValues( &(wL[IU]), &(wL[IV]) );
+	  swapValues( &(wR[IU]), &(wR[IV]) );
+	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  
+	  // copy flux
+	  UdataFlux(i,j, dofMapF(idx,0,0,ID)) = flux[ID];
+	  UdataFlux(i,j, dofMapF(idx,0,0,IE)) = flux[IE];
+	  UdataFlux(i,j, dofMapF(idx,0,0,IU)) = flux[IV]; // swap again
+	  UdataFlux(i,j, dofMapF(idx,0,0,IV)) = flux[IU]; // swap again
+
+	  
+	  // when idy == N
+	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	    qL[ivar] = UdataFlux(i,j+1, dofMapF(idx,N,0,ivar));
+	    qR[ivar] = UdataFlux(i,j  , dofMapF(idx,0,0,ivar));
+	  }
+
+	  // convert to primitive : q -> w
+	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	  
+	  // riemann solver
+	  swapValues( &(wL[IU]), &(wL[IV]) );
+	  swapValues( &(wR[IU]), &(wR[IV]) );
+	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  
+	  // copy flux
+	  UdataFlux(i,j, dofMapF(idx,N,0,ID)) = flux[ID];
+	  UdataFlux(i,j, dofMapF(idx,N,0,IE)) = flux[IE];
+	  UdataFlux(i,j, dofMapF(idx,N,0,IU)) = flux[IV]; // swap again
+	  UdataFlux(i,j, dofMapF(idx,N,0,IV)) = flux[IU]; // swap again
+	  
+	} // end for idx
+
+      } // end safe-guard
+
     } // end for dir IY
 
   } // 2d
 
-  /*
-   * 3D version.
-   */
+
+  // ================================================
+  //
+  // 3D version.
+  //
+  // ================================================
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
@@ -222,12 +295,324 @@ public:
     // state variable for conservative variables, and flux
     HydroState q, flux;
         
+    /*
+     * first handle interior point, then end points.
+     */
+    
+    // =========================
+    // ========= DIR X =========
+    // =========================
+    if (dir == IX) {
+      
+      for (int idz=0; idz<N; ++idz) {
+	for (int idy=0; idy<N; ++idy) {
+	
+	  // interior points along direction X
+	  for (int idx=1; idx<N; ++idx) {
+	    
+	    // retrieve state conservative variables
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+  
+	      q[ivar] = UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar));
+	      
+	    }
+
+	    // compute pressure
+	    real_t p = euler->compute_pressure(q, this->params.gamma0);
+	  
+	    // compute flux along X direction
+	    euler->flux_x(q, p, flux);
+	  
+	    // copy back interpolated value
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+	      
+	      UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+	      
+	    } // end for ivar
+	    
+	  } // end for idx
+	
+	} // end for idy
+      } // end for idz
+
+      /*
+       * special treatment for the end points (Riemann solver)
+       */
+
+      // make sure to exclude ghost cells
+      if (i>0 and i<isize-1) {
+	
+	for (int idz=0; idz<N; ++idz) {
+	  for (int idy=0; idy<N; ++idy) {
+	  
+	    // conservative state
+	    HydroState qL, qR;
+	    
+	    // primitive state
+	    HydroState wL, wR;
+	    
+	    HydroState qgdnv;
+	    
+	    // when idx == 0, get right and left state
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      qL[ivar] = UdataFlux(i-1,j,k, dofMapF(N,idy,idz,ivar));
+	      qR[ivar] = UdataFlux(i  ,j,k, dofMapF(0,idy,idz,ivar));
+	    }
+	    
+	    // convert to primitive
+	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    
+	    // riemann solver
+	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // copy flux
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      UdataFlux(i,j,k, dofMapF(0,idy,idz,ivar)) = flux[ivar];
+	    }
+	    
+	    // when idx == N
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      qL[ivar] = UdataFlux(i  ,j,k, dofMapF(N,idy,idz,ivar));
+	      qR[ivar] = UdataFlux(i+1,j,k, dofMapF(0,idy,idz,ivar));
+	    }
+	    
+	    // convert to primitive : q-> w
+	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    
+	    // riemann solver
+	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // copy flux
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      UdataFlux(i,j,k, dofMapF(N,idy,idz,ivar)) = flux[ivar];
+	    }
+	    
+	  } // end for idy
+	} // end for idz
+
+      } // end safe-guard
+      
+    } // end for dir IX
+
+    // =========================
+    // ========= DIR Y =========
+    // =========================
+    if (dir == IY) {
+      
+      for (int idz=0; idz<N; ++idz) {
+	for (int idx=0; idx<N; ++idx) {
+	
+	  // interior points along direction Y
+	  for (int idy=1; idy<N; ++idy) {
+	    
+	    // retrieve state conservative variables
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+  
+	      q[ivar] = UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar));
+	      
+	    }
+
+	    // compute pressure
+	    real_t p = euler->compute_pressure(q, this->params.gamma0);
+	  
+	    // compute flux along Y direction
+	    euler->flux_y(q, p, flux);
+	  
+	    // copy back interpolated value
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+	      
+	      UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+	      
+	    } // end for ivar
+	    
+	  } // end for idy
+	
+	} // end for idx
+      } // end for idz
+
+      /*
+       * special treatment for the end points (Riemann solver)
+       */
+
+      // make sure to exclude ghost cells
+      if (j>0 and j<jsize-1) {
+	
+	for (int idz=0; idz<N; ++idz) {
+	  for (int idx=0; idx<N; ++idx) {
+	  
+	    // conservative state
+	    HydroState qL, qR;
+	    
+	    // primitive state
+	    HydroState wL, wR;
+	    
+	    HydroState qgdnv;
+	    
+	    // when idy == 0, get right and left state
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      qL[ivar] = UdataFlux(i,j-1,k, dofMapF(idx,N,idz,ivar));
+	      qR[ivar] = UdataFlux(i,j  ,k, dofMapF(idx,0,idz,ivar));
+	    }
+	    
+	    // convert to primitive
+	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    
+	    // riemann solver
+	    swapValues( &(wL[IU]), &(wL[IV]) );
+	    swapValues( &(wR[IU]), &(wR[IV]) );
+	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // copy flux
+	    UdataFlux(i,j,k, dofMapF(idx,0,idz,ID)) = flux[ID];
+	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IE)) = flux[IE];
+	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IU)) = flux[IV]; // swap again
+	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IV)) = flux[IU]; // swap again
+	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IW)) = flux[IW];
+
+	    
+	    // when idx == N
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      qL[ivar] = UdataFlux(i,j  ,k, dofMapF(idx,N,idz,ivar));
+	      qR[ivar] = UdataFlux(i,j+1,k, dofMapF(idx,0,idz,ivar));
+	    }
+	    
+	    // convert to primitive : q-> w
+	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    
+	    // riemann solver
+	    swapValues( &(wL[IU]), &(wL[IV]) );
+	    swapValues( &(wR[IU]), &(wR[IV]) );
+	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // copy flux
+	    UdataFlux(i,j,k, dofMapF(idx,N,idz,ID)) = flux[ID];
+	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IE)) = flux[IE];
+	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IU)) = flux[IV]; // swap again
+	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IV)) = flux[IU]; // swap again
+	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IW)) = flux[IW];
+	    
+	  } // end for idx
+	} // end for idz
+
+      } // end safe-guard
+      
+    } // end for dir IY
+
+    // =========================
+    // ========= DIR Z =========
+    // =========================
+    if (dir == IZ) {
+      
+      for (int idy=0; idy<N; ++idy) {
+	for (int idx=0; idx<N; ++idx) {
+	
+	  // interior points along direction Z
+	  for (int idz=1; idz<N; ++idz) {
+	    
+	    // retrieve state conservative variables
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+  
+	      q[ivar] = UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar));
+	      
+	    }
+
+	    // compute pressure
+	    real_t p = euler->compute_pressure(q, this->params.gamma0);
+	  
+	    // compute flux along Z direction
+	    euler->flux_z(q, p, flux);
+	  
+	    // copy back interpolated value
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+	      
+	      UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+	      
+	    } // end for ivar
+	    
+	  } // end for idz
+	
+	} // end for idx
+      } // end for idy
+
+      /*
+       * special treatment for the end points (Riemann solver)
+       */
+
+      // make sure to exclude ghost cells
+      if (k>0 and k<ksize-1) {
+	
+	for (int idy=0; idy<N; ++idy) {
+	  for (int idx=0; idx<N; ++idx) {
+	  
+	    // conservative state
+	    HydroState qL, qR;
+	    
+	    // primitive state
+	    HydroState wL, wR;
+	    
+	    HydroState qgdnv;
+	    
+	    // when idz == 0, get right and left state
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      qL[ivar] = UdataFlux(i,j,k-1, dofMapF(idx,idy,N,ivar));
+	      qR[ivar] = UdataFlux(i,j,k  , dofMapF(idx,idy,0,ivar));
+	    }
+	    
+	    // convert to primitive
+	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    
+	    // riemann solver
+	    swapValues( &(wL[IU]), &(wL[IW]) );
+	    swapValues( &(wR[IU]), &(wR[IW]) );
+	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // copy flux
+	    UdataFlux(i,j,k, dofMapF(idx,idy,0,ID)) = flux[ID];
+	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IE)) = flux[IE];
+	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IU)) = flux[IW]; // swap again
+	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IV)) = flux[IV];
+	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IW)) = flux[IU]; // swap again
+	    
+	    // when idz == N
+	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	      qL[ivar] = UdataFlux(i,j,k  , dofMapF(idx,idy,N,ivar));
+	      qR[ivar] = UdataFlux(i,j,k+1, dofMapF(idx,idy,0,ivar));
+	    }
+	    
+	    // convert to primitive : q-> w
+	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
+	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    
+	    // riemann solver
+	    swapValues( &(wL[IU]), &(wL[IW]) );
+	    swapValues( &(wR[IU]), &(wR[IW]) );
+	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // copy flux
+	    UdataFlux(i,j,k, dofMapF(idx,idy,N,ID)) = flux[ID];
+	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IE)) = flux[IE];
+	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IU)) = flux[IW]; // swap again
+	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IV)) = flux[IV];
+	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IW)) = flux[IU]; // swap again
+	    
+	  } // end for idx
+	} // end for idy
+
+      } // end safe-guard
+      
+    } // end for dir IZ
+
   } // 3d
 
   ppkMHD::EulerEquations<dim> euler;
   DataArray UdataFlux;
 
-}; // class ComputeFluxInterior_Functor
+}; // class ComputeFluxAtFluxPoints_Functor
 
 
 /*************************************************/
