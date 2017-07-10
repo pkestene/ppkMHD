@@ -12,6 +12,7 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "shared/RiemannSolvers.h"
 #include "shared/EulerEquations.h"
 
 namespace sdm {
@@ -90,10 +91,10 @@ public:
 	  }
 
 	  // compute pressure
-	  real_t p = euler->compute_pressure(q, this->params.gamma0);
+	  real_t p = euler.compute_pressure(q, this->params.settings.gamma0);
 	  
 	  // compute flux along X direction
-	  euler->flux_x(q, p, flux);
+	  euler.flux_x(q, p, flux);
 	  
 	  // copy back interpolated value
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -130,11 +131,11 @@ public:
 	  }
 	  
 	  // convert to primitive
-	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	  euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	  euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	  
 	  // riemann solver
-	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy flux
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
@@ -148,11 +149,11 @@ public:
 	  }
 
 	  // convert to primitive : q-> w
-	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	  euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	  euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	  
 	  // riemann solver
-	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy flux
 	  UdataFlux(i,j, dofMapF(N,idy,0,ID)) = flux[ID];
@@ -185,10 +186,10 @@ public:
 	  }
 
 	  // compute pressure
-	  real_t p = euler->compute_pressure(q, this->params.gamma0);
+	  real_t p = euler.compute_pressure(q, this->params.settings.gamma0);
 	  
 	  // compute flux along Y direction
-	  euler->flux_y(q, p, flux);
+	  euler.flux_y(q, p, flux);
 	  
 	  // copy back interpolated value
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -225,13 +226,13 @@ public:
 	  }
 	  
 	  // convert to primitive : q -> w
-	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	  euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	  euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	  
 	  // riemann solver
-	  swapValues( &(wL[IU]), &(wL[IV]) );
-	  swapValues( &(wR[IU]), &(wR[IV]) );
-	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  this->swap( wL[IU], wL[IV] );
+	  this->swap( wR[IU], wR[IV] );
+	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy flux
 	  UdataFlux(i,j, dofMapF(idx,0,0,ID)) = flux[ID];
@@ -247,13 +248,13 @@ public:
 	  }
 
 	  // convert to primitive : q -> w
-	  euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	  euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	  euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	  euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	  
 	  // riemann solver
-	  swapValues( &(wL[IU]), &(wL[IV]) );
-	  swapValues( &(wR[IU]), &(wR[IV]) );
-	  riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  this->swap( wL[IU], wL[IV] );
+	  this->swap( wR[IU], wR[IV] );
+	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy flux
 	  UdataFlux(i,j, dofMapF(idx,N,0,ID)) = flux[ID];
@@ -318,10 +319,10 @@ public:
 	    }
 
 	    // compute pressure
-	    real_t p = euler->compute_pressure(q, this->params.gamma0);
+	    real_t p = euler.compute_pressure(q, this->params.settings.gamma0);
 	  
 	    // compute flux along X direction
-	    euler->flux_x(q, p, flux);
+	    euler.flux_x(q, p, flux);
 	  
 	    // copy back interpolated value
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -360,11 +361,11 @@ public:
 	    }
 	    
 	    // convert to primitive
-	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
 	    // riemann solver
-	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
 	    // copy flux
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
@@ -378,11 +379,11 @@ public:
 	    }
 	    
 	    // convert to primitive : q-> w
-	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
 	    // riemann solver
-	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
 	    // copy flux
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
@@ -415,10 +416,10 @@ public:
 	    }
 
 	    // compute pressure
-	    real_t p = euler->compute_pressure(q, this->params.gamma0);
+	    real_t p = euler.compute_pressure(q, this->params.settings.gamma0);
 	  
 	    // compute flux along Y direction
-	    euler->flux_y(q, p, flux);
+	    euler.flux_y(q, p, flux);
 	  
 	    // copy back interpolated value
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -457,13 +458,13 @@ public:
 	    }
 	    
 	    // convert to primitive
-	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
 	    // riemann solver
-	    swapValues( &(wL[IU]), &(wL[IV]) );
-	    swapValues( &(wR[IU]), &(wR[IV]) );
-	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    this->swap( wL[IU], wL[IV] );
+	    this->swap( wR[IU], wR[IV] );
+	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
 	    // copy flux
 	    UdataFlux(i,j,k, dofMapF(idx,0,idz,ID)) = flux[ID];
@@ -480,13 +481,13 @@ public:
 	    }
 	    
 	    // convert to primitive : q-> w
-	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
 	    // riemann solver
-	    swapValues( &(wL[IU]), &(wL[IV]) );
-	    swapValues( &(wR[IU]), &(wR[IV]) );
-	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    this->swap( wL[IU], wL[IV] );
+	    this->swap( wR[IU], wR[IV] );
+	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
 	    // copy flux
 	    UdataFlux(i,j,k, dofMapF(idx,N,idz,ID)) = flux[ID];
@@ -521,10 +522,10 @@ public:
 	    }
 
 	    // compute pressure
-	    real_t p = euler->compute_pressure(q, this->params.gamma0);
+	    real_t p = euler.compute_pressure(q, this->params.settings.gamma0);
 	  
 	    // compute flux along Z direction
-	    euler->flux_z(q, p, flux);
+	    euler.flux_z(q, p, flux);
 	  
 	    // copy back interpolated value
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -563,13 +564,13 @@ public:
 	    }
 	    
 	    // convert to primitive
-	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
 	    // riemann solver
-	    swapValues( &(wL[IU]), &(wL[IW]) );
-	    swapValues( &(wR[IU]), &(wR[IW]) );
-	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    this->swap( wL[IU], wL[IW] );
+	    this->swap( wR[IU], wR[IW] );
+	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
 	    // copy flux
 	    UdataFlux(i,j,k, dofMapF(idx,idy,0,ID)) = flux[ID];
@@ -585,13 +586,13 @@ public:
 	    }
 	    
 	    // convert to primitive : q-> w
-	    euler->convert_to_primitive(qR,wR,this->params.gamma0);
-	    euler->convert_to_primitive(qL,wL,this->params.gamma0);
+	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
 	    // riemann solver
-	    swapValues( &(wL[IU]), &(wL[IW]) );
-	    swapValues( &(wR[IU]), &(wR[IW]) );
-	    riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    this->swap( wL[IU], wL[IW] );
+	    this->swap( wR[IU], wR[IW] );
+	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
 	    // copy flux
 	    UdataFlux(i,j,k, dofMapF(idx,idy,N,ID)) = flux[ID];
