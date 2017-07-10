@@ -92,8 +92,7 @@ void test_flux_functors()
 
   }
 
-  // TODO
-  
+  // create an io_writer
   auto io_writer =
     std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
 						       solver.configMap,
@@ -102,8 +101,18 @@ void test_flux_functors()
   
   DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
 
+  ppkMHD::EulerEquations<dim> euler;
+  
+  // compute some flux along X direction
+  sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
+							 solver.sdm_geom,
+							 euler,
+							 solver.Fluxes);
+  Kokkos::parallel_for(nbCells, functor);
+   
+
   /*
-   * thanks to this post
+   * thanks to this post on the template use
    * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
    */
   io_writer-> template save_flux<0>(solver.Fluxes,
