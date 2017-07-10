@@ -16,6 +16,9 @@
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Flux_Functors.h"
 
+// for IO
+#include "utils/io/IO_Writer_SDM.h"
+
 //#include "SDMTestFunctors.h"
 #include "test_sdm_flux_functor_init.h"
 
@@ -36,6 +39,9 @@ template<int dim,
 void test_flux_functors()
 {
 
+  using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  using DataArrayHost = typename DataArray::HostMirror;
+  
   int myRank = 0;
 #ifdef USE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
@@ -88,8 +94,22 @@ void test_flux_functors()
 
   // TODO
   
-  solver.save_solution();
+  auto io_writer =
+    std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
+						       solver.configMap,
+						       solver.m_variables_names,
+						       solver.sdm_geom);
+  
+  DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
 
+  /*
+   * thanks to this post
+   * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
+   */
+  io_writer-> template save_flux<0>(solver.Fluxes,
+				    FluxHost,
+				    0,
+				    0.0);
   
 } // test_flux_functors
 

@@ -16,6 +16,7 @@
 #include "IO_Writer.h"
 
 #include "IO_VTK_SDM.h"
+#include "IO_VTK_SDM_Flux.h"
 
 
 namespace ppkMHD { namespace io {
@@ -80,9 +81,25 @@ public:
     // #endif // USE_PNETCDF
     
   } // IO_Writer_SDM::save_data_impl
-  
-}; // class IO_Writer_SDM
 
+  //! public interface to save flux data.
+  template<int dir>
+  void save_flux(DataArray     Udata,
+		 DataArrayHost Uhost,
+		 int iStep,
+		 real_t time)
+  {
+    
+    if (vtk_enabled) {
+
+      save_VTK_SDM_Flux<N,dir>(Udata, Uhost, params, configMap, sdm_geom,
+			       params.nbvar, this->variables_names, iStep, time);
+      
+    }
+    
+  } // IO_Writer_SDM::save_flux
+    
+}; // class IO_Writer_SDM
 
 } // namespace io
 
