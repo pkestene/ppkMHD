@@ -11,31 +11,16 @@
 
 #include <cstdint>
 
-#include <shared/kokkos_shared.h>
+#include "shared/kokkos_shared.h"
 #include "shared/HydroParams.h"
 #include "utils/config/ConfigMap.h"
 
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "utils/io/IO_VTK_SDM_shared.h"
+
 namespace ppkMHD { namespace io {
-
-/**
- * Write VTK unstructured grid header.
- */
-void write_vtu_header(std::ostream& outFile,	
-		      ConfigMap& configMap);
-
-/**
- * Write VTK unstructured grid metadata (date and time).
- */
-void write_vtk_metadata(std::ostream& outFile,
-			int iStep,
-			real_t time);
-/**
- * Write VTK unstructured grid footer.
- */
-void write_vtu_footer(std::ostream& outFile);
 
 // =======================================================
 // =======================================================
@@ -130,8 +115,8 @@ void write_nodes_location(std::ostream& outFile,
 	
       } // end for i
     } // end for j
-
-  }
+    
+  } // outputVtkAscii
     
   outFile << "    </DataArray>\n";
   outFile << "  </Points>\n";
@@ -150,11 +135,11 @@ void write_nodes_location(std::ostream& outFile,
  */
 template<int N>
 void write_nodes_location(std::ostream& outFile,
-			 DataArray3d::HostMirror Uhost,
-			 sdm::SDM_Geometry<3,N> sdm_geom,
-			 HydroParams& params,
-			 ConfigMap& configMap,
-			 uint64_t& offsetBytes)
+			  DataArray3d::HostMirror Uhost,
+			  sdm::SDM_Geometry<3,N> sdm_geom,
+			  HydroParams& params,
+			  ConfigMap& configMap,
+			  uint64_t& offsetBytes)
 {
   
   const int nx = params.nx;
@@ -318,7 +303,7 @@ void write_cells_connectivity(std::ostream& outFile,
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*N*N*4;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nbSubCells*4;
 
   if (outputVtkAscii) {
 
@@ -475,7 +460,7 @@ void write_cells_connectivity(std::ostream& outFile,
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nz*N*N*N*8;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nz*nbSubCells*8;
 
   if (outputVtkAscii) {
 
@@ -534,11 +519,11 @@ void write_cells_connectivity(std::ostream& outFile,
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nz*N*N*N;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nz*nbSubCells;
 
   if (outputVtkAscii) {
     // number of nodes per cell is 8 in 3D
-    for (int i=1; i<=nx*ny*nz*N*N*N; ++i) {
+    for (int i=1; i<=nx*ny*nz*nbSubCells; ++i) {
       uint64_t cell_offset = 8*i;
       outFile << cell_offset << " ";
     }
@@ -560,11 +545,11 @@ void write_cells_connectivity(std::ostream& outFile,
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(unsigned char)*nx*ny*nz*N*N*N;
+  offsetBytes += sizeof(uint64_t) + sizeof(unsigned char)*nx*ny*nz*nbSubCells;
 
   if (outputVtkAscii) {
     // 9 means "Quad" - 12 means "Hexahedron"
-    for (int i=0; i<nx*ny*nz*N*N*N; ++i) {
+    for (int i=0; i<nx*ny*nz*nbSubCells; ++i) {
       outFile << 12 << " ";
     }
     outFile << "\n";
@@ -1218,14 +1203,19 @@ void write_appended_binary_data(std::ostream& outFile,
  * Write Parallel VTU header. 
  * Must be done by a single MPI process.
  *
+ * \note optionnal parameter is_flux_data_array when true is used to 
+ * trigger saving a flux data array, for which dof are attached to nodes
+ * rather than cells.
+ *
  */
 void write_pvtu_header(std::string headerFilename,
-  std::string outputPrefix,
+		       std::string outputPrefix,
 		       HydroParams& params,
 		       ConfigMap& configMap,
 		       int nbvar,
 		       const std::map<int, std::string>& varNames,
-		       int iStep);
+		       int iStep,
+		       bool is_flux_data_array = false);
 #endif // USE_MPI
 
 // ================================================================
@@ -1236,9 +1226,6 @@ void write_pvtu_header(std::string headerFilename,
 
  * We use UnstructuredGrid here because, the mesh cells are unevenly
  * split inti subcells, one per Dof of the SDM scheme.
- *
- * To make sure OpenMP and CUDA version give the same
- * results, we transpose the OpenMP data.
  *
  * \param[in] Udata device data to save
  * \param[in,out] Uhost host data temporary array before saving to file
@@ -1379,9 +1366,6 @@ void save_VTK_SDM(DataArray2d             Udata,
 
  * We use UnstructuredGrid here because, the mesh cells are unevenly
  * split inti subcells, one per Dof of the SDM scheme.
- *
- * To make sure OpenMP and CUDA version give the same
- * results, we transpose the OpenMP data.
  *
  * \param[in] Udata device data to save
  * \param[in,out] Uhost host data temporary array before saving to file

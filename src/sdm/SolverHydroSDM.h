@@ -157,6 +157,10 @@ public:
   
   void save_solution_impl();
 
+  //! debug routine that saves a flux data array (for a given direction)
+  // template <int dir>
+  // void save_flux();
+  
   // time integration
   bool forward_euler_enabled;
   bool ssprk2_enabled;
