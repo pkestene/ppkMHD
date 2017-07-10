@@ -808,18 +808,20 @@ void write_flux_points_data(std::ostream& outFile,
 	      int iidy = idy;
 	      
 	      if (dir == IX) {
-	
+
 		if (idy == 0)
 		  iidy = 1;
 		else if (idy == N+1)
 		  iidy = N;
-		
+		iidy -= 1;
+		  		
 	      } else { // dir == IY
 
 		if (idx == 0)
 		  iidx = 1;
 		else if (idx == N+1)
 		  iidx = N;
+		iidx -= 1;
 
 	      }
 	      
@@ -940,35 +942,41 @@ void write_flux_points_data(std::ostream& outFile,
 		      iidy = 1;
 		    else if (idy == N+1)
 		      iidy = N;
+		    iidy -= 1;
 
 		    if (idz == 0)
 		      iidz = 1;
 		    else if (idz == N+1)
 		      iidz = N;
-		    
+		    iidz -= 1;
+
 		  } else if (dir == IY) {
 		    
 		    if (idx == 0)
 		      iidx = 1;
 		    else if (idx == N+1)
 		      iidx = N;
+		    iidx -= 1;
 
 		    if (idz == 0)
 		      iidz = 1;
 		    else if (idz == N+1)
 		      iidz = N;
-		    
+		    iidz -= 1;
+
 		  } else {  // dir == IZ
 
 		    if (idx == 0)
 		      iidx = 1;
 		    else if (idx == N+1)
 		      iidx = N;
-
+		    iidx -= 1;
+		    
 		    if (idy == 0)
 		      iidy = 1;
 		    else if (idy == N+1)
 		      iidy = N;
+		    iidy -= 1;
 
 		  }
 
@@ -1765,7 +1773,7 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
   
   write_cells_connectivity_flux<N,dir>(outFile, Uhost, sdm_geom, params, configMap,offsetBytes);
   
-  write_flux_points_data<N,dir>(outFile, Uhost, sdm_geom, params, configMap, variables_names, offsetBytes);
+  write_flux_points_data<N,dir>(outFile, Uhost, sdm_geom, params, configMap, variables_names,offsetBytes);
   
   outFile << " </Piece>\n";
   
