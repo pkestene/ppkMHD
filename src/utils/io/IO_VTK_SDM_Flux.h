@@ -115,18 +115,18 @@ void write_nodes_location_flux(std::ostream& outFile,
 	for (int idy=0; idy<idy_end; ++idy) {
 	  
 	  float y;
-	  if (dir == IX) {
+	  if (dir == IY) {
+	    y = yo + sdm_geom.flux_pts_1d_host(idy) * dy;
+	  } else {
 	    if (idy == 0) {
 	      y = yo;
 	    } else if ( idy == N+1) {
 	      y = yo + dy;
 	    } else { 
-	      y = yo + sdm_geom.solution_pts_1d_host(idy) * dy;
+	      y = yo + sdm_geom.solution_pts_1d_host(idy-1) * dy;
 	    }
-	  } else {
-	    y = yo + sdm_geom.flux_pts_1d_host(idy) * dy;
 	  }
-	  
+	  	  
 	  for (int idx=0; idx<idx_end; ++idx) {
 	    
 	    float x;
@@ -138,7 +138,7 @@ void write_nodes_location_flux(std::ostream& outFile,
 	      } else if ( idx == N+1) {
 		x = xo + dx;
 	      } else { 
-		x = xo + sdm_geom.solution_pts_1d_host(idx) * dx;
+		x = xo + sdm_geom.solution_pts_1d_host(idx-1) * dx;
 	      }
 	    }
 	    
@@ -275,7 +275,7 @@ void write_nodes_location_flux(std::ostream& outFile,
 	      } else if ( idz == N+1) {
 		z = zo + dz;
 	      } else { 
-		z = zo + sdm_geom.solution_pts_1d_host(idz) * dz;
+		z = zo + sdm_geom.solution_pts_1d_host(idz-1) * dz;
 	      }
 	    }
 	    
@@ -290,7 +290,7 @@ void write_nodes_location_flux(std::ostream& outFile,
 		} else if ( idy == N+1) {
 		  y = yo + dy;
 		} else { 
-		  y = yo + sdm_geom.solution_pts_1d_host(idy) * dy;
+		  y = yo + sdm_geom.solution_pts_1d_host(idy-1) * dy;
 		}
 	      }
 	      
@@ -306,7 +306,7 @@ void write_nodes_location_flux(std::ostream& outFile,
 		  } else if ( idx == N+1) {
 		    x = xo + dx;
 		  } else { 
-		    x = xo + sdm_geom.solution_pts_1d_host(idx) * dx;
+		    x = xo + sdm_geom.solution_pts_1d_host(idx-1) * dx;
 		  }
 		}
 		
@@ -795,6 +795,7 @@ void write_flux_points_data(std::ostream& outFile,
     offsetBytes += sizeof(uint64_t) + sizeof(real_t)*nx*ny*nbNodesPerCell;
     
     if (outputVtkAscii) {
+
       // no ghost !!
       for (int j=0; j<ny; ++j) {
 	for (int i=0; i<nx; ++i) {
@@ -803,7 +804,26 @@ void write_flux_points_data(std::ostream& outFile,
 	  for (int idy=0; idy<idy_end; ++idy) {
 	    for (int idx=0; idx<idx_end; ++idx) {
 	      
-	      real_t data = Uhost(gw+i,gw+j, sdm::DofMapFlux<2,N,dir>(idx,idy, 0, iVar)); 
+	      int iidx = idx;
+	      int iidy = idy;
+	      
+	      if (dir == IX) {
+	
+		if (idy == 0)
+		  iidy = 1;
+		else if (idy == N+1)
+		  iidy = N;
+		
+	      } else { // dir == IY
+
+		if (idx == 0)
+		  iidx = 1;
+		else if (idx == N+1)
+		  iidx = N;
+
+	      }
+	      
+	      real_t data = Uhost(gw+i,gw+j, sdm::DofMapFlux<2,N,dir>(iidx,iidy, 0, iVar));
 	      
 	      outFile << data << " ";
 	      
@@ -821,7 +841,7 @@ void write_flux_points_data(std::ostream& outFile,
     
   } // end for variables
   
-  outFile << "  </CellData>\n";
+  outFile << "  </PointData>\n";
   
 } // write_flux_points_data - 2D
 
@@ -883,7 +903,7 @@ void write_flux_points_data(std::ostream& outFile,
   /*
    * write cell data.
    */
-  outFile << "  <CellData>\n";
+  outFile << "  <PointData>\n";
 
   // loop over scalar variables
   for ( int iVar=0; iVar<params.nbvar; iVar++ ) {
@@ -910,7 +930,51 @@ void write_flux_points_data(std::ostream& outFile,
 	      for (int idy=0; idy<idy_end; ++idy) {
 		for (int idx=0; idx<idx_end; ++idx) {
 
-		  real_t data = Uhost(gw+i,gw+j, gw+k, sdm::DofMapFlux<3,N,dir>(idx,idy,idz, iVar));
+		  int iidx = idx;
+		  int iidy = idy;
+		  int iidz = idz;
+		  
+		  if (dir == IX) {
+		    
+		    if (idy == 0)
+		      iidy = 1;
+		    else if (idy == N+1)
+		      iidy = N;
+
+		    if (idz == 0)
+		      iidz = 1;
+		    else if (idz == N+1)
+		      iidz = N;
+		    
+		  } else if (dir == IY) {
+		    
+		    if (idx == 0)
+		      iidx = 1;
+		    else if (idx == N+1)
+		      iidx = N;
+
+		    if (idz == 0)
+		      iidz = 1;
+		    else if (idz == N+1)
+		      iidz = N;
+		    
+		  } else {  // dir == IZ
+
+		    if (idx == 0)
+		      iidx = 1;
+		    else if (idx == N+1)
+		      iidx = N;
+
+		    if (idy == 0)
+		      iidy = 1;
+		    else if (idy == N+1)
+		      iidy = N;
+
+		  }
+
+		  real_t data = Uhost(gw+i,gw+j,gw+k,
+				      sdm::DofMapFlux<3,N,dir>(iidx,iidy,iidz,
+							       iVar));
 		  outFile << data << " ";
 		  
 		} // for idx
@@ -929,7 +993,7 @@ void write_flux_points_data(std::ostream& outFile,
     
   } // end for variables
   
-  outFile << "  </CellData>\n";
+  outFile << "  </PointData>\n";
   
 } // write_flux_points_data - 3d
 
@@ -1456,6 +1520,12 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
+  std::string dirStr;
+  if (dir == IX)
+    dirStr = "_Flux_x_";
+  if (dir == IY)
+    dirStr = "_Flux_y_";
+  
   bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
@@ -1477,7 +1547,7 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
   if (params.myRank == 0) {
     
     // header file : parallel vtu format
-    std::string headerFilename = outputDir+"/"+outputPrefix+"_time"+stepNum.str()+".pvtu";
+    std::string headerFilename = outputDir+"/"+outputPrefix+dirStr+"_time"+stepNum.str()+".pvtu";
     
     write_pvtu_header(headerFilename,
 		      outputPrefix,
@@ -1492,7 +1562,7 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
 
   // concatenate file prefix + file number + suffix
   std::string filename;
-  filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vtu";
+  filename = outputDir + "/" + outputPrefix + dirStr + stepNum.str() + ".vtu";
 
 #ifdef USE_MPI
   {
@@ -1544,7 +1614,7 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
   outFile << " </UnstructuredGrid>\n";
 
   // write appended binary data (no compression, just raw binary)
-  // UNIMPLEMTED
+  // UNIMPLEMENTED
   // if (!outputVtkAscii)
   //   write_appended_binary_data(outFile, Uhost, sdm_geom, params, configMap, variables_names);
   
@@ -1606,6 +1676,14 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
+  std::string dirStr;
+  if (dir == IX)
+    dirStr = "_Flux_x_";
+  if (dir == IY)
+    dirStr = "_Flux_y_";
+  if (dir == IZ)
+    dirStr = "_Flux_z_";
+
   bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
@@ -1627,7 +1705,7 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
   if (params.myRank == 0) {
     
     // header file : parallel vtu format
-    std::string headerFilename = outputDir+"/"+outputPrefix+"_time"+stepNum.str()+".pvtu";
+    std::string headerFilename = outputDir+"/"+outputPrefix+dirStr+"_time"+stepNum.str()+".pvtu";
     
     write_pvtu_header(headerFilename,
 		      outputPrefix,
@@ -1642,7 +1720,7 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
 
   // concatenate file prefix + file number + suffix
   std::string filename;
-  filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vtu";
+  filename = outputDir + "/" + outputPrefix + dirStr + stepNum.str() + ".vtu";
   
 #ifdef USE_MPI
   {
