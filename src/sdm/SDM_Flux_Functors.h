@@ -313,7 +313,7 @@ public:
 	    // retrieve state conservative variables
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
   
-	      q[ivar] = UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar));
+	      q[ivar] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar));
 	      
 	    }
 
@@ -326,7 +326,7 @@ public:
 	    // copy back interpolated value
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
 	      
-	      UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
 	      
 	    } // end for ivar
 	    
@@ -410,7 +410,7 @@ public:
 	    // retrieve state conservative variables
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
   
-	      q[ivar] = UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar));
+	      q[ivar] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar));
 	      
 	    }
 
@@ -423,7 +423,7 @@ public:
 	    // copy back interpolated value
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
 	      
-	      UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
 	      
 	    } // end for ivar
 	    
@@ -516,7 +516,7 @@ public:
 	    // retrieve state conservative variables
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
   
-	      q[ivar] = UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar));
+	      q[ivar] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar));
 	      
 	    }
 
@@ -529,7 +529,7 @@ public:
 	    // copy back interpolated value
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
 	      
-	      UdataFlux(i,j,z, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
 	      
 	    } // end for ivar
 	    
