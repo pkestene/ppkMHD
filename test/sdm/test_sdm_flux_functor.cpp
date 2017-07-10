@@ -92,6 +92,7 @@ void test_flux_functors()
 
   }
 
+  
   // create an io_writer
   auto io_writer =
     std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
@@ -102,7 +103,22 @@ void test_flux_functors()
   DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
 
   ppkMHD::EulerEquations<dim> euler;
+
+  //
+  // Dir X
+  //
   
+  // interpolate conservative variables from solution points to flux points
+  {
+    
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(solver.params,
+							     solver.sdm_geom,
+							     solver.U,
+							     solver.Fluxes);
+    Kokkos::parallel_for(nbCells, functor);
+    
+  }
+
   // compute some flux along X direction
   sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
 							 solver.sdm_geom,
