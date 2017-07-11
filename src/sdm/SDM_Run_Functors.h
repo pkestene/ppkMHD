@@ -23,7 +23,7 @@ namespace sdm {
  * This functor takes as an input variables
  * at solution points and perform interpolation at flux points.
  *
- * Perform exactly the inverse of Interpolate_At_FluxPoints_Functor.
+ * Perform exactly the inverse of Interpolate_At_SolutionPoints_Functor.
  *
  */
 template<int dim, int N, int dir>
