@@ -89,7 +89,7 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  real_t compute_pressure(HydroState& q, real_t gamma0)
+  real_t compute_pressure(const HydroState& q, real_t gamma0)
   {
 
     // 0.5 * rho * (u^2+v^2)
@@ -140,7 +140,7 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_x(HydroState q, real_t p, HydroState& flux)
+  void flux_x(const HydroState& q, real_t p, HydroState& flux)
   {
     flux[ID] = q[IU];                 // rho u
     flux[IU] = q[IU]*q[IU]/q[ID]+p;   // rho u^2 + p
@@ -158,7 +158,7 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_y(HydroState q, real_t p, HydroState& flux)
+  void flux_y(const HydroState& q, real_t p, HydroState& flux)
   {
     flux[ID] = q[IV];                 // rho v
     flux[IU] = q[IV]*q[IU]/q[ID];     // rho v u
@@ -180,7 +180,9 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_x(GradTensor g, Vector v, Vector f, real_t mu,
+  void flux_v_x(const GradTensor& g,
+		const Vector& v, const Vector& f,
+		real_t mu,
 		HydroState& flux)
   {
     real_t tau_xx = 2*mu*(g[U_X]-ONE_HALF*(g[U_X]+g[V_Y]));
@@ -206,7 +208,9 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_y(GradTensor g, Vector v, Vector f, real_t mu,
+  void flux_v_y(const GradTensor& g,
+		const Vector& v, const Vector& f,
+		real_t mu,
 		HydroState& flux)
   {
     real_t tau_yy = 2*mu*(g[V_Y]-ONE_HALF*(g[U_X]+g[V_Y]));
@@ -298,7 +302,7 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  real_t compute_pressure(HydroState& q, real_t gamma0)
+  real_t compute_pressure(const HydroState& q, real_t gamma0)
   {
 
     // 0.5 * rho * (u^2+v^2+w^2)
@@ -351,7 +355,7 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_x(HydroState q, real_t p, HydroState& flux)
+  void flux_x(const HydroState& q, real_t p, HydroState& flux)
   {
     real_t u = q[IU]/q[ID];
     
@@ -372,7 +376,7 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_y(HydroState q, real_t p, HydroState& flux)
+  void flux_y(const HydroState& q, real_t p, HydroState& flux)
   {
     real_t v = q[IV]/q[ID];
 
@@ -393,7 +397,7 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_z(HydroState q, real_t p, HydroState& flux)
+  void flux_z(const HydroState& q, real_t p, HydroState& flux)
   {
     real_t w = q[IW]/q[ID];
     
@@ -418,7 +422,9 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_x(GradTensor g, Vector v, Vector f, real_t mu,
+  void flux_v_x(const GradTensor& g,
+		const Vector& v, const Vector& f,
+		real_t mu,
 		HydroState& flux)
   {
     real_t tau_xx = 2*mu*(g[U_X]-ONE_THIRD*(g[U_X]+g[V_Y]+g[W_Z]));
@@ -446,7 +452,9 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_y(GradTensor g, Vector v, Vector f, real_t mu,
+  void flux_v_y(const GradTensor& g,
+		const Vector& v, const Vector& f,
+		real_t mu,
 		HydroState& flux)
   {
     real_t tau_xy =   mu*(g[U_Y] + g[V_X]);
@@ -474,7 +482,9 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_z(GradTensor g, Vector v, Vector f, real_t mu,
+  void flux_v_z(const GradTensor& g,
+		const Vector& v, const Vector& f,
+		real_t mu,
 		HydroState& flux)
   {
     real_t tau_xz =   mu*(g[U_Z] + g[W_X]);
@@ -492,6 +502,4 @@ struct EulerEquations<3>
 
 } // namespace ppkMHD
 
-
-  
 #endif // EULER_EQUATIONS_H_
