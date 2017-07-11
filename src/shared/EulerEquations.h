@@ -339,7 +339,7 @@ struct EulerEquations<3>
     w[ID] = q[ID];
     w[IU] = q[IU]/q[ID];
     w[IV] = q[IV]/q[ID];
-    w[IV] = q[IW]/q[ID];
+    w[IW] = q[IW]/q[ID];
     w[IP] = pressure;
     
   } // convert_to_primitive
