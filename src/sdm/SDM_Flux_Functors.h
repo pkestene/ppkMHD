@@ -111,8 +111,8 @@ public:
        * special treatment for the end points (Riemann solver)
        */
 
-      // make sure to exclude ghost cells
-      if (i>0 and i<isize-1) {
+      // compute left interface Riemann problems
+      if (i>0 and i<isize) {
 	
 	for (int idy=0; idy<N; ++idy) {
 	  
@@ -137,29 +137,30 @@ public:
 	  // riemann solver
 	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
-	  // copy flux
+	  // copy back result in current cell and in neighbor
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    UdataFlux(i,j, dofMapF(0,idy,0,ivar)) = flux[ivar];
+	    UdataFlux(i-1,j, dofMapF(N,idy,0,ivar)) = flux[ivar];
+	    UdataFlux(i  ,j, dofMapF(0,idy,0,ivar)) = flux[ivar];
 	  }
 	  
-	  // when idx == N
-	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    qL[ivar] = UdataFlux(i  ,j, dofMapF(N,idy,0,ivar));
-	    qR[ivar] = UdataFlux(i+1,j, dofMapF(0,idy,0,ivar));
-	  }
+	  // // when idx == N
+	  // for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	  //   qL[ivar] = UdataFlux(i  ,j, dofMapF(N,idy,0,ivar));
+	  //   qR[ivar] = UdataFlux(i+1,j, dofMapF(0,idy,0,ivar));
+	  // }
 
-	  // convert to primitive : q-> w
-	  euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
-	  euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
+	  // // convert to primitive : q-> w
+	  // euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	  // euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	  
-	  // riemann solver
-	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  // // riemann solver
+	  // ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
-	  // copy flux
-	  UdataFlux(i,j, dofMapF(N,idy,0,ID)) = flux[ID];
-	  UdataFlux(i,j, dofMapF(N,idy,0,IE)) = flux[IE];
-	  UdataFlux(i,j, dofMapF(N,idy,0,IU)) = flux[IU];
-	  UdataFlux(i,j, dofMapF(N,idy,0,IV)) = flux[IV];
+	  // // copy flux
+	  // UdataFlux(i,j, dofMapF(N,idy,0,ID)) = flux[ID];
+	  // UdataFlux(i,j, dofMapF(N,idy,0,IE)) = flux[IE];
+	  // UdataFlux(i,j, dofMapF(N,idy,0,IU)) = flux[IU];
+	  // UdataFlux(i,j, dofMapF(N,idy,0,IV)) = flux[IV];
 	  
 	} // end for idy
 
@@ -206,8 +207,8 @@ public:
        * special treatment for the end points (Riemann solver)
        */
 
-      // make sure to exclude ghost cells
-      if (j>0 and j<jsize-1) {
+      // compute left interface Riemann problems
+      if (j>0 and j<jsize) {
 	
 	for (int idx=0; idx<N; ++idx) {
 	  
@@ -234,33 +235,37 @@ public:
 	  this->swap( wR[IU], wR[IV] );
 	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
-	  // copy flux
-	  UdataFlux(i,j, dofMapF(idx,0,0,ID)) = flux[ID];
-	  UdataFlux(i,j, dofMapF(idx,0,0,IE)) = flux[IE];
-	  UdataFlux(i,j, dofMapF(idx,0,0,IU)) = flux[IV]; // swap again
-	  UdataFlux(i,j, dofMapF(idx,0,0,IV)) = flux[IU]; // swap again
+	  // copy back results in current cell as well as in neighbor
+	  UdataFlux(i,j  , dofMapF(idx,0,0,ID)) = flux[ID];
+	  UdataFlux(i,j  , dofMapF(idx,0,0,IE)) = flux[IE];
+	  UdataFlux(i,j  , dofMapF(idx,0,0,IU)) = flux[IV]; // swap again
+	  UdataFlux(i,j  , dofMapF(idx,0,0,IV)) = flux[IU]; // swap again
 
-	  
-	  // when idy == N
-	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    qL[ivar] = UdataFlux(i,j+1, dofMapF(idx,N,0,ivar));
-	    qR[ivar] = UdataFlux(i,j  , dofMapF(idx,0,0,ivar));
-	  }
+	  UdataFlux(i,j-1, dofMapF(idx,N,0,ID)) = flux[ID];
+	  UdataFlux(i,j-1, dofMapF(idx,N,0,IE)) = flux[IE];
+	  UdataFlux(i,j-1, dofMapF(idx,N,0,IU)) = flux[IV]; // swap again
+	  UdataFlux(i,j-1, dofMapF(idx,N,0,IV)) = flux[IU]; // swap again
 
-	  // convert to primitive : q -> w
-	  euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
-	  euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
+	  // // when idy == N
+	  // for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	  //   qL[ivar] = UdataFlux(i,j+1, dofMapF(idx,N,0,ivar));
+	  //   qR[ivar] = UdataFlux(i,j  , dofMapF(idx,0,0,ivar));
+	  // }
+
+	  // // convert to primitive : q -> w
+	  // euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	  // euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	  
-	  // riemann solver
-	  this->swap( wL[IU], wL[IV] );
-	  this->swap( wR[IU], wR[IV] );
-	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	  // // riemann solver
+	  // this->swap( wL[IU], wL[IV] );
+	  // this->swap( wR[IU], wR[IV] );
+	  // ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
-	  // copy flux
-	  UdataFlux(i,j, dofMapF(idx,N,0,ID)) = flux[ID];
-	  UdataFlux(i,j, dofMapF(idx,N,0,IE)) = flux[IE];
-	  UdataFlux(i,j, dofMapF(idx,N,0,IU)) = flux[IV]; // swap again
-	  UdataFlux(i,j, dofMapF(idx,N,0,IV)) = flux[IU]; // swap again
+	  // // copy flux
+	  // UdataFlux(i,j, dofMapF(idx,N,0,ID)) = flux[ID];
+	  // UdataFlux(i,j, dofMapF(idx,N,0,IE)) = flux[IE];
+	  // UdataFlux(i,j, dofMapF(idx,N,0,IU)) = flux[IV]; // swap again
+	  // UdataFlux(i,j, dofMapF(idx,N,0,IV)) = flux[IU]; // swap again
 	  
 	} // end for idx
 
@@ -340,8 +345,8 @@ public:
        * special treatment for the end points (Riemann solver)
        */
 
-      // make sure to exclude ghost cells
-      if (i>0 and i<isize-1) {
+      // compute left interface Riemann problems
+      if (i>0 and i<isize) {
 	
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idy=0; idy<N; ++idy) {
@@ -369,26 +374,27 @@ public:
 	    
 	    // copy flux
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	      UdataFlux(i,j,k, dofMapF(0,idy,idz,ivar)) = flux[ivar];
+	      UdataFlux(i-1,j,k, dofMapF(N,idy,idz,ivar)) = flux[ivar];
+	      UdataFlux(i  ,j,k, dofMapF(0,idy,idz,ivar)) = flux[ivar];
 	    }
 	    
-	    // when idx == N
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	      qL[ivar] = UdataFlux(i  ,j,k, dofMapF(N,idy,idz,ivar));
-	      qR[ivar] = UdataFlux(i+1,j,k, dofMapF(0,idy,idz,ivar));
-	    }
+	    // // when idx == N
+	    // for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	    //   qL[ivar] = UdataFlux(i  ,j,k, dofMapF(N,idy,idz,ivar));
+	    //   qR[ivar] = UdataFlux(i+1,j,k, dofMapF(0,idy,idz,ivar));
+	    // }
 	    
-	    // convert to primitive : q-> w
-	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
-	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
+	    // // convert to primitive : q-> w
+	    // euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    // euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
-	    // riemann solver
-	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    // // riemann solver
+	    // ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
-	    // copy flux
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	      UdataFlux(i,j,k, dofMapF(N,idy,idz,ivar)) = flux[ivar];
-	    }
+	    // // copy flux
+	    // for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	    //   UdataFlux(i,j,k, dofMapF(N,idy,idz,ivar)) = flux[ivar];
+	    // }
 	    
 	  } // end for idy
 	} // end for idz
@@ -437,8 +443,8 @@ public:
        * special treatment for the end points (Riemann solver)
        */
 
-      // make sure to exclude ghost cells
-      if (j>0 and j<jsize-1) {
+      // compute left interface Riemann problems
+      if (j>0 and j<jsize) {
 	
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idx=0; idx<N; ++idx) {
@@ -466,35 +472,40 @@ public:
 	    this->swap( wR[IU], wR[IV] );
 	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
-	    // copy flux
-	    UdataFlux(i,j,k, dofMapF(idx,0,idz,ID)) = flux[ID];
-	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IE)) = flux[IE];
-	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IU)) = flux[IV]; // swap again
-	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IV)) = flux[IU]; // swap again
-	    UdataFlux(i,j,k, dofMapF(idx,0,idz,IW)) = flux[IW];
+	    // copy back results in current and neighbor cells
+	    UdataFlux(i,j-1,k, dofMapF(idx,N,idz,ID)) = flux[ID];
+	    UdataFlux(i,j-1,k, dofMapF(idx,N,idz,IE)) = flux[IE];
+	    UdataFlux(i,j-1,k, dofMapF(idx,N,idz,IU)) = flux[IV]; // swap again
+	    UdataFlux(i,j-1,k, dofMapF(idx,N,idz,IV)) = flux[IU]; // swap again
+	    UdataFlux(i,j-1,k, dofMapF(idx,N,idz,IW)) = flux[IW];
 
+	    UdataFlux(i,j  ,k, dofMapF(idx,0,idz,ID)) = flux[ID];
+	    UdataFlux(i,j  ,k, dofMapF(idx,0,idz,IE)) = flux[IE];
+	    UdataFlux(i,j  ,k, dofMapF(idx,0,idz,IU)) = flux[IV]; // swap again
+	    UdataFlux(i,j  ,k, dofMapF(idx,0,idz,IV)) = flux[IU]; // swap again
+	    UdataFlux(i,j  ,k, dofMapF(idx,0,idz,IW)) = flux[IW];
+
+	    // // when idx == N
+	    // for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	    //   qL[ivar] = UdataFlux(i,j  ,k, dofMapF(idx,N,idz,ivar));
+	    //   qR[ivar] = UdataFlux(i,j+1,k, dofMapF(idx,0,idz,ivar));
+	    // }
 	    
-	    // when idx == N
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	      qL[ivar] = UdataFlux(i,j  ,k, dofMapF(idx,N,idz,ivar));
-	      qR[ivar] = UdataFlux(i,j+1,k, dofMapF(idx,0,idz,ivar));
-	    }
+	    // // convert to primitive : q-> w
+	    // euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    // euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
-	    // convert to primitive : q-> w
-	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
-	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
+	    // // riemann solver
+	    // this->swap( wL[IU], wL[IV] );
+	    // this->swap( wR[IU], wR[IV] );
+	    // ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
-	    // riemann solver
-	    this->swap( wL[IU], wL[IV] );
-	    this->swap( wR[IU], wR[IV] );
-	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
-	    
-	    // copy flux
-	    UdataFlux(i,j,k, dofMapF(idx,N,idz,ID)) = flux[ID];
-	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IE)) = flux[IE];
-	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IU)) = flux[IV]; // swap again
-	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IV)) = flux[IU]; // swap again
-	    UdataFlux(i,j,k, dofMapF(idx,N,idz,IW)) = flux[IW];
+	    // // copy flux
+	    // UdataFlux(i,j,k, dofMapF(idx,N,idz,ID)) = flux[ID];
+	    // UdataFlux(i,j,k, dofMapF(idx,N,idz,IE)) = flux[IE];
+	    // UdataFlux(i,j,k, dofMapF(idx,N,idz,IU)) = flux[IV]; // swap again
+	    // UdataFlux(i,j,k, dofMapF(idx,N,idz,IV)) = flux[IU]; // swap again
+	    // UdataFlux(i,j,k, dofMapF(idx,N,idz,IW)) = flux[IW];
 	    
 	  } // end for idx
 	} // end for idz
@@ -543,8 +554,8 @@ public:
        * special treatment for the end points (Riemann solver)
        */
 
-      // make sure to exclude ghost cells
-      if (k>0 and k<ksize-1) {
+      // compute left interface Riemann problems
+      if (k>0 and k<ksize) {
 	
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
@@ -572,34 +583,40 @@ public:
 	    this->swap( wR[IU], wR[IW] );
 	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	    
-	    // copy flux
-	    UdataFlux(i,j,k, dofMapF(idx,idy,0,ID)) = flux[ID];
-	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IE)) = flux[IE];
-	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IU)) = flux[IW]; // swap again
-	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IV)) = flux[IV];
-	    UdataFlux(i,j,k, dofMapF(idx,idy,0,IW)) = flux[IU]; // swap again
+	    // copy back results in current and neighbor cells
+	    UdataFlux(i,j,k-1, dofMapF(idx,idy,N,ID)) = flux[ID];
+	    UdataFlux(i,j,k-1, dofMapF(idx,idy,N,IE)) = flux[IE];
+	    UdataFlux(i,j,k-1, dofMapF(idx,idy,N,IU)) = flux[IW]; // swap again
+	    UdataFlux(i,j,k-1, dofMapF(idx,idy,N,IV)) = flux[IV];
+	    UdataFlux(i,j,k-1, dofMapF(idx,idy,N,IW)) = flux[IU]; // swap again
 	    
-	    // when idz == N
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	      qL[ivar] = UdataFlux(i,j,k  , dofMapF(idx,idy,N,ivar));
-	      qR[ivar] = UdataFlux(i,j,k+1, dofMapF(idx,idy,0,ivar));
-	    }
+	    UdataFlux(i,j,k  , dofMapF(idx,idy,0,ID)) = flux[ID];
+	    UdataFlux(i,j,k  , dofMapF(idx,idy,0,IE)) = flux[IE];
+	    UdataFlux(i,j,k  , dofMapF(idx,idy,0,IU)) = flux[IW]; // swap again
+	    UdataFlux(i,j,k  , dofMapF(idx,idy,0,IV)) = flux[IV];
+	    UdataFlux(i,j,k  , dofMapF(idx,idy,0,IW)) = flux[IU]; // swap again
 	    
-	    // convert to primitive : q-> w
-	    euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
-	    euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
+	    // // when idz == N
+	    // for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	    //   qL[ivar] = UdataFlux(i,j,k  , dofMapF(idx,idy,N,ivar));
+	    //   qR[ivar] = UdataFlux(i,j,k+1, dofMapF(idx,idy,0,ivar));
+	    // }
 	    
-	    // riemann solver
-	    this->swap( wL[IU], wL[IW] );
-	    this->swap( wR[IU], wR[IW] );
-	    ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    // // convert to primitive : q-> w
+	    // euler.convert_to_primitive(qR,wR,this->params.settings.gamma0);
+	    // euler.convert_to_primitive(qL,wL,this->params.settings.gamma0);
 	    
-	    // copy flux
-	    UdataFlux(i,j,k, dofMapF(idx,idy,N,ID)) = flux[ID];
-	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IE)) = flux[IE];
-	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IU)) = flux[IW]; // swap again
-	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IV)) = flux[IV];
-	    UdataFlux(i,j,k, dofMapF(idx,idy,N,IW)) = flux[IU]; // swap again
+	    // // riemann solver
+	    // this->swap( wL[IU], wL[IW] );
+	    // this->swap( wR[IU], wR[IW] );
+	    // ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
+	    
+	    // // copy flux
+	    // UdataFlux(i,j,k, dofMapF(idx,idy,N,ID)) = flux[ID];
+	    // UdataFlux(i,j,k, dofMapF(idx,idy,N,IE)) = flux[IE];
+	    // UdataFlux(i,j,k, dofMapF(idx,idy,N,IU)) = flux[IW]; // swap again
+	    // UdataFlux(i,j,k, dofMapF(idx,idy,N,IV)) = flux[IV];
+	    // UdataFlux(i,j,k, dofMapF(idx,idy,N,IW)) = flux[IU]; // swap again
 	    
 	  } // end for idx
 	} // end for idy
