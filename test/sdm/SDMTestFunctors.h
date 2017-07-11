@@ -153,15 +153,15 @@ public:
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 	  
 	  if (compare == 1) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= x+y;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= x+y+z;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) -= x*x;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= x*x + x*y + y*y;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= x*x + x*y + y*z;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) -= x + 2 + cos(M_PI*y);
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) -= x + 2 + sin(M_PI*y);
 	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = x+y;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = x+y+z;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = x*x;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = x*x + x*y + y*y;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = x*x + x*y + y*z;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = x + 2 + cos(M_PI*y);
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = x + 2 + sin(M_PI*y);
 	  }

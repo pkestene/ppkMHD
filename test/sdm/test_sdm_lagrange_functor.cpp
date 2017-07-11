@@ -19,6 +19,8 @@
 
 #include "SDMTestFunctors.h"
 
+// for IO
+#include "utils/io/IO_Writer_SDM.h"
 
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
@@ -36,6 +38,9 @@ template<int dim,
 	 int N>
 void test_lagrange_functor()
 {
+
+  using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  using DataArrayHost = typename DataArray::HostMirror;
 
   int myRank = 0;
 #ifdef USE_MPI
@@ -90,16 +95,35 @@ void test_lagrange_functor()
   // call the interpolation functors
   {
 
-    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(solver.params,
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(solver.params,
 							     solver.sdm_geom,
 							     solver.U,
 							     solver.Fluxes);
     Kokkos::parallel_for(nbCells, functor);
   }
+
+  {
+
+    // create an io_writer
+    auto io_writer =
+      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
+							 solver.configMap,
+							 solver.m_variables_names,
+							 solver.sdm_geom);
+    
+    DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
+
+    io_writer-> template save_flux<IY>(solver.Fluxes,
+				       FluxHost,
+				       0,
+				       0.0);
+
+  }
+
   
   {
 
-    sdm::Interpolate_At_SolutionPoints_Functor<dim,N,IX> functor(solver.params,
+    sdm::Interpolate_At_SolutionPoints_Functor<dim,N,IY> functor(solver.params,
 								 solver.sdm_geom,
 								 solver.Fluxes,
 								 solver.U);
