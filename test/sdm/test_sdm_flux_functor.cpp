@@ -77,7 +77,9 @@ void test_flux_functors()
   // SolverFactory's create method)
   solver.init_io_writer();
 
-  int nbCells = dim==2 ? params.isize*params.jsize : params.isize*params.jsize*params.ksize;
+  int nbCells = dim==2 ?
+    params.isize*params.jsize :
+    params.isize*params.jsize*params.ksize;
   
   // init data
   {
@@ -88,7 +90,7 @@ void test_flux_functors()
     Kokkos::parallel_for(nbCells, functor);
 
       
-    //solver.save_solution();
+    solver.save_solution();
 
   }
 
@@ -159,7 +161,7 @@ void test_flux_functors()
 							   solver.Fluxes);
     Kokkos::parallel_for(nbCells, functor);
   }
-
+  
   /*
    * thanks to this post on the template use
    * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
@@ -168,9 +170,39 @@ void test_flux_functors()
 				     FluxHost,
 				     0,
 				     0.0);
+  
+  //
+  // Dir Z
+  //
+  {  
+    // interpolate conservative variables from solution points to flux points
+    {
+      
+      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(solver.params,
+							       solver.sdm_geom,
+							       solver.U,
+							       solver.Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+    // compute some flux along X direction
+    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
+							   solver.sdm_geom,
+							   euler,
+							   solver.Fluxes);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  /*
+   * thanks to this post on the template use
+   * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
+   */
+  io_writer-> template save_flux<IZ>(solver.Fluxes,
+				     FluxHost,
+				     0,
+				     0.0);  
 
-  
-  
 } // test_flux_functors
 
 int main(int argc, char* argv[])
