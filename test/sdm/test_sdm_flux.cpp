@@ -14,7 +14,6 @@
 
 #include "sdm/SDM_Geometry.h"
 #include "sdm/SolverHydroSDM.h"
-#include "sdm/SDM_Run_Functors.h"
 
 #include "shared/EulerEquations.h"
 

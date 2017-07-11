@@ -13,7 +13,7 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/SolverHydroSDM.h"
 #include "sdm/HydroInitFunctors.h"
-#include "sdm/SDM_Run_Functors.h"
+#include "sdm/SDM_Interpolate_Functors.h"
 #include "sdm/SDM_Flux_Functors.h"
 
 // for IO
