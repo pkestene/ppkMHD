@@ -87,7 +87,7 @@ public:
   //! Lagrange interpolation matrix type
   using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
-
+  
   SDM_Geometry() {};
   ~SDM_Geometry() {};
 
@@ -137,15 +137,21 @@ public:
   //! N+1 lines : one basis element per flux points
   //! N   cols  : one per interpolated point (solution points)
   //! flux2sol(i,j) is the value of the i-th Lagrange polynomial (i-th
-  //! flux point) taken at the i-th solution point.
+  //! flux point) taken at the j-th solution point.
   LagrangeMatrix flux2sol;
 
-  //! Lagrange matrix to interpolate flux derivative at solution points
-  //! flux2sol_derivatives matrix has
-  //! N+1 lines : one basis element per flux points
-  //! N   cols  : one per interpolated point (solution points)
-  //! flux2sol_derivative(i,j) is the value of the i-th Lagrange polynomial derivative
-  //! (i-th flux point) taken at the i-th solution point.
+  /** Matrix used to compute Lagrange polynomial derivative at solution points
+   * flux2sol_derivatives matrix has
+   * N+1 lines : one basis element per flux points
+   * N   cols  : one per interpolated point (solution points)
+   * flux2sol_derivative(i,j) is the value of the i-th Lagrange polynomial (i-th
+   * flux point) taken at the j-th solution point.
+   *
+   * We used the following formula defining the Lagrange polynomial derivative:
+   *
+   * \f$ L_^{'}_{i} (x_j) = ( \sum_{k \neq i} \frac{1}{x_j-x_k} ) L_i(x_j) \f$
+   *
+   */
   LagrangeMatrix flux2sol_derivative;
 
   /**@}*/
@@ -518,9 +524,48 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
   
   LagrangeMatrixHost flux2sol_derivative_h = Kokkos::create_mirror(flux2sol_derivative);
 
-  // create i,j entries in Lagrange matrix flux2sol_derivative
-  // i is i-th Lagrange polynomial derivative (flux)
-  // j is the location of interpolated point (solution)
+  /*
+   * compute scaling factor that appears in formula which evaluates
+   * the i-th Lagrange polynomial derivative (i span fluxes points) at
+   * the j-th solution points.
+   * 
+   * \f$ L_^{'}_{i} (x_j) = \phi(x_j) L_i(x_j) \f$
+   * where
+   * \f$ \phi(x_j) = \sum_{k \neq i} \frac{1}{x_j-x_k} \f$
+   *
+   */
+
+  // for each solution points
+  for (int j=0; j<N; ++j) {
+
+    // get solution points location
+    real_t x_j = solution_pts_1d_host(j);
+
+    // for each flux points (Lagrange basis)
+    for (int i=0; i<N+1; ++i) {
+    
+      real_t sum = 0.0;
+      for (int k=0; k<N+1; ++k) {
+
+	// get flux point location
+	real_t x_k = flux_pts_1d_host(k);
+	
+	if (k!=i) {
+	  sum += 1.0/(x_j-x_k);
+	}
+	
+      }
+
+      /*
+       * now just multiply by \f$ L_i(x_j) \f$
+       * and copy results in Lagrange derivative matrix
+       */
+      flux2sol_derivative_h(i,j) = sum * flux2sol_h(i,j);
+      
+    } // end for i
+    
+  } // end for j
+
   Kokkos::deep_copy(flux2sol_derivative,flux2sol_derivative_h);
   
 } // SDM_Geometry::init_lagrange_1d
