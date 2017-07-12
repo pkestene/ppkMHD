@@ -103,6 +103,23 @@ struct EulerEquations<2>
   } // compute_pressure
   
   /**
+   * Compute speed of sound.
+   *
+   * \param[in] vector of primitive variables
+   * \param[in] gamma0
+   *
+   * \return speed of sound
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_speed_of_sound(const HydroState& w, real_t gamma0)
+  {
+    
+    return w[IP] * gamma0 / w[ID];
+    
+  } // compute_speed_of_sound
+  
+  /**
    * Convert from conservative to primitive variables.
    *
    * \param[in] q vector of conservative variables.
@@ -315,6 +332,23 @@ struct EulerEquations<3>
     
   } // compute_pressure
   
+  /**
+   * Compute speed of sound.
+   *
+   * \param[in] vector of primitive variables
+   * \param[in] gamma0
+   *
+   * \return speed of sound
+   */
+  static
+  KOKKOS_INLINE_FUNCTION
+  real_t compute_speed_of_sound(const HydroState& w, real_t gamma0)
+  {
+    
+    return w[IP] * gamma0 / w[ID];
+    
+  } // compute_speed_of_sound
+
   /**
    * Convert from conservative to primitive variables.
    *
