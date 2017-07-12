@@ -23,79 +23,36 @@
 #include <mpi.h>
 #endif // USE_MPI
 
-namespace detail {
-
-template<int dim, int N>
-struct ComputeDt_Wrapper {
-  
-  static real_t wrapper(sdm::SolverHydroSDM<dim,N>& solver) {};
-};
-
-template<int N>
-struct ComputeDt_Wrapper<2,N> {
-  
-  static real_t wrapper(sdm::SolverHydroSDM<2,N>& solver)
-  {
-    
-    // create equation system object
-    ppkMHD::EulerEquations<2> euler;
-    
-    int nbCells =
-      solver.params.isize *
-      solver.params.jsize;
-    
-    real_t invDt = 0.0;
-    sdm::ComputeDt_Functor_2d<N> functor(solver.params,
-					 solver.sdm_geom,
-					 euler,
-					 solver.U);
-    
-    Kokkos::parallel_reduce(nbCells, functor, invDt);
-    
-    real_t dt = solver.params.settings.cfl/invDt;
-    printf("dt = %f (invDt = %f)\n", dt,invDt);
-    
-    return dt;
-    
-  } // compute_dt_wrapper - 2d
-};
-
-template<int N>
-struct ComputeDt_Wrapper<3,N> {
-
-  static real_t wrapper(sdm::SolverHydroSDM<3,N>& solver)
-  {
-    
-    // create equation system object
-    ppkMHD::EulerEquations<3> euler;
-    
-    int nbCells =
-      solver.params.isize *
-      solver.params.jsize *
-      solver.params.ksize;
-    
-    real_t invDt = 0.0;
-    sdm::ComputeDt_Functor_3d<N> functor(solver.params,
-					 solver.sdm_geom,
-					 euler,
-					 solver.U);
-    
-    Kokkos::parallel_reduce(nbCells, functor, invDt);
-    
-    real_t dt = solver.params.settings.cfl/invDt;
-    printf("dt = %f (invDt = %f)\n", dt,invDt);
-    
-    return dt;
-    
-  } // compute_dt_wrapper - 3d
-};
-
-} // namespace detail
-
 template< int dim, int N >
-void compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
-  detail::ComputeDt_Wrapper<dim,N>::wrapper(solver);
-}  
+real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
+    
+  // create equation system object
+  ppkMHD::EulerEquations<dim> euler;
+  
+  int nbCells = dim==2 ?
+    solver.params.isize * solver.params.jsize :
+    solver.params.isize * solver.params.jsize * solver.params.ksize;
+  
+  real_t invDt = 0.0;
+
+  // alias to the computational functor, dimension dependend
+  using ComputeDtFunctor =
+    typename std::conditional<dim==2,
+                              sdm::ComputeDt_Functor_2d<N>,
+                              sdm::ComputeDt_Functor_3d<N> >::type;
+  ComputeDtFunctor functor(solver.params,
+			   solver.sdm_geom,
+			   euler,
+			   solver.U);
+  
+  Kokkos::parallel_reduce(nbCells, functor, invDt);
+  
+  real_t dt = solver.params.settings.cfl/invDt;
+  printf("dt = %f (invDt = %f)\n", dt,invDt);
+  
+  return dt;
+  
+} // compute_dt
 
 /*
  *
@@ -149,6 +106,7 @@ void test_compute_dt_functors()
   // save data just for cross-checking
   solver.save_solution();
 
+  // actual test here
   compute_dt<dim,N>(solver);
 
 } // test_compute_dt_functors
