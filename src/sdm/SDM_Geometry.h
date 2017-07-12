@@ -140,6 +140,14 @@ public:
   //! flux point) taken at the i-th solution point.
   LagrangeMatrix flux2sol;
 
+  //! Lagrange matrix to interpolate flux derivative at solution points
+  //! flux2sol_derivatives matrix has
+  //! N+1 lines : one basis element per flux points
+  //! N   cols  : one per interpolated point (solution points)
+  //! flux2sol_derivative(i,j) is the value of the i-th Lagrange polynomial derivative
+  //! (i-th flux point) taken at the i-th solution point.
+  LagrangeMatrix flux2sol_derivative;
+
   /**@}*/
 
   
@@ -405,8 +413,12 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
 {
   
   // memory allocation
-  
-  // sol2flux has
+
+  /////////////
+  //
+  // sol2flux
+  //
+  ////////////
   // N   lines : one basis element per solution points
   // N+1 cols  : one per interpolated point (flux points)
   sol2flux = LagrangeMatrix("sol2flux",N,N+1);
@@ -449,7 +461,11 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
   Kokkos::deep_copy(sol2flux,sol2flux_h);
 
   
-  // flux2sol has
+  /////////////
+  //
+  // flux2sol
+  //
+  /////////////
   // N+1 lines : one basis element per flux points
   // N   cols  : one per interpolated point (solution points)
   flux2sol = LagrangeMatrix("flux2sol",N+1,N);
@@ -490,6 +506,22 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
   } // end for j
 
   Kokkos::deep_copy(flux2sol,flux2sol_h);
+  
+  ////////////////////////
+  //
+  // flux2sol_derivative
+  //
+  ///////////////////////
+  // N+1 lines : one basis element per flux points
+  // N   cols  : one per interpolated point (solution points)
+  flux2sol_derivative = LagrangeMatrix("flux2sol_derivative",N+1,N);
+  
+  LagrangeMatrixHost flux2sol_derivative_h = Kokkos::create_mirror(flux2sol_derivative);
+
+  // create i,j entries in Lagrange matrix flux2sol_derivative
+  // i is i-th Lagrange polynomial derivative (flux)
+  // j is the location of interpolated point (solution)
+  Kokkos::deep_copy(flux2sol_derivative,flux2sol_derivative_h);
   
 } // SDM_Geometry::init_lagrange_1d
 
