@@ -53,7 +53,7 @@ struct ComputeDt_Wrapper<2,N> {
     Kokkos::parallel_reduce(nbCells, functor, invDt);
     
     real_t dt = solver.params.settings.cfl/invDt;
-    printf("dt = %f %f\n", dt,invDt);
+    printf("dt = %f (invDt = %f)\n", dt,invDt);
     
     return dt;
     
@@ -83,7 +83,7 @@ struct ComputeDt_Wrapper<3,N> {
     Kokkos::parallel_reduce(nbCells, functor, invDt);
     
     real_t dt = solver.params.settings.cfl/invDt;
-    printf("dt = %f\n", dt);
+    printf("dt = %f (invDt = %f)\n", dt,invDt);
     
     return dt;
     

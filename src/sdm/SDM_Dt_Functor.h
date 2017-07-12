@@ -101,6 +101,7 @@ namespace sdm {
 // 	  // get primitive variables in current cell
 // 	  euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
 
+//	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
 // 	  vx = c+FABS(qLoc[IU]);
 // 	  vy = c+FABS(qLoc[IV]);
 	  
@@ -164,6 +165,7 @@ namespace sdm {
 // 	  // get primitive variables in current cell
 // 	  euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
 
+//	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
 // 	  vx = c+FABS(qLoc[IU]);
 // 	  vy = c+FABS(qLoc[IV]);
 // 	  vz = c+FABS(qLoc[IW]);
@@ -281,6 +283,8 @@ public:
 	  // get primitive variables in current cell
 	  euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
 
+	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
+	  
 	  vx = c+FABS(qLoc[IU]);
 	  vy = c+FABS(qLoc[IV]);
 	  
@@ -401,6 +405,8 @@ public:
 	    
 	    // get primitive variables in current cell
 	    euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
+	    
+	    c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
 	    
 	    vx = c+FABS(qLoc[IU]);
 	    vy = c+FABS(qLoc[IV]);
