@@ -202,8 +202,8 @@ public:
   } // sol2flux_vector
 
   /**
-   * This routine used SDM_Geometry information to perform interpolation at flux 
-   * points using values located at solution points.
+   * This routine used SDM_Geometry information to perform interpolation at solution
+   * points using values located at flux points.
    *
    * \param[in] flux_values is a static array containings N+1 values (flux pts)
    * \param[in] index is an integer in 0,1,..,N-1 that identifies a solution point 
@@ -227,8 +227,8 @@ public:
   } // flux2sol
   
   /**
-   * This routine used SDM_Geometry information to perform interpolation at flux 
-   * points using values located at solution points.
+   * This routine used SDM_Geometry information to perform interpolation at solution
+   * points using values located at flux points.
    *
    * \param[in]  flux_values is a static array containings N+1 values (flux pts)
    * \param[out] solution_values are interpolated values computed at all solution pts.
@@ -251,6 +251,33 @@ public:
     }
     
   } // flux2sol_vector
+  
+  /**
+   * This routine used SDM_Geometry information to perform interpolation of the derivative 
+   * at solution points using values located at flux points.
+   *
+   * \param[in]  flux_values is a static array containings N+1 values (flux pts)
+   * \param[out] derivative evaluations at all solution pts.
+   *
+   */
+  KOKKOS_INLINE_FUNCTION
+  void flux2sol_derivative_vector(const flux_values_t& flux_values,
+				  solution_values_t& solution_values) const
+  {
+
+    // evaluate derivative at solution points
+    for (int j=0; j<N; ++j) {
+      
+      // compute interpolated value of the derivative
+      real_t val=0;
+      for (int k=0; k<N+1; ++k) {
+	val += flux_values[k] * sdm_geom.flux2sol_derivative(k,j);
+      }
+
+      solution_values[j] = val;
+    }
+    
+  } // flux2sol_derivative_vector
   
 }; // class SDMBaseFunctor
 
