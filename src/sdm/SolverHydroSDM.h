@@ -18,13 +18,14 @@
 #include "shared/BoundariesFunctors.h"
 #include "shared/BoundariesFunctorsWedge.h"
 #include "shared/initRiemannConfig2d.h"
+#include "shared/EulerEquations.h"
 
 // sdm
 #include "sdm/SDM_Geometry.h"
 
 // sdm functors (where the action takes place)
 #include "sdm/HydroInitFunctors.h"
-//#include "sdm/SDM_DtFunctor.h"
+#include "sdm/SDM_Dt_Functor.h"
 //#include "sdm/SDM_UpdateFunctors.h"
 
 // for IO
@@ -94,11 +95,12 @@ public:
    */
   void init_io_writer();
 
-  /*
-   * SDM config
-   */
+  //! SDM config
   SDM_Geometry<dim,N> sdm_geom;
     
+  //! system of equations
+  ppkMHD::EulerEquations<dim> euler;
+
   /*
    * methods
    */
@@ -224,10 +226,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     //Fluxes_x = DataArray("Fluxes_x", isize, jsize, nb_dof);
     //Fluxes_y = DataArray("Fluxes_y", isize, jsize, nb_dof);
 
-    //total_mem_size += isize*jsize*nb_dof*4 * sizeof(real_t);
-    //total_mem_size += isize*jsize * sizeof(real_t);
-    //total_mem_size += isize*jsize*nb_dof * ncoefs * sizeof(real_t);
-      
+    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U
+    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U2
+    total_mem_size += isize*jsize*nb_dof_flux * sizeof(real_t); // Fluxes
+    
   } else if (dim==3) {
 
     U     = DataArray("U", isize, jsize, ksize, nb_dof);
@@ -239,9 +241,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     //Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nb_dof);
     //Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nb_dof);
 
-    //total_mem_size += isize*jsize*ksize*nb_dof*5 * sizeof(real_t);
-    //total_mem_size += isize*jsize*ksize * sizeof(real_t);
-    //total_mem_size += isize*jsize*ksize*nb_dof * ncoefs * sizeof(real_t);
+    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U
+    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U2
+    total_mem_size += isize*jsize*ksize*nb_dof_flux * sizeof(real_t);
 
   }
 
@@ -413,7 +415,12 @@ void SolverHydroSDM<dim,N>::init_sdm_geometry()
 /**
  * Compute time step satisfying CFL condition.
  *
- * \return dt time step
+ * \return dt time step (local to current MPI process)
+ *
+ * \note
+ * The global time step is computed in compute_dt (from base class SolverBase)
+ * which actually calls compute_dt_local.
+ *
  */
 template<int dim, int N>
 double SolverHydroSDM<dim,N>::compute_dt_local()
@@ -429,15 +436,14 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   else
     Udata = U2;
 
-  // typedef computeDtFunctor
-  // using ComputeDtFunctor =
-  //   typename std::conditional<dim==2,
-  // 			      ComputeDtFunctor2d<N>,
-  // 			      ComputeDtFunctor3d<N>>::type;
-
-  // // call device functor
-  // ComputeDtFunctor computeDtFunctor(params, monomialMap.data, Udata);
-  // Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
+  using ComputeDtFunctor =
+    typename std::conditional<dim==2,
+  			      ComputeDt_Functor_2d<N>,
+  			      ComputeDt_Functor_3d<N>>::type;
+  
+  // call device functor
+  ComputeDtFunctor computeDtFunctor(params, sdm_geom, euler, Udata);
+  Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
     
   dt = params.settings.cfl/invDt;
 
@@ -455,9 +461,14 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::next_iteration_impl()
 {
 
-  if (m_iteration % 10 == 0) {
-    //std::cout << "time step=" << m_iteration << " (dt=" << m_dt << ")" << std::endl;
-    printf("time step=%7d (dt=% 10.8f t=% 10.8f)\n",m_iteration,m_dt, m_t);
+  int myRank=0;
+#ifdef USE_MPI
+  myRank = params.myRank;
+#endif // USE_MPI
+  if (myRank==0) {
+    if (m_iteration % 10 == 0) {
+      printf("time step=%7d (dt=% 10.8f t=% 10.8f)\n",m_iteration,m_dt, m_t);
+    }
   }
   
   // output
@@ -563,7 +574,15 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in,
   dtdx = dt / params.dx;
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
-    
+
+  // for each direction
+  //  1. interpolate conservative variables from solution points to flux points
+  //  2. compute inplace flux at flux points (interior + cell borders)
+  //     (TODO: apply any flux limiter ?)
+  //  3. compute viscous flux + source terms
+  //  4. evaluate flux derivatives at solution points
+  //  5. update data_out
+  
 } // SolverHydroSDM::time_int_forward_euler
 
 // =======================================================
