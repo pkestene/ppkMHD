@@ -26,6 +26,9 @@
 // sdm functors (where the action takes place)
 #include "sdm/HydroInitFunctors.h"
 #include "sdm/SDM_Dt_Functor.h"
+#include "sdm/SDM_Interpolate_Functors.h"
+#include "sdm/SDM_Flux_Functors.h"
+#include "sdm/SDM_Run_Functors.h"
 //#include "sdm/SDM_UpdateFunctors.h"
 
 // for IO
@@ -141,7 +144,9 @@ public:
   void time_int_ssprk54(DataArray data_in, 
 			DataArray data_out, 
 			real_t dt);
-  
+
+  //! erase a solution data array
+  void erase(DataArray data);
 
   template<int dim_=dim>
   void make_boundaries(typename std::enable_if<dim_==2,DataArray2d>::type Udata);
@@ -575,6 +580,9 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in,
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
 
+  // erase data_out
+  erase(data_out);
+  
   // for each direction
   //  1. interpolate conservative variables from solution points to flux points
   //  2. compute inplace flux at flux points (interior + cell borders)
@@ -582,6 +590,49 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in,
   //  3. compute viscous flux + source terms
   //  4. evaluate flux derivatives at solution points
   //  5. update data_out
+
+  //
+  // Dir X
+  //
+  {
+    // 1. interpolate conservative variables from solution points to flux points
+    {
+      
+      Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(params,
+							  sdm_geom,
+							  data_in,
+							  Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+    // 2. inplace computation of fluxes along X direction at flux points
+    {
+      ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(params,
+							sdm_geom,
+							euler,
+							Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+    // 3. viscous terms + source terms (TODO)
+
+    // 4. compute derivative and accumulate in data_out
+    {
+
+      Interpolate_At_SolutionPoints_Functor<dim,N,IX> functor(params,
+							      sdm_geom,
+							      Fluxes,
+							      data_out);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+  } // end dir X
+
+  // do the same for dir Y
+
+  // perform time update: U_{n+1} = U_{n} - dt * data_out 
   
 } // SolverHydroSDM::time_int_forward_euler
 
@@ -709,8 +760,8 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray data_in,
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray data_in, 
-						   DataArray data_out, 
-						   real_t dt)
+					     DataArray data_out, 
+					     real_t dt)
 {
 
   real_t dtdx;
@@ -726,6 +777,18 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray data_in,
   std::cout << "SSP-RK54 is currently unimplemented\n";
   
 } // SolverHydroSDM::time_int_ssprk54
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::erase(DataArray data)
+{
+
+  SDM_Erase_Functor<dim,N> functor(params, sdm_geom, data);
+  
+  Kokkos::parallel_for(nbCells, functor);
+  
+} // SolverHydroSDM<dim,N>::erase
 
 // =======================================================
 // =======================================================
