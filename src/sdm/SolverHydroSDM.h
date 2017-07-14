@@ -308,9 +308,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   //   init_blast(U);
 
-  // } else if ( !m_problem_name.compare("four_quadrant") ) {
+  } else if ( !m_problem_name.compare("four_quadrant") ) {
 
-  //   init_four_quadrant(U);
+    init_four_quadrant(U);
 
   // } else if ( !m_problem_name.compare("kelvin-helmholtz") or
   // 	      !m_problem_name.compare("kelvin_helmholtz")) {
@@ -781,23 +781,23 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_four_quadrant(DataArray Udata)
 {
 
-  // int configNumber = configMap.getInteger("riemann2d","config_number",0);
-  // real_t xt = configMap.getFloat("riemann2d","x",0.8);
-  // real_t yt = configMap.getFloat("riemann2d","y",0.8);
+  int configNumber = configMap.getInteger("riemann2d","config_number",0);
+  real_t xt = configMap.getFloat("riemann2d","x",0.8);
+  real_t yt = configMap.getFloat("riemann2d","y",0.8);
     
-  // HydroState2d U0, U1, U2, U3;
-  // ppkMHD::getRiemannConfig2d(configNumber, U0, U1, U2, U3);
+  HydroState2d U0, U1, U2, U3;
+  ppkMHD::getRiemannConfig2d(configNumber, U0, U1, U2, U3);
   
-  // ppkMHD::primToCons_2D(U0, params.settings.gamma0);
-  // ppkMHD::primToCons_2D(U1, params.settings.gamma0);
-  // ppkMHD::primToCons_2D(U2, params.settings.gamma0);
-  // ppkMHD::primToCons_2D(U3, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U0, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U1, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U2, params.settings.gamma0);
+  ppkMHD::primToCons_2D(U3, params.settings.gamma0);
   
-  // InitFourQuadrantFunctor<dim,N> functor(params, monomialMap.data,
-  // 					      Udata,
-  // 					      U0, U1, U2, U3,
-  // 					      xt, yt);
-  // Kokkos::parallel_for(nbCells, functor);
+  InitFourQuadrantFunctor<dim,N> functor(params, sdm_geom,
+					 Udata,
+					 U0, U1, U2, U3,
+					 xt, yt);
+  Kokkos::parallel_for(nbCells, functor);
     
 } // init_four_quadrant
 
