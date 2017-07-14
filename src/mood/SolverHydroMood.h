@@ -1,5 +1,5 @@
 /**
- *
+ * class SolverHydroMood implementation.
  */
 #ifndef SOLVER_HYDRO_MOOD_H_
 #define SOLVER_HYDRO_MOOD_H_
