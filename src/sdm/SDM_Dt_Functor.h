@@ -255,8 +255,10 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    const real_t dx = this->params.dx;
-    const real_t dy = this->params.dy;
+    // to take into account the N DoF per direction per cell
+    // we divide dx,dy by N
+    const real_t dx = this->params.dx/N;
+    const real_t dy = this->params.dy/N;
 
     // local cell index
     int i,j;
@@ -374,9 +376,11 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    const real_t dx = this->params.dx;
-    const real_t dy = this->params.dy;
-    const real_t dz = this->params.dz;
+    // to take into account the N DoF per direction per cell
+    // we divide dx,dy,dz by N
+    const real_t dx = this->params.dx/N;
+    const real_t dy = this->params.dy/N;
+    const real_t dz = this->params.dz/N;
     
     // local cell index
     int i,j,k;
