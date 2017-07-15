@@ -29,6 +29,7 @@
 #include "sdm/SDM_Interpolate_Functors.h"
 #include "sdm/SDM_Flux_Functors.h"
 #include "sdm/SDM_Run_Functors.h"
+#include "sdm/SDM_Boundaries_Functors.h"
 //#include "sdm/SDM_UpdateFunctors.h"
 
 // for IO
@@ -148,11 +149,15 @@ public:
   //! erase a solution data array
   void erase(DataArray data);
 
-  template<int dim_=dim>
-  void make_boundaries(typename std::enable_if<dim_==2,DataArray2d>::type Udata);
+  //! override base class boundary routine
+  //! note that when dim == 2 or dim == 3 it's a different method that
+  //! gets overridden
+  void make_boundary(DataArray  Udata,
+		     FaceIdType faceId,
+		     bool       mhd_enabled);
 
-  template<int dim_=dim>
-  void make_boundaries(typename std::enable_if<dim_==3,DataArray3d>::type Udata);
+  void make_boundaries(DataArray2d Udata);
+  void make_boundaries(DataArray3d Udata);
 
   // host routines (initialization)
   void init_implode(DataArray Udata);
@@ -792,13 +797,77 @@ void SolverHydroSDM<dim,N>::erase(DataArray data)
 
 // =======================================================
 // =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::make_boundary(DataArray   Udata,
+					  FaceIdType faceId,
+					  bool mhd_enabled)
+{
+
+  
+  const int ghostWidth=params.ghostWidth;
+  int max_size = std::max(params.isize,params.jsize);
+  int nbIter = ghostWidth* max_size;
+
+  if (dim==3) {
+    max_size = std::max(max_size,params.ksize);
+    nbIter = ghostWidth * max_size * max_size;
+  }
+
+  if (faceId == FACE_XMIN) {
+
+    MakeBoundariesFunctor_SDM<dim,N,FACE_XMIN> functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+
+  }
+
+  if (faceId == FACE_XMAX) {
+
+    MakeBoundariesFunctor_SDM<dim,N,FACE_XMAX> functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+
+  }
+  
+  if (faceId == FACE_YMIN) {
+
+    MakeBoundariesFunctor_SDM<dim,N,FACE_YMIN> functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+
+  }
+
+  if (faceId == FACE_YMAX) {
+
+    MakeBoundariesFunctor_SDM<dim,N,FACE_YMAX> functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+
+  }
+
+  if (dim == 3) {
+    if (faceId == FACE_ZMIN) {
+      
+      MakeBoundariesFunctor_SDM<dim,N,FACE_ZMIN> functor(params, sdm_geom, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+      
+    }
+    
+    if (faceId == FACE_ZMAX) {
+      
+      MakeBoundariesFunctor_SDM<dim,N,FACE_ZMAX> functor(params, sdm_geom, Udata);
+      Kokkos::parallel_for(nbIter, functor);
+      
+    }
+  }
+
+  
+} // SolverHydroSDM<dim,N>::make_boundary
+
+// =======================================================
+// =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
 template<int dim, int N>
-template<int dim_>
-void SolverHydroSDM<dim,N>::make_boundaries(typename std::enable_if<dim_==2,DataArray2d>::type Udata)
+void SolverHydroSDM<dim,N>::make_boundaries(DataArray2d Udata)
 {
   
   bool mhd_enabled = false;
@@ -808,8 +877,7 @@ void SolverHydroSDM<dim,N>::make_boundaries(typename std::enable_if<dim_==2,Data
 } // SolverHydroSDM::make_boundaries
 
 template<int dim, int N>
-template<int dim_>
-void SolverHydroSDM<dim,N>::make_boundaries(typename std::enable_if<dim_==3,DataArray3d>::type Udata)
+void SolverHydroSDM<dim,N>::make_boundaries(DataArray3d Udata)
 {
 
   bool mhd_enabled = false;
