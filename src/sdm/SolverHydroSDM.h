@@ -333,9 +333,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   //   init_wedge(U);
     
-  // } else if ( !m_problem_name.compare("isentropic_vortex") ) {
+  } else if ( !m_problem_name.compare("isentropic_vortex") ) {
 
-  //   init_isentropic_vortex(U);
+    init_isentropic_vortex(U);
     
   } else {
 
@@ -999,10 +999,10 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_isentropic_vortex(DataArray Udata)
 {
 
-  // IsentropicVortexParams iparams(configMap);
+  IsentropicVortexParams iparams(configMap);
 
-  // InitIsentropicVortexFunctor<dim,N> functor(params, monomialMap.data, iparams, Udata);
-  // Kokkos::parallel_for(nbCells, functor);
+  InitIsentropicVortexFunctor<dim,N> functor(params, sdm_geom, iparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // init_isentropic_vortex
 

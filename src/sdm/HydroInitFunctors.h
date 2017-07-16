@@ -188,7 +188,7 @@ template<int dim, int N>
 class InitBlastFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
- using typename SDMBaseFunctor<dim,N>::DataArray;
+  using typename SDMBaseFunctor<dim,N>::DataArray;
 
   static constexpr auto dofMap = DofMap<dim,N>;
 
@@ -550,91 +550,206 @@ public:
   
 }; // InitFourQuadrantFunctor
 
-// /*************************************************/
-// /*************************************************/
-// /*************************************************/
-// template<int dim, int N>
-// class InitIsentropicVortexFunctor : public SDMBaseFunctor<dim,N> {
+/*************************************************/
+/*************************************************/
+/*************************************************/
+template<int dim, int N>
+class InitIsentropicVortexFunctor : public SDMBaseFunctor<dim,N> {
 
-// public:
-//  using typename SDMBaseFunctor<dim,N>::DataArray;
-//
-//   InitIsentropicVortexFunctor(HydroParams params,
-// 				IsentropicVortexParams iparams,
-// 				DataArray2d Udata) :
-//     SDMBaseFunctor<dim,N>(params), iparams(iparams), Udata(Udata)  {};
+public:
+  using typename SDMBaseFunctor<dim,N>::DataArray;
+
+  static constexpr auto dofMap = DofMap<dim,N>;
+
+  InitIsentropicVortexFunctor(HydroParams            params,
+			      SDM_Geometry<dim,N>    sdm_geom,
+			      IsentropicVortexParams iparams,
+			      DataArray              Udata) :
+    SDMBaseFunctor<dim,N>(params,sdm_geom),
+    iparams(iparams),
+    Udata(Udata) {};
   
-//   KOKKOS_INLINE_FUNCTION
-//   void operator()(const int& index) const
-//   {
+  /*
+   * 2D version.
+   */
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  {
 
-//     const int isize = this->params.isize;
-//     const int jsize = this->params.jsize;
-//     const int ghostWidth = this->params.ghostWidth;
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ghostWidth = this->params.ghostWidth;
     
-// #ifdef USE_MPI
-//     const int i_mpi = this->params.myMpiPos[IX];
-//     const int j_mpi = this->params.myMpiPos[IY];
-// #else
-//     const int i_mpi = 0;
-//     const int j_mpi = 0;
-// #endif
+#ifdef USE_MPI
+    const int i_mpi = this->params.myMpiPos[IX];
+    const int j_mpi = this->params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
 
-//     const int nx = this->params.nx;
-//     const int ny = this->params.ny;
+    const int nx = this->params.nx;
+    const int ny = this->params.ny;
 
-//     const real_t xmin = this->params.xmin;
-//     const real_t ymin = this->params.ymin;
-//     const real_t dx = this->params.dx;
-//     const real_t dy = this->params.dy;
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
     
-//     const real_t gamma0 = this->params.settings.gamma0;
+    const real_t gamma0 = this->params.settings.gamma0;
   
-//     int i,j;
-//     index2coord(index,i,j,isize,jsize);
+    // ambient flow
+    const real_t rho_a = this->iparams.rho_a;
+    //const real_t p_a   = this->iparams.p_a;
+    const real_t T_a   = this->iparams.T_a;
+    const real_t u_a   = this->iparams.u_a;
+    const real_t v_a   = this->iparams.v_a;
+    //const real_t w_a   = this->iparams.w_a;
     
-//     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
-//     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+    // vortex center
+    const real_t vortex_x = this->iparams.vortex_x;
+    const real_t vortex_y = this->iparams.vortex_y;
+    const real_t beta =     this->iparams.beta;
 
-//     // ambient flow
-//     const real_t rho_a = this->iparams.rho_a;
-//     //const real_t p_a   = this->iparams.p_a;
-//     const real_t T_a   = this->iparams.T_a;
-//     const real_t u_a   = this->iparams.u_a;
-//     const real_t v_a   = this->iparams.v_a;
-//     //const real_t w_a   = this->iparams.w_a;
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
     
-//     // vortex center
-//     const real_t vortex_x = this->iparams.vortex_x;
-//     const real_t vortex_y = this->iparams.vortex_y;
+    // loop over cell DoF's
+    for (int idy=0; idy<N; ++idy) {
+      for (int idx=0; idx<N; ++idx) {
+	
+	// lower left corner
+	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 
-//     // relative coordinates versus vortex center
-//     real_t xp = x - vortex_x;
-//     real_t yp = y - vortex_y;
-//     real_t r  = sqrt(xp*xp + yp*yp);
-    
-//     const real_t beta = this->iparams.beta;
+	// DoF location
+	x += this->sdm_geom.solution_pts_1d(idx) * dx;
+	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
-//     real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
-//     real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+	// relative coordinates versus vortex center
+	real_t xp = x - vortex_x;
+	real_t yp = y - vortex_y;
+	real_t r  = sqrt(xp*xp + yp*yp);
+	
+	real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+	real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
     
-//     real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
-//     real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
+	real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
+	real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
+	
+	Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho;
+	Udata(i  ,j  , dofMap(idx,idy,0,IU)) = rho*(u_a + du);
+	Udata(i  ,j  , dofMap(idx,idy,0,IV)) = rho*(v_a + dv);
+	//Udata(i  ,j  , dofMap(idx,idy,0,IE)) = pow(rho,gamma0)/(gamma0-1.0) +
+	Udata(i  ,j  , dofMap(idx,idy,0,IE)) = rho*T/(gamma0-1.0) +
+	  0.5*rho*(u_a + du)*(u_a + du) +
+	  0.5*rho*(v_a + dv)*(v_a + dv) ;
+
+      } // end for idx
+    } // end for idy
+
+  } // end operator () - 2d
+
+  /*
+   * 3D version.
+   */
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
     
-//     Udata(i  ,j  , ID) = rho;
-//     Udata(i  ,j  , IU) = rho*(u_a + du);
-//     Udata(i  ,j  , IV) = rho*(v_a + dv);
-//     //Udata(i  ,j  , IP) = pow(rho,gamma0)/(gamma0-1.0) +
-//     Udata(i  ,j  , IP) = rho*T/(gamma0-1.0) +
-//       0.5*rho*(u_a + du)*(u_a + du) +
-//       0.5*rho*(v_a + dv)*(v_a + dv) ;
+#ifdef USE_MPI
+    const int i_mpi = this->params.myMpiPos[IX];
+    const int j_mpi = this->params.myMpiPos[IY];
+    const int k_mpi = this->params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const int nx = this->params.nx;
+    const int ny = this->params.ny;
+    const int nz = this->params.nz;
+
+    const real_t xmin = this->params.xmin;
+    const real_t ymin = this->params.ymin;
+    const real_t zmin = this->params.zmin;
+
+    const real_t dx = this->params.dx;
+    const real_t dy = this->params.dy;
+    const real_t dz = this->params.dz;
     
-//   } // end operator ()
+    const real_t gamma0 = this->params.settings.gamma0;
+
+    // ambient flow
+    const real_t rho_a = this->iparams.rho_a;
+    //const real_t p_a   = this->iparams.p_a;
+    const real_t T_a   = this->iparams.T_a;
+    const real_t u_a   = this->iparams.u_a;
+    const real_t v_a   = this->iparams.v_a;
+    //const real_t w_a   = this->iparams.w_a;
+    
+    // vortex center
+    const real_t vortex_x = this->iparams.vortex_x;
+    const real_t vortex_y = this->iparams.vortex_y;
+    const real_t beta =     this->iparams.beta;
+
+    // local cell index
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+
+    // loop over cell DoF's
+    for (int idz=0; idz<N; ++idz) {
+      for (int idy=0; idy<N; ++idy) {
+	for (int idx=0; idx<N; ++idx) {
+	  
+	  // lower left corner
+	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+	  real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
+
+	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
+	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
+	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
+
+	  // relative coordinates versus vortex center
+	  real_t xp = x - vortex_x;
+	  real_t yp = y - vortex_y;
+	  real_t r  = sqrt(xp*xp + yp*yp);
+	  
+	  real_t du = - yp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+	  real_t dv =   xp * beta / (2 * M_PI) * exp(0.5*(1.0-r*r));
+	  
+	  real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
+	  real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
+	  
+	  Udata(i,j,k, dofMap(idx,idy,idz,ID)) = rho;
+	  Udata(i,j,k, dofMap(idx,idy,idz,IU)) = rho*(u_a + du);
+	  Udata(i,j,k, dofMap(idx,idy,idz,IV)) = rho*(v_a + dv);
+	  Udata(i,j,k, dofMap(idx,idy,idz,IW)) = 0.0;
+	  Udata(i,j,k, dofMap(idx,idy,idz,IE)) = rho*T/(gamma0-1.0) +
+	    0.5*rho*(u_a + du)*(u_a + du) +
+	    0.5*rho*(v_a + dv)*(v_a + dv) ;
+	  
+	} // end for idx
+      } // end for idy
+    } // end for idz
+    
+  } // end operator () - 3d
+
+  DataArray Udata;
+  IsentropicVortexParams iparams;
   
-//   DataArray2d Udata;
-//   IsentropicVortexParams iparams;
-  
-// }; // InitIsentropicVortexFunctor
+}; // InitIsentropicVortexFunctor
   
 } // namespace sdm
 
