@@ -316,9 +316,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
     init_implode(U);
 
-  // } else if ( !m_problem_name.compare("blast") ) {
+  } else if ( !m_problem_name.compare("blast") ) {
 
-  //   init_blast(U);
+    init_blast(U);
 
   } else if ( !m_problem_name.compare("four_quadrant") ) {
 
@@ -911,10 +911,10 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_blast(DataArray Udata)
 {
 
-  // BlastParams blastParams = BlastParams(configMap);
+  BlastParams blastParams = BlastParams(configMap);
   
-  // InitBlastFunctor<dim,N> functor(params, monomialMap.data, blastParams, Udata);
-  // Kokkos::parallel_for(nbCells, functor);
+  InitBlastFunctor<dim,N> functor(params, sdm_geom, blastParams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
 
 } // SolverHydroSDM::init_blast
 
