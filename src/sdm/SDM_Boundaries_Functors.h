@@ -17,7 +17,7 @@ namespace sdm {
  * \tparam faceId identifies on which face will the border condition be fixed
  *
  * At some point, we should consider BC like ASZ (Absorbing Sponge Zone) or PML
- * (Perfrectly Matched Layer); see article
+ * (Perfectly Matched Layer); see article
  * "Absorbing boundary conditions for the Euler and Navier–Stokes
  *  equations with the spectral difference method", by Ying Zhou, Z.J. Wang
  * Journal of Computational Physics, 229 (2010) 8733–8749
