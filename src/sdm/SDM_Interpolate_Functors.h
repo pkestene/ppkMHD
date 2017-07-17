@@ -317,6 +317,11 @@ public:
 
     const int nbvar = this->params.nbvar;
 
+    // rescale factor for derivative
+    real_t rescale = 1.0/this->params.dx;
+    if (dir == IY)
+      rescale = 1.0/this->params.dy;
+    
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
@@ -343,7 +348,7 @@ public:
 	  if (itype==INTERPOLATE_SOLUTION)
 	    this->flux2sol_vector(flux, sol);
 	  else
-	    this->flux2sol_derivative_vector(flux,sol);
+	    this->flux2sol_derivative_vector(flux,sol,rescale);
 	  
 	  // copy back interpolated value
 	  for (int idx=0; idx<N; ++idx) {
@@ -377,7 +382,7 @@ public:
 	  if (itype==INTERPOLATE_SOLUTION)
 	    this->flux2sol_vector(flux, sol);
 	  else
-	    this->flux2sol_derivative_vector(flux,sol);
+	    this->flux2sol_derivative_vector(flux,sol,rescale);
 	  
 	  // copy back interpolated value
 	  for (int idy=0; idy<N; ++idy) {
@@ -410,6 +415,13 @@ public:
 
     const int nbvar = this->params.nbvar;
 
+    // rescale factor for derivative
+    real_t rescale = 1.0/this->params.dx;
+    if (dir == IY)
+      rescale = 1.0/this->params.dy;
+    if (dir == IZ)
+      rescale = 1.0/this->params.dz;
+
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
@@ -437,7 +449,7 @@ public:
 	    if (itype==INTERPOLATE_SOLUTION)
 	      this->flux2sol_vector(flux, sol);
 	    else
-	      this->flux2sol_derivative_vector(flux,sol);
+	      this->flux2sol_derivative_vector(flux,sol,rescale);
 	    
 	    // copy back interpolated value
 	    for (int idx=0; idx<N; ++idx) {
@@ -473,7 +485,7 @@ public:
 	    if (itype==INTERPOLATE_SOLUTION)
 	      this->flux2sol_vector(flux, sol);
 	    else
-	      this->flux2sol_derivative_vector(flux,sol);
+	      this->flux2sol_derivative_vector(flux,sol,rescale);
 	    
 	    // copy back interpolated value
 	    for (int idy=0; idy<N; ++idy) {
@@ -509,7 +521,7 @@ public:
 	    if (itype==INTERPOLATE_SOLUTION)
 	      this->flux2sol_vector(flux, sol);
 	    else
-	      this->flux2sol_derivative_vector(flux,sol);
+	      this->flux2sol_derivative_vector(flux,sol,rescale);
 	    
 	    // copy back interpolated value
 	    for (int idz=0; idz<N; ++idz) {
