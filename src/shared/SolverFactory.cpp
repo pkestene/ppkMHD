@@ -5,6 +5,10 @@
 #include "muscl/SolverHydroMuscl.h"
 #include "muscl/SolverMHDMuscl.h"
 
+#ifdef USE_SDM
+#include "sdm/SolverHydroSDM.h"
+#endif // USE_SDM
+
 #ifdef USE_MOOD
 #include "mood/SolverHydroMood.h"
 #endif // USE_MOOD
@@ -24,6 +28,11 @@ SolverFactory::SolverFactory()
   registerSolver("MHD_Muscl_2D",   &muscl::SolverMHDMuscl<2>::create);
   registerSolver("MHD_Muscl_3D",   &muscl::SolverMHDMuscl<3>::create);
 
+#ifdef USE_SDM
+  registerSolver("Hydro_SDM_2D_degree1",   &sdm::SolverHydroSDM<2,1>::create);  
+  registerSolver("Hydro_SDM_2D_degree2",   &sdm::SolverHydroSDM<2,2>::create);  
+#endif // USE_SDM
+  
 #ifdef USE_MOOD
   registerSolver("Hydro_Mood_2D_degree1",  &mood::SolverHydroMood<2,1>::create);
   registerSolver("Hydro_Mood_2D_degree2",  &mood::SolverHydroMood<2,2>::create);

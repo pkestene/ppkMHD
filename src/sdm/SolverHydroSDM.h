@@ -85,14 +85,13 @@ public:
 
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
-  DataArray     U2;    /*!< hydrodynamics conservative variables arrays */
+  DataArray     Utmp;  /*!< hydrodynamics conservative variables arrays */
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
 
   //! fluxes
   DataArray Fluxes;
-  DataArray Fluxes_x, Fluxes_y, Fluxes_z;
   
   /*
    * Override base class method to initialize IO writer object
@@ -120,30 +119,39 @@ public:
 
   //! numerical scheme
   void time_integration(real_t dt);
-
+  
   //! wrapper to tha actual time integation scheme
-  void time_integration_impl(DataArray data_in, 
-			     DataArray data_out, 
+  void time_integration_impl(DataArray Udata, 
+			     DataArray Udata_tmp, 
 			     real_t dt);
 
+  //! compute update, without actual update
+  //! Udate is used in input
+  //! Udata_tmp is used in,out as an accumulator
+  //! so that the actual update will be U_{n+1}=U_{n}-dt*Udata_tmp
+  //! this operator is used in every Runge Kutta time intergrator
+  void compute_update(DataArray Udata, 
+		      DataArray Udata_tmp, 
+		      real_t    dt);
+
   //! time integration using forward Euler method
-  void time_int_forward_euler(DataArray data_in, 
-			      DataArray data_out, 
+  void time_int_forward_euler(DataArray Udata, 
+			      DataArray Udata_tmp, 
 			      real_t dt);
 
   //! time integration using SSP RK2
-  void time_int_ssprk2(DataArray data_in, 
-		       DataArray data_out, 
+  void time_int_ssprk2(DataArray Udata, 
+		       DataArray Udata_tmp, 
 		       real_t dt);
   
   //! time integration using SSP RK3
-  void time_int_ssprk3(DataArray data_in, 
-		       DataArray data_out, 
+  void time_int_ssprk3(DataArray Udata, 
+		       DataArray Udata_tmp, 
 		       real_t dt);
 
   //! time integration using SSP RK4
-  void time_int_ssprk54(DataArray data_in, 
-			DataArray data_out, 
+  void time_int_ssprk54(DataArray Udata, 
+			DataArray Udata_tmp, 
 			real_t dt);
 
   //! erase a solution data array
@@ -197,8 +205,8 @@ template<int dim, int N>
 SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 				      ConfigMap& configMap) :
   SolverBase(params, configMap),
-  U(), Uhost(), U2(),
-  Fluxes(), Fluxes_x(), Fluxes_y(), Fluxes_z(),
+  U(), Uhost(), Utmp(),
+  Fluxes(), 
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
@@ -230,30 +238,25 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
     U     = DataArray("U", isize, jsize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
-    U2    = DataArray("U2",isize, jsize, nb_dof);
+    Utmp  = DataArray("Utmp",isize, jsize, nb_dof);
     
     Fluxes = DataArray("Fluxes", isize, jsize, nb_dof_flux);
-    //Fluxes_x = DataArray("Fluxes_x", isize, jsize, nb_dof);
-    //Fluxes_y = DataArray("Fluxes_y", isize, jsize, nb_dof);
 
     total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U
-    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U2
+    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // Utmp
     total_mem_size += isize*jsize*nb_dof_flux * sizeof(real_t); // Fluxes
     
   } else if (dim==3) {
 
     U     = DataArray("U", isize, jsize, ksize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
-    U2    = DataArray("U2",isize, jsize, ksize, nb_dof);
+    Utmp  = DataArray("Utmp",isize, jsize, ksize, nb_dof);
     
     Fluxes = DataArray("Fluxes", isize, jsize, ksize, nb_dof_flux);
-    //Fluxes_x = DataArray("Fluxes_x", isize, jsize, ksize, nb_dof);
-    //Fluxes_y = DataArray("Fluxes_y", isize, jsize, ksize, nb_dof);
-    //Fluxes_z = DataArray("Fluxes_z", isize, jsize, ksize, nb_dof);
 
     total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U
-    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U2
-    total_mem_size += isize*jsize*ksize*nb_dof_flux * sizeof(real_t);
+    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // Utmp
+    total_mem_size += isize*jsize*ksize*nb_dof_flux * sizeof(real_t); // Fluxes
 
   }
 
@@ -378,8 +381,8 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   // initialize boundaries
   make_boundaries(U);
 
-  // copy U into U2
-  Kokkos::deep_copy(U2,U);
+  // copy U into Utmp
+  //Kokkos::deep_copy(U2,U);
   
 } // SolverHydroSDM::SolverHydroSDM
 
@@ -441,11 +444,13 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   DataArray Udata;
   
   // which array is the current one ?
-  if (m_iteration % 2 == 0)
-    Udata = U;
-  else
-    Udata = U2;
+  // if (m_iteration % 2 == 0)
+  //   Udata = U;
+  // else
+  //   Udata = U2;
 
+  Udata = U;
+  
   using ComputeDtFunctor =
     typename std::conditional<dim==2,
   			      ComputeDt_Functor_2d<N>,
@@ -513,11 +518,7 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::time_integration(real_t dt)
 {
   
-  if ( m_iteration % 2 == 0 ) {
-    time_integration_impl(U , U2, dt);
-  } else {
-    time_integration_impl(U2, U , dt);
-  }
+  time_integration_impl(U , Utmp, dt);
   
 } // SolverHydroSDM::time_integration
 
@@ -527,38 +528,34 @@ void SolverHydroSDM<dim,N>::time_integration(real_t dt)
 // Actual CPU computation of SDM scheme
 // ///////////////////////////////////////////
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_integration_impl(DataArray data_in, 
-						  DataArray data_out, 
+void SolverHydroSDM<dim,N>::time_integration_impl(DataArray Udata, 
+						  DataArray Udata_tmp,
 						  real_t dt)
 {
   
-  // fill ghost cell in data_in
+  // fill ghost cell in Udata
   timers[TIMER_BOUNDARIES]->start();
-  make_boundaries(data_in);
+  make_boundaries(Udata);
   timers[TIMER_BOUNDARIES]->stop();
-    
-  // copy data_in into data_out (not necessary)
-  // data_out = data_in;
-  Kokkos::deep_copy(data_out, data_in);
-  
+      
   // start main computation
   timers[TIMER_NUM_SCHEME]->start();
 
   if (ssprk2_enabled) {
     
-    time_int_ssprk2(data_in, data_out, dt);
-    
+    time_int_ssprk2(Udata, Udata_tmp, dt);
+
   } else if (ssprk3_enabled) {
     
-    time_int_ssprk3(data_in, data_out, dt);
+    time_int_ssprk3(Udata, Udata_tmp, dt);
     
   } else if (ssprk54_enabled) {
     
-    time_int_ssprk54(data_in, data_out, dt);
+    time_int_ssprk54(Udata, Udata_tmp, dt);
     
   } else {
     
-    time_int_forward_euler(data_in, data_out, dt);
+    time_int_forward_euler(Udata, Udata_tmp, dt);
     
   }
   
@@ -569,33 +566,26 @@ void SolverHydroSDM<dim,N>::time_integration_impl(DataArray data_in,
 // =======================================================
 // =======================================================
 // ///////////////////////////////////////////
-// Forward Euler time integration
+// Compute update (Udata_tmp)
+// so that the actual update will be U_{n+1}=U_{n}-dt*Udata_tmp
 // ///////////////////////////////////////////
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in, 
-						   DataArray data_out, 
-						   real_t dt)
+void SolverHydroSDM<dim,N>::compute_update(DataArray Udata, 
+					   DataArray Udata_tmp,
+					   real_t dt)
 {
-  
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-  
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
 
-  // erase data_out
-  erase(data_out);
-  
+  // Here is the plan:
   // for each direction
   //  1. interpolate conservative variables from solution points to flux points
   //  2. compute inplace flux at flux points (interior + cell borders)
   //     (TODO: apply any flux limiter ?)
   //  3. compute viscous flux + source terms
-  //  4. evaluate flux derivatives at solution points
-  //  5. update data_out
+  //  4. evaluate flux derivatives at solution points and accumulate in Udata_tmp
 
+  // erase Udata_tmp
+  erase(Udata_tmp);
+  
   //
   // Dir X
   //
@@ -605,7 +595,7 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in,
       
       Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(params,
 							  sdm_geom,
-							  data_in,
+							  Udata,
 							  Fluxes);
       Kokkos::parallel_for(nbCells, functor);
       
@@ -622,22 +612,131 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in,
 
     // 3. viscous terms + source terms (TODO)
 
-    // 4. compute derivative and accumulate in data_out
+    // 4. compute derivative and accumulate in Udata_tmp
     {
 
       Interpolate_At_SolutionPoints_Functor<dim,N,IX> functor(params,
 							      sdm_geom,
 							      Fluxes,
-							      data_out);
+							      Udata_tmp);
       Kokkos::parallel_for(nbCells, functor);
       
     }
     
   } // end dir X
 
-  // do the same for dir Y
+  //
+  // Dir Y
+  //
+  {
+    // 1. interpolate conservative variables from solution points to flux points
+    {
+      
+      Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(params,
+							  sdm_geom,
+							  Udata,
+							  Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+    // 2. inplace computation of fluxes along Y direction at flux points
+    {
+      ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(params,
+							sdm_geom,
+							euler,
+							Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
 
-  // perform time update: U_{n+1} = U_{n} - dt * data_out 
+    // 3. viscous terms + source terms (TODO)
+
+    // 4. compute derivative and accumulate in Udata_tmp
+    {
+
+      Interpolate_At_SolutionPoints_Functor<dim,N,IY> functor(params,
+							      sdm_geom,
+							      Fluxes,
+							      Udata_tmp);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+  } // end dir Y
+
+  
+  if (dim == 3) {
+    //
+    // Dir Z
+    //
+    {
+      // 1. interpolate conservative variables from solution points to flux points
+      {
+	
+	Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(params,
+							    sdm_geom,
+							    Udata,
+							    Fluxes);
+	Kokkos::parallel_for(nbCells, functor);
+	
+      }
+      
+      // 2. inplace computation of fluxes along Z direction at flux points
+      {
+	ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(params,
+							  sdm_geom,
+							  euler,
+							  Fluxes);
+	Kokkos::parallel_for(nbCells, functor);
+      }
+      
+      // 3. viscous terms + source terms (TODO)
+      
+      // 4. compute derivative and accumulate in Udata_tmp
+      {
+	
+	Interpolate_At_SolutionPoints_Functor<dim,N,IZ> functor(params,
+								sdm_geom,
+								Fluxes,
+								Udata_tmp);
+	Kokkos::parallel_for(nbCells, functor);
+	
+      }
+      
+    } // end dir Z
+    
+  } // end dim == 3
+  
+  
+} // SolverHydroSDM<dim,N>::compute_update
+
+// =======================================================
+// =======================================================
+// ///////////////////////////////////////////
+// Forward Euler time integration
+// ///////////////////////////////////////////
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata, 
+						   DataArray Udata_tmp,
+						   real_t dt)
+{
+  
+  real_t dtdx;
+  real_t dtdy;
+  real_t dtdz;
+  
+  dtdx = dt / params.dx;
+  dtdy = dt / params.dy;
+  dtdz = dt / params.dz;
+  
+  // evaluate flux derivatives (up to minus sign)
+  compute_update(Udata, Udata_tmp, dt);
+  
+  // perform actual time update in place in Udata: U_{n+1} = U_{n} - dt * Udata_tmp 
+  {
+    SDM_Update_Functor<dim,N> functor(params, sdm_geom, Udata, Udata_tmp, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
   
 } // SolverHydroSDM::time_int_forward_euler
 
@@ -663,9 +762,9 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray data_in,
  * where Dt_FE is the forward Euler Dt
  */
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray data_in, 
-						  DataArray data_out, 
-						  real_t dt)
+void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata, 
+					    DataArray Udata_tmp, 
+					    real_t dt)
 {
 
   real_t dtdx;
@@ -676,15 +775,31 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray data_in,
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
 
-  Kokkos::deep_copy(U_RK1, data_in);
+  Kokkos::deep_copy(U_RK1, Udata);
   
   // ==============================================
   // first step : U_RK1 = U_n + dt * fluxes(U_n)
   // ==============================================
+  // evaluate flux derivatives (up to minus sign)
+  compute_update(Udata, Udata_tmp, dt);
+  
+  // perform actual time update in place in U_RK1: U_{n+1} = U_{n} - dt * Udata_tmp 
+  {
+    SDM_Update_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata_tmp, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
   // ==================================================================
   // second step : U_{n+1} = 0.5 * (U_n + U_RK1 + dt * fluxes(U_RK1) )
   // ==================================================================
+  // evaluate flux derivatives (up to minus sign)
+  compute_update(U_RK1, Udata_tmp, dt);
+
+  {
+    SDM_Update_sspRK2_Functor<dim,N> functor(params, sdm_geom, Udata, U_RK1, Udata_tmp, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   
 } // SolverHydroSDM::time_int_ssprk2
 
@@ -712,9 +827,9 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray data_in,
  * where Dt_FE is the forward Euler Dt
  */
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray data_in, 
-						  DataArray data_out, 
-						  real_t dt)
+void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata, 
+					    DataArray Udata_tmp, 
+					    real_t dt)
 {
 
   real_t dtdx;
@@ -725,7 +840,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray data_in,
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
 
-  Kokkos::deep_copy(U_RK1, data_in);
+  Kokkos::deep_copy(U_RK1, Udata);
 
   // ==============================================
   // first step : U_RK1 = U_n + dt * fluxes(U_n)
@@ -764,8 +879,8 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray data_in,
  * have a flux operator backward in time stable.
  */
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray data_in, 
-					     DataArray data_out, 
+void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata, 
+					     DataArray Udata_tmp, 
 					     real_t dt)
 {
 
@@ -777,7 +892,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray data_in,
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
 
-  Kokkos::deep_copy(U_RK1, data_in);
+  Kokkos::deep_copy(U_RK1, Udata);
 
   std::cout << "SSP-RK54 is currently unimplemented\n";
   
@@ -1013,10 +1128,13 @@ void SolverHydroSDM<dim,N>::save_solution_impl()
 {
 
   timers[TIMER_IO]->start();
-  if (m_iteration % 2 == 0)
-    save_data(U,  Uhost, m_times_saved, m_t);
-  else
-    save_data(U2, Uhost, m_times_saved, m_t);
+
+  save_data(U,  Uhost, m_times_saved, m_t);
+
+  // if (m_iteration % 2 == 0)
+  //   save_data(U,  Uhost, m_times_saved, m_t);
+  // else
+  //   save_data(U2, Uhost, m_times_saved, m_t);
   
   timers[TIMER_IO]->stop();
     
