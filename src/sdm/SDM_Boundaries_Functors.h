@@ -80,8 +80,8 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 	    
-	    real_t sign=1.0;
 	    for ( iVar=0; iVar<nbvar; iVar++ ) {
+	      real_t sign=1.0;
 	      
 	      if ( boundary_type == BC_DIRICHLET ) {
 		i0=2*ghostWidth-1-i;
@@ -131,8 +131,8 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    real_t sign=1.0;
 	    for ( iVar=0; iVar<nbvar; iVar++ ) {
+	      real_t sign=1.0;
 	      
 	      if ( boundary_type == BC_DIRICHLET ) {
 
@@ -178,8 +178,9 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    real_t sign=1.0;
 	    for ( iVar=0; iVar<nbvar; iVar++ ) {
+	      real_t sign=1.0;
+
 	      if ( boundary_type == BC_DIRICHLET ) {
 
 		j0=2*ghostWidth-1-j;
@@ -224,8 +225,8 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    real_t sign=1.0;
 	    for ( iVar=0; iVar<nbvar; iVar++ ) {
+	      real_t sign=1.0;
 	      
 	      if ( boundary_type == BC_DIRICHLET ) {
 
@@ -313,8 +314,8 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 	      
-	      real_t sign=1.0;
 	      for ( iVar=0; iVar<nbvar; iVar++ ) {
+		real_t sign=1.0;
 		
 		if ( boundary_type == BC_DIRICHLET ) {
 
@@ -367,8 +368,8 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 
-	      real_t sign=1.0;
 	      for ( iVar=0; iVar<nbvar; iVar++ ) {
+		real_t sign=1.0;
 		
 		if ( boundary_type == BC_DIRICHLET ) {
 
@@ -417,9 +418,9 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 
-	      real_t sign=1.0;
-	      
 	      for ( iVar=0; iVar<nbvar; iVar++ ) {
+		real_t sign=1.0;
+	      
 		if ( boundary_type == BC_DIRICHLET ) {
 
 		  j0=2*ghostWidth-1-j;
@@ -470,8 +471,8 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 
-	      real_t sign=1.0;
 	      for ( iVar=0; iVar<nbvar; iVar++ ) {
+		real_t sign=1.0;
 		
 		if ( boundary_type == BC_DIRICHLET ) {
 
@@ -520,9 +521,9 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 	      
-	      real_t sign=1.0;
-	      
 	      for ( iVar=0; iVar<nbvar; iVar++ ) {
+		real_t sign=1.0;
+	      
 		if ( boundary_type == BC_DIRICHLET ) {
 
 		  k0=2*ghostWidth-1-k;
@@ -573,9 +574,9 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 
-	      real_t sign=1.0;
-	
 	      for ( iVar=0; iVar<nbvar; iVar++ ) {
+		real_t sign=1.0;
+	
 		if ( boundary_type == BC_DIRICHLET ) {
 
 		  k0=2*nz+2*ghostWidth-1-k;
