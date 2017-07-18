@@ -23,7 +23,7 @@ namespace sdm {
  * This functor takes as an input variables
  * at solution points and perform interpolation at flux points.
  *
- * Its is essentially a wrapper arround interpolation method sol2flux_vector.
+ * It is essentially a wrapper arround interpolation method sol2flux_vector.
  *
  * Perform exactly the inverse of Interpolate_At_SolutionPoints_Functor.
  *
