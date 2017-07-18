@@ -104,3 +104,12 @@ target_link_libraries(test_sdm_compute_dt_functor config io shared monitoring ko
 if (USE_MPI)
   target_link_libraries(test_sdm_compute_functor mpiUtils)
 endif()
+
+##############################################
+add_executable(test_sdm_chebyshev_quadrature
+  test_sdm_chebyshev_quadrature.cpp)
+target_include_directories(test_sdm_chebyshev_quadrature
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+target_link_libraries(test_sdm_chebyshev_quadrature kokkos hwloc dl)
