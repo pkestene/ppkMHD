@@ -57,6 +57,21 @@ namespace sdm {
  * just use ID) of the (i,j) Dof inside a given cell. the pair i,j identifies
  * a unique Dof among the N^2 Dof in 2D.
  * 
+ * Time integration is configurable through parameter file. Allowed
+ * possiblities are foward_euler, ssprk2 or ssprk3.
+ * 
+ * Flux limiter. It is disabled by default, but can be enable through parameter
+ * flux_limiting_enabled.
+ * We just use the idea from May, Jameson, "A Spectral Difference Method for the Euler
+ * and Navier-Stokes Equations on Unstructured Meshes", AIAA 2006-304
+ * http://aero-comlab.stanford.edu/Papers/may.aiaa.06-0304.pdf
+ * When enabled, limiting procedure consists in:
+ * 1. for each cell, compute reference state as average HydroState (stored in Uaverage)
+ * 2. for each cell, compute Umin, Umax as min max HydroState in a neighborhood
+ * 3. for each cell, evaluate is the high-order cell-border reconstruction must be
+ * demoted to linear reconstruction. If any of the K=number_of_faces x N reconstructed
+ * state violates the TVD criterium, all the faces reconstruction will be demoted to
+ * linear reconstruction.
  */
 template<int dim, int N>
 class SolverHydroSDM : public ppkMHD::SolverBase
@@ -86,6 +101,10 @@ public:
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
   DataArray     Utmp;  /*!< hydrodynamics conservative variables arrays */
+
+  DataArray     Uaverage; /*! used if limiting is enabled */
+  DataArray     Umin;     /*! used if limiting is enabled */
+  DataArray     Umax;     /*! used if limiting is enabled */
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
@@ -180,6 +199,9 @@ public:
   //! debug routine that saves a flux data array (for a given direction)
   // template <int dir>
   // void save_flux();
+
+  //! flux limiting procedure
+  bool flux_limiting_enabled;
   
   // time integration
   bool forward_euler_enabled;
@@ -212,6 +234,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ksize(params.ksize),
   nbCells(params.isize*params.jsize),
   sdm_geom(),
+  flux_limiting_enabled(false),
   forward_euler_enabled(true),
   ssprk2_enabled(false),
   ssprk3_enabled(false),
