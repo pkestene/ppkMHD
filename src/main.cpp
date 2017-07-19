@@ -25,6 +25,20 @@
 #include "utils/io/IO_HDF5.h"
 #endif // USE_HDF5
 
+#ifdef USE_FPE_DEBUG
+// for catching floating point errors
+#include <fenv.h>
+#include <signal.h>
+
+// signal handler for catching floating point errors
+void fpehandler(int sig_num)
+{
+  signal(SIGFPE, fpehandler);
+  printf("SIGFPE: floating point exception occured of type %d, exiting.\n",sig_num);
+  abort();
+}
+#endif // USE_FPE_DEBUG
+
 // ===============================================================
 // ===============================================================
 // ===============================================================
@@ -71,6 +85,16 @@ int main(int argc, char *argv[])
     std::cout << msg.str();
     std::cout << "##########################\n";
 
+#ifdef USE_FPE_DEBUG
+    /*
+     * Install a signal handler for floating point errors.
+     * This only usefull when debugging, doing a backtrace in gdb,
+     * tracking for NaN 
+     */
+    eenableexcept(FE_DIVBYZERO | FE_INVALID);
+    signal(SIGFPE, fpehandler);
+#endif // USE_FPE_DEBUG
+    
 #ifdef USE_MPI
 # ifdef CUDA
     {

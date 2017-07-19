@@ -10,6 +10,7 @@ option (USE_MOOD "build MOOD numerical schemes" OFF)
 option (USE_SDM "build Spectral Difference Method numerical schemes" OFF)
 option (USE_HDF5 "build HDF5 input/output support" OFF)
 option (USE_PNETCDF "build PNETCDF input/output support (MPI required)" OFF)
+option (USE_FPE_DEBUG "build with floating point Nan tracing (signal handler)" OFF)
 
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
@@ -196,6 +197,10 @@ endif()
 
 if (USE_MPI)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MPI" )
+endif()
+
+if (USE_FPE_DEBUG)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_FPE_DEBUG" )
 endif()
 
 #
