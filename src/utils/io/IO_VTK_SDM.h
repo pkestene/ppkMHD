@@ -1239,7 +1239,8 @@ void save_VTK_SDM(DataArray2d             Udata,
 		  int nbvar,
 		  const std::map<int, std::string>& variables_names,
 		  int iStep,
-		  real_t time)
+		  real_t time,
+		  std::string debug_name = "")
 {
   const int nx = params.nx;
   const int ny = params.ny;
@@ -1287,6 +1288,9 @@ void save_VTK_SDM(DataArray2d             Udata,
     
     // header file : parallel vtu format
     std::string headerFilename = outputDir+"/"+outputPrefix+"_time"+stepNum.str()+".pvtu";
+
+    if ( !debug_name.empty() )
+      headerFilename = outputDir+"/"+outputPrefix+"_"+debug_name+"_time"+stepNum.str()+".pvtu";
     
     write_pvtu_header(headerFilename,
 		      outputPrefix,
@@ -1301,6 +1305,9 @@ void save_VTK_SDM(DataArray2d             Udata,
   // concatenate file prefix + file number + suffix
   std::string filename;
   filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vtu";
+
+  if ( !debug_name.empty() )
+    filename = outputDir + "/" + outputPrefix + "_" + debug_name + "_" + stepNum.str() + ".vtu";
 
 #ifdef USE_MPI
   {

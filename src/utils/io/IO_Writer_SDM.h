@@ -55,7 +55,7 @@ public:
     
     if (vtk_enabled) {
 
-      save_VTK_SDM<N>(Udata, Uhost, params, configMap, sdm_geom, params.nbvar, variables_names, iStep, time);
+      save_VTK_SDM<N>(Udata, Uhost, params, configMap, sdm_geom, params.nbvar, variables_names, iStep, time, debug_name);
 
     }
     
