@@ -454,7 +454,7 @@ public:
 	    // copy back interpolated value
 	    for (int idx=0; idx<N; ++idx) {
 	    
-	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idx];
+	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idx];
 	    
 	    }
 	    
@@ -490,7 +490,7 @@ public:
 	    // copy back interpolated value
 	    for (int idy=0; idy<N; ++idy) {
 	    
-	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idy];
+	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idy];
 	    
 	    }
 	    
