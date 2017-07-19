@@ -64,6 +64,8 @@ void write_nodes_location(std::ostream& outFile,
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
+  bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
+  
   outFile << "  <Points>\n";
   outFile << "    <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\""
 	  << ascii_or_binary << "\"";
