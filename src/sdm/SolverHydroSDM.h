@@ -100,7 +100,7 @@ public:
 
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
-  DataArray     Utmp;  /*!< hydrodynamics conservative variables arrays */
+  DataArray     Uaux;  /*!< auxiliary hydrodynamics conservative variables arrays (used in computing fluxes divergence */
 
   DataArray     Uaverage; /*! used if limiting is enabled */
   DataArray     Umin;     /*! used if limiting is enabled */
@@ -228,7 +228,7 @@ template<int dim, int N>
 SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 				      ConfigMap& configMap) :
   SolverBase(params, configMap),
-  U(), Uhost(), Utmp(),
+  U(), Uhost(), Uaux(),
   Fluxes(), 
   isize(params.isize),
   jsize(params.jsize),
@@ -262,24 +262,24 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
     U     = DataArray("U", isize, jsize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
-    Utmp  = DataArray("Utmp",isize, jsize, nb_dof);
+    Uaux  = DataArray("Uaux",isize, jsize, nb_dof);
     
     Fluxes = DataArray("Fluxes", isize, jsize, nb_dof_flux);
 
     total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U
-    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // Utmp
+    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // Uaux
     total_mem_size += isize*jsize*nb_dof_flux * sizeof(real_t); // Fluxes
     
   } else if (dim==3) {
 
     U     = DataArray("U", isize, jsize, ksize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
-    Utmp  = DataArray("Utmp",isize, jsize, ksize, nb_dof);
+    Uaux  = DataArray("Uaux",isize, jsize, ksize, nb_dof);
     
     Fluxes = DataArray("Fluxes", isize, jsize, ksize, nb_dof_flux);
 
     total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U
-    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // Utmp
+    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // Uaux
     total_mem_size += isize*jsize*ksize*nb_dof_flux * sizeof(real_t); // Fluxes
 
   }
@@ -404,9 +404,6 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   // initialize boundaries
   make_boundaries(U);
-
-  // copy U into Utmp
-  //Kokkos::deep_copy(U2,U);
   
 } // SolverHydroSDM::SolverHydroSDM
 
@@ -467,12 +464,6 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   real_t invDt = ZERO_F;
   DataArray Udata;
   
-  // which array is the current one ?
-  // if (m_iteration % 2 == 0)
-  //   Udata = U;
-  // else
-  //   Udata = U2;
-
   Udata = U;
   
   using ComputeDtFunctor =
@@ -542,7 +533,7 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::time_integration(real_t dt)
 {
   
-  time_integration_impl(U , Utmp, dt);
+  time_integration_impl(U , Uaux, dt);
   
 } // SolverHydroSDM::time_integration
 
@@ -1176,11 +1167,6 @@ void SolverHydroSDM<dim,N>::save_solution_impl()
   timers[TIMER_IO]->start();
 
   save_data(U,  Uhost, m_times_saved, m_t);
-
-  // if (m_iteration % 2 == 0)
-  //   save_data(U,  Uhost, m_times_saved, m_t);
-  // else
-  //   save_data(U2, Uhost, m_times_saved, m_t);
   
   timers[TIMER_IO]->stop();
     

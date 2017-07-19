@@ -184,7 +184,7 @@ void test_sdm_flux(int argc, char* argv[])
   ppkMHD::EulerEquations<dim> euler;
   
   // create test functor
-  sdm::TestFluxFunctor<dim,N> functor(params, sdm_geom, euler, solver.U, solver.Utmp);
+  sdm::TestFluxFunctor<dim,N> functor(params, sdm_geom, euler, solver.U, solver.Uaux);
   Kokkos::parallel_for(solver.nbCells, functor);
   
   solver.save_solution();
