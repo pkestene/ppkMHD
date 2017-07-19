@@ -1504,7 +1504,8 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
 		       int nbvar,
 		       const std::map<int, std::string>& variables_names,
 		       int iStep,
-		       real_t time)
+		       real_t time,
+		       std::string debug_name = "")
 {
   const int nx = params.nx;
   const int ny = params.ny;
@@ -1533,6 +1534,9 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
     dirStr = "_Flux_x_";
   if (dir == IY)
     dirStr = "_Flux_y_";
+
+  if ( !debug_name.empty() )
+    dirStr += debug_name + "_";
   
   bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
@@ -1653,7 +1657,8 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
 		       int nbvar,
 		       const std::map<int, std::string>& variables_names,
 		       int iStep,
-		       real_t time)
+		       real_t time,
+		       std::string debug_name = "")
 {
   const int nx = params.nx;
   const int ny = params.ny;
@@ -1691,6 +1696,9 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
     dirStr = "_Flux_y_";
   if (dir == IZ)
     dirStr = "_Flux_z_";
+
+  if ( !debug_name.empty() )
+    dirStr += debug_name + "_";
 
   bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";

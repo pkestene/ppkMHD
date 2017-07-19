@@ -87,13 +87,14 @@ public:
   void save_flux(DataArray     Udata,
 		 DataArrayHost Uhost,
 		 int iStep,
-		 real_t time)
+		 real_t time,
+		 std::string debug_name = "")
   {
     
     if (vtk_enabled) {
 
       save_VTK_SDM_Flux<N,dir>(Udata, Uhost, params, configMap, sdm_geom,
-			       params.nbvar, this->variables_names, iStep, time);
+			       params.nbvar, this->variables_names, iStep, time, debug_name);
       
     }
     
