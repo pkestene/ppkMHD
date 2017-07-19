@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
      * This only usefull when debugging, doing a backtrace in gdb,
      * tracking for NaN 
      */
-    eenableexcept(FE_DIVBYZERO | FE_INVALID);
+    feenableexcept(FE_DIVBYZERO | FE_INVALID);
     signal(SIGFPE, fpehandler);
 #endif // USE_FPE_DEBUG
     
