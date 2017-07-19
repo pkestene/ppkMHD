@@ -59,8 +59,8 @@ void HydroParams::setup(ConfigMap &configMap)
     ghostWidth = 3;
     mhdEnabled = true;
     
-  } else if (!solver_name.compare("Hydro_Sdm_2D") ||
-	     !solver_name.compare("Hydro_SDM_2D")  ) {
+  } else if ( solver_name.find("Hydro_Sdm_2D") != std::string::npos ||
+	      solver_name.find("Hydro_SDM_2D") != std::string::npos ) {
     
 #if USE_SDM
     
