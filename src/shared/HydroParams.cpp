@@ -70,7 +70,8 @@ void HydroParams::setup(ConfigMap &configMap)
     
 #endif // USE_SDM
     
-  } else if ( !solver_name.compare("Hydro_SDM_3D") ) {
+  } else if ( solver_name.find("Hydro_Sdm_3D") != std::string::npos ||
+	      solver_name.find("Hydro_SDM_3D") != std::string::npos ) {
 
 #if USE_SDM
 
@@ -93,7 +94,7 @@ void HydroParams::setup(ConfigMap &configMap)
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
 #endif // USE_MOOD
     
-  } else if ( !solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
+  } else if ( solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
 
 #ifdef USE_MOOD
     // create the list of valid mood schemes names
