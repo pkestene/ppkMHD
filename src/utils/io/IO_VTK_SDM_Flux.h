@@ -66,15 +66,15 @@ void write_nodes_location_flux(std::ostream& outFile,
   const int j_mpi = 0;
 #endif
   
-  const int ghostWidth = params.ghostWidth;
+  //const int ghostWidth = params.ghostWidth;
 
-  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  const char* dataType = useDouble ? "Float64" : "Float32";
+  //bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  //const char* dataType = useDouble ? "Float64" : "Float32";
 
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  int nbNodesPerCell = (N+1)*(N+2); // in 3D
+  //int nbNodesPerCell = (N+1)*(N+2); // in 3D
   
   // bounds used to loop over sub-nodes
   // idx_end x idy_end is equal to nbNodesPerCells
@@ -207,10 +207,10 @@ void write_nodes_location_flux(std::ostream& outFile,
   const int k_mpi = 0;
 #endif
   
-  const int ghostWidth = params.ghostWidth;
+  //const int ghostWidth = params.ghostWidth;
 
-  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  const char* dataType = useDouble ? "Float64" : "Float32";
+  //bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  //const char* dataType = useDouble ? "Float64" : "Float32";
 
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
@@ -355,21 +355,6 @@ void write_cells_connectivity_flux(std::ostream& outFile,
 
   const int nx = params.nx;
   const int ny = params.ny;
-
-  const real_t xmin = params.xmin;
-  const real_t ymin = params.ymin;
-  const real_t dx = params.dx;
-  const real_t dy = params.dy;
-  
-#ifdef USE_MPI
-  const int i_mpi = params.myMpiPos[IX];
-  const int j_mpi = params.myMpiPos[IY];
-#else
-  const int i_mpi = 0;
-  const int j_mpi = 0;
-#endif
-  
-  const int ghostWidth = params.ghostWidth;
 
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
@@ -552,26 +537,6 @@ void write_cells_connectivity_flux(std::ostream& outFile,
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
-
-  const real_t xmin = params.xmin;
-  const real_t ymin = params.ymin;
-  const real_t zmin = params.zmin;
-  
-  const real_t dx = params.dx;
-  const real_t dy = params.dy;
-  const real_t dz = params.dz;
-  
-#ifdef USE_MPI
-  const int i_mpi = params.myMpiPos[IX];
-  const int j_mpi = params.myMpiPos[IY];
-  const int k_mpi = params.myMpiPos[IZ];
-#else
-  const int i_mpi = 0;
-  const int j_mpi = 0;
-  const int k_mpi = 0;
-#endif
-  
-  const int ghostWidth = params.ghostWidth;
 
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
@@ -1520,22 +1485,10 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  const int imin = params.imin;
-  const int imax = params.imax;
-
-  const int jmin = params.jmin;
-  const int jmax = params.jmax;
-
-  const int ghostWidth = params.ghostWidth;
-
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
   
   // local variables
-  int i,j,iVar;
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
@@ -1547,16 +1500,6 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
 
   if ( !debug_name.empty() )
     dirStr += debug_name + "_";
-  
-  bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
-
-  // check scalar data type
-  bool useDouble = false;
-
-  if (sizeof(real_t) == sizeof(double)) {
-    useDouble = true;
-  }
   
   // write iStep in string stepNum
   std::ostringstream stepNum;
@@ -1673,29 +1616,11 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
-
-  const int imin = params.imin;
-  const int imax = params.imax;
-
-  const int jmin = params.jmin;
-  const int jmax = params.jmax;
-
-  const int kmin = params.kmin;
-  const int kmax = params.kmax;
-
-  const int ghostWidth = params.ghostWidth;
-
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int ksize = params.ksize;
-
-  const int nbCells = isize*jsize*ksize;
   
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
   
   // local variables
-  int i,j,k,iVar;
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
@@ -1709,16 +1634,6 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
 
   if ( !debug_name.empty() )
     dirStr += debug_name + "_";
-
-  bool outputVtkAscii = true; //configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
-
-  // check scalar data type
-  bool useDouble = false;
-
-  if (sizeof(real_t) == sizeof(double)) {
-    useDouble = true;
-  }
   
   // write iStep in string stepNum
   std::ostringstream stepNum;
