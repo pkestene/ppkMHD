@@ -27,7 +27,7 @@ void test_sdm_geom_2d()
   std::cout << "===========\n";
   
   // dim is the number of variable in the multivariate polynomial representation
-  int dim=2;
+  //int dim=2;
   
   sdm::SDM_Geometry<2,N> sdm_geom;
   
@@ -53,7 +53,7 @@ void test_sdm_geom_3d()
   std::cout << "===========\n";
   
   // dim is the number of variable in the multivariate polynomial representation
-  int dim=3;
+  //int dim=3;
   
   sdm::SDM_Geometry<3,N> sdm_geom;
   
