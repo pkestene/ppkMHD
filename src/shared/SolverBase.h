@@ -15,6 +15,14 @@
 #include "utils/monitoring/OpenMPTimer.h"
 #endif
 
+//! this enum helps identifying the type of solver used
+enum solver_type_t {
+  SOLVER_UNDEFINED=0,
+  SOLVER_MUSCL_HANCOCK=1,
+  SOLVER_SDM=2,
+  SOLVER_MOOD=3
+};
+
 namespace ppkMHD { namespace io {
 class IO_WriterBase;
 } }
@@ -44,7 +52,8 @@ public:
   ConfigMap& configMap;
 
   /* some common member data */
-
+  solver_type_t solver_type;
+  
   //! is this a restart run ?
   int m_restart_run_enabled;
 
@@ -58,7 +67,8 @@ public:
   double               m_tEnd;      //!< maximun time
   double               m_cfl;       //!< Courant number
 
-  long long int        m_nCells;    //!< number of cells
+  long long int        m_nCells;       //!< number of cells
+  long long int        m_nDofsPerCell; //!< number of degrees of freedom per cell 
 
   //! init condition name (or problem)
   std::string          m_problem_name;

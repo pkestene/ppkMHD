@@ -236,11 +236,14 @@ SolverHydroMood<dim,degree>::SolverHydroMood(HydroParams& params,
   ssprk54_enabled(false)
 {
 
+  solver_type = SOLVER_MOOD;
+
   if (dim==3)
     nbCells = params.isize*params.jsize*params.ksize;
   
   m_nCells = nbCells;
-
+  m_nDofsPerCell = 1;
+  
   int nbvar = params.nbvar;
 
   long long int total_mem_size = 0;

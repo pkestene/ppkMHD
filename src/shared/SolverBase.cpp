@@ -20,7 +20,8 @@ namespace ppkMHD {
 // =======================================================
 SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   params(params),
-  configMap(configMap)
+  configMap(configMap),
+  solver_type(SOLVER_UNDEFINED)
 {
 
   /*
@@ -32,8 +33,9 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
    * other variables initialization.
    */
   m_times_saved = 0;
-  m_nCells = 0;
-
+  m_nCells = -1;
+  m_nDofsPerCell = -1;
+  
   // create the timers
   timers[TIMER_TOTAL]      = std::make_shared<Timer>();
   timers[TIMER_IO]         = std::make_shared<Timer>();

@@ -88,6 +88,9 @@ public:
 
   //! a type to store some coefficients needed to perform Runge-Kutta integration
   using coefs_t = std::array<real_t,3>;
+
+  constexpr int get_dim() {return dim;};
+  constexpr int get_N()   {return N;};
   
   SolverHydroSDM(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroSDM();
@@ -245,6 +248,8 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ssprk54_enabled(false)
 {
 
+  solver_type = SOLVER_SDM;
+
   if (dim==3)
     nbCells = params.isize*params.jsize*params.ksize;
   
@@ -253,6 +258,8 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
   int nb_dof = params.nbvar * nb_dof_per_cell;
 
+  m_nDofsPerCell = nb_dof_per_cell;
+  
   // useful for allocating Fluxes, for conservative variables at flux points
   int nb_dof_flux = dim==2 ? (N+1)*N*params.nbvar : (N+1)*N*N*params.nbvar;
   

@@ -183,10 +183,13 @@ SolverMHDMuscl<dim>::SolverMHDMuscl(HydroParams& params,
   nbCells(params.isize*params.jsize)
 {
 
+  solver_type = SOLVER_MUSCL_HANCOCK;
+
   if (dim==3)
     nbCells = params.isize*params.jsize*params.ksize;
   
   m_nCells = nbCells;
+  m_nDofsPerCell = 1;
   
   int nbvar = params.nbvar;
  
