@@ -6,7 +6,9 @@
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_Error.hpp>
 
-#include "real_type.h"
+#include "shared/real_type.h"
+#include "shared/utils.h"
+
 
 #ifdef CUDA
 # define DEVICE Kokkos::Cuda
@@ -58,7 +60,11 @@ typedef DataArrayVector3::HostMirror           DataArrayVector3Host;
 /* 2D */
 
 KOKKOS_INLINE_FUNCTION
-void index2coord(int index, int &i, int &j, int Nx, int Ny) {
+void index2coord(int index, int &i, int &j, int Nx, int Ny)
+{
+  UNUSED(Nx);
+  UNUSED(Ny);
+  
 #ifdef CUDA
   j = index / Nx;
   i = index - j*Nx;
@@ -69,7 +75,10 @@ void index2coord(int index, int &i, int &j, int Nx, int Ny) {
 }
 
 KOKKOS_INLINE_FUNCTION
-int coord2index(int i, int j, int Nx, int Ny) {
+int coord2index(int i, int j, int Nx, int Ny)
+{
+  UNUSED(Nx);
+  UNUSED(Ny);
 #ifdef CUDA
   return i + Nx*j; // left layout
 #else
@@ -82,7 +91,10 @@ int coord2index(int i, int j, int Nx, int Ny) {
 KOKKOS_INLINE_FUNCTION
 void index2coord(int index,
                  int &i, int &j, int &k,
-                 int Nx, int Ny, int Nz) {
+                 int Nx, int Ny, int Nz)
+{
+  UNUSED(Nx);
+  UNUSED(Nz);
 #ifdef CUDA
   int NxNy = Nx*Ny;
   k = index / NxNy;
@@ -98,7 +110,10 @@ void index2coord(int index,
 
 KOKKOS_INLINE_FUNCTION
 int coord2index(int i,  int j,  int k,
-                int Nx, int Ny, int Nz) {
+                int Nx, int Ny, int Nz)
+{
+  UNUSED(Nx);
+  UNUSED(Nz);
 #ifdef CUDA
   return i + Nx*j + Nx*Ny*k; // left layout
 #else

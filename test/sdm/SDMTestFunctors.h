@@ -62,8 +62,6 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
-    const real_t gamma0 = this->params.settings.gamma0;
-
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
@@ -132,8 +130,6 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
-    const real_t gamma0 = this->params.settings.gamma0;
-
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
