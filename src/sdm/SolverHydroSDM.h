@@ -87,10 +87,10 @@ public:
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
   //! a type to store some coefficients needed to perform Runge-Kutta integration
-  using coefs_t = std::array<real_t,3>;
+  using coefs_t = Kokkos::Array<real_t,3>;
 
-  constexpr int get_dim() {return dim;};
-  constexpr int get_N()   {return N;};
+  static constexpr int get_dim() {return dim;};
+  static constexpr int get_N()   {return N;};
   
   SolverHydroSDM(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroSDM();
@@ -749,15 +749,7 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata,
 						   DataArray Udata_fdiv,
 						   real_t dt)
 {
-  
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-  
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
-  
+    
   // evaluate flux divergence
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
   
@@ -797,14 +789,6 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
 					    DataArray Udata_fdiv, 
 					    real_t dt)
 {
-
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-  
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
 
   // ==============================================
   // first step : U_RK1 = U_n + dt * fluxes(U_n)
@@ -861,14 +845,6 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
 					    DataArray Udata_fdiv, 
 					    real_t dt)
 {
-
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-  
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
 
   // ===============================================
   // first stage : U_RK1 = U_n - dt * div_fluxes(U_n)
@@ -935,16 +911,6 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
 					     DataArray Udata_fdiv, 
 					     real_t dt)
 {
-
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-  
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
-
-  Kokkos::deep_copy(U_RK1, Udata);
 
   std::cout << "SSP-RK54 is currently unimplemented\n";
   
