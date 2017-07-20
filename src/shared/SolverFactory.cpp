@@ -33,6 +33,7 @@ SolverFactory::SolverFactory()
   registerSolver("Hydro_SDM_2D_degree2",   &sdm::SolverHydroSDM<2,2>::create);  
   registerSolver("Hydro_SDM_2D_degree3",   &sdm::SolverHydroSDM<2,3>::create);  
   registerSolver("Hydro_SDM_2D_degree4",   &sdm::SolverHydroSDM<2,4>::create);  
+  registerSolver("Hydro_SDM_3D_degree3",   &sdm::SolverHydroSDM<3,3>::create);  
 #endif // USE_SDM
   
 #ifdef USE_MOOD
