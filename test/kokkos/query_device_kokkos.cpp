@@ -52,11 +52,19 @@
 
 #include <Kokkos_Core.hpp>
 
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 int main( int argc , char ** argv )
 {
+
+  UNUSED(argc);
+  UNUSED(argv);
+  
   std::ostringstream msg ;
 
 #if defined( KOKKOS_ENABLE_MPI )

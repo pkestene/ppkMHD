@@ -442,6 +442,7 @@ void riemann_hllc(const HydroState& qleft,
 		  HydroState& flux,
 		  const HydroParams& params)
 {
+  UNUSED(qgdnv);
   
   real_t gamma0 = params.settings.gamma0;
   real_t smallr = params.settings.smallr;

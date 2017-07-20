@@ -912,6 +912,10 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
 					     real_t dt)
 {
 
+  UNUSED(Udata);
+  UNUSED(Udata_fdiv);
+  UNUSED(dt);
+
   std::cout << "SSP-RK54 is currently unimplemented\n";
   
 } // SolverHydroSDM::time_int_ssprk54
@@ -936,6 +940,8 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
 					      bool mhd_enabled)
 {
 
+  UNUSED(mhd_enabled);
+  
   const int ghostWidth=params.ghostWidth;
   int max_size = std::max(params.isize,params.jsize);
   int nbIter = ghostWidth * max_size;

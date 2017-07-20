@@ -41,6 +41,8 @@ template<int dim,
 	 int N>
 void test_sdm_io(int argc, char* argv[])
 {
+  UNUSED(argc);
+  UNUSED(argv);
 
   int myRank = 0;
 #ifdef USE_MPI

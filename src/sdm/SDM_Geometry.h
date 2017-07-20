@@ -171,6 +171,8 @@ public:
   template<int dim_ = dim>
   void init(const typename std::enable_if<dim_==2, int>::type& dummy)
   {
+
+    UNUSED(dummy);
     
     // first 1d initialization
     init_1d(SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
@@ -229,6 +231,8 @@ public:
   void init(const typename std::enable_if<dim_==3, int>::type& dummy)
   {
     
+    UNUSED(dummy);
+
     // first 1d initialization
     init_1d(SDM_SOL_GAUSS_CHEBYSHEV, SDM_FLUX_GAUSS_LEGENDRE);
     

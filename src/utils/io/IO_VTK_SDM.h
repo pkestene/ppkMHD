@@ -32,7 +32,6 @@ namespace ppkMHD { namespace io {
  */
 template<int N>
 void write_nodes_location(std::ostream& outFile,
-			  DataArray2d::HostMirror Uhost,
 			  sdm::SDM_Geometry<2,N> sdm_geom,
 			  HydroParams& params,
 			  ConfigMap& configMap,
@@ -132,7 +131,6 @@ void write_nodes_location(std::ostream& outFile,
  */
 template<int N>
 void write_nodes_location(std::ostream& outFile,
-			  DataArray3d::HostMirror Uhost,
 			  sdm::SDM_Geometry<3,N> sdm_geom,
 			  HydroParams& params,
 			  ConfigMap& configMap,
@@ -251,7 +249,6 @@ void write_nodes_location(std::ostream& outFile,
  */
 template<int N>
 void write_cells_connectivity(std::ostream& outFile,
-			      DataArray2d::HostMirror Uhost,
 			      sdm::SDM_Geometry<2,N> sdm_geom,
 			      HydroParams& params,
 			      ConfigMap& configMap,
@@ -384,7 +381,6 @@ void write_cells_connectivity(std::ostream& outFile,
  */
 template<int N>
 void write_cells_connectivity(std::ostream& outFile,
-			      DataArray3d::HostMirror Uhost,
 			      sdm::SDM_Geometry<3,N> sdm_geom,
 			      HydroParams& params,
 			      ConfigMap& configMap,
@@ -527,7 +523,6 @@ void write_cells_connectivity(std::ostream& outFile,
 template<int N>
 void write_cells_data(std::ostream& outFile,
 		      DataArray2d::HostMirror Uhost,
-		      sdm::SDM_Geometry<2,N> sdm_geom,
 		      HydroParams& params,
 		      ConfigMap& configMap,
 		      const std::map<int, std::string>& variables_names,
@@ -603,7 +598,6 @@ void write_cells_data(std::ostream& outFile,
 template<int N>
 void write_cells_data(std::ostream& outFile,
 		      DataArray3d::HostMirror Uhost,
-		      sdm::SDM_Geometry<3,N> sdm_geom,
 		      HydroParams& params,
 		      ConfigMap& configMap,
 		      const std::map<int, std::string>& variables_names,
@@ -690,6 +684,8 @@ void write_appended_binary_data(std::ostream& outFile,
 				const std::map<int, std::string>& variables_names)
 {
 
+  UNUSED(configMap);
+  
   const int nx = params.nx;
   const int ny = params.ny;
 
@@ -1199,6 +1195,8 @@ void save_VTK_SDM(DataArray2d             Udata,
 		  real_t time,
 		  std::string debug_name = "")
 {
+  UNUSED(nbvar);
+
   const int nx = params.nx;
   const int ny = params.ny;
 
@@ -1280,11 +1278,11 @@ void save_VTK_SDM(DataArray2d             Udata,
    */
   uint64_t offsetBytes = 0;
 
-  write_nodes_location<N>(outFile,Uhost,sdm_geom,params,configMap,offsetBytes);
+  write_nodes_location<N>(outFile,sdm_geom,params,configMap,offsetBytes);
 
-  write_cells_connectivity<N>(outFile, Uhost, sdm_geom, params, configMap,offsetBytes);
+  write_cells_connectivity<N>(outFile,sdm_geom,params,configMap,offsetBytes);
 
-  write_cells_data<N>(outFile, Uhost, sdm_geom, params, configMap, variables_names,offsetBytes);
+  write_cells_data<N>(outFile,Uhost,params,configMap,variables_names,offsetBytes);
   
   outFile << " </Piece>\n";
   
@@ -1324,6 +1322,8 @@ void save_VTK_SDM(DataArray3d             Udata,
 		  real_t time,
 		  std::string debug_name = "")
 {
+  UNUSED(nbvar);
+
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
@@ -1406,11 +1406,11 @@ void save_VTK_SDM(DataArray3d             Udata,
    */
   uint64_t offsetBytes = 0;
   
-  write_nodes_location<N>(outFile,Uhost,sdm_geom,params,configMap,offsetBytes);
+  write_nodes_location<N>(outFile,sdm_geom,params,configMap,offsetBytes);
   
-  write_cells_connectivity<N>(outFile, Uhost, sdm_geom, params, configMap,offsetBytes);
+  write_cells_connectivity<N>(outFile,sdm_geom,params,configMap,offsetBytes);
   
-  write_cells_data<N>(outFile, Uhost, sdm_geom, params, configMap, variables_names, offsetBytes);
+  write_cells_data<N>(outFile,Uhost,params,configMap,variables_names,offsetBytes);
   
   outFile << " </Piece>\n";
   
