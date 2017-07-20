@@ -146,7 +146,6 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
 
     const int nbvar = this->params.nbvar;
 
@@ -409,7 +408,6 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
 
     const int nbvar = this->params.nbvar;
 

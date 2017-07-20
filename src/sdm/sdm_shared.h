@@ -47,10 +47,12 @@ int DofMapFlux(int i, int j, int k, int iv) {
       0 :
       i + N    *j + N*N*k + N*N*(N+1)*iv;
     
-  }
+  } else {
 
-  // should never come here !
-  return 0;
+    // should never come here !
+    return 0;
+
+  }
   
 } // DofMapFlux
 

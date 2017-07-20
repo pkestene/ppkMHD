@@ -44,7 +44,10 @@ public:
 
   //! Spectral Difference Method Geometry information
   sdm::SDM_Geometry<dim,N> sdm_geom;
-  
+
+  //! this using allow to override base class method without any warning
+  using IO_Writer::save_data_impl;
+
   //! public interface to save data (override base class).
   void save_data_impl(DataArray     Udata,
 		      DataArrayHost Uhost,

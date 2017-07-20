@@ -102,7 +102,7 @@ public:
       j = index - i*ghostWidth;
 
       real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-      real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
+      //real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
       
       if(i >= imin && i <= imax    &&
 	 j >= 0    && j <ghostWidth) {
