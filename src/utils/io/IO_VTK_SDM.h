@@ -829,7 +829,7 @@ void write_appended_binary_data(std::ostream& outFile,
     std::vector<uint64_t> offsets;
 
     // number of nodes per cell is 4 in 2D
-    for (uint64_t i=1; i<=nx*ny*N*N; ++i) {
+    for (int64_t i=1; i<=nx*ny*N*N; ++i) {
       offsets.push_back(4*i);
     }
 
@@ -847,7 +847,7 @@ void write_appended_binary_data(std::ostream& outFile,
     std::vector<unsigned char> celltypes;
 
     // 9 means "Quad" - 12 means "Hexahedron"
-    for (uint64_t i=0; i<nx*ny*N*N; ++i) {
+    for (int64_t i=0; i<nx*ny*N*N; ++i) {
       celltypes.push_back(9);
     }
     
@@ -1078,7 +1078,7 @@ void write_appended_binary_data(std::ostream& outFile,
     std::vector<uint64_t> offsets;
 
     // number of nodes per cell is 8 in 3D
-    for (uint64_t i=1; i<=nx*ny*nz*N*N*N; ++i) {
+    for (int64_t i=1; i<=nx*ny*nz*N*N*N; ++i) {
       offsets.push_back(8*i);
     }
 
@@ -1096,7 +1096,7 @@ void write_appended_binary_data(std::ostream& outFile,
     std::vector<unsigned char> celltypes;
     
     // 9 means "Quad" - 12 means "Hexahedron"
-    for (uint64_t i=0; i<nx*ny*nz*N*N*N; ++i) {
+    for (int64_t i=0; i<nx*ny*nz*N*N*N; ++i) {
       celltypes.push_back(12);
     }
     
