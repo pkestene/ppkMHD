@@ -804,10 +804,12 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
   // ==============================================
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
     
-  // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
-  coefs_t coefs = {1.0, 0.0, -1.0};
-  SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
-  Kokkos::parallel_for(nbCells, functor);
+  // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv
+  {
+    coefs_t coefs = {1.0, 0.0, -1.0};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
   // ================================================================
   // second step :
@@ -816,9 +818,11 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
   make_boundaries(U_RK1);
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
 
-  coefs_t coefs= {0.5, 0.5, -0.5};    
-  SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, Udata, U_RK1, Udata_fdiv, coefs, dt);
-  Kokkos::parallel_for(nbCells, functor);
+  {
+    coefs_t coefs= {0.5, 0.5, -0.5};    
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, Udata, U_RK1, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
   
 } // SolverHydroSDM::time_int_ssprk2
 
