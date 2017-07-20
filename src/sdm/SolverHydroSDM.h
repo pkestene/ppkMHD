@@ -66,12 +66,13 @@ namespace sdm {
  * and Navier-Stokes Equations on Unstructured Meshes", AIAA 2006-304
  * http://aero-comlab.stanford.edu/Papers/may.aiaa.06-0304.pdf
  * When enabled, limiting procedure consists in:
- * 1. for each cell, compute reference state as average HydroState (stored in Uaverage)
+ * 1. for each cell, compute reference state as average HydroState 
+ *    (stored in Uaverage)
  * 2. for each cell, compute Umin, Umax as min max HydroState in a neighborhood
- * 3. for each cell, evaluate is the high-order cell-border reconstruction must be
- * demoted to linear reconstruction. If any of the K=number_of_faces x N reconstructed
- * state violates the TVD criterium, all the faces reconstruction will be demoted to
- * linear reconstruction.
+ * 3. for each cell, evaluate is the high-order cell-border reconstruction 
+ *    must be demoted to linear reconstruction. If any of the 
+ *    K=number_of_faces x N reconstructed state violates the TVD criterium,
+ *    all the faces reconstruction will be demoted to linear reconstruction.
  */
 template<int dim, int N>
 class SolverHydroSDM : public ppkMHD::SolverBase
@@ -85,6 +86,9 @@ public:
   //! Data array typedef for host memory space
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
+  //! a type to store some coefficients needed to perform Runge-Kutta integration
+  using coefs_t = std::array<real_t,3>;
+  
   SolverHydroSDM(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroSDM();
 
@@ -177,16 +181,15 @@ public:
   //! erase a solution data array
   void erase(DataArray data);
 
-  //! override base class boundary routine
-  //! note that when dim == 2 or dim == 3 it's a different method that
-  //! gets overridden
-  void make_boundary(DataArray  Udata,
-		     FaceIdType faceId,
-		     bool       mhd_enabled);
+  //! avoid override the base class make_boundary method
+  void make_boundary_sdm(DataArray  Udata,
+			 FaceIdType faceId,
+			 bool       mhd_enabled);
 
-  void make_boundaries(DataArray2d Udata);
-  void make_boundaries(DataArray3d Udata);
+  void make_boundaries(DataArray Udata);
 
+  void make_boundaries_sdm_serial(DataArray Udata, bool mhd_enabled);
+  
   // host routines (initialization)
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
@@ -748,12 +751,14 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata,
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
   
-  // evaluate flux derivatives (up to minus sign)
+  // evaluate flux divergence
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
   
-  // perform actual time update in place in Udata: U_{n+1} = U_{n} - dt * Udata_fdiv 
+  // perform actual time update in place in Udata: U_{n+1} = U_{n} - dt * Udata_fdiv
+  // translated into Udata = 1.0*Udata + 0.0*Udata - dt * Udata_fdiv 
   {
-    SDM_Update_Functor<dim,N> functor(params, sdm_geom, Udata, Udata_fdiv, dt);
+    coefs_t coefs = {1.0, 0.0, -1.0};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, Udata, Udata, Udata_fdiv, coefs, dt);
     Kokkos::parallel_for(nbCells, functor);
   }
   
@@ -797,28 +802,23 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
   // ==============================================
   // first step : U_RK1 = U_n + dt * fluxes(U_n)
   // ==============================================
-  Kokkos::deep_copy(U_RK1, Udata);
-  
-  // evaluate flux derivatives (up to minus sign)
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
-  
-  // perform actual time update in place in U_RK1: U_{n+1} = U_{n} - dt * Udata_fdiv 
-  {
-    SDM_Update_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata_fdiv, dt);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+    
+  // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
+  coefs_t coefs = {1.0, 0.0, -1.0};
+  SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
+  Kokkos::parallel_for(nbCells, functor);
 
-  // ==================================================================
-  // second step : U_{n+1} = 0.5 * (U_n + U_RK1 + dt * fluxes(U_RK1) )
-  // ==================================================================
-  // evaluate flux derivatives (up to minus sign)
+  // ================================================================
+  // second step :
+  // U_{n+1} = 0.5 * U_n + 0.5 * U_RK1 - 0.5 * dt * div_fluxes(U_RK1)
+  // ================================================================
+  make_boundaries(U_RK1);
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
 
-  {
-    SDM_Update_sspRK2_Functor<dim,N> functor(params, sdm_geom, Udata, U_RK1, Udata_fdiv, dt);
-    Kokkos::parallel_for(nbCells, functor);
-  }
-
+  coefs_t coefs= {0.5, 0.5, -0.5};    
+  SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, Udata, U_RK1, Udata_fdiv, coefs, dt);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // SolverHydroSDM::time_int_ssprk2
 
@@ -859,36 +859,36 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
   dtdy = dt / params.dy;
   dtdz = dt / params.dz;
 
-  // ==============================================
-  // first step : U_RK1 = U_n + dt * fluxes(U_n)
-  // ==============================================
-  Kokkos::deep_copy(U_RK1, Udata);
-  
-  // evaluate flux derivatives (up to minus sign)
+  // ===============================================
+  // first step : U_RK1 = U_n - dt * div_fluxes(U_n)
+  // ===============================================
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
   
-  // perform actual time update in place in U_RK1: U_{n+1} = U_{n} - dt * Udata_fdiv 
+  // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
   {
-    SDM_Update_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata_fdiv, dt);
+    coefs_t coefs = {1.0, 0.0, -1.0};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // ========================================================================
-  // second step : U_RK2 = 3/4 * U_n + 1/4 * U_RK1 + 1/4 * dt * fluxes(U_RK1)
-  // ========================================================================
+  // ============================================================================
+  // second step : U_RK2 = 3/4 * U_n + 1/4 * U_RK1 - 1/4 * dt * div_fluxes(U_RK1)
+  // ============================================================================
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
   {
-    //SDM_Update_RK_Functor<dim,N,SSPRK3_STEP2> functor(params, sdm_geom, Udata, U_RK1, Udata_fdiv, dt, U_RK2);
-    //Kokkos::parallel_for(nbCells, functor);
+    coefs_t coefs = {0.75, 0.25, -0.25};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
   }
   
-  // =========================================================================
-  // third step : U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 + 2/3 * dt * fluxes(U_RK2)
-  // =========================================================================
+  // =============================================================================
+  // third step : U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 - 2/3 * dt * div_fluxes(U_RK2)
+  // =============================================================================
   compute_fluxes_divergence(U_RK2, Udata_fdiv, dt);
   {
-    //SDM_Update_RK_Functor<dim,N,SSPRK3_STEP3> functor(params, sdm_geom, Udata, U_RK2, Udata_fdiv, dt, U_data);
-    //Kokkos::parallel_for(nbCells, functor);
+    coefs_t coefs = {1.0/3, 2.0/3, -2.0/3};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, Udata, U_RK2, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
   }
 
 } // SolverHydroSDM::time_int_ssprk3
@@ -950,15 +950,14 @@ void SolverHydroSDM<dim,N>::erase(DataArray data)
 // =======================================================
 // =======================================================
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::make_boundary(DataArray   Udata,
-					  FaceIdType faceId,
-					  bool mhd_enabled)
+void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
+					      FaceIdType faceId,
+					      bool mhd_enabled)
 {
 
-  
   const int ghostWidth=params.ghostWidth;
   int max_size = std::max(params.isize,params.jsize);
-  int nbIter = ghostWidth* max_size;
+  int nbIter = ghostWidth * max_size;
 
   if (dim==3) {
     max_size = std::max(max_size,params.ksize);
@@ -1008,7 +1007,6 @@ void SolverHydroSDM<dim,N>::make_boundary(DataArray   Udata,
       
     }
   }
-
   
 } // SolverHydroSDM<dim,N>::make_boundary
 
@@ -1019,25 +1017,36 @@ void SolverHydroSDM<dim,N>::make_boundary(DataArray   Udata,
 // absorbant, reflexive or periodic
 // //////////////////////////////////////////////////
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::make_boundaries(DataArray2d Udata)
+void SolverHydroSDM<dim,N>::make_boundaries(DataArray Udata)
 {
   
   bool mhd_enabled = false;
 
-  make_boundaries_serial(Udata, mhd_enabled);
+  make_boundaries_sdm_serial(Udata, mhd_enabled);
   
 } // SolverHydroSDM::make_boundaries
 
+// =======================================================
+// =======================================================
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::make_boundaries(DataArray3d Udata)
+void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
+						       bool mhd_enabled)
 {
 
-  bool mhd_enabled = false;
+  make_boundary_sdm(Udata, FACE_XMIN, mhd_enabled);
+  make_boundary_sdm(Udata, FACE_XMAX, mhd_enabled);
+  make_boundary_sdm(Udata, FACE_YMIN, mhd_enabled);
+  make_boundary_sdm(Udata, FACE_YMAX, mhd_enabled);
 
-  make_boundaries_serial(Udata, mhd_enabled);
+  if (dim==3) {
 
-} // SolverHydroSDM::make_boundaries
+    make_boundary_sdm(Udata, FACE_ZMIN, mhd_enabled);
+    make_boundary_sdm(Udata, FACE_ZMAX, mhd_enabled);
 
+  }
+    
+} // SolverHydroSDM<dim,N>::make_boundaries_sdm_serial
+    
 // =======================================================
 // =======================================================
 /**
