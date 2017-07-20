@@ -1494,6 +1494,16 @@ void write_flux_points_data(std::ostream& outFile,
  *
  * \param[in] Udata device data to save
  * \param[in,out] Uhost host data temporary array before saving to file
+ *
+ * Example usage in a SolverHydroSDM:
+ *
+ *   {
+ *	DataArrayHost FluxesHost = Kokkos::create_mirror(Fluxes);
+ *	ppkMHD::io::IO_Writer_SDM<dim,N>* p_io_writer = static_cast<typename ppkMHD::io::IO_Writer_SDM<dim,N>*>(m_io_writer.get());
+ *	p_io_writer-> template save_flux<IX>(Fluxes, FluxesHost, m_times_saved, m_t, "debug1");
+ *   }
+ *
+ *
  */
 template<int N, int dir>
 void save_VTK_SDM_Flux(DataArray2d             Udata,
