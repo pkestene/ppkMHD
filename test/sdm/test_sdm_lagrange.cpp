@@ -127,7 +127,7 @@ void test_lagrange()
 
   sdm_geom.init(0);
   
-  std::cout << "Solution poins:\n";
+  std::cout << "Solution points:\n";
   for (int j=0; j<N; ++j) {
     for (int i=0; i<N; ++i) {
       std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
@@ -141,19 +141,26 @@ void test_lagrange()
   std::cout << "1D lagrange interpolation solution to flux:\n";
   
   // create values at solution points:
-  using DataVal = Kokkos::View<real_t*>;
-  DataVal solution_values = DataVal("solution_values",N);
-  DataVal solution_values_h = Kokkos::create_mirror(solution_values);
-  
+  using DataVal     = Kokkos::View<real_t*,DEVICE>;
+  using DataValHost = Kokkos::View<real_t*,DEVICE>::HostMirror;
+  DataVal     solution_values   = DataVal("solution_values",N);
+  DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
+
   for (int i=0; i<N; ++i)
     solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
+  
+  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
+
+  LagrangeMatrixHost sol2flux_h = Kokkos::create_mirror(sdm_geom.sol2flux);
+  Kokkos::deep_copy(sol2flux_h, sdm_geom.sol2flux);
   
   for (int j=0; j<N+1; ++j) {
     
     // compute interpolated value
     real_t val=0;
     for (int k=0; k<N; ++k) {
-      val += solution_values_h(k) * sdm_geom.sol2flux(k,j);
+      val += solution_values_h(k) * sol2flux_h(k,j);
     }
     
     real_t x_j = sdm_geom.flux_pts_1d_host(j);
