@@ -203,6 +203,14 @@ if (USE_FPE_DEBUG)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_FPE_DEBUG" )
 endif()
 
+##
+## Using flags -Wextra, it's to strong for Kokkos, too many warnings
+## But -Wall is really a minimum
+##
+#add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual  -pedantic )
+#add_definitions( -Wall -Wextra )
+add_definitions( -Wall )
+
 #
 # sources
 #
@@ -219,6 +227,7 @@ message(STATUS "MPI      enabled : ${USE_MPI}")
 message(STATUS "CUDA     enabled : ${KOKKOS_ENABLE_CUDA}")
 message(STATUS "HDF5     enabled : ${USE_HDF5}")
 message(STATUS "PNETCDF  enabled : ${USE_PNETCDF}")
+message(STATUS "SDM      enabled : ${USE_SDM}")
 message(STATUS "MOOD     enabled : ${USE_MOOD}")
 message(STATUS "DOUBLE precision : ${USE_DOUBLE}")
 
