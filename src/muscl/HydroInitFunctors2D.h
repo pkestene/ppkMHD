@@ -148,8 +148,8 @@ public:
     
   } // end operator ()
   
-  DataArray2d Udata;
   BlastParams bParams;
+  DataArray2d Udata;
   
 }; // InitBlastFunctor2D
   
@@ -318,8 +318,8 @@ public:
     
   } // end operator ()
   
-  DataArray2d Udata;
   IsentropicVortexParams iparams;
+  DataArray2d Udata;
   
 }; // InitIsentropicVortexFunctor2D
 

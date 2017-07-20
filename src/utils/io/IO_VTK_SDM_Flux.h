@@ -91,6 +91,9 @@ void write_nodes_location_flux(std::ostream& outFile,
     // sub-cells layout N+1 x N  
     idx_end = N+2;
     idy_end = N+1;
+  } else {
+    idx_end = -1;
+    idy_end = -1;
   }
 
   outFile << "  <Points>\n";
@@ -738,6 +741,9 @@ void write_flux_points_data(std::ostream& outFile,
     // sub-cells layout N+1 x N  
     idx_end = N+2;
     idy_end = N+1;
+  } else {
+    idx_end = -1;
+    idy_end = -1;
   }
 
   /*

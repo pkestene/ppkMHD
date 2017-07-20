@@ -36,8 +36,8 @@ public:
 
   virtual ~SDMBaseFunctor() {};
 
-  SDM_Geometry<dim,N> sdm_geom;
   HydroParams params;
+  SDM_Geometry<dim,N> sdm_geom;
   
   /**
    * a dummy swap device routine.

@@ -60,24 +60,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ghostWidth = this->params.ghostWidth;
-    
-#ifdef USE_MPI
-    const int i_mpi = this->params.myMpiPos[IX];
-    const int j_mpi = this->params.myMpiPos[IY];
-#else
-    const int i_mpi = 0;
-    const int j_mpi = 0;
-#endif
-
-    const int nx = this->params.nx;
-    const int ny = this->params.ny;
-
-    const real_t xmin = this->params.xmin;
-    const real_t ymin = this->params.ymin;
-    const real_t dx = this->params.dx;
-    const real_t dy = this->params.dy;
-    
+     
     const real_t gamma0 = this->params.settings.gamma0;
 
     // local cell index

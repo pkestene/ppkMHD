@@ -199,8 +199,8 @@ public:
     
   } // end operator ()
   
-  DataArray3d Udata;
   BlastParams bParams;
+  DataArray3d Udata;
   
 }; // InitBlastFunctor3D_MHD
 
@@ -315,7 +315,7 @@ public:
     const real_t gamma0 = params.settings.gamma0;
     
     const double TwoPi = 4.0*asin(1.0);
-    const double B0    = 1.0/sqrt(2.0*TwoPi);
+    //const double B0    = 1.0/sqrt(2.0*TwoPi);
     const double p0    = gamma0/(2.0*TwoPi);
     //const double d0    = gamma0*p0;
     //const double v0    = 1.0;

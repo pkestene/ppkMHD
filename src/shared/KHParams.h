@@ -38,15 +38,6 @@ struct KHParams {
   KHParams(ConfigMap& configMap)
   {
 
-    double xmin = configMap.getFloat("mesh", "xmin", 0.0);
-    double ymin = configMap.getFloat("mesh", "ymin", 0.0);
-    double zmin = configMap.getFloat("mesh", "zmin", 0.0);
-
-    double xmax = configMap.getFloat("mesh", "xmax", 1.0);
-    double ymax = configMap.getFloat("mesh", "ymax", 1.0);
-    double zmax = configMap.getFloat("mesh", "zmax", 1.0);
-
-    
     d_in  = configMap.getFloat("KH", "d_in", 1.0);
     d_out = configMap.getFloat("KH", "d_out", 1.0);
 

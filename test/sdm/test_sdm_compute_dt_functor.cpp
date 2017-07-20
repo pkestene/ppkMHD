@@ -65,9 +65,6 @@ template<int dim,
 void test_compute_dt_functors()
 {
 
-  using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
-  using DataArrayHost = typename DataArray::HostMirror;
-  
   int myRank = 0;
 #ifdef USE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);

@@ -236,16 +236,16 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   SolverBase(params, configMap),
   U(), Uhost(), Uaux(),
   Fluxes(), 
-  isize(params.isize),
-  jsize(params.jsize),
-  ksize(params.ksize),
-  nbCells(params.isize*params.jsize),
   sdm_geom(),
   flux_limiting_enabled(false),
   forward_euler_enabled(true),
   ssprk2_enabled(false),
   ssprk3_enabled(false),
-  ssprk54_enabled(false)
+  ssprk54_enabled(false),
+  isize(params.isize),
+  jsize(params.jsize),
+  ksize(params.ksize),
+  nbCells(params.isize*params.jsize)
 {
 
   solver_type = SOLVER_SDM;
