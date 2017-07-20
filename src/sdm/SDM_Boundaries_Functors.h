@@ -35,7 +35,7 @@ public:
 			    SDM_Geometry<dim,N>   sdm_geom,
 			    DataArray             Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
-    Udata(Udata)  {};
+    Udata(Udata) {};
   
   // ================================================
   //
@@ -47,17 +47,17 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
   {
-    const int nx = params.nx;
-    const int ny = params.ny;
+    const int nx = this->params.nx;
+    const int ny = this->params.ny;
     
-    const int ghostWidth = params.ghostWidth;
-    const int nbvar = params.nbvar;
+    const int ghostWidth = this->params.ghostWidth;
+    const int nbvar = this->params.nbvar;
     
-    const int imin = params.imin;
-    const int imax = params.imax;
+    const int imin = this->params.imin;
+    const int imax = this->params.imax;
     
-    const int jmin = params.jmin;
-    const int jmax = params.jmax;
+    const int jmin = this->params.jmin;
+    const int jmax = this->params.jmax;
     
     int i,j;
     
@@ -65,11 +65,11 @@ public:
     
     int i0, j0;
     int iVar;
-    
+
     if (faceId == FACE_XMIN) {
       
       // boundary xmin
-      boundary_type = params.boundary_type_xmin;
+      boundary_type = this->params.boundary_type_xmin;
 
       j = index / ghostWidth;
       i = index - j*ghostWidth;
@@ -119,7 +119,7 @@ public:
     if (faceId == FACE_XMAX) {
       
       // boundary xmax
-      boundary_type = params.boundary_type_xmax;
+      boundary_type = this->params.boundary_type_xmax;
       
       j = index / ghostWidth;
       i = index - j*ghostWidth;
@@ -167,7 +167,7 @@ public:
     if (faceId == FACE_YMIN) {
       
       // boundary ymin
-      boundary_type = params.boundary_type_ymin;
+      boundary_type = this->params.boundary_type_ymin;
       
       i = index / ghostWidth;
       j = index - i*ghostWidth;
@@ -214,7 +214,7 @@ public:
     if (faceId == FACE_YMAX) {
 
       // boundary ymax
-      boundary_type = params.boundary_type_ymax;
+      boundary_type = this->params.boundary_type_ymax;
       
       i = index / ghostWidth;
       j = index - i*ghostWidth;
@@ -271,24 +271,24 @@ public:
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
   {
 
-    const int nx = params.nx;
-    const int ny = params.ny;
-    const int nz = params.nz;
+    const int nx = this->params.nx;
+    const int ny = this->params.ny;
+    const int nz = this->params.nz;
     
-    const int isize = params.isize;
-    const int jsize = params.jsize;
-    //const int ksize = params.ksize;
-    const int ghostWidth = params.ghostWidth;
-    const int nbvar = params.nbvar;
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    //const int ksize = this->params.ksize;
+    const int ghostWidth = this->params.ghostWidth;
+    const int nbvar = this->params.nbvar;
     
-    const int imin = params.imin;
-    const int imax = params.imax;
+    const int imin = this->params.imin;
+    const int imax = this->params.imax;
     
-    const int jmin = params.jmin;
-    const int jmax = params.jmax;
+    const int jmin = this->params.jmin;
+    const int jmax = this->params.jmax;
 
-    const int kmin = params.kmin;
-    const int kmax = params.kmax;
+    const int kmin = this->params.kmin;
+    const int kmax = this->params.kmax;
     
     int i,j,k;
     
@@ -304,7 +304,7 @@ public:
       j = (index - k*ghostWidth*jsize) / ghostWidth;
       i = index - j*ghostWidth - k*ghostWidth*jsize;
       
-      boundary_type = params.boundary_type_xmin;
+      boundary_type = this->params.boundary_type_xmin;
       
       if(k >= kmin && k <= kmax &&
 	 j >= jmin && j <= jmax &&
@@ -358,7 +358,7 @@ public:
 
       i += (nx+ghostWidth);
       
-      boundary_type = params.boundary_type_xmax;
+      boundary_type = this->params.boundary_type_xmax;
       
       if(k >= kmin          && k <= kmax &&
 	 j >= jmin          && j <= jmax &&
@@ -408,7 +408,7 @@ public:
       j = (index - k*isize*ghostWidth) / isize;
       i = index - j*isize - k*isize*ghostWidth;
 
-      boundary_type = params.boundary_type_ymin;
+      boundary_type = this->params.boundary_type_ymin;
       
       if(k >= kmin && k <= kmax       && 
 	 j >= 0    && j <  ghostWidth &&
@@ -461,7 +461,7 @@ public:
 
       j += (ny+ghostWidth);
 
-      boundary_type = params.boundary_type_ymax;
+      boundary_type = this->params.boundary_type_ymax;
       
       if(k >= kmin           && k <= kmax              &&
 	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
@@ -511,7 +511,7 @@ public:
       j = (index - k*isize*jsize) / isize;
       i = index - j*isize - k*isize*jsize;
 
-      boundary_type = params.boundary_type_zmin;
+      boundary_type = this->params.boundary_type_zmin;
       
       if(k >= 0    && k <  ghostWidth &&
 	 j >= jmin && j <= jmax       &&
@@ -564,7 +564,7 @@ public:
 
       k += (nz+ghostWidth);
 
-      boundary_type = params.boundary_type_zmax;
+      boundary_type = this->params.boundary_type_zmax;
       
       if(k >= nz+ghostWidth && k <= nz+2*ghostWidth-1 &&
 	 j >= jmin          && j <= jmax              &&
@@ -609,7 +609,6 @@ public:
 
   } // end operator () - 3d
   
-  HydroParams params;
   DataArray Udata;
   
 }; // MakeBoundariesFunctor_SDM
