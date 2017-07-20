@@ -69,28 +69,36 @@ void test_lagrange_derivative()
   std::cout << "1D lagrange derivative interpolation (flux to solution points):\n";
   
   // create values at solution points:
-  using DataVal = Kokkos::View<real_t*>;
-  DataVal solution_values = DataVal("solution_values",N);
-  DataVal solution_values_h = Kokkos::create_mirror(solution_values);
+  using DataVal     = Kokkos::View<real_t*,DEVICE>;
+  using DataValHost = Kokkos::View<real_t*,DEVICE>::HostMirror;
 
-  DataVal flux_values = DataVal("flux_values",N);
-  DataVal flux_values_h = Kokkos::create_mirror(flux_values);
+  DataVal     solution_values   = DataVal("solution_values",N);
+  DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
+
+  DataVal     flux_values   = DataVal("flux_values",N);
+  DataValHost flux_values_h = Kokkos::create_mirror(flux_values);
   
   for (int i=0; i<N+1; ++i)
     flux_values_h(i) = f(sdm_geom.flux_pts_1d_host(i));
 
+  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
+  
+  LagrangeMatrixHost flux2sol_derivative_h = Kokkos::create_mirror(sdm_geom.flux2sol_derivative);
+  Kokkos::deep_copy(flux2sol_derivative_h, sdm_geom.flux2sol_derivative);
+  
   // evaluate derivative at solution points
   for (int j=0; j<N; ++j) {
     
     // compute interpolated value
     real_t val=0;
     for (int k=0; k<N+1; ++k) {
-      val += flux_values_h(k) * sdm_geom.flux2sol_derivative(k,j);
+      val += flux_values_h(k) * flux2sol_derivative_h(k,j);
     }
     
     real_t x_j = sdm_geom.solution_pts_1d_host(j);
     
-    printf("Interpolated derivative value at %f is %f - exact value is %f (difference with exact value is %f)\n",x_j,val, df_4(x_j), val-df_4(x_j));
+    printf("Interpolated derivative value at %f is %f - exact value is %f (difference with exact value is %f)\n",x_j,val, df(x_j), val-df(x_j));
     
   }
   
