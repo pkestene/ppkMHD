@@ -864,20 +864,22 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
   dtdz = dt / params.dz;
 
   // ===============================================
-  // first step : U_RK1 = U_n - dt * div_fluxes(U_n)
+  // first stage : U_RK1 = U_n - dt * div_fluxes(U_n)
   // ===============================================
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
   
-  // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
+  // perform : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
     SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // ============================================================================
-  // second step : U_RK2 = 3/4 * U_n + 1/4 * U_RK1 - 1/4 * dt * div_fluxes(U_RK1)
-  // ============================================================================
+  // ==============================================================
+  // second stage :
+  // U_RK2 = 3/4 * U_n + 1/4 * U_RK1 - 1/4 * dt * div_fluxes(U_RK1)
+  // ==============================================================
+  make_boundaries(U_RK1);
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
   {
     coefs_t coefs = {0.75, 0.25, -0.25};
@@ -885,9 +887,11 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
     Kokkos::parallel_for(nbCells, functor);
   }
   
-  // =============================================================================
-  // third step : U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 - 2/3 * dt * div_fluxes(U_RK2)
-  // =============================================================================
+  // ================================================================
+  // third stage :
+  // U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 - 2/3 * dt * div_fluxes(U_RK2)
+  // ================================================================
+  make_boundaries(U_RK2);
   compute_fluxes_divergence(U_RK2, Udata_fdiv, dt);
   {
     coefs_t coefs = {1.0/3, 2.0/3, -2.0/3};
