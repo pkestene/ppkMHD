@@ -42,7 +42,6 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ghostWidth = this->params.ghostWidth;
 
     // local cell index
     int i,j;
@@ -74,7 +73,6 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
     
     // local cell index
     int i,j,k;
@@ -356,7 +354,7 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
 
-  using coefs_t = std::array<real_t,3>;
+  using coefs_t = Kokkos::Array<real_t,3>;
   
   static constexpr auto dofMap = DofMap<dim,N>;
 

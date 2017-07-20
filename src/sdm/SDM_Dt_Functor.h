@@ -253,7 +253,7 @@ public:
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
 
-    const int nbvar = this->params.nbvar;
+    //const int nbvar = this->params.nbvar;
 
     // to take into account the N DoF per direction per cell
     // we divide dx,dy by N
@@ -374,7 +374,7 @@ public:
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
 
-    const int nbvar = this->params.nbvar;
+    //const int nbvar = this->params.nbvar;
 
     // to take into account the N DoF per direction per cell
     // we divide dx,dy,dz by N

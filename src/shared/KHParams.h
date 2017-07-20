@@ -61,7 +61,7 @@ struct KHParams {
 
     if (p_rand) {
       // to do get MPI rank
-      int mpiRank = 0;
+      //int mpiRank = 0;
 
       // choose a different random seed per mpi rank
       seed = configMap.getInteger("KH", "rand_seed", 12);
