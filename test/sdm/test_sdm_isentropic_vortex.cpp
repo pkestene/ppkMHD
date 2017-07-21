@@ -17,7 +17,12 @@
 #include "shared/solver_utils.h" // print monitoring information
 
 // solver
-#include "shared/SolverFactory.h"
+//#include "shared/SolverFactory.h"
+#include "sdm/SolverHydroSDM.h"
+
+// compare / compute L1/L2 norm of the difference between solver solution
+// and the exact solution (which is also the initial condition)
+#include "sdm/SDM_Compute_error.h"
 
 enum RK_type {
   FORWARD_EULER=1,
@@ -41,8 +46,8 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "[run]\n";
   outFile << "solver_name=Hydro_SDM_2D_degree" << N << "\n";
   outFile << "tEnd=10\n";
-  outFile << "nStepmax=3000\n";
-  outFile << "nOutput=20\n";
+  outFile << "nStepmax=1000000\n";
+  outFile << "nOutput=1\n";
   outFile << "\n";
 
   outFile << "[mesh]\n";
@@ -117,16 +122,55 @@ void generate_input_file(int N, int size, int runge_kutta)
 // ===============================================================
 // ===============================================================
 // ===============================================================
-void test_isentropic_vortex(int N, int size, int runge_kutta)
+template<int N, int norm_type>
+real_t compute_L2_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
+{
+  
+  real_t norm = 0.0;
+  
+  int nbCells =
+    solver->params.isize *
+    solver->params.jsize;
+  
+  // retrieve exact solution in auxiliary data arrary : solver.Uaux
+  {
+    IsentropicVortexParams iparams(solver->configMap);
+
+    sdm::InitIsentropicVortexFunctor<2,N> functor(solver->params,
+						  solver->sdm_geom,
+						  iparams,
+						  solver->Uaux);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // perform the actual comparison
+  {
+    sdm::Compute_Error_Functor_2d<N,norm_type> functor(solver->params,
+						       solver->sdm_geom,
+						       solver->U,
+						       solver->Uaux,
+						       ID);
+    Kokkos::parallel_reduce(nbCells, functor, norm);
+  }
+  
+  return norm/nbCells/N/N; 
+  
+} // compute_L2_versus_exact
+
+// ===============================================================
+// ===============================================================
+// ===============================================================
+template<int N, int norm_type>
+real_t test_isentropic_vortex(int size, int runge_kutta)
 {
 
   using namespace ppkMHD;
 
   std::cout << "###############################\n";
   std::cout << "Running isentropic vortex test \n";
-  std::cout << "N    =" << N << "\n";
-  std::cout << "size =" << size << "\n";
-  std::cout << "Runge-Kutta order=" << runge_kutta << "\n";
+  std::cout << "N    = " << N << "\n";
+  std::cout << "size = " << size << "\n";
+  std::cout << "Runge-Kutta order= " << runge_kutta << "\n";
   std::cout << "###############################\n";
 
   generate_input_file(N,size,runge_kutta);
@@ -144,10 +188,9 @@ void test_isentropic_vortex(int N, int size, int runge_kutta)
   const std::string solver_name = configMap.getString("run", "solver_name", "Unknown");
 
   // initialize workspace memory (U, U2, ...)
-  SolverBase *solver = SolverFactory::Instance().create(solver_name,
-							params,
-							configMap);
-
+  sdm::SolverHydroSDM<2,N>* solver = new sdm::SolverHydroSDM<2,N>(params, configMap);
+  solver->init_io_writer();
+  
   if (params.nOutput != 0)
     solver->save_solution();
   
@@ -171,12 +214,16 @@ void test_isentropic_vortex(int N, int size, int runge_kutta)
   
   printf("final time is %f\n", solver->m_t);
 
-  //compute_L2_versus_exact(solver);
+  real_t error = compute_L2_versus_exact<N,norm_type>(solver);
   
   print_solver_monitoring_info(solver);
+
+  printf("test isentropic vortex for N=%d, size=%d, error=%5.3f\n",N,size,error);
   
   delete solver;
 
+  return error;
+  
 } // test_isentropic_vortex
 
 
@@ -223,11 +270,55 @@ int main(int argc, char *argv[])
     
   }
 
-  // testing convergence
-  test_isentropic_vortex(2, 50,SSP_RK2);
-  // test_isentropic_vortex(2,100,SSP_RK2);
-  // test_isentropic_vortex(2,200,SSP_RK2);
-  // test_isentropic_vortex(2,400,SSP_RK2);
+  // default order to test
+  int order = 2;
+
+  // check command line for another order to test
+  if (argc > 1) {
+    int tmp = std::atoi(argv[1]);
+    if (tmp >= 1 and tmp < 7)
+      order = tmp;
+  }
+
+  std::array<real_t, 4> results;
+  
+  if (order==2) {
+
+    std::array<int, 4> sizes={40, 80, 160, 320};
+    
+    // testing convergence for second order N=2
+    for (std::size_t i = 0; i<sizes.size(); ++i)
+      results[i] = test_isentropic_vortex<2,sdm::NORM_L1>(sizes[i],SSP_RK2);
+
+    for (std::size_t i = 0; i<sizes.size(); ++i)
+      printf("order %d, size=%4d, error=%6.4e\n",order,sizes[i],results[i]);
+    
+  } else if (order==3) {
+
+    std::array<int, 4> sizes={20, 40, 80, 160};
+
+    // testing convergence for order N=3
+    for (std::size_t i = 0; i<sizes.size(); ++i)
+      results[i] = test_isentropic_vortex<3,sdm::NORM_L1>(sizes[i],SSP_RK2);
+
+    for (std::size_t i = 0; i<sizes.size(); ++i)
+      printf("order %d, size=%4d, error=%6.4e\n",order,sizes[i],results[i]);
+    
+  } else if (order==4) {
+
+    std::array<int, 4> sizes={10, 20, 40, 80};
+
+    // testing convergence for order N=4
+    for (std::size_t i = 0; i<sizes.size(); ++i)
+      results[i] = test_isentropic_vortex<4,sdm::NORM_L1>(sizes[i],SSP_RK3);
+
+    for (std::size_t i = 0; i<sizes.size(); ++i)
+      printf("order %d, size=%4d, error=%6.4e\n",order,sizes[i],results[i]);
+    
+  }
+
+  // save result in a numpy compatible file (for plotting with python / matplotlib)
+  
   
 #ifdef CUDA
   Kokkos::Cuda::finalize();
@@ -239,3 +330,4 @@ int main(int argc, char *argv[])
   return EXIT_SUCCESS;
 
 } // end main
+
