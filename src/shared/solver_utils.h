@@ -31,11 +31,11 @@ inline void print_solver_monitoring_info(SolverBase* solver)
   if (solver->solver_type == SOLVER_SDM) {
     int nCells = solver->m_nCells;
     int nb_dof_per_cell = solver->m_nDofsPerCell;
-     printf("Perf (DoF)       : %10.2f number of MDoF-updates/s\n",solver->m_iteration*nCells*nb_dof_per_cell/t_tot*1e-6);
+     printf("Perf (DoF)       : %5.3f number of MDoF-updates/s\n",solver->m_iteration*nCells*nb_dof_per_cell/t_tot*1e-6);
   }
 #endif // USE_SDM
   
-  printf("Perf             : %10.2f number of Mcell-updates/s\n",solver->m_iteration*solver->m_nCells/t_tot*1e-6);
+  printf("Perf             : %5.3f number of Mcell-updates/s\n",solver->m_iteration*solver->m_nCells/t_tot*1e-6);
   
 } // print_solver_monitoring_info
 
