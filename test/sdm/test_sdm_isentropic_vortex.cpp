@@ -47,7 +47,7 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "solver_name=Hydro_SDM_2D_degree" << N << "\n";
   outFile << "tEnd=10\n";
   outFile << "nStepmax=1000000\n";
-  outFile << "nOutput=1\n";
+  outFile << "nOutput=2\n";
   outFile << "\n";
 
   outFile << "[mesh]\n";
@@ -218,7 +218,7 @@ real_t test_isentropic_vortex(int size, int runge_kutta)
   
   print_solver_monitoring_info(solver);
 
-  printf("test isentropic vortex for N=%d, size=%d, error=%5.3f\n",N,size,error);
+  printf("test isentropic vortex for N=%d, size=%d, error=%6.4e\n",N,size,error);
   
   delete solver;
 
@@ -226,7 +226,40 @@ real_t test_isentropic_vortex(int size, int runge_kutta)
   
 } // test_isentropic_vortex
 
+template<int N>
+void run_test()
+{
+  std::array<real_t, 4> results;
 
+  // setup
+  std::array<int, 4> sizes;
+  int RK_type;
+  if (N==2) {
+    sizes = {40, 80, 160, 320};
+    RK_type = SSP_RK2;
+  } else if (N==3) {
+    sizes = {20, 40, 80, 160};
+    RK_type = SSP_RK3;
+  } else if (N==4) {
+    sizes = {10, 20, 40, 80};
+    RK_type = SSP_RK3;
+  }
+
+  // action
+  for (std::size_t i = 0; i<sizes.size(); ++i)
+    results[i] = test_isentropic_vortex<N,sdm::NORM_L1>(sizes[i],RK_type);
+
+  // report
+  for (std::size_t i = 0; i<sizes.size(); ++i) {
+    if (i==0)
+      printf("order %d, size=%4d, error = %6.4e, order = --   \n",N,sizes[i],results[i]);
+    else
+      printf("order %d, size=%4d, error = %6.4e, order = %5.3f\n",N,sizes[i],results[i],log(results[i-1]/results[i])/log(2.0));
+  }
+  
+} // run_test
+
+  
 // ===============================================================
 // ===============================================================
 // ===============================================================
@@ -280,45 +313,23 @@ int main(int argc, char *argv[])
       order = tmp;
   }
 
-  std::array<real_t, 4> results;
-  
   if (order==2) {
 
-    std::array<int, 4> sizes={40, 80, 160, 320};
-    
-    // testing convergence for second order N=2
-    for (std::size_t i = 0; i<sizes.size(); ++i)
-      results[i] = test_isentropic_vortex<2,sdm::NORM_L1>(sizes[i],SSP_RK2);
+    run_test<2>();
 
-    for (std::size_t i = 0; i<sizes.size(); ++i)
-      printf("order %d, size=%4d, error=%6.4e\n",order,sizes[i],results[i]);
-    
   } else if (order==3) {
 
-    std::array<int, 4> sizes={20, 40, 80, 160};
-
-    // testing convergence for order N=3
-    for (std::size_t i = 0; i<sizes.size(); ++i)
-      results[i] = test_isentropic_vortex<3,sdm::NORM_L1>(sizes[i],SSP_RK2);
-
-    for (std::size_t i = 0; i<sizes.size(); ++i)
-      printf("order %d, size=%4d, error=%6.4e\n",order,sizes[i],results[i]);
+    run_test<3>();
     
   } else if (order==4) {
 
-    std::array<int, 4> sizes={10, 20, 40, 80};
+    run_test<4>();
 
-    // testing convergence for order N=4
-    for (std::size_t i = 0; i<sizes.size(); ++i)
-      results[i] = test_isentropic_vortex<4,sdm::NORM_L1>(sizes[i],SSP_RK3);
-
-    for (std::size_t i = 0; i<sizes.size(); ++i)
-      printf("order %d, size=%4d, error=%6.4e\n",order,sizes[i],results[i]);
-    
   }
+    
 
   // save result in a numpy compatible file (for plotting with python / matplotlib)
-  
+  // TODO
   
 #ifdef CUDA
   Kokkos::Cuda::finalize();
