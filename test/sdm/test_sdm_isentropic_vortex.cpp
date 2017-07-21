@@ -3,12 +3,16 @@
  *
  * Perform simulation from t=0 to t=10.0 and compute L1 / L2 error.
  *
+ * You can increase the range of mesh sizes to test in routine run_test.
+ * There is a custom range of each scheme order.
+ *
  * \date July, 21st 2017
  * \author P. Kestener
  */
 
 #include <cstdlib>
 #include <cstdio>
+#include <array>
 
 #include "shared/kokkos_shared.h"
 
@@ -29,6 +33,8 @@ enum RK_type {
   SSP_RK2=2,
   SSP_RK3=3
 };
+
+using errors_t = std::array<real_t,2>;
 
 /**
  * Generate a test parameter file.
@@ -122,11 +128,22 @@ void generate_input_file(int N, int size, int runge_kutta)
 // ===============================================================
 // ===============================================================
 // ===============================================================
-template<int N, int norm_type>
-real_t compute_L2_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
+/**
+ * compute both L1 and L2 error between simulation and exact solution.
+ *
+ * \param[in]  solver is the state of the simulation after a run, 
+ *             solution is in solver->U
+ *
+ * \return an array containing the L1 and L2 errors.
+ */
+template<int N>
+errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
 {
+
+  errors_t error;
   
-  real_t norm = 0.0;
+  real_t error_L1 = 0.0;
+  real_t error_L2 = 0.0;
   
   int nbCells =
     solver->params.isize *
@@ -143,25 +160,36 @@ real_t compute_L2_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // perform the actual comparison
+  // perform the actual error computation
   {
-    sdm::Compute_Error_Functor_2d<N,norm_type> functor(solver->params,
-						       solver->sdm_geom,
-						       solver->U,
-						       solver->Uaux,
-						       ID);
-    Kokkos::parallel_reduce(nbCells, functor, norm);
+    sdm::Compute_Error_Functor_2d<N,sdm::NORM_L1> functor(solver->params,
+							  solver->sdm_geom,
+							  solver->U,
+							  solver->Uaux,
+							  ID);
+    Kokkos::parallel_reduce(nbCells, functor, error_L1);
+    error[sdm::NORM_L1] = error_L1/nbCells/N/N;
   }
+
+  {
+    sdm::Compute_Error_Functor_2d<N,sdm::NORM_L2> functor(solver->params,
+							  solver->sdm_geom,
+							  solver->U,
+							  solver->Uaux,
+							  ID);
+    Kokkos::parallel_reduce(nbCells, functor, error_L2);
+    error[sdm::NORM_L2] = std::sqrt(error_L2)/nbCells/N/N;
+  }
+
+  return error;
   
-  return norm/nbCells/N/N; 
-  
-} // compute_L2_versus_exact
+} // compute_error_versus_exact
 
 // ===============================================================
 // ===============================================================
 // ===============================================================
-template<int N, int norm_type>
-real_t test_isentropic_vortex(int size, int runge_kutta)
+template<int N>
+errors_t test_isentropic_vortex(int size, int runge_kutta)
 {
 
   using namespace ppkMHD;
@@ -214,11 +242,11 @@ real_t test_isentropic_vortex(int size, int runge_kutta)
   
   printf("final time is %f\n", solver->m_t);
 
-  real_t error = compute_L2_versus_exact<N,norm_type>(solver);
+  errors_t error = compute_error_versus_exact<N>(solver);
   
   print_solver_monitoring_info(solver);
 
-  printf("test isentropic vortex for N=%d, size=%d, error=%6.4e\n",N,size,error);
+  printf("test isentropic vortex for N=%d, size=%d, error L1=%6.4e, error L2=%6.4e\n",N,size,error[sdm::NORM_L1],error[sdm::NORM_L2]);
   
   delete solver;
 
@@ -229,13 +257,15 @@ real_t test_isentropic_vortex(int size, int runge_kutta)
 template<int N>
 void run_test()
 {
-  std::array<real_t, 4> results;
+  std::array<real_t, 4> results_L1;
+  std::array<real_t, 4> results_L2;
 
   // setup
   std::array<int, 4> sizes;
   int RK_type;
   if (N==2) {
-    sizes = {40, 80, 160, 320};
+    //sizes = {40, 80, 160, 320};
+    sizes = {20, 40, 80, 160};
     RK_type = SSP_RK2;
   } else if (N==3) {
     sizes = {20, 40, 80, 160};
@@ -243,18 +273,35 @@ void run_test()
   } else if (N==4) {
     sizes = {10, 20, 40, 80};
     RK_type = SSP_RK3;
+  } else if (N==5) {
+    sizes = {5, 10, 20, 40};
+    RK_type = SSP_RK3;
+  } else if (N==6) {
+    sizes = {5, 10, 20, 40};
+    RK_type = SSP_RK3;
   }
 
   // action
-  for (std::size_t i = 0; i<sizes.size(); ++i)
-    results[i] = test_isentropic_vortex<N,sdm::NORM_L1>(sizes[i],RK_type);
-
-  // report
+  for (std::size_t i = 0; i<sizes.size(); ++i) {
+    errors_t error = test_isentropic_vortex<N>(sizes[i],RK_type);
+    results_L1[i] = error[sdm::NORM_L1];
+    results_L2[i] = error[sdm::NORM_L2];
+  }
+  
+  // report results with norm L1
   for (std::size_t i = 0; i<sizes.size(); ++i) {
     if (i==0)
-      printf("order %d, size=%4d, error = %6.4e, order = --   \n",N,sizes[i],results[i]);
+      printf("order %d, size=%4d, error L1 = %6.4e, order = --   \n",N,sizes[i],results_L1[i]);
     else
-      printf("order %d, size=%4d, error = %6.4e, order = %5.3f\n",N,sizes[i],results[i],log(results[i-1]/results[i])/log(2.0));
+      printf("order %d, size=%4d, error L1 = %6.4e, order = %5.3f\n",N,sizes[i],results_L1[i],log(results_L1[i-1]/results_L1[i])/log(2.0));
+  }
+  
+  // report results with norm L2
+  for (std::size_t i = 0; i<sizes.size(); ++i) {
+    if (i==0)
+      printf("order %d, size=%4d, error L2 = %6.4e, order = --   \n",N,sizes[i],results_L2[i]);
+    else
+      printf("order %d, size=%4d, error L2 = %6.4e, order = %5.3f\n",N,sizes[i],results_L2[i],log(results_L2[i-1]/results_L2[i])/log(2.0));
   }
   
 } // run_test
@@ -324,6 +371,14 @@ int main(int argc, char *argv[])
   } else if (order==4) {
 
     run_test<4>();
+
+  } else if (order==5) {
+
+    run_test<5>();
+
+  } else if (order==6) {
+
+    run_test<6>();
 
   }
     
