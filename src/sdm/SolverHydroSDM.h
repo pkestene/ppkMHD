@@ -210,11 +210,14 @@ public:
   //! flux limiting procedure
   bool flux_limiting_enabled;
   
-  // time integration
+  //! time integration
   bool forward_euler_enabled;
   bool ssprk2_enabled;
   bool ssprk3_enabled;
   bool ssprk54_enabled;
+
+  //! limiter (for shock capturing features)
+  bool limiter_enabled;
   
   int isize, jsize, ksize, nbCells;
 
@@ -242,6 +245,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ssprk2_enabled(false),
   ssprk3_enabled(false),
   ssprk54_enabled(false),
+  limiter_enabled(false),
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
@@ -346,6 +350,23 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     
   }
 
+  /*
+   * limiter
+   */
+  limiter_enabled = configMap.getBool("sdm", "limiter_enabled", false);
+  if (limiter_enabled) {
+    
+    if (dim==2) {
+      Uaverage = DataArray("Uaverage",isize,jsize,params.nbvar);
+      Umin     = DataArray("Umin"    ,isize,jsize,params.nbvar);
+      Umax     = DataArray("Umax"    ,isize,jsize,params.nbvar);
+    } else if (dim==3) {
+      Uaverage = DataArray("Uaverage",isize,jsize,ksize,params.nbvar);
+      Umin     = DataArray("Umin"    ,isize,jsize,ksize,params.nbvar);
+      Umax     = DataArray("Umax"    ,isize,jsize,ksize,params.nbvar);
+    }
+  }
+  
   /*
    * initialize hydro array at t=0
    */
