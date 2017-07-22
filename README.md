@@ -58,4 +58,11 @@ If you want to enforce the use of OpenBLAS, just use a recent CMake (>=3.6) and 
 
 On a recent Ubuntu, if atlas is not installed, but OpenBLAS is, you don't need to have a bleeding edge CMake, current cmake will find OpenBLAS.
 
+### Developping with vim and youcomplete plugin
+
+Assuming you are using vim (or neovim) text editor and have installed the youcomplete plugin, you can have
+semantic autocompletion in a C++ project.
+
+Make sure to have CMake variable CMAKE_EXPORT_COMPILE_COMMANDS set to ON, and symlink the generated file to the top level
+source directory.
 
