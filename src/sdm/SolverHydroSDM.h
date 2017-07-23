@@ -30,6 +30,7 @@
 #include "sdm/SDM_Flux_Functors.h"
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
+#include "sdm/SDM_Limiter_Functors.h"
 //#include "sdm/SDM_UpdateFunctors.h"
 
 // for IO
@@ -635,7 +636,17 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 
   // erase Udata_fdiv
   erase(Udata_fdiv);
+ 
+  // if limiter computation is enabled first compute Uaverage (cell volume averaged conservative variables) 
+  {
+    Average_Conservative_Variables_Functor<dim,N> functor(params,
+                                                          sdm_geom,
+                                                          Udata,
+                                                          Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
   
+
   //
   // Dir X
   //
