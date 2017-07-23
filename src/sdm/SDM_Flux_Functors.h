@@ -21,7 +21,7 @@ namespace sdm {
 /*************************************************/
 /*************************************************/
 /**
- * This functor compute fluxes at fluxes points taking
+ * This functor computes fluxes at fluxes points taking
  * as input conservative variables at fluxes points.
  *
  * We first compute fluxes at flux points interior to cell, then 
