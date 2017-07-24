@@ -112,8 +112,11 @@ void test_sdm_lsq_gradient()
     printf("%f %f\n",mat[0][0], mat[0][1]);
     printf("%f %f\n",mat[1][0], mat[1][1]);
 
-    printf("df/dx=%f - exact is %f\n",rhs[0]/mat[0][0],f_x(xc,yc,z));
-    printf("df/dy=%f - exact is %f\n",rhs[1]/mat[1][1],f_y(xc,yc,z));
+    /*printf("df/dx=%f - exact is %f\n",rhs[0]/mat[0][0],f_x(xc,yc,z));
+      printf("df/dy=%f - exact is %f\n",rhs[1]/mat[1][1],f_y(xc,yc,z));*/
+
+    printf("df/dx=%f - exact is %f\n",rhs[0]/sdm_geom.sum_dx_square,f_x(xc,yc,z));
+    printf("df/dy=%f - exact is %f\n",rhs[1]/sdm_geom.sum_dx_square,f_y(xc,yc,z));
     
   } else {
 
@@ -154,8 +157,8 @@ void test_sdm_lsq_gradient()
       printf("df/dz=%f - exact is %f\n",rhs[2]/mat[2][2],f_z(xc,yc,zc));*/
 
     printf("df/dx=%f - exact is %f\n",rhs[0]/sdm_geom.sum_dx_square,f_x(xc,yc,zc));
-    printf("df/dy=%f - exact is %f\n",rhs[1]/sdm_geom.sum_dx_square,f_y(xc,yc,zc));
-    printf("df/dz=%f - exact is %f\n",rhs[2]/sdm_geom.sum_dx_square,f_z(xc,yc,zc));
+    printf("df/dy=%f - exact is %f\n",rhs[1]/sdm_geom.sum_dy_square,f_y(xc,yc,zc));
+    printf("df/dz=%f - exact is %f\n",rhs[2]/sdm_geom.sum_dz_square,f_z(xc,yc,zc));
 
   }
 
