@@ -141,3 +141,16 @@ endif()
 # copy input parameter files for testing SDM Limiter test
 configure_file(test_sdm_limiter_2D.ini test_sdm_limiter_2D.ini COPYONLY)
 configure_file(test_sdm_limiter_3D.ini test_sdm_limiter_3D.ini COPYONLY)
+
+##############################################
+add_executable(test_sdm_lsq_gradient
+  test_sdm_lsq_gradient.cpp)
+target_include_directories(test_sdm_lsq_gradient
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+target_link_libraries(test_sdm_lsq_gradient config io shared monitoring kokkos hwloc dl)
+
+if (USE_MPI)
+  target_link_libraries(test_sdm_lsq_gradient mpiUtils)
+endif()
