@@ -156,6 +156,11 @@ public:
 
   /**@}*/
 
+  //! some useful variables for estimating gradient at cell center
+  //! taking into account symetry of the solution points layout
+  real_t sum_dx_square;
+  real_t sum_dy_square;
+  real_t sum_dz_square;
   
   /**
    * Init solution and flux points locations.
@@ -196,6 +201,20 @@ public:
     
     // copy solution point coordinates on DEVICE
     Kokkos::deep_copy(solution_pts, solution_pts_host);
+
+    // init variables for gradient at cell center estimation
+    sum_dx_square = 0.0;
+    sum_dy_square = 0.0;
+    for (int j=0; j<N; ++j) {
+      real_t dy = solution_pts_1d_host(j) - 0.5;
+
+      for (int i=0; i<N; ++i) {
+	real_t dx = solution_pts_1d_host(i) - 0.5;
+
+	sum_dx_square += dx*dx;
+	sum_dy_square += dy*dy;
+      }
+    }
     
     // =================
     // Flux points
@@ -259,6 +278,26 @@ public:
     // copy solution point coordinates on DEVICE
     Kokkos::deep_copy(solution_pts, solution_pts_host);
     
+    // init variables for gradient at cell center estimation
+    sum_dx_square = 0.0;
+    sum_dy_square = 0.0;
+    sum_dz_square = 0.0;
+    for (int k=0; k<N; ++k) {
+      real_t dz = solution_pts_1d_host(k) - 0.5;
+
+      for (int j=0; j<N; ++j) {
+	real_t dy = solution_pts_1d_host(j) - 0.5;
+	
+	for (int i=0; i<N; ++i) {
+	  real_t dx = solution_pts_1d_host(i) - 0.5;
+	  
+	  sum_dx_square += dx*dx;
+	  sum_dy_square += dy*dy;
+	  sum_dz_square += dz*dz;
+	}
+      }
+    }
+
     // =================
     // Flux points
     // =================
