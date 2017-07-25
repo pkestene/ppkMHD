@@ -676,13 +676,18 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
     
     // 2. inplace computation of fluxes along X direction at flux points
     if (limiter_enabled) {
-      // ComputeFluxAtFluxPoints_with_Limiter_Functor<dim,N,IX> functor(params,
-      // 								     sdm_geom,
-      // 								     euler,
-      // 								     Uaverage,
-      // 								     Umin, Umax,
-      // 								     Fluxes);
-      // Kokkos::parallel_for(nbCells, functor);
+      // compute flux at interior flux points +
+      // reconstructed state at cell borders
+      {
+	ComputeFluxAtFluxPoints_with_Limiter_Functor<dim,N,IX> functor(params,
+								       sdm_geom,
+								       euler,
+								       Udata,
+								       Uaverage,
+								       Umin, Umax,
+								       Fluxes);
+	Kokkos::parallel_for(nbCells, functor);
+      }
     } else {
       ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(params,
 							sdm_geom,
