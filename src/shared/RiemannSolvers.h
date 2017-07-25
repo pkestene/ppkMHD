@@ -209,6 +209,8 @@ void riemann_approx(const HydroState& qleft,
  *
  * Reference : E.F. Toro, Riemann solvers and numerical methods for
  * fluid dynamics, Springer, chapter 10 (The HLL and HLLC Riemann solver).
+ * See section 10.5.1, equation 10.43 which gives the expression of S+ denoted here
+ * as cmax.
  *
  * @param[in] qleft  : input left  state (primitive variables)
  * @param[in] qright : input right state (primitive variables)
