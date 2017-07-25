@@ -638,14 +638,26 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   erase(Udata_fdiv);
  
   // if limiter computation is enabled first compute Uaverage (cell volume averaged conservative variables) 
-  {
-    Average_Conservative_Variables_Functor<dim,N> functor(params,
-                                                          sdm_geom,
-                                                          Udata,
-                                                          Uaverage);
-    Kokkos::parallel_for(nbCells, functor);
-  }
-  
+  if (limiter_enabled) {
+    // compute Uaverage
+    {
+      Average_Conservative_Variables_Functor<dim,N> functor(params,
+							    sdm_geom,
+							    Udata,
+							    Uaverage);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+    
+    // compute Umin / Umax
+    {
+      MinMax_Conservative_Variables_Functor<dim,N> functor(params,
+							   sdm_geom,
+							   Uaverage,
+							   Umin,
+							   Umax);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+  } // end limiter_enabled
 
   //
   // Dir X
