@@ -32,7 +32,7 @@
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
 #include "sdm/SDM_Limiter_Functors.h"
-//#include "sdm/SDM_UpdateFunctors.h"
+#include "sdm/SDM_Positivity_preserving.h"
 
 // for IO
 #include "utils/io/IO_Writer_SDM.h"
