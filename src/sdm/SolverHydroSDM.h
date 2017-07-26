@@ -28,6 +28,7 @@
 #include "sdm/SDM_Dt_Functor.h"
 #include "sdm/SDM_Interpolate_Functors.h"
 #include "sdm/SDM_Flux_Functors.h"
+#include "sdm/SDM_Flux_with_Limiter_Functors.h"
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
 #include "sdm/SDM_Limiter_Functors.h"
