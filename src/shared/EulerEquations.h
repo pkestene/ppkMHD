@@ -132,13 +132,15 @@ struct EulerEquations<2>
 			    real_t            gamma0)
   {
 
+    const real_t rho = fmax(q[ID], 1e-8);
+    
     // 0.5 * rho * (u^2+v^2)
-    real_t ekin = 0.5 * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
+    const real_t ekin = 0.5 * (q[IU]*q[IU] + q[IV]*q[IV]) / rho;
     
     // pressure
     real_t pressure = (gamma0-1.0)*(q[IE] - ekin);
     
-    pressure = fmax( pressure ,  smallp*q[ID]);
+    pressure = fmax( pressure ,  smallp*rho);
 
     w[ID] = q[ID];
     w[IU] = q[IU]/q[ID];

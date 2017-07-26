@@ -87,6 +87,12 @@ public:
 	  
 	  // interpolate at flux points for this given variable
 	  this->sol2flux_vector(sol, flux);
+
+	  // positivity preserving for density
+	  if (ivar==ID) {
+	    for (int idf=0; idf<N+1; ++idf)
+	      flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+	  }
 	  
 	  // copy back interpolated value
 	  for (int idx=0; idx<N+1; ++idx) {
@@ -119,6 +125,12 @@ public:
 	  // interpolate at flux points for this given variable
 	  this->sol2flux_vector(sol, flux);
 	  
+	  // positivity preserving for density
+	  if (ivar==ID) {
+	    for (int idf=0; idf<N+1; ++idf)
+	      flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+	  }
+
 	  // copy back interpolated value
 	  for (int idy=0; idy<N+1; ++idy) {
 	    
@@ -175,6 +187,12 @@ public:
 	    // interpolate at flux points for this given variable
 	    this->sol2flux_vector(sol, flux);
 	    
+	    // positivity preserving for density
+	    if (ivar==ID) {
+	      for (int idf=0; idf<N+1; ++idf)
+		flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+	    }
+	    
 	    // copy back interpolated value
 	    for (int idx=0; idx<N+1; ++idx) {
 	      
@@ -208,6 +226,12 @@ public:
 	    // interpolate at flux points for this given variable
 	    this->sol2flux_vector(sol, flux);
 	    
+	    // positivity preserving for density
+	    if (ivar==ID) {
+	      for (int idf=0; idf<N+1; ++idf)
+		flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+	    }
+	    
 	    // copy back interpolated value
 	    for (int idy=0; idy<N+1; ++idy) {
 	      
@@ -240,6 +264,12 @@ public:
 	    
 	    // interpolate at flux points for this given variable
 	    this->sol2flux_vector(sol, flux);
+	    
+	    // positivity preserving for density
+	    if (ivar==ID) {
+	      for (int idf=0; idf<N+1; ++idf)
+		flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+	    }
 	    
 	    // copy back interpolated value
 	    for (int idz=0; idz<N+1; ++idz) {
