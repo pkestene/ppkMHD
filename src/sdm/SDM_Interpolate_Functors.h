@@ -289,7 +289,7 @@ public:
   
   DataArray UdataSol, UdataFlux;
 
-}; // Interpolate_At_FluxPoints_Functor
+}; // class Interpolate_At_FluxPoints_Functor
 
 enum Interpolation_type_t {
   INTERPOLATE_DERIVATIVE=0,
