@@ -674,6 +674,16 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       Kokkos::parallel_for(nbCells, functor);
       
     }
+
+    // 1.1 ensure positivity (density and pressure)
+    {
+      Apply_positivity_Functor<dim,N,IX> functor(params,
+						 sdm_geom,
+						 Udata,
+						 Fluxes,
+						 Uaverage);
+      Kokkos::parallel_for(nbCells, functor);      
+    }
     
     // 2. inplace computation of fluxes along X direction at flux points
     if (limiter_enabled) {
