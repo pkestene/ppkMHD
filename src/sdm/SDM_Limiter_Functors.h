@@ -82,7 +82,11 @@ public:
       // final scaling
       tmp *= (M_PI/N)*(M_PI/N);
 
-      Uaverage(i,j,ivar) = tmp;
+      const real_t smallr = this->params.settings.smallr;
+      if (ivar == ID)
+	Uaverage(i,j,ID) = tmp > smallr ? tmp : smallr;
+      else
+	Uaverage(i,j,ivar) = tmp;
       
     } // end for ivar
     
@@ -138,7 +142,11 @@ public:
       // final scaling
       tmp *= (M_PI/N)*(M_PI/N)*(M_PI/N);
 
-      Uaverage(i,j,k,ivar) = tmp;
+      const real_t smallr = this->params.settings.smallr;
+      if (ivar == ID)
+	Uaverage(i,j,k,ID)   = tmp > smallr ? tmp : smallr;
+      else
+	Uaverage(i,j,k,ivar) = tmp;
       
     } // end for ivar
     
