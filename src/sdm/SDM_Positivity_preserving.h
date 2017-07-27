@@ -6,6 +6,7 @@
  * compressible Euler equations on rectangular meshes", Xiangxiong Zhang, 
  * Chi-Wang Shu, Journal of Computational Physics Volume 229, Issue 23,
  * 20 November 2010, Pages 8918-8934
+ * http://www.sciencedirect.com/science/article/pii/S0021999110004535
  *
  * The idea is to ensure/preserve positivity after each Runge-Kutta stage.
  */
