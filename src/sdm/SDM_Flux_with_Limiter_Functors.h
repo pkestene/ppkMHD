@@ -109,102 +109,98 @@ public:
        * special treatment for the end points (only perform reconstruction)
        */      
       // check if limiter reconstruction is needed
-      if (i>0 and i<isize) {
-
-	real_t dx = this->params.dx;
-	real_t dy = this->params.dy;
-	
-	for (int ivar = 0; ivar<nbvar; ++ivar) {  
-
-	  /*
-	   * compute cell center gradient:
-	   * sweep solution points, a perform a simplified least square
-	   * estimate of the partial derivative at cell center.
-	   */
-	  real_t gradx=0.0, grady=0.0;
-
-	  // cell center
-	  const real_t xc = 0.5;
-	  const real_t yc = 0.5;
-
-	  // least-square estimate of gradient
-	  for (int idy=0; idy<N; ++idy) {
-	    real_t y = this->sdm_geom.solution_pts_1d_host(idy);
-	    real_t delta_y = y-yc;
-	    
-	    for (int idx=0; idx<N; ++idx) {
-	      real_t x = this->sdm_geom.solution_pts_1d_host(idx);
-	      real_t delta_x = x-xc;
-	      
-	      gradx += delta_x*Udata(i,j,dofMapS(idx,idy,0,ivar));
-	      grady += delta_y*Udata(i,j,dofMapS(idx,idy,0,ivar));
-	      
-	    }
-	  }
-	  gradx /= this->sdm_geom.sum_dx_square;
-	  grady /= this->sdm_geom.sum_dy_square;
-
-	  // rescale to put gradient in physical unit (not reference cell unit)
-	  gradx /= dx;
-	  grady /= dy;
-	  
-	  // retrieve admissible range for current cell borders reconstructions
-	  real_t umin = Umin(i,j, ivar);
-	  real_t umax = Umax(i,j, ivar);
-	  
-	  /*
-	   * for each end point on x-border perform proper reconstruction
-	   */
-	  for (int idy=0; idy<N; ++idy) {
-
-	    /*
-	     * handle end point at idx = 0 and idx = N
-	     */
-	    for (int idx = 0; idx<=N; idx+=N) {
-
-	      real_t qtmp = UdataFlux(i,j,dofMapF(idx,idy,0,ivar));
-	      
-	      // check if qtmp falls in range [Umin,Umax]
-	      
-	      real_t dq;
-	      
-	      // is a limited reconstruction required ?
-	      // if not, don't do anything the regular reconstructed state
-	      // qtmp is fine
-	      if (qtmp < umin or qtmp > umax) {
-		
-		// offset from cell center to reconstructed location
-		// in the reference cell
-		real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
-		real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
-		
-		// delta Q (dp) is used in q_recons = q_center + dq
-		dq = gradx * delta_x + grady * delta_y;
-		
-		// proposed reconstructed state from cell center value
-		real_t qr = Uaverage(i,j,ivar) + dq;
-		
-		// write back resulting linear limited reconstructed state
-		// with a minmod limitation
-		if (qr >= umin and qr <= umax)
-		  UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = qr;
-		if (qr <  umin)
-		  UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umin;
-		if (qr >  umax)
-		  UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umax;
-		
-	      } // qtmp<umin or qtmp>umax
-
-	    } // end checking end point at idx=0 and idx=N
-	    	    
-	  } // end for idy
-	  	  	  
-	} // end for ivar
-
-      } // end safe-guard
+      real_t dx = this->params.dx;
+      real_t dy = this->params.dy;
       
+      for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	
+	/*
+	 * compute cell center gradient:
+	 * sweep solution points, a perform a simplified least square
+	 * estimate of the partial derivative at cell center.
+	 */
+	real_t gradx=0.0, grady=0.0;
+	
+	// cell center
+	const real_t xc = 0.5;
+	const real_t yc = 0.5;
+	
+	// least-square estimate of gradient
+	for (int idy=0; idy<N; ++idy) {
+	  real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	  real_t delta_y = y-yc;
+	  
+	  for (int idx=0; idx<N; ++idx) {
+	    real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	    real_t delta_x = x-xc;
+	    
+	    gradx += delta_x*Udata(i,j,dofMapS(idx,idy,0,ivar));
+	    grady += delta_y*Udata(i,j,dofMapS(idx,idy,0,ivar));
+	    
+	  }
+	}
+	gradx /= this->sdm_geom.sum_dx_square;
+	grady /= this->sdm_geom.sum_dy_square;
+	
+	// rescale to put gradient in physical unit (not reference cell unit)
+	gradx /= dx;
+	grady /= dy;
+	
+	// retrieve admissible range for current cell borders reconstructions
+	real_t umin = Umin(i,j, ivar);
+	real_t umax = Umax(i,j, ivar);
+	
+	/*
+	 * for each end point on x-border perform proper reconstruction
+	 */
+	for (int idy=0; idy<N; ++idy) {
+	  
+	  /*
+	   * handle end point at idx = 0 and idx = N
+	   */
+	  for (int idx = 0; idx<=N; idx+=N) {
+	    
+	    real_t qtmp = UdataFlux(i,j,dofMapF(idx,idy,0,ivar));
+	    
+	    // check if qtmp falls in range [Umin,Umax]
+	    
+	    real_t dq;
+	    
+	    // is a limited reconstruction required ?
+	    // if not, don't do anything the regular reconstructed state
+	    // qtmp is fine
+	    if (qtmp < umin or qtmp > umax) {
+	      
+	      // offset from cell center to reconstructed location
+	      // in the reference cell
+	      real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
+	      real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
+	      
+	      // delta Q (dp) is used in q_recons = q_center + dq
+	      dq = gradx * delta_x + grady * delta_y;
+	      
+	      // proposed reconstructed state from cell center value
+	      real_t qr = Uaverage(i,j,ivar) + dq;
+	      
+	      // write back resulting linear limited reconstructed state
+	      // with a minmod limitation
+	      if (qr >= umin and qr <= umax)
+		UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = qr;
+	      if (qr <  umin)
+		UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umin;
+	      if (qr >  umax)
+		UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umax;
+	      
+	    } // qtmp<umin or qtmp>umax
+	    
+	  } // end checking end point at idx=0 and idx=N
+	  
+	} // end for idy
+	
+      } // end for ivar
+    
     } // end for dir IX
-
+  
     // =========================
     // ========= DIR Y =========
     // =========================
@@ -214,104 +210,99 @@ public:
        * special treatment for the end points (only perform reconstruction)
        */      
       // check if limiter reconstruction is needed
-      if (j>0 and j<jsize) {
-
-	real_t dx = this->params.dx;
-	real_t dy = this->params.dy;
+      real_t dx = this->params.dx;
+      real_t dy = this->params.dy;
+      
+      for (int ivar = 0; ivar<nbvar; ++ivar) {  
 	
-	for (int ivar = 0; ivar<nbvar; ++ivar) {  
+	/*
+	 * compute cell center gradient:
+	 * sweep solution points, a perform a simplified least square
+	 * estimate of the partial derivative at cell center.
+	 */
+	real_t gradx=0.0, grady=0.0;
+	
+	// cell center
+	const real_t xc = 0.5;
+	const real_t yc = 0.5;
+	
+	// least-square estimate of gradient
+	for (int idy=0; idy<N; ++idy) {
+	  real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	  real_t delta_y = y-yc;
 	  
-	  /*
-	   * compute cell center gradient:
-	   * sweep solution points, a perform a simplified least square
-	   * estimate of the partial derivative at cell center.
-	   */
-	  real_t gradx=0.0, grady=0.0;
-
-	  // cell center
-	  const real_t xc = 0.5;
-	  const real_t yc = 0.5;
-
-	  // least-square estimate of gradient
-	  for (int idy=0; idy<N; ++idy) {
-	    real_t y = this->sdm_geom.solution_pts_1d_host(idy);
-	    real_t delta_y = y-yc;
-	    
-	    for (int idx=0; idx<N; ++idx) {
-	      real_t x = this->sdm_geom.solution_pts_1d_host(idx);
-	      real_t delta_x = x-xc;
-	      
-	      gradx += delta_x*Udata(i,j,dofMapS(idx,idy,0,ivar));
-	      grady += delta_y*Udata(i,j,dofMapS(idx,idy,0,ivar));
-	      
-	    }
-	  }
-	  gradx /= this->sdm_geom.sum_dx_square;
-	  grady /= this->sdm_geom.sum_dy_square;
-
-	  // rescale to put gradient in physical unit (not reference cell unit)
-	  gradx /= dx;
-	  grady /= dy;
-
-	  // retrieve admissible range for current cell borders reconstructions
-	  real_t umin = Umin(i,j, ivar);
-	  real_t umax = Umax(i,j, ivar);
-	  
-	  /*
-	   * for each end point on y-border perform proper reconstruction
-	   */
 	  for (int idx=0; idx<N; ++idx) {
-
-	    /*
-	     * handle end point at idy = 0 and idy = N
-	     */
-	    for (int idy = 0; idy<=N; idy+=N) {
-
-	      real_t qtmp = UdataFlux(i,j,dofMapF(idx,idy,0,ivar));
+	    real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	    real_t delta_x = x-xc;
+	    
+	    gradx += delta_x*Udata(i,j,dofMapS(idx,idy,0,ivar));
+	    grady += delta_y*Udata(i,j,dofMapS(idx,idy,0,ivar));
+	    
+	  }
+	}
+	gradx /= this->sdm_geom.sum_dx_square;
+	grady /= this->sdm_geom.sum_dy_square;
+	
+	// rescale to put gradient in physical unit (not reference cell unit)
+	gradx /= dx;
+	grady /= dy;
+	
+	// retrieve admissible range for current cell borders reconstructions
+	real_t umin = Umin(i,j, ivar);
+	real_t umax = Umax(i,j, ivar);
+	
+	/*
+	 * for each end point on y-border perform proper reconstruction
+	 */
+	for (int idx=0; idx<N; ++idx) {
+	  
+	  /*
+	   * handle end point at idy = 0 and idy = N
+	   */
+	  for (int idy = 0; idy<=N; idy+=N) {
+	    
+	    real_t qtmp = UdataFlux(i,j,dofMapF(idx,idy,0,ivar));
+	    
+	    // check if qtmp falls in range [Umin,Umax]
+	    
+	    real_t dq;
+	    
+	    // is a limited reconstruction required ?
+	    // if not, don't do anything the regular reconstructed state
+	    // qtmp is fine
+	    if (qtmp < umin or qtmp > umax) {
 	      
-	      // check if qtmp falls in range [Umin,Umax]
+	      // offset from cell center to reconstructed location
+	      // in the reference cell
+	      real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
+	      real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
 	      
-	      real_t dq;
+	      // delta Q (dp) is used in q_recons = q_center + dq
+	      dq = gradx * delta_x + grady * delta_y;
 	      
-	      // is a limited reconstruction required ?
-	      // if not, don't do anything the regular reconstructed state
-	      // qtmp is fine
-	      if (qtmp < umin or qtmp > umax) {
-		
-		// offset from cell center to reconstructed location
-		// in the reference cell
-		real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
-		real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
-		
-		// delta Q (dp) is used in q_recons = q_center + dq
-		dq = gradx * delta_x + grady * delta_y;
-		
-		// proposed reconstructed state from cell center value
-		real_t qr = Uaverage(i,j,ivar) + dq;
-		
-		// write back resulting linear limited reconstructed state
-		// with a minmod limitation
-		if (qr >= umin and qr <= umax)
-		  UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = qr;
-		if (qr <  umin)
-		  UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umin;
-		if (qr >  umax)
-		  UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umax;
-		
-	      } // qtmp<umin or qtmp>umax
-
-	    } // end checking end point at idx=0 and idx=N
-	    	    
-	  } // end for idy
-	  	  	  
-	} // end for ivar
-
-      } // end safe-guard
-
+	      // proposed reconstructed state from cell center value
+	      real_t qr = Uaverage(i,j,ivar) + dq;
+	      
+	      // write back resulting linear limited reconstructed state
+	      // with a minmod limitation
+	      if (qr >= umin and qr <= umax)
+		UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = qr;
+	      if (qr <  umin)
+		UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umin;
+	      if (qr >  umax)
+		UdataFlux(i,j,dofMapF(idx,idy,0,ivar)) = umax;
+	      
+	    } // qtmp<umin or qtmp>umax
+	    
+	  } // end checking end point at idx=0 and idx=N
+	  
+	} // end for idy
+	
+      } // end for ivar
+      
     } // end for dir IY
 
   } // 2d
-
 
   // ================================================
   //
@@ -346,118 +337,114 @@ public:
        * special treatment for the end points (only perform reconstruction)
        */      
       // check if limiter reconstruction is needed
-      if (i>0 and i<isize) {
-
-	real_t dx = this->params.dx;
-	real_t dy = this->params.dy;
-	real_t dz = this->params.dz;
+      real_t dx = this->params.dx;
+      real_t dy = this->params.dy;
+      real_t dz = this->params.dz;
+      
+      for (int ivar = 0; ivar<nbvar; ++ivar) {  
 	
-	for (int ivar = 0; ivar<nbvar; ++ivar) {  
-
-	  /*
-	   * compute cell center gradient:
-	   * sweep solution points, a perform a simplified least square
-	   * estimate of the partial derivative at cell center.
-	   */
-	  real_t gradx=0.0, grady=0.0, gradz=0.0;
-
-	  // cell center
-	  const real_t xc = 0.5;
-	  const real_t yc = 0.5;
-	  const real_t zc = 0.5;
-
-	  // least-square estimate of gradient
-	  for (int idz=0; idz<N; ++idz) {
-	    real_t z = this->sdm_geom.solution_pts_1d_host(idz);
-	    real_t delta_z = z-zc;
-	    
-	    for (int idy=0; idy<N; ++idy) {
-	      real_t y = this->sdm_geom.solution_pts_1d_host(idy);
-	      real_t delta_y = y-yc;
-	      
-	      for (int idx=0; idx<N; ++idx) {
-		real_t x = this->sdm_geom.solution_pts_1d_host(idx);
-		real_t delta_x = x-xc;
-		
-		gradx += delta_x*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-		grady += delta_y*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-		gradz += delta_z*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-	      
-	      } // end for idx
-	    } // end for idy
-	  } // end for idz
-	  gradx /= this->sdm_geom.sum_dx_square;
-	  grady /= this->sdm_geom.sum_dy_square;
-	  gradz /= this->sdm_geom.sum_dz_square;
-
-	  // rescale to put gradient in physical unit (not reference cell unit)
-	  gradx /= dx;
-	  grady /= dy;
-	  gradz /= dz;
-
-	  // retrieve admissible range for current cell borders reconstructions
-	  real_t umin = Umin(i,j,k, ivar);
-	  real_t umax = Umax(i,j,k, ivar);
+	/*
+	 * compute cell center gradient:
+	 * sweep solution points, a perform a simplified least square
+	 * estimate of the partial derivative at cell center.
+	 */
+	real_t gradx=0.0, grady=0.0, gradz=0.0;
+	
+	// cell center
+	const real_t xc = 0.5;
+	const real_t yc = 0.5;
+	const real_t zc = 0.5;
+	
+	// least-square estimate of gradient
+	for (int idz=0; idz<N; ++idz) {
+	  real_t z = this->sdm_geom.solution_pts_1d_host(idz);
+	  real_t delta_z = z-zc;
 	  
-	  /*
-	   * for each end point on x-border perform proper reconstruction
-	   */
-	  for (int idz=0; idz<N; ++idz) {
-	    for (int idy=0; idy<N; ++idy) {
-
-	      /*
-	       * handle end point at idx = 0 and idx = N
-	       */
-	      for (int idx = 0; idx<=N; idx+=N) {
-
-		real_t qtmp = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar));
-		
-		// check if qtmp falls in range [Umin,Umax]
-		
-		real_t dq;
-		
-		// is a limited reconstruction required ?
-		// if not, don't do anything the regular reconstructed state
-		// qtmp is fine
-		if (qtmp < umin or qtmp > umax) {
-		  
-		  // offset from cell center to reconstructed location
-		  // in the reference cell
-		  real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
-		  real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
-		  real_t delta_z = (this->sdm_geom.flux_pts_1d(idz)-0.5)*dz;
-		
-		  // delta Q (dp) is used in q_recons = q_center + dq
-		  dq =
-		    gradx * delta_x +
-		    grady * delta_y +
-		    gradz * delta_z;
-		
-		  // proposed reconstructed state from cell center value
-		  real_t qr = Uaverage(i,j,k,ivar) + dq;
-		
-		  // write back resulting linear limited reconstructed state
-		  // with a minmod limitation
-		  if (qr >= umin and qr <= umax)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = qr;
-		  if (qr <  umin)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umin;
-		  if (qr >  umax)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umax;
-		
-		} // qtmp<umin or qtmp>umax
-
-	      } // end checking end point at idx=0 and idx=N
+	  for (int idy=0; idy<N; ++idy) {
+	    real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	    real_t delta_y = y-yc;
+	    
+	    for (int idx=0; idx<N; ++idx) {
+	      real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	      real_t delta_x = x-xc;
 	      
-	    } // end for idy
-	  } // end for idz
-	  	  	  
-	} // end for ivar
-
-      } // end safe-guard
+	      gradx += delta_x*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      grady += delta_y*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      gradz += delta_z*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      
+	    } // end for idx
+	  } // end for idy
+	} // end for idz
+	gradx /= this->sdm_geom.sum_dx_square;
+	grady /= this->sdm_geom.sum_dy_square;
+	gradz /= this->sdm_geom.sum_dz_square;
+	
+	// rescale to put gradient in physical unit (not reference cell unit)
+	gradx /= dx;
+	grady /= dy;
+	gradz /= dz;
+	
+	// retrieve admissible range for current cell borders reconstructions
+	real_t umin = Umin(i,j,k, ivar);
+	real_t umax = Umax(i,j,k, ivar);
+	
+	/*
+	 * for each end point on x-border perform proper reconstruction
+	 */
+	for (int idz=0; idz<N; ++idz) {
+	  for (int idy=0; idy<N; ++idy) {
+	    
+	    /*
+	     * handle end point at idx = 0 and idx = N
+	     */
+	    for (int idx = 0; idx<=N; idx+=N) {
+	      
+	      real_t qtmp = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar));
+	      
+	      // check if qtmp falls in range [Umin,Umax]
+	      
+	      real_t dq;
+	      
+	      // is a limited reconstruction required ?
+	      // if not, don't do anything the regular reconstructed state
+	      // qtmp is fine
+	      if (qtmp < umin or qtmp > umax) {
+		
+		// offset from cell center to reconstructed location
+		// in the reference cell
+		real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
+		real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
+		real_t delta_z = (this->sdm_geom.flux_pts_1d(idz)-0.5)*dz;
+		
+		// delta Q (dp) is used in q_recons = q_center + dq
+		dq =
+		  gradx * delta_x +
+		  grady * delta_y +
+		  gradz * delta_z;
+		
+		// proposed reconstructed state from cell center value
+		real_t qr = Uaverage(i,j,k,ivar) + dq;
+		
+		// write back resulting linear limited reconstructed state
+		// with a minmod limitation
+		if (qr >= umin and qr <= umax)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = qr;
+		if (qr <  umin)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umin;
+		if (qr >  umax)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umax;
+		
+	      } // qtmp<umin or qtmp>umax
+	      
+	    } // end checking end point at idx=0 and idx=N
+	    
+	  } // end for idy
+	} // end for idz
+	
+      } // end for ivar
       
     } // end for dir IX
-
+    
     // =========================
     // ========= DIR Y =========
     // =========================
@@ -467,115 +454,112 @@ public:
        * special treatment for the end points (only perform reconstruction)
        */      
       // check if limiter reconstruction is needed
-      if (j>0 and j<jsize) {
 
-	real_t dx = this->params.dx;
-	real_t dy = this->params.dy;
-	real_t dz = this->params.dz;
+      real_t dx = this->params.dx;
+      real_t dy = this->params.dy;
+      real_t dz = this->params.dz;
 	
-	for (int ivar = 0; ivar<nbvar; ++ivar) {  
+      for (int ivar = 0; ivar<nbvar; ++ivar) {  
 
-	  /*
-	   * compute cell center gradient:
-	   * sweep solution points, a perform a simplified least square
-	   * estimate of the partial derivative at cell center.
-	   */
-	  real_t gradx=0.0, grady=0.0, gradz=0.0;
+	/*
+	 * compute cell center gradient:
+	 * sweep solution points, a perform a simplified least square
+	 * estimate of the partial derivative at cell center.
+	 */
+	real_t gradx=0.0, grady=0.0, gradz=0.0;
 
-	  // cell center
-	  const real_t xc = 0.5;
-	  const real_t yc = 0.5;
-	  const real_t zc = 0.5;
+	// cell center
+	const real_t xc = 0.5;
+	const real_t yc = 0.5;
+	const real_t zc = 0.5;
 
-	  // least-square estimate of gradient
-	  for (int idz=0; idz<N; ++idz) {
-	    real_t z = this->sdm_geom.solution_pts_1d_host(idz);
-	    real_t delta_z = z-zc;
+	// least-square estimate of gradient
+	for (int idz=0; idz<N; ++idz) {
+	  real_t z = this->sdm_geom.solution_pts_1d_host(idz);
+	  real_t delta_z = z-zc;
 	    
-	    for (int idy=0; idy<N; ++idy) {
-	      real_t y = this->sdm_geom.solution_pts_1d_host(idy);
-	      real_t delta_y = y-yc;
+	  for (int idy=0; idy<N; ++idy) {
+	    real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	    real_t delta_y = y-yc;
 	      
-	      for (int idx=0; idx<N; ++idx) {
-		real_t x = this->sdm_geom.solution_pts_1d_host(idx);
-		real_t delta_x = x-xc;
-		
-		gradx += delta_x*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-		grady += delta_y*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-		gradz += delta_z*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-	      
-	      } // end for idx
-	    } // end for idy
-	  } // end for idz
-	  gradx /= this->sdm_geom.sum_dx_square;
-	  grady /= this->sdm_geom.sum_dy_square;
-	  gradz /= this->sdm_geom.sum_dz_square;
-
-	  // rescale to put gradient in physical unit (not reference cell unit)
-	  gradx /= dx;
-	  grady /= dy;
-	  gradz /= dz;
-
-	  // retrieve admissible range for current cell borders reconstructions
-	  real_t umin = Umin(i,j,k, ivar);
-	  real_t umax = Umax(i,j,k, ivar);
-	  
-	  /*
-	   * for each end point on x-border perform proper reconstruction
-	   */
-	  for (int idz=0; idz<N; ++idz) {
 	    for (int idx=0; idx<N; ++idx) {
-
-	      /*
-	       * handle end point at idy = 0 and idy = N
-	       */
-	      for (int idy = 0; idy<=N; idy+=N) {
+	      real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	      real_t delta_x = x-xc;
 		
-		real_t qtmp = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar));
-		
-		// check if qtmp falls in range [Umin,Umax]
-		
-		real_t dq;
-		
-		// is a limited reconstruction required ?
-		// if not, don't do anything the regular reconstructed state
-		// qtmp is fine
-		if (qtmp < umin or qtmp > umax) {
-		  
-		  // offset from cell center to reconstructed location
-		  // in the reference cell
-		  real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
-		  real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
-		  real_t delta_z = (this->sdm_geom.flux_pts_1d(idz)-0.5)*dz;
-		
-		  // delta Q (dp) is used in q_recons = q_center + dq
-		  dq =
-		    gradx * delta_x +
-		    grady * delta_y +
-		    gradz * delta_z;
-		
-		  // proposed reconstructed state from cell center value
-		  real_t qr = Uaverage(i,j,k,ivar) + dq;
-		
-		  // write back resulting linear limited reconstructed state
-		  // with a minmod limitation
-		  if (qr >= umin and qr <= umax)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = qr;
-		  if (qr <  umin)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umin;
-		  if (qr >  umax)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umax;
-		
-		} // qtmp<umin or qtmp>umax
-
-	      } // end checking end point at idy=0 and idy=N
+	      gradx += delta_x*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      grady += delta_y*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      gradz += delta_z*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
 	      
 	    } // end for idx
-	  } // end for idz
-	  	  	  
-	} // end for ivar
+	  } // end for idy
+	} // end for idz
+	gradx /= this->sdm_geom.sum_dx_square;
+	grady /= this->sdm_geom.sum_dy_square;
+	gradz /= this->sdm_geom.sum_dz_square;
 
-      } // end safe-guard
+	// rescale to put gradient in physical unit (not reference cell unit)
+	gradx /= dx;
+	grady /= dy;
+	gradz /= dz;
+
+	// retrieve admissible range for current cell borders reconstructions
+	real_t umin = Umin(i,j,k, ivar);
+	real_t umax = Umax(i,j,k, ivar);
+	  
+	/*
+	 * for each end point on x-border perform proper reconstruction
+	 */
+	for (int idz=0; idz<N; ++idz) {
+	  for (int idx=0; idx<N; ++idx) {
+
+	    /*
+	     * handle end point at idy = 0 and idy = N
+	     */
+	    for (int idy = 0; idy<=N; idy+=N) {
+		
+	      real_t qtmp = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar));
+		
+	      // check if qtmp falls in range [Umin,Umax]
+		
+	      real_t dq;
+		
+	      // is a limited reconstruction required ?
+	      // if not, don't do anything the regular reconstructed state
+	      // qtmp is fine
+	      if (qtmp < umin or qtmp > umax) {
+		  
+		// offset from cell center to reconstructed location
+		// in the reference cell
+		real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
+		real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
+		real_t delta_z = (this->sdm_geom.flux_pts_1d(idz)-0.5)*dz;
+		
+		// delta Q (dp) is used in q_recons = q_center + dq
+		dq =
+		  gradx * delta_x +
+		  grady * delta_y +
+		  gradz * delta_z;
+		
+		// proposed reconstructed state from cell center value
+		real_t qr = Uaverage(i,j,k,ivar) + dq;
+		
+		// write back resulting linear limited reconstructed state
+		// with a minmod limitation
+		if (qr >= umin and qr <= umax)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = qr;
+		if (qr <  umin)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umin;
+		if (qr >  umax)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umax;
+		
+	      } // qtmp<umin or qtmp>umax
+
+	    } // end checking end point at idy=0 and idy=N
+	      
+	  } // end for idx
+	} // end for idz
+	  	  	  
+      } // end for ivar
       
     } // end for dir IY
 
@@ -588,115 +572,111 @@ public:
        * special treatment for the end points (only perform reconstruction)
        */      
       // check if limiter reconstruction is needed
-      if (k>0 and k<ksize) {
-
-	real_t dx = this->params.dx;
-	real_t dy = this->params.dy;
-	real_t dz = this->params.dz;
+      real_t dx = this->params.dx;
+      real_t dy = this->params.dy;
+      real_t dz = this->params.dz;
 	
-	for (int ivar = 0; ivar<nbvar; ++ivar) {  
+      for (int ivar = 0; ivar<nbvar; ++ivar) {  
 
-	  /*
-	   * compute cell center gradient:
-	   * sweep solution points, a perform a simplified least square
-	   * estimate of the partial derivative at cell center.
-	   */
-	  real_t gradx=0.0, grady=0.0, gradz=0.0;
+	/*
+	 * compute cell center gradient:
+	 * sweep solution points, a perform a simplified least square
+	 * estimate of the partial derivative at cell center.
+	 */
+	real_t gradx=0.0, grady=0.0, gradz=0.0;
 
-	  // cell center
-	  const real_t xc = 0.5;
-	  const real_t yc = 0.5;
-	  const real_t zc = 0.5;
+	// cell center
+	const real_t xc = 0.5;
+	const real_t yc = 0.5;
+	const real_t zc = 0.5;
 
-	  // least-square estimate of gradient
-	  for (int idz=0; idz<N; ++idz) {
-	    real_t z = this->sdm_geom.solution_pts_1d_host(idz);
-	    real_t delta_z = z-zc;
+	// least-square estimate of gradient
+	for (int idz=0; idz<N; ++idz) {
+	  real_t z = this->sdm_geom.solution_pts_1d_host(idz);
+	  real_t delta_z = z-zc;
 	    
-	    for (int idy=0; idy<N; ++idy) {
-	      real_t y = this->sdm_geom.solution_pts_1d_host(idy);
-	      real_t delta_y = y-yc;
-	      
-	      for (int idx=0; idx<N; ++idx) {
-		real_t x = this->sdm_geom.solution_pts_1d_host(idx);
-		real_t delta_x = x-xc;
-		
-		gradx += delta_x*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-		grady += delta_y*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-		gradz += delta_z*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
-	      
-	      } // end for idx
-	    } // end for idy
-	  } // end for idz
-	  gradx /= this->sdm_geom.sum_dx_square;
-	  grady /= this->sdm_geom.sum_dy_square;
-	  gradz /= this->sdm_geom.sum_dz_square;
-
-	  // rescale to put gradient in physical unit (not reference cell unit)
-	  gradx /= dx;
-	  grady /= dy;
-	  gradz /= dz;
-
-	  // retrieve admissible range for current cell borders reconstructions
-	  real_t umin = Umin(i,j,k, ivar);
-	  real_t umax = Umax(i,j,k, ivar);
-	  
-	  /*
-	   * for each end point on x-border perform proper reconstruction
-	   */
 	  for (int idy=0; idy<N; ++idy) {
+	    real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	    real_t delta_y = y-yc;
+	      
 	    for (int idx=0; idx<N; ++idx) {
-
-	      /*
-	       * handle end point at idz = 0 and idz = N
-	       */
-	      for (int idz = 0; idz<=N; idz+=N) {
+	      real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	      real_t delta_x = x-xc;
 		
-		real_t qtmp = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar));
-		
-		// check if qtmp falls in range [Umin,Umax]
-		
-		real_t dq;
-		
-		// is a limited reconstruction required ?
-		// if not, don't do anything the regular reconstructed state
-		// qtmp is fine
-		if (qtmp < umin or qtmp > umax) {
-		  
-		  // offset from cell center to reconstructed location
-		  // in the reference cell
-		  real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
-		  real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
-		  real_t delta_z = (this->sdm_geom.flux_pts_1d(idz)-0.5)*dz;
-		
-		  // delta Q (dp) is used in q_recons = q_center + dq
-		  dq =
-		    gradx * delta_x +
-		    grady * delta_y +
-		    gradz * delta_z;
-		
-		  // proposed reconstructed state from cell center value
-		  real_t qr = Uaverage(i,j,k,ivar) + dq;
-		
-		  // write back resulting linear limited reconstructed state
-		  // with a minmod limitation
-		  if (qr >= umin and qr <= umax)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = qr;
-		  if (qr <  umin)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umin;
-		  if (qr >  umax)
-		    UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umax;
-		
-		} // qtmp<umin or qtmp>umax
-
-	      } // end checking end point at idz=0 and idz=N
+	      gradx += delta_x*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      grady += delta_y*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
+	      gradz += delta_z*Udata(i,j,k,dofMapS(idx,idy,idz,ivar));
 	      
 	    } // end for idx
 	  } // end for idy
-	  	  	  
-	} // end for ivar
+	} // end for idz
+	gradx /= this->sdm_geom.sum_dx_square;
+	grady /= this->sdm_geom.sum_dy_square;
+	gradz /= this->sdm_geom.sum_dz_square;
 
-      } // end safe-guard
+	// rescale to put gradient in physical unit (not reference cell unit)
+	gradx /= dx;
+	grady /= dy;
+	gradz /= dz;
+
+	// retrieve admissible range for current cell borders reconstructions
+	real_t umin = Umin(i,j,k, ivar);
+	real_t umax = Umax(i,j,k, ivar);
+	  
+	/*
+	 * for each end point on x-border perform proper reconstruction
+	 */
+	for (int idy=0; idy<N; ++idy) {
+	  for (int idx=0; idx<N; ++idx) {
+
+	    /*
+	     * handle end point at idz = 0 and idz = N
+	     */
+	    for (int idz = 0; idz<=N; idz+=N) {
+		
+	      real_t qtmp = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar));
+		
+	      // check if qtmp falls in range [Umin,Umax]
+		
+	      real_t dq;
+		
+	      // is a limited reconstruction required ?
+	      // if not, don't do anything the regular reconstructed state
+	      // qtmp is fine
+	      if (qtmp < umin or qtmp > umax) {
+		  
+		// offset from cell center to reconstructed location
+		// in the reference cell
+		real_t delta_x = (this->sdm_geom.flux_pts_1d(idx)-0.5)*dx;
+		real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
+		real_t delta_z = (this->sdm_geom.flux_pts_1d(idz)-0.5)*dz;
+		
+		// delta Q (dp) is used in q_recons = q_center + dq
+		dq =
+		  gradx * delta_x +
+		  grady * delta_y +
+		  gradz * delta_z;
+		
+		// proposed reconstructed state from cell center value
+		real_t qr = Uaverage(i,j,k,ivar) + dq;
+		
+		// write back resulting linear limited reconstructed state
+		// with a minmod limitation
+		if (qr >= umin and qr <= umax)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = qr;
+		if (qr <  umin)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umin;
+		if (qr >  umax)
+		  UdataFlux(i,j,k,dofMapF(idx,idy,idz,ivar)) = umax;
+		
+	      } // qtmp<umin or qtmp>umax
+
+	    } // end checking end point at idz=0 and idz=N
+	      
+	  } // end for idx
+	} // end for idy
+	  	  	  
+      } // end for ivar
       
     } // end for dir IZ
 
