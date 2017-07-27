@@ -683,6 +683,14 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
     }
   }
   
+  if (positivity_enabled) {
+    Apply_positivity_Functor_v2<dim,N> functor(params,
+					       sdm_geom,
+					       Udata,
+					       Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
   //
   // Dir X
   //
@@ -700,7 +708,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 
     // 1.1 ensure positivity (density and pressure),
     if (positivity_enabled) {
-      {
+      if (0) {
 	Apply_positivity_Functor<dim,N,IX> functor(params,
 						   sdm_geom,
 						   Udata,
@@ -766,7 +774,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
     
     // 1.1 ensure positivity (density and pressure)
     if (positivity_enabled) {
-      {
+      if (0) {
 	Apply_positivity_Functor<dim,N,IY> functor(params,
 						   sdm_geom,
 						   Udata,
@@ -834,7 +842,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       
       // 1.1 ensure positivity (density and pressure)
       if (positivity_enabled) {
-	{
+	if (0) {
 	  Apply_positivity_Functor<dim,N,IZ> functor(params,
 						     sdm_geom,
 						     Udata,
