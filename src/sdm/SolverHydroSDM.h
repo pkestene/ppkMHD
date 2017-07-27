@@ -220,6 +220,10 @@ public:
 
   //! limiter (for shock capturing features)
   bool limiter_enabled;
+
+  //! positivity preserving (density + pressure)
+  bool positivity_enabled;
+
   
   int isize, jsize, ksize, nbCells;
 
@@ -248,6 +252,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ssprk3_enabled(false),
   ssprk54_enabled(false),
   limiter_enabled(false),
+  positivity_enabled(false),
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
@@ -351,7 +356,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     }
     
   }
-
+  
   /*
    * limiter
    */
@@ -359,14 +364,27 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (limiter_enabled) {
     
     if (dim==2) {
-      Uaverage = DataArray("Uaverage",isize,jsize,params.nbvar);
       Umin     = DataArray("Umin"    ,isize,jsize,params.nbvar);
       Umax     = DataArray("Umax"    ,isize,jsize,params.nbvar);
     } else if (dim==3) {
-      Uaverage = DataArray("Uaverage",isize,jsize,ksize,params.nbvar);
       Umin     = DataArray("Umin"    ,isize,jsize,ksize,params.nbvar);
       Umax     = DataArray("Umax"    ,isize,jsize,ksize,params.nbvar);
     }
+  }
+
+  /*
+   * Data arrary Uaverage is used in both positivity preserving and
+   * limiter
+   */
+  positivity_enabled = configMap.getBool("sdm", "positivity_enabled", false);
+  if (positivity_enabled or limiter_enabled) {
+
+    if (dim==2) {
+      Uaverage = DataArray("Uaverage",isize,jsize,params.nbvar);
+    } else if (dim==3) {
+      Uaverage = DataArray("Uaverage",isize,jsize,ksize,params.nbvar);
+    }
+    
   }
   
   /*
@@ -638,8 +656,9 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   // erase Udata_fdiv
   erase(Udata_fdiv);
  
-  // if limiter computation is enabled first compute Uaverage (cell volume averaged conservative variables) 
-  if (limiter_enabled) {
+  // if limiter or positivity preserving are enabled,
+  // we first compute Uaverage (cell volume averaged conservative variables) 
+  if (limiter_enabled or positivity_enabled) {
     // compute Uaverage
     {
       Average_Conservative_Variables_Functor<dim,N> functor(params,
@@ -648,7 +667,11 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 							    Uaverage);
       Kokkos::parallel_for(nbCells, functor);
     }
-    
+  } // end limiter_enabled
+
+  // if limiter is enabled we need to access cell neighborhood for min/max
+  // cell average values
+  if (limiter_enabled) {
     // compute Umin / Umax
     {
       MinMax_Conservative_Variables_Functor<dim,N> functor(params,
@@ -658,8 +681,8 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 							   Umax);
       Kokkos::parallel_for(nbCells, functor);
     }
-  } // end limiter_enabled
-
+  }
+  
   //
   // Dir X
   //
@@ -675,14 +698,16 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       
     }
 
-    // 1.1 ensure positivity (density and pressure)
-    {
-      Apply_positivity_Functor<dim,N,IX> functor(params,
-						 sdm_geom,
-						 Udata,
-						 Fluxes,
-						 Uaverage);
-      Kokkos::parallel_for(nbCells, functor);      
+    // 1.1 ensure positivity (density and pressure),
+    if (positivity_enabled) {
+      {
+	Apply_positivity_Functor<dim,N,IX> functor(params,
+						   sdm_geom,
+						   Udata,
+						   Fluxes,
+						   Uaverage);
+	Kokkos::parallel_for(nbCells, functor);
+      }      
     }
     
     // 2. inplace computation of fluxes along X direction at flux points
@@ -699,7 +724,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 									   Fluxes);
 	Kokkos::parallel_for(nbCells, functor);
       }
-    }
+    } // end limiter enabled
 
     {
       ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(params,
@@ -739,6 +764,18 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       
     }
     
+    // 1.1 ensure positivity (density and pressure)
+    if (positivity_enabled) {
+      {
+	Apply_positivity_Functor<dim,N,IY> functor(params,
+						   sdm_geom,
+						   Udata,
+						   Fluxes,
+						   Uaverage);
+	Kokkos::parallel_for(nbCells, functor);
+      }
+    }
+
     // 2. inplace computation of fluxes along Y direction at flux points
     if (limiter_enabled) {
       // compute flux at interior flux points +
@@ -753,7 +790,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 									   Fluxes);
 	Kokkos::parallel_for(nbCells, functor);
       }
-    }
+    } // end limiter enabled
 
     {
       ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(params,
@@ -795,6 +832,18 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 	
       }
       
+      // 1.1 ensure positivity (density and pressure)
+      if (positivity_enabled) {
+	{
+	  Apply_positivity_Functor<dim,N,IX> functor(params,
+						     sdm_geom,
+						     Udata,
+						     Fluxes,
+						   Uaverage);
+	  Kokkos::parallel_for(nbCells, functor);
+	}
+      }
+      
       // 2. inplace computation of fluxes along Z direction at flux points
       if (limiter_enabled) {
 	// compute flux at interior flux points +
@@ -809,7 +858,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 									     Fluxes);
 	  Kokkos::parallel_for(nbCells, functor);
 	}
-      }
+      } // end limiter enabled
       
       {
 	ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(params,
