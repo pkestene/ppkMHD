@@ -157,14 +157,16 @@ endif(USE_MPI)
 #####################################################################
 # Lapack with C interface --> OpenBLAS
 #####################################################################
-# LAPACK / LAPACKE (for MOOD) - for DGEQRF and DTRSM (on host, not device)
-#set(BLA_VENDOR "OpenBLAS")
-#find_package(BLAS REQUIRED)
-find_package(OpenBLAS)
-find_package(LAPACKE REQUIRED)
-if ( NOT LAPACKE_FOUND )
-  message(FATAL_ERROR "Package LAPACKE required, but not found!")
-endif( NOT LAPACKE_FOUND )
+if (USE_MOOD)
+   # LAPACK / LAPACKE (for MOOD) - for DGEQRF and DTRSM (on host, not device)
+   #set(BLA_VENDOR "OpenBLAS")
+   #find_package(BLAS REQUIRED)
+   find_package(OpenBLAS)
+   find_package(LAPACKE)
+   if ( NOT LAPACKE_FOUND )
+     message(FATAL_ERROR "Package LAPACKE required, but not found!")
+   endif( NOT LAPACKE_FOUND )
+endif( USE_MOOD)
 
 #####################################################################
 # PAPI for performance conuters
