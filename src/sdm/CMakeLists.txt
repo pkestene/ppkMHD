@@ -9,6 +9,7 @@ set (sdm_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Flux_with_Limiter_Functors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Interpolate_Functors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Limiter_Functors.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Positivity_preserving.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Run_Functors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroInitFunctors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroSDM.h
