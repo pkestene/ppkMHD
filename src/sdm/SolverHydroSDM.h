@@ -835,7 +835,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       // 1.1 ensure positivity (density and pressure)
       if (positivity_enabled) {
 	{
-	  Apply_positivity_Functor<dim,N,IX> functor(params,
+	  Apply_positivity_Functor<dim,N,IZ> functor(params,
 						     sdm_geom,
 						     Udata,
 						     Fluxes,
