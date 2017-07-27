@@ -157,6 +157,14 @@ public:
 
 }; // class Average_Conservative_Variables_Functor
 
+//! this enum is used functor MinMax_Conservative_Variables_Functor
+//! to decide if min / max are computed used only face neighbors or should
+//! include corners too
+enum stencil_minmax_t {
+  STENCIL_MINMAX_NOCORNER = 0,
+  STENCIL_MINMAX_CORNER =1
+};
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
@@ -186,11 +194,13 @@ public:
 					SDM_Geometry<dim,N> sdm_geom,
 					DataArray           Uaverage,
 					DataArray           Umin,
-					DataArray           Umax) :
+					DataArray           Umax,
+					int                 corner_included=0) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Uaverage(Uaverage),
     Umin(Umin),
-    Umax(Umax)
+    Umax(Umax),
+    corner_included(corner_included)
   {};
 
   KOKKOS_INLINE_FUNCTION
@@ -325,7 +335,8 @@ public:
   DataArray Uaverage;
   DataArray Umin;
   DataArray Umax;
-
+  int       corner_included;
+  
 }; // class
 
 } // namespace sdm
