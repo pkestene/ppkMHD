@@ -98,7 +98,7 @@ public:
     index2coord(index,i,j,isize,jsize);
 
     // state variable for conservative variables, and flux
-    HydroState q;
+    //HydroState q;
     
     // =========================
     // ========= DIR X =========
@@ -326,7 +326,7 @@ public:
     index2coord(index,i,j,k,isize,jsize,ksize);
 
     // state variable for conservative variables, and flux
-    HydroState q;
+    //HydroState q;
             
     // =========================
     // ========= DIR X =========
