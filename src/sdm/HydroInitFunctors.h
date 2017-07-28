@@ -82,7 +82,7 @@ public:
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	
-	real_t tmp = x+y;
+	real_t tmp = x+y*y;
 	if (tmp > 0.5 && tmp < 1.5) {
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 1.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 1.0/(gamma0-1.0);
@@ -464,14 +464,14 @@ public:
 	} else {
 	  if (y<yt) {
 	    // quarter 3
-	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U3[IE];
-	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U3[IP];
+	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U3[ID];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U3[IE];
 	    Udata(i  ,j  , dofMap(idx,idy,0,IU)) = U3[IU];
 	    Udata(i  ,j  , dofMap(idx,idy,0,IV)) = U3[IV];
 	  } else {
 	    // quarter 0
-	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U0[IE];
-	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U0[IP];
+	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U0[ID];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U0[IE];
 	    Udata(i  ,j  , dofMap(idx,idy,0,IU)) = U0[IU];
 	    Udata(i  ,j  , dofMap(idx,idy,0,IV)) = U0[IV];
 	  }
