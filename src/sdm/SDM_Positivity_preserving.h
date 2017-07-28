@@ -881,7 +881,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     
-    const int nbvar = this->params.nbvar;
+    //const int nbvar = this->params.nbvar;
 
     const real_t gamma0 = this->params.settings.gamma0;
     
@@ -1202,7 +1202,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
 
-    const int nbvar = this->params.nbvar;
+    //const int nbvar = this->params.nbvar;
 
     const real_t gamma0 = this->params.settings.gamma0;
 
@@ -1400,36 +1400,36 @@ public:
 	    real_t b1 = 2.0*drho*(e_ave - eps2/(gamma0-1.0))
 	      + 2.0*rho_ave*dE
 	      - 2.0*(rhou_ave*drhou + rhov_ave*drhov + rhow_ave*drhow);
-	  real_t c1 = 2.0*rho_ave*e_ave
+	    real_t c1 = 2.0*rho_ave*e_ave
 	      - (rhou_ave*rhou_ave + rhov_ave*rhov_ave + rhow_ave*rhow_ave)
-	    - 2.0*eps2*rho_ave/(gamma0-1.0);
-	  // Divide by a1 to avoid round-off error
-	  b1 /= a1;
-	  c1 /= a1;
-	  // discrimant
-	  real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
+	      - 2.0*eps2*rho_ave/(gamma0-1.0);
+	    // Divide by a1 to avoid round-off error
+	    b1 /= a1;
+	    c1 /= a1;
+	    // discrimant
+	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
 	  
-	  // possible solutions
-	  real_t t1 = 0.5*(-b1 - D);
-	  real_t t2 = 0.5*(-b1 + D);
-	  real_t t=0.0;
-	  if(     t1 > -1.0e-12 and t1 < 1.0 + 1.0e-12)
-	    t = t1;
-	  else if(t2 > -1.0e-12 and t2 < 1.0 + 1.0e-12)
-	    t = t2;
-	  else
-	    ; // Houston, we have a problem
+	    // possible solutions
+	    real_t t1 = 0.5*(-b1 - D);
+	    real_t t2 = 0.5*(-b1 + D);
+	    real_t t=0.0;
+	    if(     t1 > -1.0e-12 and t1 < 1.0 + 1.0e-12)
+	      t = t1;
+	    else if(t2 > -1.0e-12 and t2 < 1.0 + 1.0e-12)
+	      t = t2;
+	    else
+	      ; // Houston, we have a problem
 	  
-	  // t should strictly lie in [0,1]
-	  t = t<1.0 ? t : 1.0;
-	  t = t>0.0 ? t : 0.0;
-	  // Need t < 1.0. If t==1 upto machine precision
-	  // then we are suffering from round off error.
-	  // In this case we take the cell average value, t=0.
-	  if (fabs(1.0-t) < 1.0e-14)
-	    t = 0.0;
+	    // t should strictly lie in [0,1]
+	    t = t<1.0 ? t : 1.0;
+	    t = t>0.0 ? t : 0.0;
+	    // Need t < 1.0. If t==1 upto machine precision
+	    // then we are suffering from round off error.
+	    // In this case we take the cell average value, t=0.
+	    if (fabs(1.0-t) < 1.0e-14)
+	      t = 0.0;
 	  
-	  theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
+	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
 	  
 	  } // end small pressure
 	  
@@ -1437,151 +1437,220 @@ public:
       } // for idy
     } // for idz
 
-    // UNFINISHED
-    
-//     if (theta2 < 1.0) {
-      
-//       // we need to modify the values at solution points:
-//       for (int idz=0; idz<N; ++idz) {
-// 	for (int idy=0; idy<N; ++idy) {
-// 	  for (int idx=0; idx<N; ++idx) {
-	    
-// 	    real_t val;
-	    
-// 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
-// 	    val = theta2 * ( val - rho_ave ) + rho_ave;
-// 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = val;
-	    
-// 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IE));
-// 	    val = theta2 * ( val - e_ave ) + e_ave;
-// 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IE)) = val;
-	    
-// 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IU));
-// 	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
-// 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IU)) = val;
-	    
-// 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IV));
-// 	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
-// 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IV)) = val;
-	    
-// 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IW));
-// 	    val = theta2 * ( val - rhow_ave ) + rhow_ave;
-// 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IW)) = val;
-	    
-// 	  } // end for idx
-// 	} // end for idy
-//       } // end for idz
+    // along Y-axis
+    for (int idz=0; idz<N; ++idz) {
+      for (int idx=0; idx<N; ++idx) {
 
-//       /*
-//        * modification at flux points
-//        */
-//       {
-// 	// vector of values at solution points
-// 	solution_values_t sol;
-// 	flux_values_t     flux;
+	// recompute (interpolate) conservative variables at flux points
+	for (int idy=0; idy<N; ++idy) 
+	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
+        this->sol2flux_vector(sol, flux_id);
 	
-// 	// loop over cell DoF's
-// 	if (dir == IX) {
-	  
-// 	  for (int idz=0; idz<N; ++idz) {
-// 	    for (int idy=0; idy<N; ++idy) {
-	      
-// 	      // for each variables
-// 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
-// 		// get solution values vector along X direction
-// 		for (int idx=0; idx<N; ++idx) {
-		  
-// 		  sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-		  
-// 		}
-		
-// 		// interpolate at flux points for this given variable
-// 		this->sol2flux_vector(sol, flux);
-				
-// 		// copy back interpolated value
-// 		for (int idx=0; idx<N+1; ++idx) {
-		  
-// 		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idx];
-		  
-// 		} // end for idx
-		
-// 	      } // end for ivar
-	      
-// 	    } // end for idy
-// 	  } // end for idz
-	  
-// 	} // end for dir IX
-	
-// 	// loop over cell DoF's
-// 	if (dir == IY) {
-	  
-// 	  for (int idz=0; idz<N; ++idz) {
-// 	    for (int idx=0; idx<N; ++idx) {
-	      
-// 	      // for each variables
-// 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
-// 		// get solution values vector along Y direction
-// 		for (int idy=0; idy<N; ++idy) {
-		  
-// 		  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-		  
-// 		}
-		
-// 		// interpolate at flux points for this given variable
-// 		this->sol2flux_vector(sol, flux);
-		
-// 		// copy back interpolated value
-// 		for (int idy=0; idy<N+1; ++idy) {
-		  
-// 		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idy];
-		  
-// 		}
-		
-// 	      } // end for ivar
-	      
-// 	    } // end for idx
-// 	  } // end for idz
-	  
-// 	} // end for dir IY
-	
-// 	// loop over cell DoF's
-// 	if (dir == IZ) {
-	  
-// 	  for (int idy=0; idy<N; ++idy) {
-// 	    for (int idx=0; idx<N; ++idx) {
-	      
-// 	      // for each variables
-// 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
-// 		// get solution values vector along Z direction
-// 		for (int idz=0; idz<N; ++idz) {
-		  
-// 		  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-		  
-// 		}
-		
-// 		// interpolate at flux points for this given variable
-// 		this->sol2flux_vector(sol, flux);
-		
-// 		// copy back interpolated value
-// 		for (int idz=0; idz<N+1; ++idz) {
-		  
-// 		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idz];
-		  
-// 		} // end for idz
-		
-// 	      } // end for ivar
-	      
-// 	    } // end for idx
-// 	  } // end for idy
-	  
-// 	} // end for dir IZ
+	for (int idy=0; idy<N; ++idy)
+	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IE));
+        this->sol2flux_vector(sol, flux_ie);
 
-//       } // end modification at flux points
+	for (int idy=0; idy<N; ++idy)
+	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IU));
+        this->sol2flux_vector(sol, flux_iu);
+
+	for (int idy=0; idy<N; ++idy)
+	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IV));
+        this->sol2flux_vector(sol, flux_iv);
+
+	for (int idy=0; idy<N; ++idy)
+	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IW));
+        this->sol2flux_vector(sol, flux_iw);
+
+	for (int idy=0; idy<N+1; ++idy) {
+	  const real_t E    = flux_ie[idy];
+	  const real_t rhou = flux_iu[idy];
+	  const real_t rhov = flux_iv[idy];
+	  const real_t rhow = flux_iw[idy];
+	  const real_t rho  = flux_id[idy];
+	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
+						     rhov*rhov+
+						     rhow*rhow)/rho);
+	  
+	  if (pressure < 1e-12) {
+	    real_t drho  = rho - rho_ave;
+	    real_t dE    = E   - e_ave;
+	    real_t drhou = rhou-rhou_ave;
+	    real_t drhov = rhov-rhov_ave;
+	    real_t drhow = rhow-rhow_ave;
+	  
+	    real_t dm2 =
+	      drhou*drhou +
+	      drhov*drhov +
+	      drhow*drhow;
+	  
+	    // solve 2nd order equation in t:
+	    // a_1 t^2 + b_1 t + c_1 = 0
+	    real_t a1 = 2.0*drho*dE - dm2;
+	    real_t b1 = 2.0*drho*(e_ave - eps2/(gamma0-1.0))
+	      + 2.0*rho_ave*dE
+	      - 2.0*(rhou_ave*drhou + rhov_ave*drhov + rhow_ave*drhow);
+	    real_t c1 = 2.0*rho_ave*e_ave
+	      - (rhou_ave*rhou_ave + rhov_ave*rhov_ave + rhow_ave*rhow_ave)
+	      - 2.0*eps2*rho_ave/(gamma0-1.0);
+	    // Divide by a1 to avoid round-off error
+	    b1 /= a1;
+	    c1 /= a1;
+	    // discrimant
+	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
+	  
+	    // possible solutions
+	    real_t t1 = 0.5*(-b1 - D);
+	    real_t t2 = 0.5*(-b1 + D);
+	    real_t t=0.0;
+	    if(     t1 > -1.0e-12 and t1 < 1.0 + 1.0e-12)
+	      t = t1;
+	    else if(t2 > -1.0e-12 and t2 < 1.0 + 1.0e-12)
+	      t = t2;
+	    else
+	      ; // Houston, we have a problem
+	  
+	    // t should strictly lie in [0,1]
+	    t = t<1.0 ? t : 1.0;
+	    t = t>0.0 ? t : 0.0;
+	    // Need t < 1.0. If t==1 upto machine precision
+	    // then we are suffering from round off error.
+	    // In this case we take the cell average value, t=0.
+	    if (fabs(1.0-t) < 1.0e-14)
+	      t = 0.0;
+	  
+	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
+	  
+	  } // end small pressure
+	  
+	} // for idy
+      } // for idx
+    } // for idz
+
+    // along Z-axis
+    for (int idy=0; idy<N; ++idy) {
+      for (int idx=0; idx<N; ++idx) {
+
+	// recompute (interpolate) conservative variables at flux points
+	for (int idz=0; idz<N; ++idz) 
+	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
+        this->sol2flux_vector(sol, flux_id);
+	
+	for (int idz=0; idz<N; ++idz)
+	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IE));
+        this->sol2flux_vector(sol, flux_ie);
+
+	for (int idz=0; idz<N; ++idz)
+	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IU));
+        this->sol2flux_vector(sol, flux_iu);
+
+	for (int idz=0; idz<N; ++idz)
+	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IV));
+        this->sol2flux_vector(sol, flux_iv);
+
+	for (int idz=0; idz<N; ++idz)
+	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IW));
+        this->sol2flux_vector(sol, flux_iw);
+
+	for (int idz=0; idz<N+1; ++idz) {
+	  const real_t E    = flux_ie[idz];
+	  const real_t rhou = flux_iu[idz];
+	  const real_t rhov = flux_iv[idz];
+	  const real_t rhow = flux_iw[idz];
+	  const real_t rho  = flux_id[idz];
+	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
+						     rhov*rhov+
+						     rhow*rhow)/rho);
+	  
+	  if (pressure < 1e-12) {
+	    real_t drho  = rho - rho_ave;
+	    real_t dE    = E   - e_ave;
+	    real_t drhou = rhou-rhou_ave;
+	    real_t drhov = rhov-rhov_ave;
+	    real_t drhow = rhow-rhow_ave;
+	  
+	    real_t dm2 =
+	      drhou*drhou +
+	      drhov*drhov +
+	      drhow*drhow;
+	  
+	    // solve 2nd order equation in t:
+	    // a_1 t^2 + b_1 t + c_1 = 0
+	    real_t a1 = 2.0*drho*dE - dm2;
+	    real_t b1 = 2.0*drho*(e_ave - eps2/(gamma0-1.0))
+	      + 2.0*rho_ave*dE
+	      - 2.0*(rhou_ave*drhou + rhov_ave*drhov + rhow_ave*drhow);
+	    real_t c1 = 2.0*rho_ave*e_ave
+	      - (rhou_ave*rhou_ave + rhov_ave*rhov_ave + rhow_ave*rhow_ave)
+	      - 2.0*eps2*rho_ave/(gamma0-1.0);
+	    // Divide by a1 to avoid round-off error
+	    b1 /= a1;
+	    c1 /= a1;
+	    // discrimant
+	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
+	  
+	    // possible solutions
+	    real_t t1 = 0.5*(-b1 - D);
+	    real_t t2 = 0.5*(-b1 + D);
+	    real_t t=0.0;
+	    if(     t1 > -1.0e-12 and t1 < 1.0 + 1.0e-12)
+	      t = t1;
+	    else if(t2 > -1.0e-12 and t2 < 1.0 + 1.0e-12)
+	      t = t2;
+	    else
+	      ; // Houston, we have a problem
+	  
+	    // t should strictly lie in [0,1]
+	    t = t<1.0 ? t : 1.0;
+	    t = t>0.0 ? t : 0.0;
+	    // Need t < 1.0. If t==1 upto machine precision
+	    // then we are suffering from round off error.
+	    // In this case we take the cell average value, t=0.
+	    if (fabs(1.0-t) < 1.0e-14)
+	      t = 0.0;
+	  
+	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
+	  
+	  } // end small pressure
+	  
+	} // for idz
+      } // for idx
+    } // for idy
+
+    if (theta2 < 1.0) {
       
-//     } // end theta2 < 1    
+      // we need to modify the values at solution points:
+      for (int idz=0; idz<N; ++idz) {
+	for (int idy=0; idy<N; ++idy) {
+	  for (int idx=0; idx<N; ++idx) {
+	    
+	    real_t val;
+	    
+	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
+	    val = theta2 * ( val - rho_ave ) + rho_ave;
+	    UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = val;
+	    
+	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IE));
+	    val = theta2 * ( val - e_ave ) + e_ave;
+	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IE)) = val;
+	    
+	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IU));
+	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
+	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IU)) = val;
+	    
+	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IV));
+	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
+	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IV)) = val;
+	    
+	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IW));
+	    val = theta2 * ( val - rhow_ave ) + rhow_ave;
+	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IW)) = val;
+	    
+	  } // end for idx
+	} // end for idy
+      } // end for idz
+
+    } // end theta2 < 1    
     
   } // end operator () - 3d
 
