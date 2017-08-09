@@ -407,9 +407,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   //   init_kelvin_helmholtz(U);
 
-  // } else if ( !m_problem_name.compare("wedge") ) {
-
-  //   init_wedge(U);
+  } else if ( !m_problem_name.compare("wedge") ) {
+    
+    init_wedge(U);
     
   } else if ( !m_problem_name.compare("isentropic_vortex") ) {
 
@@ -1286,10 +1286,10 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_wedge(DataArray Udata)
 {
 
-  // WedgeParams wparams(configMap, 0.0);
+  WedgeParams wparams(configMap, 0.0);
   
-  // InitWedgeFunctor<dim,N> functor(params, monomialMap.data, wparams, Udata);
-  // Kokkos::parallel_for(nbCells, functor);
+  InitWedgeFunctor<dim,N> functor(params, sdm_geom, wparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
   
 } // init_wedge
 
