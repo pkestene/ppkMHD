@@ -107,6 +107,13 @@ public:
     return solver;
   }
 
+  /**
+   * Return a string that uniquely identifies a SDM Solver. This class
+   * returns a string <tt>SolverHydroSDM<dim,N></tt>, with @p dim and @p N
+   * replaced by appropriate template values.
+   */
+  virtual std::string get_name () const;
+
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
   DataArray     Uaux;  /*!< auxiliary hydrodynamics conservative variables arrays (used in computing fluxes divergence */
@@ -468,6 +475,20 @@ SolverHydroSDM<dim,N>::~SolverHydroSDM()
 {
 
 } // SolverHydroSDM::~SolverHydroSDM
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+std::string SolverHydroSDM<dim,N>::get_name() const
+{
+
+  std::ostringstream buf;
+  buf << "SolverHydroSDM<"
+      << dim << "," << N << ">";
+
+  return buf.str();
+  
+} // SolverHydroSDM<dim,N>::get_name
 
 // =======================================================
 // =======================================================
