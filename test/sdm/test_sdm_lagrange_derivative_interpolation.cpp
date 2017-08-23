@@ -56,8 +56,8 @@ void test_lagrange_derivative()
   f_t  f = f_4;
   f_t df = df_4;
   
-  std::cout << "  Dimnsion is : " << dim << "\n";
-  std::cout << "  Using order : " << N << "\n";
+  std::cout << "  Dimension is : " << dim << "\n";
+  std::cout << "  Using order  : " << N << "\n";
   std::cout << "  Number of solution points : " << N << "\n";
   std::cout << "  Number of flux     points : " << N+1 << "\n";
   
