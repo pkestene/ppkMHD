@@ -1,6 +1,9 @@
 /**
  * This executable is used to test sdm::SDM_Geometry class, 
  * more specific Lagrange interpolation.
+ *
+ * More precicely, given a Lagrange polynomial basis at solution points, we
+ * interpolate values at flux points.
  */
 
 #include <cstdio>
@@ -118,8 +121,8 @@ void test_lagrange()
   f_t f = select_polynomial(N);
   //f_t f = select_polynomial_non_exact(N);
   
-  std::cout << "  Dimnsion is : " << dim << "\n";
-  std::cout << "  Using order : " << N << "\n";
+  std::cout << "  Dimension is : " << dim << "\n";
+  std::cout << "  Using order  : " << N << "\n";
   std::cout << "  Number of solution points : " << N << "\n";
   std::cout << "  Number of flux     points : " << N+1 << "\n";
   
