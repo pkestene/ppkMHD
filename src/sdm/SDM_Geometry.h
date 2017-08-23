@@ -18,6 +18,9 @@ enum SDM_SOLUTION_POINTS_TYPE {
 /**
  * enumerate all possible locations for the flux points, specified as
  * a quadrature.
+ *
+ * Only Gauss-Legendre is implemented.
+ *
  */
 enum SDM_FLUX_POINTS_TYPE {
   
@@ -154,6 +157,17 @@ public:
    */
   LagrangeMatrix flux2sol_derivative;
 
+  /**
+   * N by N matrix containing the derivatives of the solution points based 
+   * Lagrange polynomial computed at solution points. Please note that the formula 
+   *
+   * \f$ L_^{'}_{i} (x_j) = ( \sum_{k \neq i} \frac{1}{x_j-x_k} ) L_i(x_j) \f$
+   *
+   * can only be used when j=i; so used the brute force to compute them (only once,
+   * at initialization).
+   */
+  LagrangeMatrix sol2sol_derivative;
+  
   /**@}*/
 
   //! some useful variables for estimating gradient at cell center
@@ -611,6 +625,42 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
 
   Kokkos::deep_copy(flux2sol_derivative,flux2sol_derivative_h);
   
+  ////////////////////////
+  //
+  // sol2sol_derivative
+  //
+  ///////////////////////
+  // N lines : one basis element per solution points
+  // N cols  : one per interpolated point (solution points)
+  sol2sol_derivative = LagrangeMatrix("sol2sol_derivative",N,N);
+  
+  LagrangeMatrixHost sol2sol_derivative_h = Kokkos::create_mirror(sol2sol_derivative);
+
+  /*
+   * compute scaling factor that appears in formula which evaluates
+   * the i-th Lagrange polynomial derivative (i span solution points) at
+   * the j-th solution points.
+   * 
+   * we compute \f$ L_^{'}_{i} (x_j) \f$ where i and j span the solution points.
+   */
+
+  // for each solution points
+  for (int j=0; j<N; ++j) {
+
+    // get solution points location
+    real_t x_j = solution_pts_1d_host(j);
+
+    // for each solution points (Lagrange basis)
+    for (int i=0; i<N; ++i) {
+
+      // TODO
+      
+    } // end for i
+    
+  } // end for j
+
+  Kokkos::deep_copy(sol2sol_derivative,sol2sol_derivative_h);
+
 } // SDM_Geometry::init_lagrange_1d
 
 } // namespace sdm
