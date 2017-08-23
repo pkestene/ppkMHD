@@ -12,13 +12,13 @@ target_include_directories(test_sdm_geom
 target_link_libraries(test_sdm_geom kokkos hwloc dl)
 
 ##############################################
-add_executable(test_sdm_lagrange
-  test_sdm_lagrange.cpp)
-target_include_directories(test_sdm_lagrange
+add_executable(test_sdm_lagrange_sol2flux
+  test_sdm_lagrange_sol2flux.cpp)
+target_include_directories(test_sdm_lagrange_sol2flux
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
-target_link_libraries(test_sdm_lagrange kokkos hwloc dl)
+target_link_libraries(test_sdm_lagrange_sol2flux kokkos hwloc dl)
 
 ##############################################
 add_executable(test_sdm_lagrange_derivative_interpolation
