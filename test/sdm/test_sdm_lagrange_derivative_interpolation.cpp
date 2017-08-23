@@ -1,6 +1,7 @@
 /**
  * This executable is used to test sdm::SDM_Geometry class, 
- * more specific Lagrange interpolation, how to interpolate derivative.
+ * more specific Lagrange interpolation, how to interpolate derivative
+ * at solution points given the value at flux points.
  *
  * Please be aware the following test is OK as long as we are using polynomial
  * representation in interval [0,1]. If you use something else, you wil have
