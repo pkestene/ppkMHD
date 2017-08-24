@@ -644,16 +644,52 @@ void SDM_Geometry<dim,order>::init_lagrange_1d()
    * we compute \f$ L_^{'}_{i} (x_j) \f$ where i and j span the solution points.
    */
 
-  // for each solution points
-  for (int j=0; j<N; ++j) {
+  // for each solution points (Lagrange basis)
+  for (int i=0; i<N; ++i) {
+    
+    real_t x_i = solution_pts_1d_host(i);
 
-    // get solution points location
-    real_t x_j = solution_pts_1d_host(j);
+    // for each solution points
+    for (int j=0; j<N; ++j) {
+      
+      // get solution points location
+      real_t x_j = solution_pts_1d_host(j);
 
-    // for each solution points (Lagrange basis)
-    for (int i=0; i<N; ++i) {
+      /*
+       * Lagrange polynomial (solution points basis)
+       *
+       * l_i(x) = \Pi_{k \neq i} \frac{x-x_k}{x_i-x_k}
+       *
+       * Derivative of the i-th Lagrange polynomial (solution points basis)
+       * computed at the j-th solution points.
+       *
+       * ld_i(x_j) = \sum_{l=0, l \neq i}^{N-1} \frac{1.0}{x_i-x_l} \Pi_{k \neq i, k \neq l} \frac{x_j-x_k}{x_i-x_k}
+       */
+      real_t tmp_deriv = 0.0;
 
-      // TODO
+      // l spans Lagrange basis, number of solution points
+      for (int l=0; l<N; ++l) {
+
+	if (l != i) {
+	  real_t x_l = solution_pts_1d_host(l);
+	  
+	  real_t tmp = 1.0/(x_i-x_l);
+	  // k spans Lagrange basis, number of solution points
+	  for (int k=0; k<N; ++k) {
+	    real_t x_k = solution_pts_1d_host(k);
+	    if (k != i and k != l) {
+	      tmp *= (x_j-x_k)/(x_i-x_k);
+	    }
+	  } // end for k
+
+	  tmp_deriv += tmp;
+	  
+	}
+		
+      } // end for l
+
+      // copy ld into matrix
+      sol2sol_derivative_h(i,j) = tmp_deriv;
       
     } // end for i
     

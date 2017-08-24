@@ -30,6 +30,15 @@ target_include_directories(test_sdm_lagrange_flux2sol_derivative_interpolation
 target_link_libraries(test_sdm_lagrange_flux2sol_derivative_interpolation kokkos hwloc dl)
 
 ##############################################
+add_executable(test_sdm_lagrange_sol2sol_derivative
+  test_sdm_lagrange_sol2sol_derivative.cpp)
+target_include_directories(test_sdm_lagrange_sol2sol_derivative
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/src
+  )
+target_link_libraries(test_sdm_lagrange_sol2sol_derivative kokkos hwloc dl)
+
+##############################################
 add_executable(test_sdm_io
   test_sdm_io.cpp)
 target_include_directories(test_sdm_io
