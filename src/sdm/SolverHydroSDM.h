@@ -64,7 +64,7 @@ namespace sdm {
  * 
  * Shock capturing with limiters is a delicate subject.
  * It is disabled by default, but can be enable through parameter
- * flux_limiting_enabled.
+ * limiter_enabled.
  *
  * Our first idea was to implement adapt the work by
  * May, Jameson, "A Spectral Difference Method for the Euler
@@ -89,12 +89,19 @@ namespace sdm {
  *    a. current cell average gradient times dx
  *    b. backward difference of cell-averaged value (current and neighbor cell)
  *    c. forward  difference of cell-averaged value (current and neighbor cell)
- * 3. project these 3 vectors in the local characteristics space (eigenspace of the
- *    local flux Jacobian matrix); 
+ * 3. (optional) project these 3 vectors in the local characteristics space
+ *    (eigenspace of the local flux Jacobian matrix); 
  * 4. for each component, perform a TVB-modified minmod limiting of the 3 values 
  *    to detect if dofs must be modified to a 1st order polynomial approximation
  * 5. if limiting detection, was positive actually perform the 1st order modification
- *    in current cell.
+ *    in current cell (with optionally a back-projection in the real space from 
+ *    the eigenspace).
+ *
+ * To enabled the limiting procedure to project data into the characteristics space,
+ * use parameter:
+ * limiter_characteristics_enabled=true
+ * in the sdm section of the ini parameter file.
+ *
  */
 template<int dim, int N>
 class SolverHydroSDM : public ppkMHD::SolverBase
@@ -139,8 +146,12 @@ public:
   DataArray     Uaux;  /*!< auxiliary hydrodynamics conservative variables arrays (used in computing fluxes divergence */
 
   DataArray     Uaverage; /*! used if limiting is enabled */
-  DataArray     Umin;     /*! used if limiting is enabled */
-  DataArray     Umax;     /*! used if limiting is enabled */
+  //DataArray     Umin;     /*! used if limiting is enabled */
+  //DataArray     Umax;     /*! used if limiting is enabled */
+
+  DataArray     Ugradx; /*! used if limiting is enabled, cell-average gradient, x component */
+  DataArray     Ugrady; /*! used if limiting is enabled, cell-average gradient, y component */
+  DataArray     Ugradz; /*! used if limiting is enabled, cell-average gradient, z component */
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
@@ -180,6 +191,15 @@ public:
 			     DataArray Udata_fdiv, 
 			     real_t dt);
 
+  //! all computation that must be done before all others
+  void apply_pre_step_computation(DataArray Udata);
+  
+  //! apply positivity preserving procedure
+  void apply_positivity_preserving(DataArray Udata);
+  
+  //! apply limiting procedure
+  void apply_limiting(DataArray Udata);
+  
   //! compute flux divergence, the main term to perform the actual update
   //! in one of the Runge-Kutta methods.
   //! Udata is used in input (one of Runge-Kutta sub-step data)
@@ -247,7 +267,8 @@ public:
 
   //! limiter (for shock capturing features)
   bool limiter_enabled;
-
+  bool limiter_characteristics_enabled;
+  
   //! positivity preserving (density + pressure)
   bool positivity_enabled;
 
@@ -279,6 +300,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ssprk3_enabled(false),
   ssprk54_enabled(false),
   limiter_enabled(false),
+  limiter_characteristics_enabled(false),
   positivity_enabled(false),
   isize(params.isize),
   jsize(params.jsize),
@@ -390,20 +412,35 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   limiter_enabled = configMap.getBool("sdm", "limiter_enabled", false);
   if (limiter_enabled) {
     
-    if (dim==2) {
-      Umin     = DataArray("Umin"    ,isize,jsize,params.nbvar);
-      Umax     = DataArray("Umax"    ,isize,jsize,params.nbvar);
-    } else if (dim==3) {
-      Umin     = DataArray("Umin"    ,isize,jsize,ksize,params.nbvar);
-      Umax     = DataArray("Umax"    ,isize,jsize,ksize,params.nbvar);
-    }
-  }
+    // if (dim==2) {
+    //   Umin     = DataArray("Umin"    ,isize,jsize,params.nbvar);
+    //   Umax     = DataArray("Umax"    ,isize,jsize,params.nbvar);
+    // } else if (dim==3) {
+    //   Umin     = DataArray("Umin"    ,isize,jsize,ksize,params.nbvar);
+    //   Umax     = DataArray("Umax"    ,isize,jsize,ksize,params.nbvar);
+    // }
 
+    // memory allocation to store cell-averaged gradient components
+    if (dim==2) {
+      Ugradx   = DataArray("Ugradx"    ,isize,jsize,params.nbvar);
+      Ugrady   = DataArray("Ugrady"    ,isize,jsize,params.nbvar);
+    } else if (dim==3) {
+      Ugradx   = DataArray("Ugradx"    ,isize,jsize,ksize,params.nbvar);
+      Ugrady   = DataArray("Ugrady"    ,isize,jsize,ksize,params.nbvar);
+      Ugradz   = DataArray("Ugradz"    ,isize,jsize,ksize,params.nbvar);
+    }
+
+  }
+  
+  limiter_characteristics_enabled = configMap.getBool("sdm", "limiter_characteristics_enabled", false);
+    
   /*
    * Data arrary Uaverage is used in both positivity preserving and
    * limiter
    */
   positivity_enabled = configMap.getBool("sdm", "positivity_enabled", false);
+
+
   if (positivity_enabled or limiter_enabled) {
 
     if (dim==2) {
@@ -672,6 +709,67 @@ void SolverHydroSDM<dim,N>::time_integration_impl(DataArray Udata,
 
 // =======================================================
 // =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::apply_pre_step_computation(DataArray Udata)
+{
+
+  // if limiter or positivity preserving are enabled,
+  // we first compute Uaverage (cell volume averaged conservative variables) 
+  if (limiter_enabled or positivity_enabled) {
+
+    // compute Uaverage
+    {
+      Average_Conservative_Variables_Functor<dim,N> functor(params,
+							    sdm_geom,
+							    Udata,
+							    Uaverage);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+    
+  } // end limiter_enabled or positivity_enabled true
+
+} // SolverHydroSDM<dim,N>::apply_pre_step_computation
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::apply_positivity_preserving(DataArray Udata)
+{
+
+  if (positivity_enabled) {
+    Apply_positivity_Functor_v2<dim,N> functor(params,
+					       sdm_geom,
+					       Udata,
+					       Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+} // SolverHydroSDM<dim,N>::apply_positivity_preserving
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
+{
+  
+  // // if limiter is enabled we need to access cell neighborhood for min/max
+  // // cell average values
+  // if (limiter_enabled) {
+  //   // compute Umin / Umax
+  //   {
+  //     MinMax_Conservative_Variables_Functor<dim,N> functor(params,
+  // 							   sdm_geom,
+  // 							   Uaverage,
+  // 							   Umin,
+  // 							   Umax);
+  //     Kokkos::parallel_for(nbCells, functor);
+  //   }
+  // }
+    
+} // SolverHydroSDM<dim,N>::apply_limiting
+
+// =======================================================
+// =======================================================
 // //////////////////////////////////////////////////////////
 // Compute fluxes divergence (Udata_fdiv)
 // Taken the conservation law dU/dt + div F(U) = 0
@@ -696,42 +794,13 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 
   // erase Udata_fdiv
   erase(Udata_fdiv);
- 
-  // if limiter or positivity preserving are enabled,
-  // we first compute Uaverage (cell volume averaged conservative variables) 
-  if (limiter_enabled or positivity_enabled) {
-    // compute Uaverage
-    {
-      Average_Conservative_Variables_Functor<dim,N> functor(params,
-							    sdm_geom,
-							    Udata,
-							    Uaverage);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-  } // end limiter_enabled
 
-  // if limiter is enabled we need to access cell neighborhood for min/max
-  // cell average values
-  if (limiter_enabled) {
-    // compute Umin / Umax
-    {
-      MinMax_Conservative_Variables_Functor<dim,N> functor(params,
-							   sdm_geom,
-							   Uaverage,
-							   Umin,
-							   Umax);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-  }
+  apply_pre_step_computation(Udata);
   
-  if (positivity_enabled) {
-    Apply_positivity_Functor_v2<dim,N> functor(params,
-					       sdm_geom,
-					       Udata,
-					       Uaverage);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+  apply_limiting(Udata);
   
+  apply_positivity_preserving(Udata);
+    
   //
   // Dir X
   //
@@ -746,35 +815,8 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       Kokkos::parallel_for(nbCells, functor);
       
     }
-
-    // 1.1 ensure positivity (density and pressure),
-    if (positivity_enabled) {
-      if (0) {
-	Apply_positivity_Functor<dim,N,IX> functor(params,
-						   sdm_geom,
-						   Udata,
-						   Fluxes,
-						   Uaverage);
-	Kokkos::parallel_for(nbCells, functor);
-      }      
-    }
     
     // 2. inplace computation of fluxes along X direction at flux points
-    if (limiter_enabled) {
-      // compute flux at interior flux points +
-      // reconstructed state at cell borders
-      {
-	Compute_Reconstructed_state_with_Limiter_Functor<dim,N,IX> functor(params,
-									   sdm_geom,
-									   euler,
-									   Udata,
-									   Uaverage,
-									   Umin, Umax,
-									   Fluxes);
-	Kokkos::parallel_for(nbCells, functor);
-      }
-    } // end limiter enabled
-
     {
       ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(params,
 							sdm_geom,
@@ -813,34 +855,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       
     }
     
-    // 1.1 ensure positivity (density and pressure)
-    if (positivity_enabled) {
-      if (0) {
-	Apply_positivity_Functor<dim,N,IY> functor(params,
-						   sdm_geom,
-						   Udata,
-						   Fluxes,
-						   Uaverage);
-	Kokkos::parallel_for(nbCells, functor);
-      }
-    }
-
     // 2. inplace computation of fluxes along Y direction at flux points
-    if (limiter_enabled) {
-      // compute flux at interior flux points +
-      // reconstructed state at cell borders
-      {
-	Compute_Reconstructed_state_with_Limiter_Functor<dim,N,IY> functor(params,
-									   sdm_geom,
-									   euler,
-									   Udata,
-									   Uaverage,
-									   Umin, Umax,
-									   Fluxes);
-	Kokkos::parallel_for(nbCells, functor);
-      }
-    } // end limiter enabled
-
     {
       ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(params,
 							sdm_geom,
@@ -880,35 +895,8 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 	Kokkos::parallel_for(nbCells, functor);
 	
       }
-      
-      // 1.1 ensure positivity (density and pressure)
-      if (positivity_enabled) {
-	if (0) {
-	  Apply_positivity_Functor<dim,N,IZ> functor(params,
-						     sdm_geom,
-						     Udata,
-						     Fluxes,
-						   Uaverage);
-	  Kokkos::parallel_for(nbCells, functor);
-	}
-      }
-      
-      // 2. inplace computation of fluxes along Z direction at flux points
-      if (limiter_enabled) {
-	// compute flux at interior flux points +
-	// reconstructed state at cell borders
-	{
-	  Compute_Reconstructed_state_with_Limiter_Functor<dim,N,IZ> functor(params,
-									     sdm_geom,
-									     euler,
-									     Udata,
-									     Uaverage,
-									     Umin, Umax,
-									     Fluxes);
-	  Kokkos::parallel_for(nbCells, functor);
-	}
-      } // end limiter enabled
-      
+            
+      // 2. inplace computation of fluxes along Z direction at flux points      
       {
 	ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(params,
 							  sdm_geom,
