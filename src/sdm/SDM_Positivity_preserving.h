@@ -830,8 +830,9 @@ public:
 /**
  * This functor implements ideas from Zhang and Shu about 
  * positivity preserving.
- * It designed to be called right after functor 
- * Interpolate_At_FluxPoints_Functor.
+ *
+ * It designed to be called at the begining of a Runge-Kutta
+ * sub-step.
  *
  * Its purpose is to modify conservative variable at flux to 
  * ensure positivity. These variables are computed by 
