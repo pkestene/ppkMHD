@@ -20,6 +20,8 @@ namespace sdm {
 /**
  * This functor computes the average HydroState in each cell
  * and store the result in Uaverage.
+ *
+ * The space average is performed using a Gauss-Chebyshev quadrature.
  */
 template<int dim, int N>
 class Average_Conservative_Variables_Functor : public SDMBaseFunctor<dim,N> {
@@ -67,11 +69,11 @@ public:
       
       // for each DoFs
       for (int idy=0; idy<N; ++idy) {
-	real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	real_t y = this->sdm_geom.solution_pts_1d(idy);
 	real_t wy = sqrt(y-y*y);
 	
       	for (int idx=0; idx<N; ++idx) {
-	  real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	  real_t x = this->sdm_geom.solution_pts_1d(idx);
 	  real_t wx = sqrt(x-x*x);
 	  
 	  tmp += Udata(i,j, dofMap(idx,idy,0,ivar)) * wx * wy;
@@ -122,15 +124,15 @@ public:
       
       // for each DoFs
       for (int idz=0; idz<N; ++idz) {
-	real_t z = this->sdm_geom.solution_pts_1d_host(idz);
+	real_t z = this->sdm_geom.solution_pts_1d(idz);
 	real_t wz = sqrt(z-z*z);
 	
 	for (int idy=0; idy<N; ++idy) {
-	  real_t y = this->sdm_geom.solution_pts_1d_host(idy);
+	  real_t y = this->sdm_geom.solution_pts_1d(idy);
 	  real_t wy = sqrt(y-y*y);
 	  
 	  for (int idx=0; idx<N; ++idx) {
-	    real_t x = this->sdm_geom.solution_pts_1d_host(idx);
+	    real_t x = this->sdm_geom.solution_pts_1d(idx);
 	    real_t wx = sqrt(x-x*x);
 	    
 	    tmp += Udata(i,j,k, dofMap(idx,idy,idz,ivar)) * wx * wy * wz;
@@ -338,6 +340,381 @@ public:
   int       corner_included;
   
 }; // class
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+/**
+ * This functor computes one component of the average HydroState gradient
+ * in each cell and store the result in Uaverage.
+ *
+ * The space average is performed using a Gauss-Chebyshev quadrature.
+ *
+ * \tparam dir integer to specify direction / component of the gradient
+ * dir can IX,IY in 2D or IX,IY,IZ in 3D.
+ */
+template<int dim, int N, int dir>
+class Average_Gradient_Functor : public SDMBaseFunctor<dim,N> {
+
+public:
+  using typename SDMBaseFunctor<dim,N>::DataArray;
+  using typename SDMBaseFunctor<dim,N>::HydroState;
+
+  using typename SDMBaseFunctor<dim,N>::solution_values_t;
+  
+  static constexpr auto dofMap = DofMap<dim,N>;
+
+  Average_Gradient_Functor(HydroParams         params,
+			   SDM_Geometry<dim,N> sdm_geom,
+			   DataArray           Udata,
+			   DataArray           Uaverage) :
+    SDMBaseFunctor<dim,N>(params,sdm_geom),
+    Udata(Udata),
+    Uaverage(Uaverage)
+  {};
+
+  // ================================================
+  //
+  // 2D version.
+  //
+  // ================================================
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  {
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+
+    const int nbvar = this->params.nbvar;
+
+    // local cell index
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+
+    if (dir == IX) {
+      
+      // for each variables
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+	// a vector of values at solution points
+	solution_values_t sol;
+
+	// variable used to accumulate gradient before averaging
+	real_t tmp_average = 0.0;
+
+	// load Udata values line by line for current cell
+	for (int idy=0; idy<N; ++idy) {
+
+	  // compute quadrature  weight for the current line of dofs
+	  real_t y = this->sdm_geom.solution_pts_1d(idy);
+	  real_t wy = sqrt(y-y*y);
+
+	  // read a line
+	  for (int idx=0; idx<N; ++idx) {
+
+	    sol[idx] = Udata(i,j,dofMap(idx,idy,0,ivar));
+	    
+	  }
+
+	  // compute gradient component at each dof of this line
+	  for (int idx=0; idx<N; ++idx) {
+
+	    // compute gradient using Lagrange polynomial representation
+	    // remember that sol2sol_derivative_h(idof,idx) is the derivative of
+	    // the idof-th Lagrange polynomial evaluated at the idx-th solution points
+	    real_t grad_val=0;
+	    for (int idof=0; idof<N; ++idof) {
+	      grad_val += sol[idof] * this->sdm_geom.sol2sol_derivative(idof,idx);
+	    }
+
+	    // we can now accumulate this grad_val into the average gradient
+	    real_t x = this->sdm_geom.solution_pts_1d(idx);
+	    real_t wx = sqrt(x-x*x);
+	    
+	    tmp_average += grad_val * wx * wy;
+	    
+	  } // end for idx
+	  
+	} // end for idy
+
+	// we swept all the dof, all we need is the final scaling
+	tmp_average *= (M_PI/N)*(M_PI/N);
+
+	// store the result
+	Uaverage(i,j,ivar) = tmp_average;
+	
+      } // end for ivar
+
+    } // end dir == IX
+    
+    if (dir == IY) {
+      
+      // for each variables
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+	// a vector of values at solution points
+	solution_values_t sol;
+
+	// variable used to accumulate gradient before averaging
+	real_t tmp_average = 0.0;
+
+	// load Udata values line by line for current cell
+	for (int idx=0; idx<N; ++idx) {
+
+	  // compute quadrature  weight for the current line of dofs
+	  real_t x = this->sdm_geom.solution_pts_1d(idx);
+	  real_t wx = sqrt(x-x*x);
+
+	  // read a line
+	  for (int idy=0; idy<N; ++idy) {
+
+	    sol[idy] = Udata(i,j,dofMap(idx,idy,0,ivar));
+	    
+	  }
+
+	  // compute gradient component at each dof of this line
+	  for (int idy=0; idy<N; ++idy) {
+
+	    // compute gradient using Lagrange polynomial representation
+	    // remember that sol2sol_derivative_h(idof,idy) is the derivative of
+	    // the idof-th Lagrange polynomial evaluated at the idy-th solution points
+	    real_t grad_val=0;
+	    for (int idof=0; idof<N; ++idof) {
+	      grad_val += sol[idof] * this->sdm_geom.sol2sol_derivative(idof,idy);
+	    }
+
+	    // we can now accumulate this grad_val into the average gradient
+	    real_t y = this->sdm_geom.solution_pts_1d(idy);
+	    real_t wy = sqrt(y-y*y);
+	    
+	    tmp_average += grad_val * wx * wy;
+	    
+	  } // end for idx
+	  
+	} // end for idy
+
+	// we swept all the dof, all we need is the final scaling
+	tmp_average *= (M_PI/N)*(M_PI/N);
+
+	// store the result
+	Uaverage(i,j,ivar) = tmp_average;
+	
+      } // end for ivar
+
+    } // end dir == IY
+    
+  } // operator () - 2d
+
+  // ================================================
+  //
+  // 3D version.
+  //
+  // ================================================
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+
+    const int nbvar = this->params.nbvar;
+
+    // local cell index
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+
+    if (dir == IX) {
+      
+      // for each variables
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+	// a line-vector of values at solution points 
+	solution_values_t sol;
+
+	// variable used to accumulate gradient before averaging
+	real_t tmp_average = 0.0;
+
+	// load Udata values line by line for current cell
+	for (int idz=0; idz<N; ++idz) {
+
+	  // compute quadrature weight for the current line of dofs
+	  real_t z = this->sdm_geom.solution_pts_1d(idz);
+	  real_t wz = sqrt(z-z*z);
+	  
+	  for (int idy=0; idy<N; ++idy) {
+	    
+	    // compute quadrature weight for the current line of dofs
+	    real_t y = this->sdm_geom.solution_pts_1d(idy);
+	    real_t wy = sqrt(y-y*y);
+	    
+	    // read a line-vector
+	    for (int idx=0; idx<N; ++idx)
+	      sol[idx] = Udata(i,j,k,dofMap(idx,idy,idz,ivar));
+	      
+	    // compute gradient component at each dof of this line
+	    for (int idx=0; idx<N; ++idx) {
+	      
+	      // compute gradient using Lagrange polynomial representation
+	      // remember that sol2sol_derivative_h(idof,idx) is the derivative of
+	      // the idof-th Lagrange polynomial evaluated at the idx-th solution points
+	      real_t grad_val=0;
+	      for (int idof=0; idof<N; ++idof) {
+		grad_val += sol[idof] * this->sdm_geom.sol2sol_derivative(idof,idx);
+	      }
+
+	      // we can now accumulate this grad_val into the average gradient
+	      real_t x = this->sdm_geom.solution_pts_1d(idx);
+	      real_t wx = sqrt(x-x*x);
+	    
+	      tmp_average += grad_val * wx * wy * wz;
+	    
+	    } // end for idx
+	    
+	  } // end for idy
+	} // end for idz
+
+	// we swept all the dof, all we need is the final scaling
+	tmp_average *= (M_PI/N)*(M_PI/N)*(M_PI/N);
+
+	// store the result
+	Uaverage(i,j,k,ivar) = tmp_average;
+	
+      } // end for ivar
+      
+    } // end dir == IX
+    
+    if (dir == IY) {
+      
+      // for each variables
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+	// a line-vector of values at solution points 
+	solution_values_t sol;
+
+	// variable used to accumulate gradient before averaging
+	real_t tmp_average = 0.0;
+
+	// load Udata values line by line for current cell
+	for (int idz=0; idz<N; ++idz) {
+
+	  // compute quadrature weight for the current line of dofs
+	  real_t z = this->sdm_geom.solution_pts_1d(idz);
+	  real_t wz = sqrt(z-z*z);
+	  
+	  for (int idx=0; idx<N; ++idx) {
+	    
+	    // compute quadrature weight for the current line of dofs
+	    real_t x = this->sdm_geom.solution_pts_1d(idx);
+	    real_t wx = sqrt(x-x*x);
+	    
+	    // read a line-vector
+	    for (int idy=0; idy<N; ++idy)
+	      sol[idy] = Udata(i,j,k,dofMap(idx,idy,idz,ivar));
+	      
+	    // compute gradient component at each dof of this line
+	    for (int idy=0; idy<N; ++idy) {
+	      
+	      // compute gradient using Lagrange polynomial representation
+	      // remember that sol2sol_derivative_h(idof,idy) is the derivative of
+	      // the idof-th Lagrange polynomial evaluated at the idx-th solution points
+	      real_t grad_val=0;
+	      for (int idof=0; idof<N; ++idof) {
+		grad_val += sol[idof] * this->sdm_geom.sol2sol_derivative(idof,idy);
+	      }
+
+	      // we can now accumulate this grad_val into the average gradient
+	      real_t y = this->sdm_geom.solution_pts_1d(idy);
+	      real_t wy = sqrt(y-y*y);
+	    
+	      tmp_average += grad_val * wx * wy * wz;
+	    
+	    } // end for idy
+	    
+	  } // end for idx
+	  
+	} // end for idz
+
+	// we swept all the dof, all we need is the final scaling
+	tmp_average *= (M_PI/N)*(M_PI/N)*(M_PI/N);
+
+	// store the result
+	Uaverage(i,j,k,ivar) = tmp_average;
+	
+      } // end for ivar
+      
+    } // end dir == IY
+    
+    if (dir == IZ) {
+      
+      // for each variables
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+	// a line-vector of values at solution points 
+	solution_values_t sol;
+
+	// variable used to accumulate gradient before averaging
+	real_t tmp_average = 0.0;
+
+	// load Udata values line by line for current cell
+	for (int idx=0; idx<N; ++idx) {
+
+	  // compute quadrature weight for the current line of dofs
+	  real_t x = this->sdm_geom.solution_pts_1d(idx);
+	  real_t wx = sqrt(x-x*x);
+	  
+	  for (int idy=0; idy<N; ++idy) {
+	    
+	    // compute quadrature weight for the current line of dofs
+	    real_t y = this->sdm_geom.solution_pts_1d(idy);
+	    real_t wy = sqrt(y-y*y);
+	    
+	    // read a line-vector
+	    for (int idz=0; idz<N; ++idz)
+	      sol[idz] = Udata(i,j,k,dofMap(idx,idy,idz,ivar));
+	      
+	    // compute gradient component at each dof of this line
+	    for (int idz=0; idz<N; ++idz) {
+	      
+	      // compute gradient using Lagrange polynomial representation
+	      // remember that sol2sol_derivative_h(idof,idx) is the derivative of
+	      // the idof-th Lagrange polynomial evaluated at the idx-th solution points
+	      real_t grad_val=0;
+	      for (int idof=0; idof<N; ++idof) {
+		grad_val += sol[idof] * this->sdm_geom.sol2sol_derivative(idof,idz);
+	      }
+
+	      // we can now accumulate this grad_val into the average gradient
+	      real_t z = this->sdm_geom.solution_pts_1d(idz);
+	      real_t wz = sqrt(z-z*z);
+	    
+	      tmp_average += grad_val * wx * wy * wz;
+	    
+	    } // end for idz
+	    
+	  } // end for idy
+
+	} // end for idz
+
+	// we swept all the dof, all we need is the final scaling
+	tmp_average *= (M_PI/N)*(M_PI/N)*(M_PI/N);
+
+	// store the result
+	Uaverage(i,j,k,ivar) = tmp_average;
+	
+      } // end for ivar
+      
+    } // end dir == IZ
+
+  } // operator () - 3d
+  
+  DataArray Udata;
+  DataArray Uaverage;
+
+}; // class Average_Gradient_Functor
 
 } // namespace sdm
 
