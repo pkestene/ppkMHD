@@ -339,7 +339,7 @@ public:
   DataArray Umax;
   int       corner_included;
   
-}; // class
+}; // class MinMax_Conservative_Variables_Functor
 
 /*************************************************/
 /*************************************************/
@@ -715,6 +715,129 @@ public:
   DataArray Uaverage;
 
 }; // class Average_Gradient_Functor
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+/**
+ * This functor applies the limiting procedure to all cells.
+ * 
+ * The limiting procedure is described in Cockburn and Shu,
+ * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V: 
+ * MultiDimensinal systems", Journal of Computational Physics, 141, 199-224
+ * (1998).
+ *
+ * We use as a reference implementation (for Discontinuous Galerkin schemes)
+ * the code dflo by Praveen Chandrashekar:
+ * https://github.com/cpraveen/dflo
+ */
+template<int dim, int N>
+class Apply_limiter_Functor : public SDMBaseFunctor<dim,N> {
+
+public:
+  using typename SDMBaseFunctor<dim,N>::DataArray;
+  using typename SDMBaseFunctor<dim,N>::HydroState;
+
+  //using typename SDMBaseFunctor<dim,N>::solution_values_t;
+  
+  static constexpr auto dofMap = DofMap<dim,N>;
+
+  Apply_limiter_Functor(HydroParams         params,
+			SDM_Geometry<dim,N> sdm_geom,
+			DataArray           Udata,
+			DataArray           Uaverage,
+			DataArray           Ugradx,
+			DataArray           Ugrady,
+			DataArray           Ugradz,
+			const real_t        Mdx2) :
+    SDMBaseFunctor<dim,N>(params,sdm_geom),
+    Udata(Udata),
+    Uaverage(Uaverage),
+    Ugradx(Ugradx),
+    Ugrady(Ugrady),
+    Ugradz(Ugradz),
+    Mdx2(Mdx2)
+  {};
+
+  // ================================================
+  //
+  // 2D version.
+  //
+  // ================================================
+  //! functor for 2d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  {
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+
+    const int nbvar = this->params.nbvar;
+
+    HydroState Du, Du_new;
+    HydroState Du_left; // neighbor on the left
+    HydroState Du_right; // neighbor on the left
+    
+    // local cell index
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+
+    // read cell-averaged gradient, and difference neighbor
+    for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+      Du[ivar] = Ugradx(i,j,ivar);
+      Du_left[i]  = Uaverage(i  ,j,ivar) - Uaverage(i-1,j,ivar);
+      Du_right[i] = Uaverage(i+1,j,ivar) - Uaverage(i  ,j,ivar);
+    }
+
+    // if limiter_characteristics_enabled ...
+
+
+    // Apply minmod limiter
+    double change_x = 0;
+    double change_y = 0;
+
+    // for(int ivar=0; i<nbvar; ++ivar) {
+    //   Du_new[ivar] = minmod(Dx(i), beta*Du_left[ivar], beta*Du_right[ivar], Mdx2);
+    //   change_x += fabs(Du_new[ivar] - Du[ivar]);
+    // }
+    // change_x /= nbvar;
+    // change_y /= nbvar;
+    
+    
+  } // operator () - 2d
+
+  // ================================================
+  //
+  // 3D version.
+  //
+  // ================================================
+  //! functor for 3d 
+  template<int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+
+    const int nbvar = this->params.nbvar;
+
+    // local cell index
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+  } // operator () - 3d
+  
+  DataArray Udata;
+  DataArray Uaverage;
+  DataArray Ugradx;
+  DataArray Ugrady;
+  DataArray Ugradz;
+  real_t    Mdx2;
+  
+}; // class Apply_limiter_Functor
 
 } // namespace sdm
 

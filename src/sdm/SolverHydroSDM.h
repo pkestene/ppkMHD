@@ -255,9 +255,6 @@ public:
   //! debug routine that saves a flux data array (for a given direction)
   // template <int dir>
   // void save_flux();
-
-  //! flux limiting procedure
-  bool flux_limiting_enabled;
   
   //! time integration
   bool forward_euler_enabled;
@@ -294,7 +291,6 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   U(), Uhost(), Uaux(),
   Fluxes(), 
   sdm_geom(),
-  flux_limiting_enabled(false),
   forward_euler_enabled(true),
   ssprk2_enabled(false),
   ssprk3_enabled(false),
@@ -765,7 +761,55 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
   //     Kokkos::parallel_for(nbCells, functor);
   //   }
   // }
+
+  if (limiter_enabled) {
+
+     // we assume here that Uaverage has been computed in routine apply_pre_step_computation
+    // we just need to compute cell-average gradient component.
+    {
+      Average_Gradient_Functor<dim,N,IX> functor(params,
+						 sdm_geom,
+						 Udata,
+						 Ugradx);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+    {
+      Average_Gradient_Functor<dim,N,IY> functor(params,
+						 sdm_geom,
+						 Udata,
+						 Ugrady);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+    if (dim == 3) {
+      Average_Gradient_Functor<dim,N,IZ> functor(params,
+						 sdm_geom,
+						 Udata,
+						 Ugradz);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+  } // end computing cell-average gradient
+
+  // retrieve parameter M_TVB (used in the modified minmod routine)
+  real_t M_TVB = configMap.getFloat("sdm","M_TVB",40);
+  const real_t dx = this->params.dx;
+  const real_t Mdx2 = M_TVB * dx * dx;
+  
+  {
     
+    Apply_limiter_Functor<dim,N> functor(params,
+					 sdm_geom,
+					 Udata,
+					 Uaverage,
+					 Ugradx,
+					 Ugrady,
+					 Ugradz,
+					 Mdx2);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
 } // SolverHydroSDM<dim,N>::apply_limiting
 
 // =======================================================
