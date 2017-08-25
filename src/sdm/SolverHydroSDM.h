@@ -62,12 +62,15 @@ namespace sdm {
  * Time integration is configurable through parameter file. Allowed
  * possiblities are foward_euler, ssprk2 or ssprk3.
  * 
- * Flux limiter. It is disabled by default, but can be enable through parameter
+ * Shock capturing with limiters is a delicate subject.
+ * It is disabled by default, but can be enable through parameter
  * flux_limiting_enabled.
- * We just use the idea from May, Jameson, "A Spectral Difference Method for the Euler
+ *
+ * Our first idea was to implement adapt the work by
+ * May, Jameson, "A Spectral Difference Method for the Euler
  * and Navier-Stokes Equations on Unstructured Meshes", AIAA 2006-304
  * http://aero-comlab.stanford.edu/Papers/may.aiaa.06-0304.pdf
- * When enabled, limiting procedure consists in:
+ * May/Jameson limiting procedure consists in:
  * 1. for each cell, compute reference state as average HydroState 
  *    (stored in Uaverage)
  * 2. for each cell, compute Umin, Umax as min max HydroState in a neighborhood
@@ -75,6 +78,23 @@ namespace sdm {
  *    must be demoted to linear reconstruction. If any of the 
  *    K=number_of_faces x N reconstructed state violates the TVD criterium,
  *    all the faces reconstruction will be demoted to linear reconstruction.
+ *
+ * We finaly implement the original idea published in Cockburn and Shu,
+ * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V: 
+ * MultiDimensinal systems", Journal of Computational Physics, 141, 199-224 (1998).
+ *
+ * 1. compute cell-average of conservative variables, as well as cell-aveage gradient
+ * of the conservative variables.
+ * 2. for each space direction, for each cell, compute 3 state-vector:
+ *    a. current cell average gradient times dx
+ *    b. backward difference of cell-averaged value (current and neighbor cell)
+ *    c. forward  difference of cell-averaged value (current and neighbor cell)
+ * 3. project these 3 vectors in the local characteristics space (eigenspace of the
+ *    local flux Jacobian matrix); 
+ * 4. for each component, perform a TVB-modified minmod limiting of the 3 values 
+ *    to detect if dofs must be modified to a 1st order polynomial approximation
+ * 5. if limiting detection, was positive actually perform the 1st order modification
+ *    in current cell.
  */
 template<int dim, int N>
 class SolverHydroSDM : public ppkMHD::SolverBase
