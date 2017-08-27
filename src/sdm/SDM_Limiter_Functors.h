@@ -759,6 +759,29 @@ public:
     Mdx2(Mdx2)
   {};
 
+  /**
+   * TVB version of minmod limiter. If Mdx2=0 then it is TVD limiter.
+   */
+  KOKKOS_INLINE_FUNCTION
+  real_t minmod (const real_t& a,
+		 const real_t& b,
+		 const real_t& c,
+		 const real_t& Mdx2) const 
+  {
+    real_t aa = fabs(a);
+    if(aa < Mdx2) return a;
+    
+    if(a*b > 0 && b*c > 0)
+      {
+	real_t s = (a > 0) ? 1.0 : -1.0;
+	return s * fmin(aa, fmin(fabs(b), fabs(c)));
+      }
+    else
+      return 0;
+    
+  } // minmod
+  
+  
   // ================================================
   //
   // 2D version.
@@ -774,9 +797,13 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    HydroState Du, Du_new;
-    HydroState Du_left; // neighbor on the left
-    HydroState Du_right; // neighbor on the left
+    HydroState DuX, DuX_new;
+    HydroState DuXL; // neighbor on the left
+    HydroState DuXR; // neighbor on the right
+    
+    HydroState DuY, DuY_new;
+    HydroState DuYL; // neighbor on the left
+    HydroState DuYR; // neighbor on the right
     
     // local cell index
     int i,j;
@@ -785,13 +812,17 @@ public:
     // read cell-averaged gradient, and difference neighbor
     for (int ivar = 0; ivar<nbvar; ++ivar) {
 
-      Du[ivar] = Ugradx(i,j,ivar);
-      Du_left[i]  = Uaverage(i  ,j,ivar) - Uaverage(i-1,j,ivar);
-      Du_right[i] = Uaverage(i+1,j,ivar) - Uaverage(i  ,j,ivar);
+      DuX[ivar] = Ugradx(i,j,ivar);
+      DuXL[i]   = Uaverage(i  ,j,ivar) - Uaverage(i-1,j,ivar);
+      DuXR[i]   = Uaverage(i+1,j,ivar) - Uaverage(i  ,j,ivar);
+
+      DuY[ivar] = Ugrady(i,j,ivar);
+      DuYL[i]   = Uaverage(i,j  ,ivar) - Uaverage(i,j-1,ivar);
+      DuYR[i]   = Uaverage(i,j+1,ivar) - Uaverage(i,j  ,ivar);
     }
 
     // if limiter_characteristics_enabled ...
-
+    
 
     // Apply minmod limiter
     double change_x = 0;
