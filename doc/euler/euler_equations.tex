@@ -210,7 +210,7 @@ A left line-eigenvector basis:
   L^{(2)}=\left[0, \frac{\rho}{2c}, \frac{1}{2c^2}\right],
 \end{equation}
 
-Eigen identity : $A(W) = L \Lambda R$, where the matrix $L$ and $R$ are formed with the corresponding eigenvectors:
+Eigen identity : $\Lambda = L A(W) R$, where the matrix $L$ and $R$ are formed with the corresponding eigenvectors:
 \begin{equation}
   L = \left[
     \begin{array}{ccc}
@@ -283,18 +283,26 @@ Eigen decompostion are: $A(W) = L_A \Lambda R_A$ and $B(W) = L_B \Lambda R_B$ wi
 \begin{equation}
   L_A = \left[
     \begin{array}{cccc}
-      0 & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
-      1 & 0                & 0                &-\frac{1}{c^2}\\
-      1 & 0                & -1               &-\frac{1}{c^2}\\
+      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
+      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
+     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
       0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
+  \Lambda = \left[
+    \begin{array}{cccc}
+      u-c& 0 & 0 & 0\\
+      0  & u & 0 & 0\\
+      0  & 0 & u & 0\\
+      0  & 0 & 0 & u+c
     \end{array}
   \right],\;\;
   R_A = \left[
     \begin{array}{cccc}
-      1       & 1 & 1      & 1\\
-      -c/\rho & 0 & 0      & c/\rho\\
-      0       & v & 1/\rho & 0\\
-      c^2     & 0 & 0      & c^2
+      1       & 1 & \rho & 1\\
+      -c/\rho & 0 & 0    & c/\rho\\
+      0       & v & 1    & 0\\
+      c^2     & 0 & 0    & c^2
     \end{array}
   \right],\;\;
 \end{equation}
@@ -353,34 +361,6 @@ with
   \right].
 \end{equation}
 
-\subsubsection*{2D}
-
-\begin{equation}
-  \partial_t \mathbf{W} + \mathbf{A(W)} \partial_x \mathbf{W} + \mathbf{B(W)} \partial_y \mathbf{W} = \mathbf{0}
-\end{equation}
-
-with
-\begin{equation}
-  \mathbf{A(W)} = \left[
-    \begin{array}{c c c c}
-      u & \rho     & 0 & 0 \\
-      0 & u        & 0 & 1/\rho\\
-      0 & 0        & u & 0 \\
-      0 & \gamma p & 0 & u \\
-    \end{array}
-  \right],
-\end{equation}
-
-\begin{equation}
-  \mathbf{B(W)} = \left[
-    \begin{array}{c c c c}
-      v & 0 & \rho     & 0 \\
-      0 & v & 0        & 0 \\
-      0 & 0 & v        & 1/\rho \\
-      0 & 0 & \gamma p & v \\
-    \end{array}
-  \right],
-\end{equation}
 
 \subsection{Quasi-linear form in conservative variable}
 
