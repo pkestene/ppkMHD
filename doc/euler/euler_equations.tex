@@ -1,0 +1,416 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{commath}
+
+\usepackage[a4paper,margin=1.8cm,footskip=.5cm]{geometry}
+\usepackage{hyperref}
+
+\title{Minimal information about Euler equations}
+\author{Pierre Kestener}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Just gathering important equations about the compressible Euler system of equations.
+\end{abstract}
+
+\section{Compressible Euler equations}
+
+Let's define the vector of conservative variables $U=(\rho, \rho u, \rho v, \rho w, E)$ and the corresponding vector of primitive variables $W=(\rho, u, v, w, p)$, where $\rho$ is the fluid density, $u,v,w$ are the three cartesian components of the velocity vector field, $E$ is the total energy per unit volume and $p$ is the pressure.
+
+Speed of sound $c=\sqrt{\left(\frac{\partial p}{\partial \rho}\right)_s} = \sqrt{\frac{\gamma p}{\rho}}$
+
+\subsection{Euler system in conservative variables}
+
+\subsubsection*{1D Euler system in conservative variables}
+The compressible Euler system reads in conservative variables:\\
+\begin{equation}
+  \begin{array}{ccccc}
+    \partial_t \rho & + & \partial_x(\rho u) & = & 0,\\
+    \partial_t (\rho u) & + & \partial_x(\rho u^2+p) & = & 0,\\
+    \partial_t E & + & \partial_x (u(E+p)) & = & 0,\\
+  \end{array}
+\end{equation}
+
+or in short notations:
+\begin{equation*}
+  \partial_t \mathbf{U} + \partial_x \mathbf{F(U)} = \mathbf{0},
+\end{equation*}
+
+where the flux function is defined by
+\begin{equation}
+  \mathbf{F(U)} = \left [
+  \begin{array}{c}
+    \rho u \\
+    \rho u^2 + p \\
+    u (E + p)
+  \end{array} \right]
+\end{equation}
+
+\begin{itemize}
+\item total (internal + kinetic) energy per unit volume $E = \rho \left( e + \frac{1}{2} u^2 \right) = \frac{p}{\gamma-1} + \frac{1}{2} \rho u^2$,
+\item specific (per mass unit) internal energy $e=\frac{p}{(\gamma-1)\rho}$.
+\item total enthalpy $H = E + p$ per unit volume
+\end{itemize}
+
+
+\subsubsection*{2D Euler system in conservative variables}
+The compressible Euler system reads in conservative variables:\\
+\begin{equation}
+  \begin{array}{ccccccc}
+    \partial_t \rho & + & \partial_x(\rho u) & + & \partial_y(\rho v) & = & 0,\\
+    \partial_t (\rho u) & + & \partial_x(\rho u^2+p) & + & \partial_y(\rho v u) & = & 0,\\
+    \partial_t (\rho v) & + & \partial_x(\rho u v) & + & \partial_y(\rho v^2+p) & = & 0,\\
+    \partial_t E & + & \partial_x (u(E+p)) & + & \partial_y (v(E+p)) & = & 0,\\
+  \end{array}
+\end{equation}
+
+or in short notations:
+\begin{equation*}
+  \partial_t \mathbf{U} + \partial_x \mathbf{F(U)} + \partial_y \mathbf{G(U)} = \mathbf{0},
+\end{equation*}
+
+where the flux functions are defined by
+\begin{equation}
+  \mathbf{F(U)} = \left [
+  \begin{array}{c}
+    \rho u \\
+    \rho u^2 + p \\
+    \rho u v \\
+    u (E + p)
+  \end{array} \right]
+  \;\; ,
+  \mathbf{G(U)} = \left [
+  \begin{array}{c}
+    \rho v \\
+    \rho v u \\
+    \rho v^2 + p \\
+    v (E + p)
+  \end{array} \right]
+\end{equation}
+
+Total (internal + kinetic) energy $E = \rho \left( e + \frac{1}{2} (u^2+v^2) \right) = \frac{p}{\gamma-1} + \frac{1}{2} \rho (u^2+v^2)$.
+
+\subsubsection*{3D Euler system in conservative variables}
+The compressible Euler system reads in conservative variables:\\
+\begin{equation}
+  \begin{array}{ccccccccc}
+    \partial_t \rho & + & \partial_x(\rho u) & + & \partial_y(\rho v) & + & \partial_z(\rho w) & = & 0,\\
+    \partial_t (\rho u) & + & \partial_x(\rho u^2+p) & + & \partial_y(\rho v u) & + & \partial_z(\rho w u) & = & 0,\\
+    \partial_t (\rho v) & + & \partial_x(\rho u v) & + & \partial_y(\rho v^2+p) & + & \partial_z(\rho w v) & = & 0,\\
+    \partial_t (\rho w) & + & \partial_x(\rho u w) & + & \partial_y(v w) & + & \partial_z(\rho w^2+p) & = & 0,\\
+    \partial_t E & + & \partial_x (u(E+p)) & + & \partial_y (v(E+p)) & + & \partial_z (w(E+p)) & = & 0,\\
+  \end{array}
+\end{equation}
+
+or in short notations:
+\begin{equation*}
+  \partial_t \mathbf{U} + \partial_x \mathbf{F(U)} + \partial_y \mathbf{G(U)} + \partial_z \mathbf{H(U)} = \mathbf{0},
+\end{equation*}
+
+where the flux functions are defined by
+\begin{equation}
+  \mathbf{F(U)} = \left [
+  \begin{array}{c}
+    \rho u \\
+    \rho u^2 + p \\
+    \rho u v \\
+    \rho u w \\
+    u (E + p)
+  \end{array} \right]
+  \;\; ,
+  \mathbf{G(U)} = \left [
+  \begin{array}{c}
+    \rho v \\
+    \rho v u \\
+    \rho v^2 + p \\
+    \rho v w \\
+    v (E + p)
+  \end{array} \right]
+  \;\; ,
+  \mathbf{H(U)} = \left [
+  \begin{array}{c}
+    \rho w \\
+    \rho w u \\
+    \rho w v \\
+    \rho w^2 + p \\
+    w (E + p)
+  \end{array} \right]
+\end{equation}
+
+Total (internal + kinetic) energy $E = \rho \left( e + \frac{1}{2} (u^2+v^2+w^2) \right) = \frac{p}{\gamma-1} + \frac{1}{2} \rho (u^2+v^2+w^2)$.
+
+\subsection{Euler system in primitive variables}
+
+\subsubsection*{1D Euler system in primitive variables}
+The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
+
+\begin{equation}
+  \begin{array}{ccccc}
+    \rho_t & + & u\rho_x + \rho u_x   & = & 0,\\
+    u_t    & + & u u_x   + p_x/\rho   & = & 0,\\
+    p_t    & + & \gamma p u_x + u p_x & = & 0,
+  \end{array}
+\end{equation}
+
+where the subscript variable designates the variable used in the partial derivative, e.g $\rho_t = \partial_t \rho$
+
+\begin{equation}
+  \partial_t \mathbf{W} + \mathbf{A(W)} \partial_x \mathbf{W} = \mathbf{0}
+\end{equation}
+
+with
+\begin{equation}
+  \mathbf{A(W)} = \left[
+    \begin{array}{c c c c}
+      u & \rho     & 0 \\
+      0 & u        & 1/\rho\\
+      0 & \gamma p & u \\
+    \end{array}
+  \right]
+\end{equation}
+
+$A(W)$ has 3 eigenvalues: $\lambda_{-}=u-c$, $\lambda_{0}=u$ and $\lambda_{+}=u+c$, where $c=\sqrt{\frac{\gamma p}{\rho}}$ is the speed of sound. 
+
+A right column-eigenvectors basis:
+\begin{equation}
+  R^{(0)}=\left[
+    \begin{array}{c}
+      1\\
+      -c/\rho\\
+      c^2
+    \end{array} \right],
+  \;\;
+  R^{(1)}=\left[
+    \begin{array}{c}
+      1\\
+      0\\
+      0
+    \end{array} \right],
+  \;\;
+  R^{(2)}=\left[
+    \begin{array}{c}
+      1\\
+      c/\rho\\
+      c^2
+    \end{array} \right],
+\end{equation}
+
+A left line-eigenvector basis:
+\begin{equation}
+  L^{(0)}=\left[0, -\frac{\rho}{2c}, \frac{1}{2c^2}\right],\;\;\\
+  L^{(1)}=\left[1, 0, -\frac{1}{c^2} \right],\;\;\\
+  L^{(2)}=\left[0, \frac{\rho}{2c}, \frac{1}{2c^2}\right],
+\end{equation}
+
+Eigen identity : $A(W) = L \Lambda R$, where the matrix $L$ and $R$ are formed with the corresponding eigenvectors:
+\begin{equation}
+  L = \left[
+    \begin{array}{ccc}
+      0 & -\frac{\rho}{2c} & \frac{1}{2c^2}\\
+      1 & 0 & -\frac{1}{c^2}\\
+      0 & \frac{\rho}{2c} & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
+  \Lambda = \left[
+    \begin{array}{ccc}
+      u-c& 0 & 0\\
+      0  & u & 0\\
+      0  & 0 & u+c
+    \end{array}
+  \right],\;\;
+  R = \left[
+    \begin{array}{ccc}
+      1 & 1 & 1\\
+      -c/\rho & 0 & c/\rho\\
+      c^2 & 0 & c^2
+    \end{array}
+  \right].
+\end{equation}
+
+You can also check that $L R = Id$ (identity matrix).
+
+\subsubsection*{2D Euler system in primitive variables}
+The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
+
+\begin{equation}
+  \begin{array}{ccccccc}
+    \rho_t & + & u\rho_x+\rho u_x & + & v\rho_y+\rho u_y & = &0,\\
+    u_t    & + & u u_x + p_x/\rho & + & v u_y            & = &0,\\
+    v_t    & + & u v_x            & + & v v_y + p_y/\rho & = &0,\\
+    p_t    & + & \gamma p u_x + u p_x & + & \gamma p v_y + v p_y & = &0,
+  \end{array}
+\end{equation}
+
+where the subscript variable designates the variable used in the partial derivative, e.g $\rho_t = \partial_t \rho$
+
+\begin{equation}
+  \partial_t \mathbf{W} + \mathbf{A(W)} \partial_x \mathbf{W} + \mathbf{B(W)} \partial_y \mathbf{W} = \mathbf{0}
+\end{equation}
+
+with
+\begin{equation}
+  \mathbf{A(W)} = \left[
+    \begin{array}{c c c c}
+      u & \rho     & 0 & 0 \\
+      0 & u        & 0 & 1/\rho\\
+      0 & 0        & u & 0 \\
+      0 & \gamma p & 0 & u \\
+    \end{array}
+  \right],
+  \;\;
+  \mathbf{B(W)} = \left[
+    \begin{array}{c c c c}
+      v & 0 & \rho     & 0 \\
+      0 & v & 0        & 0\\
+      0 & 0 & v        & 1/\rho \\
+      0 & 0 & \gamma p & v \\
+    \end{array}
+  \right],
+\end{equation}
+
+$A(W)$ and B(W) have 4 eigenvalues: $\lambda_{-}=u-c$, $\lambda_{0}=u$ (2 times) and $\lambda_{+}=u+c$, where $c=\sqrt{\frac{\gamma p}{\rho}}$ is the speed of sound. 
+
+Eigen decompostion are: $A(W) = L_A \Lambda R_A$ and $B(W) = L_B \Lambda R_B$ with
+
+\begin{equation}
+  L_A = \left[
+    \begin{array}{cccc}
+      0 & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
+      1 & 0                & 0                &-\frac{1}{c^2}\\
+      1 & 0                & -1               &-\frac{1}{c^2}\\
+      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
+  R_A = \left[
+    \begin{array}{cccc}
+      1       & 1 & 1      & 1\\
+      -c/\rho & 0 & 0      & c/\rho\\
+      0       & v & 1/\rho & 0\\
+      c^2     & 0 & 0      & c^2
+    \end{array}
+  \right],\;\;
+\end{equation}
+
+
+
+\subsubsection*{3D Euler system in primitive variables}
+The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
+
+\begin{equation}
+  \begin{array}{ccccccccc}
+    \rho_t & + & u\rho_x+\rho u_x & + & v\rho_y+\rho u_y & + & w\rho_z+\rho u_z & = &0,\\
+    u_t    & + & u u_x + p_x/\rho & + & v u_y            & + & w u_z            & = &0,\\
+    v_t    & + & u v_x            & + & v v_y + p_y/\rho & + & w v_z            & = &0,\\
+    w_t    & + & u w_x            & + & v w_y            & + & w w_z + p_z/\rho & = &0,\\
+    p_t    & + & \gamma p u_x + u p_x & + & \gamma p v_y + v p_y & + & \gamma p w_z + w p_z & = &0,
+  \end{array}
+\end{equation}
+
+where the subscript variable designates the variable used in the partial derivative, e.g $\rho_t = \partial_t \rho$
+
+\begin{equation}
+  \partial_t \mathbf{W} + \mathbf{A(W)} \partial_x \mathbf{W} + \mathbf{B(W)} \partial_y \mathbf{W} + \mathbf{C(W)} \partial_z \mathbf{W} = \mathbf{0}
+\end{equation}
+
+with
+\begin{equation}
+  \mathbf{A(W)} = \left[
+    \begin{array}{c c c c c}
+      u & \rho     & 0 & 0 & 0 \\
+      0 & u        & 0 & 0 & 1/\rho\\
+      0 & 0        & u & 0 & 0 \\
+      0 & 0        & 0 & u & 0 \\
+      0 & \gamma p & 0 & 0 & u \\
+    \end{array}
+  \right],
+  \;\;
+  \mathbf{B(W)} = \left[
+    \begin{array}{c c c c c}
+      v & 0 & \rho     & 0 & 0 \\
+      0 & v & 0        & 0 & 0\\
+      0 & 0 & v        & 0 & 1/\rho \\
+      0 & 0 & 0        & v & 0 \\
+      0 & 0 & \gamma p & 0 & v \\
+    \end{array}
+  \right],
+  \;\;
+  \mathbf{C(W)} = \left[
+    \begin{array}{c c c c c}
+      w & 0 & 0 & \rho     & 0 \\
+      0 & w & 0 & 0        & 0\\
+      0 & 0 & w & 0        & 0 \\
+      0 & 0 & 0 & w        & 1/\rho \\
+      0 & 0 & 0 & \gamma p & w \\
+    \end{array}
+  \right].
+\end{equation}
+
+\subsubsection*{2D}
+
+\begin{equation}
+  \partial_t \mathbf{W} + \mathbf{A(W)} \partial_x \mathbf{W} + \mathbf{B(W)} \partial_y \mathbf{W} = \mathbf{0}
+\end{equation}
+
+with
+\begin{equation}
+  \mathbf{A(W)} = \left[
+    \begin{array}{c c c c}
+      u & \rho     & 0 & 0 \\
+      0 & u        & 0 & 1/\rho\\
+      0 & 0        & u & 0 \\
+      0 & \gamma p & 0 & u \\
+    \end{array}
+  \right],
+\end{equation}
+
+\begin{equation}
+  \mathbf{B(W)} = \left[
+    \begin{array}{c c c c}
+      v & 0 & \rho     & 0 \\
+      0 & v & 0        & 0 \\
+      0 & 0 & v        & 1/\rho \\
+      0 & 0 & \gamma p & v \\
+    \end{array}
+  \right],
+\end{equation}
+
+\subsection{Quasi-linear form in conservative variable}
+
+The compressible Euler system can be rewritten in a quasi-linear form:
+
+\begin{equation}
+  \partial_t \mathbf{U} + \mathbf{A(U)} \partial_x \mathbf{U} + \mathbf{B(U)} \partial_y \mathbf{U} + \mathbf{C(U)} \partial_z \mathbf{U} = \mathbf{0},
+\end{equation}
+
+where $A(U)=\frac{\partial F}{\partial U}$, $B(U)=\frac{\partial G}{\partial U}$, $C(U)=\frac{\partial H}{\partial U}$ are flux Jacobian matrices.
+
+When using the following notation for the conservative variables vector $U=[u_1, u_2, u_3, u_4, u_5]$, and for the flux vector $F=[f_1, f_2, f_3, f_4, f_5]$, the x direction flux Jacobian matrix $A(U)$ reads
+
+\begin{equation}
+  A(U)=\frac{\partial F}{\partial U} = \left[ \partial f_i/\partial u_j \right] = \left [
+    \begin{array}{c c c}
+      \partial f_1/\partial u_1 & \dots & \partial f_1/\partial u_5\\
+      \partial f_2/\partial u_1 & \dots & \partial f_2/\partial u_5\\
+      \vdots & \ddots & \vdots\\
+      \partial f_5/\partial u_1 & \dots & \partial f_5/\partial u_5\\
+    \end{array} \right ]
+  = \left[
+    \begin{array}{c c c c c}
+      
+    \end{array} \right ]
+\end{equation}
+
+\begin{thebibliography}{9}
+\bibitem[Toro]{toro} \emph{Riemann solvers and numerical methods for fluid dynamics. A practical introduction.}, E.F. Toro , Springer, 2nd edition, 1999.
+\bibitem[Zingale]{zingale} \emph{Notes on the Euler equations}, \url{http://bender.astro.sunysb.edu/hydro_by_example/compressible/Euler.pdf}
+\end{thebibliography}
+
+\end{document}
