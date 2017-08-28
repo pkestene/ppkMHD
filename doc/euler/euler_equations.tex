@@ -16,6 +16,8 @@
 
 \date{\today}
 
+\renewcommand{\arraystretch}{1.2}
+
 \begin{document}
 
 \maketitle
@@ -402,7 +404,14 @@ with
 
 $A(W)$, $B(W)$ and $C(W)$ have 5 eigenvalues: $\lambda_{-}=u-c$, $\lambda_{0}=u$ (3 times) and $\lambda_{+}=u+c$, where $c=\sqrt{\frac{\gamma p}{\rho}}$ is the speed of sound. 
 
-Eigen decompostions are: $\Lambda_A = L_A A(W) R_A$, $\Lambda_B = L_B B(W) R_B$ and $\Lambda_C = L_C C(W) R_C$ with
+Eigen decompositions are:\\
+$\Lambda_A = L_A A(W) R_A$, $\Lambda_B = L_B B(W) R_B$ and $\Lambda_C = L_C C(W) R_C$.
+
+% \begin{eqnarray}
+%   \Lambda_A &=& L_A A(W) R_A,\\
+%   \Lambda_B &=& L_B B(W) R_B,\\
+%   \Lambda_C &=& L_C C(W) R_C
+% \end{eqnarray}
 
 % A
 \begin{equation}
@@ -415,12 +424,18 @@ Eigen decompostions are: $\Lambda_A = L_A A(W) R_A$, $\Lambda_B = L_B B(W) R_B$ 
       0  & 0 & 0 & 0 & u+c
     \end{array}
   \right],\;\;
-  L_A = \left[
+\end{equation}
+
+Let $D_A=\rho (v-1) (w-1) + (1-\rho) (1-vw) = 1-vw -\rho(v+w-2vw)$:
+
+\begin{equation}
+L_A = \left[
     \begin{array}{ccccc}
-      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
-      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
-     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
-      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+      0                  & -\frac{\rho}{2c} & 0  & 0              & \frac{1}{2c^2}\\
+      \frac{1-v*w}{D_A} & 0 & -\frac{\rho (1-w)}{D_A} & -\frac{\rho (1-v)}{D_A} & -\frac{1 -v w}{D_A c^2}\\
+      -\frac{(1-w) v}{D_A} & 0 & \frac{1-\rho w}{D_A}  &  -\frac{v (1-\rho)}{D_A} & -\frac{(1 - w) v}{D_A c^2}\\
+      -\frac{(1-v)w}{D_A} & 0 &  -\frac{w (1-\rho)}{D_A} & \frac{1-\rho v}{D_A} &  \frac{(1-v)w}{D_A c^2} \\
+      0 & \frac{\rho}{2c}  & 0 & 0               & \frac{1}{2c^2}
     \end{array}
   \right],\;\;
   R_A = \left[
@@ -434,6 +449,77 @@ Eigen decompostions are: $\Lambda_A = L_A A(W) R_A$, $\Lambda_B = L_B B(W) R_B$ 
   \right],\;\;
 \end{equation}
 
+% B
+\begin{equation}
+  \Lambda_B = \left[
+    \begin{array}{ccccc}
+      v-c& 0 & 0 & 0 & 0\\
+      0  & v & 0 & 0 & 0\\
+      0  & 0 & v & 0 & 0\\
+      0  & 0 & 0 & v & 0\\
+      0  & 0 & 0 & 0 & v+c
+    \end{array}
+  \right],\;\;
+\end{equation}
+
+Let $D_B=\rho (w-1) (u-1) + (1-\rho) (1-wu) = 1-wu -\rho(w+u-2wu)$:
+
+\begin{equation}
+L_B = \left[
+    \begin{array}{ccccc}
+      0                  & 0 & -\frac{\rho}{2c}  & 0              & \frac{1}{2c^2}\\
+      -\frac{(1-w) u}{D_B} & \frac{1-\rho w}{D_B} & 0 & -\frac{u (1-\rho)}{D_B} &  \frac{(1-w)u}{D_B c^2}\\
+       \frac{1-w*u}{D_B} &  -\frac{\rho (1-w)}{D_B}  & 0 & -\frac{\rho (1-u)}{D_B} & -\frac{1 -w u}{D_B c^2}\\
+      -\frac{(1-u)w}{D_B} & -\frac{w (1-\rho)}{D_B} & 0 & \frac{1-\rho u}{D_B} & -\frac{(1 - u) w}{D_B c^2} \\
+      0 & 0 & \frac{\rho}{2c}  & 0               & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
+  R_B = \left[
+    \begin{array}{ccccc}
+      1       & \rho & 1 & \rho & 1 \\
+      0       & 1 & u    & u    & 0 \\
+      -c/\rho & 0 & 0    & 0    & c/\rho \\
+      0       & w & w    & 1    & 0 \\
+      c^2     & 0 & 0    & 0    & c^2
+    \end{array}
+  \right],\;\;
+\end{equation}
+
+% C
+\begin{equation}
+  \Lambda_C = \left[
+    \begin{array}{ccccc}
+      w-c& 0 & 0 & 0 & 0\\
+      0  & w & 0 & 0 & 0\\
+      0  & 0 & w & 0 & 0\\
+      0  & 0 & 0 & w & 0\\
+      0  & 0 & 0 & 0 & w+c
+    \end{array}
+  \right],\;\;
+\end{equation}
+
+Let $D_C=\rho (u-1) (v-1) + (1-\rho) (1-uv) = 1-uv -\rho(u+v-2uv)$:
+
+\begin{equation}
+L_C = \left[
+    \begin{array}{ccccc}
+      0 & 0 & 0 & -\frac{\rho}{2c} & \frac{1}{2c^2}\\
+      -\frac{(1-v)u}{D_C} & \frac{1-\rho v}{D_C} & -\frac{u(1-\rho)}{D_C} & 0 & \frac{(1-v)u}{D_C c^2}\\
+      -\frac{(1-u)v}{D_C} & -\frac{v(1-\rho)}{D_C} & \frac{1-\rho u}{D_C} & 0 & \frac{(1-u)v}{D_C c^2}\\
+      \frac{1-u v}{D_C} & -\frac{\rho(1-v)}{D_C} & -\frac{\rho(1-u)}{D_C} & 0 & -\frac{1-uv}{D_C c^2}\\
+      0 & 0 & 0&  \frac{\rho}{2c} & \frac{1}{2 c^2}
+      \end{array}
+  \right],\;\;
+  R_C = \left[
+    \begin{array}{ccccc}
+      1       & \rho & \rho & 1 & 1 \\
+      0       & 1    & u    & u & 0 \\
+      0       & v    & 1    & v & 0 \\
+      -c/\rho & 0    & 0    & 0 & c/\rho \\
+      c^2     & 0    & 0    & 0 & c^2
+    \end{array}
+  \right],\;\;
+\end{equation}
 
 \subsection{Quasi-linear form in conservative variable}
 
