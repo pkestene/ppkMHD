@@ -400,6 +400,40 @@ with
   \right].
 \end{equation}
 
+$A(W)$, $B(W)$ and $C(W)$ have 5 eigenvalues: $\lambda_{-}=u-c$, $\lambda_{0}=u$ (3 times) and $\lambda_{+}=u+c$, where $c=\sqrt{\frac{\gamma p}{\rho}}$ is the speed of sound. 
+
+Eigen decompostions are: $\Lambda_A = L_A A(W) R_A$, $\Lambda_B = L_B B(W) R_B$ and $\Lambda_C = L_C C(W) R_C$ with
+
+% A
+\begin{equation}
+  \Lambda_A = \left[
+    \begin{array}{ccccc}
+      u-c& 0 & 0 & 0 & 0\\
+      0  & u & 0 & 0 & 0\\
+      0  & 0 & u & 0 & 0\\
+      0  & 0 & 0 & u & 0\\
+      0  & 0 & 0 & 0 & u+c
+    \end{array}
+  \right],\;\;
+  L_A = \left[
+    \begin{array}{ccccc}
+      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
+      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
+     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
+      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
+  R_A = \left[
+    \begin{array}{ccccc}
+      1       & 1 & \rho & \rho & 1 \\
+      -c/\rho & 0 & 0    & 0    & c/\rho \\
+      0       & v & 1    & v    & 0 \\
+      0       & w & w    & 1    & 0 \\
+      c^2     & 0 & 0    & 0    & c^2
+    \end{array}
+  \right],\;\;
+\end{equation}
+
 
 \subsection{Quasi-linear form in conservative variable}
 
