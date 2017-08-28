@@ -8,6 +8,9 @@
 \usepackage[a4paper,margin=1.8cm,footskip=.5cm]{geometry}
 \usepackage{hyperref}
 
+% this document is supposed to compiled using latexmk; e.g.
+% latexmk -pdf euler_equations.tex
+
 \title{Minimal information about Euler equations}
 \author{Pierre Kestener}
 
@@ -18,7 +21,7 @@
 \maketitle
 
 \begin{abstract}
-Just gathering important equations about the compressible Euler system of equations.
+Just gathering important equations about the compressible Euler system of equations in 1D, 2D and 3D space. In particular, we give all the flux Jacobian matrix, and the corresponding eigen decomposition in conservative and primitive variables in the case of perfect gas EOS.
 \end{abstract}
 
 \section{Compressible Euler equations}
@@ -212,21 +215,28 @@ A left line-eigenvector basis:
 
 Eigen identity : $\Lambda = L A(W) R$, where the matrix $L$ and $R$ are formed with the corresponding eigenvectors:
 \begin{equation}
-  L = \left[
-    \begin{array}{ccc}
-      0 & -\frac{\rho}{2c} & \frac{1}{2c^2}\\
-      1 & 0 & -\frac{1}{c^2}\\
-      0 & \frac{\rho}{2c} & \frac{1}{2c^2}
-    \end{array}
-  \right],\;\;
   \Lambda = \left[
     \begin{array}{ccc}
       u-c& 0 & 0\\
       0  & u & 0\\
       0  & 0 & u+c
     \end{array}
-  \right],\;\;
-  R = \left[
+  \right],\;
+  L=\left[
+    \begin{array}{ccc}
+      0 & -\frac{\rho}{2c} & \frac{1}{2c^2}\\
+      1 & 0 & -\frac{1}{c^2}\\
+      0 & \frac{\rho}{2c} & \frac{1}{2c^2}
+    \end{array}
+  \right],\;
+  A(W)=\left[
+    \begin{array}{c c c c}
+      u & \rho     & 0 \\
+      0 & u        & 1/\rho\\
+      0 & \gamma p & u \\
+    \end{array}
+  \right],\;
+  R=\left[
     \begin{array}{ccc}
       1 & 1 & 1\\
       -c/\rho & 0 & c/\rho\\
@@ -235,7 +245,7 @@ Eigen identity : $\Lambda = L A(W) R$, where the matrix $L$ and $R$ are formed w
   \right].
 \end{equation}
 
-You can also check that $L R = Id$ (identity matrix).
+You can also check that $L$ is the the matrix inverse of $R$: $L = R^{-1}$.
 
 \subsubsection*{2D Euler system in primitive variables}
 The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
@@ -278,17 +288,10 @@ with
 
 $A(W)$ and B(W) have 4 eigenvalues: $\lambda_{-}=u-c$, $\lambda_{0}=u$ (2 times) and $\lambda_{+}=u+c$, where $c=\sqrt{\frac{\gamma p}{\rho}}$ is the speed of sound. 
 
-Eigen decompostion are: $A(W) = L_A \Lambda R_A$ and $B(W) = L_B \Lambda R_B$ with
+Eigen decompostions are: $\Lambda = L_A A(W) R_A$ and $\Lambda = L_B B(W) R_B$ with
 
+% A
 \begin{equation}
-  L_A = \left[
-    \begin{array}{cccc}
-      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
-      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
-     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
-      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
-    \end{array}
-  \right],\;\;
   \Lambda = \left[
     \begin{array}{cccc}
       u-c& 0 & 0 & 0\\
@@ -297,11 +300,47 @@ Eigen decompostion are: $A(W) = L_A \Lambda R_A$ and $B(W) = L_B \Lambda R_B$ wi
       0  & 0 & 0 & u+c
     \end{array}
   \right],\;\;
+  L_A = \left[
+    \begin{array}{cccc}
+      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
+      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
+     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
+      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
   R_A = \left[
     \begin{array}{cccc}
       1       & 1 & \rho & 1\\
       -c/\rho & 0 & 0    & c/\rho\\
       0       & v & 1    & 0\\
+      c^2     & 0 & 0    & c^2
+    \end{array}
+  \right],\;\;
+\end{equation}
+
+% B
+\begin{equation}
+  \Lambda = \left[
+    \begin{array}{cccc}
+      u-c& 0 & 0 & 0\\
+      0  & u & 0 & 0\\
+      0  & 0 & u & 0\\
+      0  & 0 & 0 & u+c
+    \end{array}
+  \right],\;\;
+  L_B = \left[
+    \begin{array}{cccc}
+      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
+      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
+     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
+      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+    \end{array}
+  \right],\;\;
+  R_B = \left[
+    \begin{array}{cccc}
+      1       & 1 & \rho & 1\\
+      0       & 1 & u    & 0\\
+      -c/\rho & 0 & 0    & c/\rho\\
       c^2     & 0 & 0    & c^2
     \end{array}
   \right],\;\;
