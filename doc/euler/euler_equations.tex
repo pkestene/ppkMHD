@@ -288,11 +288,11 @@ with
 
 $A(W)$ and B(W) have 4 eigenvalues: $\lambda_{-}=u-c$, $\lambda_{0}=u$ (2 times) and $\lambda_{+}=u+c$, where $c=\sqrt{\frac{\gamma p}{\rho}}$ is the speed of sound. 
 
-Eigen decompostions are: $\Lambda = L_A A(W) R_A$ and $\Lambda = L_B B(W) R_B$ with
+Eigen decompostions are: $\Lambda_A = L_A A(W) R_A$ and $\Lambda_B = L_B B(W) R_B$ with
 
 % A
 \begin{equation}
-  \Lambda = \left[
+  \Lambda_A = \left[
     \begin{array}{cccc}
       u-c& 0 & 0 & 0\\
       0  & u & 0 & 0\\
@@ -320,26 +320,26 @@ Eigen decompostions are: $\Lambda = L_A A(W) R_A$ and $\Lambda = L_B B(W) R_B$ w
 
 % B
 \begin{equation}
-  \Lambda = \left[
+  \Lambda_B = \left[
     \begin{array}{cccc}
-      u-c& 0 & 0 & 0\\
-      0  & u & 0 & 0\\
-      0  & 0 & u & 0\\
-      0  & 0 & 0 & u+c
+      v-c& 0 & 0 & 0\\
+      0  & v & 0 & 0\\
+      0  & 0 & v & 0\\
+      0  & 0 & 0 & v+c
     \end{array}
   \right],\;\;
   L_B = \left[
     \begin{array}{cccc}
-      0                  & -\frac{\rho}{2c} & 0                & \frac{1}{2c^2}\\
-      \frac{1}{1-\rho v} & 0                & -\frac{\rho}{1-\rho v} & -\frac{1}{c^2 (1-\rho v)}\\
-     -\frac{v}{1-\rho v} & 0                & \frac{1}{1-\rho v}     &  \frac{v}{c^2 (1-\rho v)}\\
-      0 & \frac{\rho}{2c}  & 0                & \frac{1}{2c^2}
+      0                  & 0 &-\frac{\rho}{2c} & \frac{1}{2c^2}\\
+      \frac{1}{1-\rho u} & -\frac{\rho}{1-\rho u} & 0 & -\frac{1}{c^2 (1-\rho u)}\\
+     -\frac{u}{1-\rho u} &  \frac{1}{1-\rho u} & 0     &  \frac{u}{c^2 (1-\rho u)}\\
+      0 & 0 & \frac{\rho}{2c} & \frac{1}{2c^2}
     \end{array}
   \right],\;\;
   R_B = \left[
     \begin{array}{cccc}
       1       & 1 & \rho & 1\\
-      0       & 1 & u    & 0\\
+      0       & u & 1    & 0\\
       -c/\rho & 0 & 0    & c/\rho\\
       c^2     & 0 & 0    & c^2
     \end{array}
