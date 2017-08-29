@@ -552,7 +552,7 @@ When using the following notation for the conservative variables vector $U=[u_1,
     \end{array} \right ]
 \end{equation}
 
-\subsubsection*{Jacobian matrix in 1D}
+\subsubsection*{Jacobian matrix in 1D: \boldmath $\partial F/\partial U$}
 
 Let's define the vector of conservative variables:
 \begin{equation}
@@ -570,9 +570,11 @@ Let's define the vector of conservative variables:
     \end{array}
   \right]
 \end{equation}
+
 Then the pressure is defined by $p=(\gamma-1)[u_3-\frac{u_2^2}{2u_1} ]$.
 
-By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}u^2+\frac{c^2}{\gamma-1}$, the flux vector becomes:
+Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{u^2}{2}$, which is equivalent to $H=(E+p)/\rho = \frac{1}{2}u^2+\frac{c^2}{\gamma-1}$. Then the flux vector becomes:
+
 \begin{equation}
   F(U) = \left[
     \begin{array}{c}
@@ -601,13 +603,15 @@ By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}u^2+\frac{c^2}{\gamm
   \right]
 \end{equation}
 
-\begin{equation}
-  A(U) = \frac{\partial F}{\partial U} = \left[ \partial f_i/\partial u_j \right] = \left[
+\begin{eqnarray}
+  A(U) = \frac{\partial F}{\partial U} = \left[ \partial f_i/\partial u_j \right] & = & \left[
     \begin{array}{ccc}
       0 & 1 & 0 \\
-      -(3-\gamma)\frac{u_2^2}{u_1^2} & 
+      -(3-\gamma)\frac{u_2^2}{2u_1^2} & (3-\gamma)\frac{u_2}{u_1} & \gamma-1\\
+      -\gamma\frac{u_2 u_3}{u_1^2} + (\gamma-1)\frac{u_2^3}{u_1^3} & \gamma\frac{u_3}{u_1}-\frac{3}{2}(\gamma-1)\frac{u_2^2}{u_1^2} & \gamma\frac{u_2}{u_1}
     \end{array}
-  \right] = \left[
+   \right] \\
+  &=& \left[
     \begin{array}{ccc}
       0 & 1 & 0 \\
       \frac{1}{2}(\gamma-3) u^2 & (3-\gamma) u & \gamma-1\\
@@ -615,24 +619,140 @@ By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}u^2+\frac{c^2}{\gamm
       % \frac{1}{2}(\gamma-2)u^3-\frac{c^2 u}{\gamma-1} & \frac{3-2\gamma}{2}u^2+\frac{c^2}{\gamma-1} & \gamma u
     \end{array}
   \right]
-\end{equation}
+\end{eqnarray}
 
-\subsubsection*{Jacobian matrix in 2D}
+\subsubsection*{Jacobian matrix in 2D: \boldmath $\partial F/\partial U, \; \partial G/\partial U$}
 
-By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}(u^2+v^2)+\frac{c^2}{\gamma-1}$
-
+Let's define the vector of conservative variables:
 \begin{equation}
-  A(U) = \frac{\partial F}{\partial U} = \left[
-    \begin{array}{cccc}
-      0 & 1 & 0 & 0\\
-      (\gamma-1)H- u^2-c^2 & (3-\gamma) u & -(\gamma-1)v & \gamma-1\\
-      -u v & v & u & 0\\
-      \frac{1}{2} u [(\gamma-3)H-c^2] & H-(\gamma-1)u^2 & -(\gamma-1)uv &\gamma u
+  U = \left[
+    \begin{array}{c}
+      u_1\\
+      u_2\\
+      u_3\\
+      u_4
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho\\
+      \rho u\\
+      \rho v\\
+      E
     \end{array}
   \right]
 \end{equation}
 
-\subsubsection*{Jacobian matrix in 3D}
+Then the pressure is defined by $p=(\gamma-1)[u_4-\frac{u_2^2+u_3^2}{2u_1} ]$.
+Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{u^2+v^2}{2}$, which is equivalent to $H = (E+p)/\rho = \frac{1}{2}(u^2+v^2)+\frac{c^2}{\gamma-1}$.
+
+Then the flux vectors become:
+% 2D F(U)
+\begin{equation}
+  F(U) = \left[
+    \begin{array}{c}
+      f_1 \\
+      f_2 \\
+      f_3 \\
+      f_4
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho u\\
+      \rho u^2 + p\\
+      \rho u v\\
+      u(E+p)
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_2\\
+      \frac{u_2^2}{u_1} + (\gamma-1) (u_4-\frac{u_2^2+u_3^2}{2u_1})\\
+      \frac{u_2 u_3}{u_1}\\
+      \frac{u_2}{u_1} [ u_4 + (\gamma-1)(u_4-\frac{u_2^2+u_3^2}{2u_1}) ]
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_2\\
+      (\gamma-1)u_4 + (3-\gamma)\frac{u_2^2}{2u_1} - (\gamma-1)\frac{u_3^2}{2u_1}\\
+      \frac{u_2 u_3}{u_1}\\
+      \gamma \frac{u_2 u_4}{u_1} - (\gamma-1) u_2 \frac{u_2^2+u_3^2}{2 u_1^2}
+    \end{array}
+  \right]
+\end{equation}
+
+% 2D G(U)
+\begin{equation}
+  G(U) = \left[
+    \begin{array}{c}
+      g_1 \\
+      g_2 \\
+      g_3 \\
+      g_4
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho v\\
+      \rho v u\\
+      \rho v^2 + p\\
+      v(E+p)
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_3\\
+      \frac{u_2 u_3}{u_1}\\
+      \frac{u_3^2}{u_1} + (\gamma-1) (u_4-\frac{u_2^2+u_3^2}{2u_1})\\
+      \frac{u_3}{u_1} [ u_4 + (\gamma-1)(u_4-\frac{u_2^2+u_3^2}{2u_1}) ]
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_3\\
+      \frac{u_2 u_3}{u_1}\\
+      (\gamma-1)u_4 + (3-\gamma)\frac{u_3^2}{2u_1} - (\gamma-1)\frac{u_2^2}{2u_1}\\
+      \gamma \frac{u_3 u_4}{u_1} - (\gamma-1) u_3 \frac{u_2^2+u_3^2}{2 u_1^2}
+    \end{array}
+  \right]
+\end{equation}
+
+% 2D A(U)
+\begin{eqnarray}
+  A(U) = \frac{\partial F}{\partial U} = \left[ \partial f_i/\partial u_j \right] & = & \left[
+    \begin{array}{cccc}
+      0 & 1 & 0 & 0\\
+      -(3-\gamma)\frac{u_2^2}{2 u_1^2} + (\gamma-1)\frac{u_3^2}{2 u_1^2} & (3-\gamma) \frac{u_2}{u_1} & -(\gamma-1)\frac{u_3}{u_1} & \gamma-1\\
+      -\frac{u_2 u_3}{u_1^2} & \frac{u_3}{u_1} & \frac{u_2}{u_1} & 0\\
+       -\gamma\frac{u_2 u_4}{u_1^2} + (\gamma-1)u_2 \frac{u_2^2+u_3^2}{u_1^3}& \gamma \frac{u_4}{u_1} -\frac{\gamma-1}{2 u_1^2} (3u_2^2+u_3^2) & -(\gamma-1)\frac{u_2 u_3}{u_1^2} &\gamma \frac{u_2}{u_1}
+    \end{array}
+  \right]\\
+  &=& \left[
+    \begin{array}{cccc}
+      0 & 1 & 0 & 0\\
+      -\frac{3-\gamma}{2}u^2+\frac{\gamma-1}{2}v^2 & (3-\gamma) u & -(\gamma-1)v & \gamma-1\\
+      -u v & v & u & 0\\
+      - u [H-\frac{\gamma-1}{2} (u^2+v^2) ] & H-(\gamma-1)u^2 & -(\gamma-1)uv &\gamma u
+    \end{array}
+  \right]
+\end{eqnarray}
+
+% 2D B(U)
+\begin{eqnarray}
+  B(U) = \frac{\partial G}{\partial U} = \left[ \partial g_i/\partial u_j \right] & = & \left[
+    \begin{array}{cccc}
+      0 & 0 & 1 & 0\\
+      -\frac{u_2 u_3}{u_1^2} & \frac{u_3}{u_1} & \frac{u_2}{u_1} & 0\\
+      -(3-\gamma)\frac{u_3^2}{2 u_1^2} + (\gamma-1)\frac{u_2^2}{2 u_1^2} & -(\gamma-1)\frac{u_2}{u_1} & (3-\gamma) \frac{u_3}{u_1} & \gamma-1\\
+       -\gamma\frac{u_3 u_4}{u_1^2} + (\gamma-1)u_3 \frac{u_2^2+u_3^2}{u_1^3} & -(\gamma-1)\frac{u_3 u_2}{u_1^2} & \gamma \frac{u_4}{u_1} -\frac{\gamma-1}{2 u_1^2} (3u_3^2+u_2^2) &\gamma \frac{u_3}{u_1}
+    \end{array}
+  \right]\\
+  &=& \left[
+    \begin{array}{cccc}
+      0 & 0 & 1 & 0\\
+      -u v & v & u & 0\\
+      -\frac{3-\gamma}{2}v^2+\frac{\gamma-1}{2}u^2 & -(\gamma-1)u  & (3-\gamma) v & \gamma-1\\
+      - v [H-\frac{\gamma-1}{2} (u^2+v^2) ] & -(\gamma-1)uv & H-(\gamma-1)v^2 &\gamma v
+    \end{array}
+  \right]
+\end{eqnarray}
+
+\subsubsection*{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
 
 By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}(u^2+v^2+w^2)+\frac{c^2}{\gamma-1}$
 
