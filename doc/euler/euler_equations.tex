@@ -62,7 +62,8 @@ where the flux function is defined by
 \begin{itemize}
 \item total (internal + kinetic) energy per unit volume $E = \rho \left( e + \frac{1}{2} u^2 \right) = \frac{p}{\gamma-1} + \frac{1}{2} \rho u^2$,
 \item specific (per mass unit) internal energy $e=\frac{p}{(\gamma-1)\rho}$.
-\item total enthalpy $H = E + p$ per unit volume
+\item total enthalpy $H = (E + p)/\rho$ per mass unit (specific enthalpy)
+\item another useful relation $\frac{\gamma E}{\rho}=H+(\gamma-1)u^2/2$.
 \end{itemize}
 
 
@@ -102,6 +103,8 @@ where the flux functions are defined by
 \end{equation}
 
 Total (internal + kinetic) energy $E = \rho \left( e + \frac{1}{2} (u^2+v^2) \right) = \frac{p}{\gamma-1} + \frac{1}{2} \rho (u^2+v^2)$.
+
+Energy-enthalpy relation: $\frac{\gamma E}{\rho}=H+(\gamma-1)(u^2+v^2)/2$.
 
 \subsubsection*{3D Euler system in conservative variables}
 The compressible Euler system reads in conservative variables:\\
@@ -151,6 +154,8 @@ where the flux functions are defined by
 \end{equation}
 
 Total (internal + kinetic) energy $E = \rho \left( e + \frac{1}{2} (u^2+v^2+w^2) \right) = \frac{p}{\gamma-1} + \frac{1}{2} \rho (u^2+v^2+w^2)$.
+
+Energy-enthalpy relation: $\frac{\gamma E}{\rho}=H+(\gamma-1)(u^2+v^2+w^2)/2$.
 
 \subsection{Euler system in primitive variables}
 
@@ -521,7 +526,7 @@ L_C = \left[
   \right],\;\;
 \end{equation}
 
-\subsection{Quasi-linear form in conservative variable}
+\subsection{Quasi-linear form in conservative variables}
 
 The compressible Euler system can be rewritten in a quasi-linear form:
 
@@ -546,6 +551,115 @@ When using the following notation for the conservative variables vector $U=[u_1,
       
     \end{array} \right ]
 \end{equation}
+
+\subsubsection*{Jacobian matrix in 1D}
+
+Let's define the vector of conservative variables:
+\begin{equation}
+  U = \left[
+    \begin{array}{c}
+      u_1\\
+      u_2\\
+      u_3
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho\\
+      \rho u\\
+      E
+    \end{array}
+  \right]
+\end{equation}
+Then the pressure is defined by $p=(\gamma-1)[u_3-\frac{u_2^2}{2u_1} ]$.
+
+By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}u^2+\frac{c^2}{\gamma-1}$, the flux vector becomes:
+\begin{equation}
+  F(U) = \left[
+    \begin{array}{c}
+      f_1 \\
+      f_2 \\
+      f_3
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho u\\
+      \rho u^2 + p\\
+      u(E+p)
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_2\\
+      \frac{u_2^2}{u_1} + (\gamma-1) (u_3-\frac{u_2^2}{2u_1})\\
+      \frac{u_2}{u_1} [ u_3 + (\gamma-1)(u_3-\frac{u_2^2}{2u_1}) ]
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_2\\
+      (3-\gamma)\frac{u_2^2}{2u_1}+(\gamma-1)u_3\\
+      \gamma \frac{u_2}{u_1} u_3 - \frac{1}{2}(\gamma-1)\frac{u_2^3}{u_1^2}
+    \end{array}
+  \right]
+\end{equation}
+
+\begin{equation}
+  A(U) = \frac{\partial F}{\partial U} = \left[ \partial f_i/\partial u_j \right] = \left[
+    \begin{array}{ccc}
+      0 & 1 & 0 \\
+      -(3-\gamma)\frac{u_2^2}{u_1^2} & 
+    \end{array}
+  \right] = \left[
+    \begin{array}{ccc}
+      0 & 1 & 0 \\
+      \frac{1}{2}(\gamma-3) u^2 & (3-\gamma) u & \gamma-1\\
+      u [\frac{1}{2}(\gamma-1)u^2-H] & H-(\gamma-1)u^2 & \gamma u
+      % \frac{1}{2}(\gamma-2)u^3-\frac{c^2 u}{\gamma-1} & \frac{3-2\gamma}{2}u^2+\frac{c^2}{\gamma-1} & \gamma u
+    \end{array}
+  \right]
+\end{equation}
+
+\subsubsection*{Jacobian matrix in 2D}
+
+By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}(u^2+v^2)+\frac{c^2}{\gamma-1}$
+
+\begin{equation}
+  A(U) = \frac{\partial F}{\partial U} = \left[
+    \begin{array}{cccc}
+      0 & 1 & 0 & 0\\
+      (\gamma-1)H- u^2-c^2 & (3-\gamma) u & -(\gamma-1)v & \gamma-1\\
+      -u v & v & u & 0\\
+      \frac{1}{2} u [(\gamma-3)H-c^2] & H-(\gamma-1)u^2 & -(\gamma-1)uv &\gamma u
+    \end{array}
+  \right]
+\end{equation}
+
+\subsubsection*{Jacobian matrix in 3D}
+
+By defining the volumic enthalpy $H=(E+p)/\rho = \frac{1}{2}(u^2+v^2+w^2)+\frac{c^2}{\gamma-1}$
+
+\begin{equation}
+  A(U) = \frac{\partial F}{\partial U} = \left[
+    \begin{array}{ccccc}
+      0 & 1 & 0 & 0 & 0\\
+      (\gamma-1)H- u^2-c^2 & (3-\gamma) u & -(\gamma-1)v & -(\gamma-1)w & \gamma-1\\
+      -u v & v & u & 0 & 0\\
+      -u w & w & 0 & u & 0\\
+      \frac{1}{2} u [(\gamma-3)H-c^2] & H-(\gamma-1)u^2 & -(\gamma-1)uv &-(\gamma-1)uw & \gamma u
+    \end{array}
+  \right]
+\end{equation}
+
+\begin{equation}
+  B(U) = \frac{\partial G}{\partial U} = \left[
+    \begin{array}{ccccc}
+      0 & 0 & 1 & 0 & 0\\
+      -v u & 0 & w & v & 0\\
+      (\gamma-1)H- v^2-c^2 & -(\gamma-1)u & (3-\gamma) v & -(\gamma-1)w &  \gamma-1\\
+      -v w & w & v & 0 & 0\\
+      \frac{1}{2} u [(\gamma-3)H-c^2] & -(\gamma-1)vu & H-(\gamma-1)v^2 & -(\gamma-1)vw & \gamma v
+    \end{array}
+  \right]
+\end{equation}
+
 
 \begin{thebibliography}{9}
 \bibitem[Toro]{toro} \emph{Riemann solvers and numerical methods for fluid dynamics. A practical introduction.}, E.F. Toro , Springer, 2nd edition, 1999.
