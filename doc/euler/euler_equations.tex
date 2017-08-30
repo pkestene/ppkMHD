@@ -641,9 +641,10 @@ Let's define the vector of conservative variables:
     \end{array}
   \right]
 \end{equation}
+and denote the square velocity norm : $V^2=u^2+v^2$.
 
 Then the pressure is defined by $p=(\gamma-1)[u_4-\frac{u_2^2+u_3^2}{2u_1} ]$.
-Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{u^2+v^2}{2}$, which is equivalent to $H = (E+p)/\rho = \frac{1}{2}(u^2+v^2)+\frac{c^2}{\gamma-1}$.
+Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{V^2}{2}$, which is equivalent to $H = (E+p)/\rho = \frac{V^2}{2}+\frac{c^2}{\gamma-1}$.
 
 Then the flux vectors become:
 % 2D F(U)
@@ -725,9 +726,9 @@ Then the flux vectors become:
   &=& \left[
     \begin{array}{cccc}
       0 & 1 & 0 & 0\\
-      -\frac{3-\gamma}{2}u^2+\frac{\gamma-1}{2}v^2 & (3-\gamma) u & -(\gamma-1)v & \gamma-1\\
+      \frac{\gamma-1}{2}V^2-u^2 & (3-\gamma) u & -(\gamma-1)v & \gamma-1\\
       -u v & v & u & 0\\
-      - u [H-\frac{\gamma-1}{2} (u^2+v^2) ] & H-(\gamma-1)u^2 & -(\gamma-1)uv &\gamma u
+      - u [H-\frac{\gamma-1}{2} V^2 ] & H-(\gamma-1)u^2 & -(\gamma-1)uv &\gamma u
     \end{array}
   \right]
 \end{eqnarray}
@@ -746,12 +747,13 @@ Then the flux vectors become:
     \begin{array}{cccc}
       0 & 0 & 1 & 0\\
       -u v & v & u & 0\\
-      -\frac{3-\gamma}{2}v^2+\frac{\gamma-1}{2}u^2 & -(\gamma-1)u  & (3-\gamma) v & \gamma-1\\
-      - v [H-\frac{\gamma-1}{2} (u^2+v^2) ] & -(\gamma-1)uv & H-(\gamma-1)v^2 &\gamma v
+      \frac{\gamma-1}{2}V^2-v^2 & -(\gamma-1)u  & (3-\gamma) v & \gamma-1\\
+      - v [H-\frac{\gamma-1}{2} V^2 ] & -(\gamma-1)uv & H-(\gamma-1)v^2 &\gamma v
     \end{array}
   \right]
 \end{eqnarray}
 
+\newpage 
 \subsubsection*{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
 
 Let's define the vector of conservative variables:
@@ -774,9 +776,10 @@ Let's define the vector of conservative variables:
     \end{array}
   \right]
 \end{equation}
+and denote the square velocity norm : $V^2=u^2+v^2+w^2$.
 
-Then the pressure is defined by $p=(\gamma-1)[u_5-\frac{u_2^2+u_3^2+u_4^2}{2u_1} ]$.
-Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{u^2+v^2+w^2}{2}$, which is equivalent to $H = (E+p)/\rho = \frac{1}{2}(u^2+v^2+w^2)+\frac{c^2}{\gamma-1}$.
+The pressure in conservative variables is defined by $p=(\gamma-1)[u_5-\frac{u_2^2+u_3^2+u_4^2}{2u_1} ]$.
+Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{V^2}{2}$, which is equivalent to $H = (E+p)/\rho = \frac{V^2}{2}+\frac{c^2}{\gamma-1}$.
 
 Then the flux vectors become:
 % 3D F(U)
@@ -808,7 +811,7 @@ Then the flux vectors become:
   \right] = \left[
     \begin{array}{c}
       u_2\\
-      (\gamma-1)u_5 + (3-\gamma)\frac{u_2^2}{2u_1} - (\gamma-1)\frac{u_3^2+u_4^2}{2u_1}\\
+      (\gamma-1)u_5 + \frac{u_2^2}{u_1} - (\gamma-1)\frac{u_2^2+u_3^2+u_4^2}{2u_1}\\
       \frac{u_2 u_3}{u_1}\\
       \frac{u_2 u_4}{u_1}\\
       \gamma \frac{u_2 u_5}{u_1} - (\gamma-1) u_2 \frac{u_2^2+u_3^2+u_4^2}{2 u_1^2}
@@ -816,34 +819,125 @@ Then the flux vectors become:
   \right]
 \end{equation}
 
+% 3D G(U)
+\begin{equation}
+  G(U) = \left[
+    \begin{array}{c}
+      g_1 \\
+      g_2 \\
+      g_3 \\
+      g_4 \\
+      g_5
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho v\\
+      \rho v u\\
+      \rho v^2 + p\\
+      \rho v w\\
+      v(E+p)
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_3\\
+      \frac{u_3 u_2}{u_1}\\
+      \frac{u_3^2}{u_1} + (\gamma-1) (u_5-\frac{u_2^2+u_3^2+u_4^2}{2u_1})\\
+      \frac{u_3 u_4}{u_1}\\
+      \frac{u_3}{u_1} [ u_5 + (\gamma-1)(u_5-\frac{u_2^2+u_3^2+u_4^2}{2u_1}) ]
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_3\\
+      \frac{u_3 u_2}{u_1}\\
+      (\gamma-1)u_5 + \frac{u_3^2}{u_1} - (\gamma-1)\frac{u_2^2+u_3^2+u_4^2}{2u_1}\\
+      \frac{u_3 u_4}{u_1}\\
+      \gamma \frac{u_3 u_5}{u_1} - (\gamma-1) u_3 \frac{u_2^2+u_3^2+u_4^2}{2 u_1^2}
+    \end{array}
+  \right]
+\end{equation}
 
+% 3D H(U)
+\begin{equation}
+  H(U) = \left[
+    \begin{array}{c}
+      h_1 \\
+      h_2 \\
+      h_3 \\
+      h_4 \\
+      h_5
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      \rho w\\
+      \rho w u\\
+      \rho w v\\
+      \rho w^2 + p\\
+      w(E+p)
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_4\\
+      \frac{u_4 u_2}{u_1}\\
+      \frac{u_4 u_3}{u_1}\\
+      \frac{u_4^2}{u_1} + (\gamma-1) (u_5-\frac{u_2^2+u_3^2+u_4^2}{2u_1})\\
+      \frac{u_4}{u_1} [ u_5 + (\gamma-1)(u_5-\frac{u_2^2+u_3^2+u_4^2}{2u_1}) ]
+    \end{array}
+  \right] = \left[
+    \begin{array}{c}
+      u_4\\
+      \frac{u_4 u_2}{u_1}\\
+      \frac{u_4 u_3}{u_1}\\
+      (\gamma-1)u_5 + \frac{u_4^2}{u_1} - (\gamma-1)\frac{u_2^2+u_3^2+u_4^2}{2u_1}\\
+      \gamma \frac{u_4 u_5}{u_1} - (\gamma-1) u_4 \frac{u_2^2+u_3^2+u_4^2}{2 u_1^2}
+    \end{array}
+  \right]
+\end{equation}
+
+\newpage
+% 3D A(U)
 \begin{eqnarray}
-  A(U) = \frac{\partial F}{\partial U} = \left[ \partial f_i/\partial u_j \right] & = & \left[
+  A(U) = \frac{\partial F}{\partial U} = \left[ \frac{\partial f_i}{\partial u_j} \right] & = & \left[
     \begin{array}{ccccc}
-      
+      0 & 1 & 0 & 0 & 0\\
+      -\frac{u_2^2}{u_1^2} + (\gamma-1)\frac{V^2}{2} & (3-\gamma) \frac{u_2}{u_1} & -(\gamma-1)\frac{u_3}{u_1} & -(\gamma-1)\frac{u_4}{u_1} & \gamma-1\\
+      -\frac{u_2 u_3}{u_1^2} & \frac{u_3}{u_1} & \frac{u_2}{u_1} & 0 & 0\\
+      -\frac{u_2 u_4}{u_1^2} & \frac{u_4}{u_1} & 0 & \frac{u_2}{u_1} & 0\\
+       -\gamma\frac{u_2 u_5}{u_1^2} + (\gamma-1)\frac{u_2}{u_1}V^2  & \gamma \frac{u_5}{u_1} -(\gamma-1)\frac{3u_2^2+u_3^2+u_4^2}{2 u_1^2} & -\frac{\gamma-1}{u_1^2}u_2 u_3 & -\frac{\gamma-1}{u_1^2}u_2u_4 & \gamma \frac{u_2}{u_1}      
     \end{array}
   \right]\\
   & = & \left[
     \begin{array}{ccccc}
       0 & 1 & 0 & 0 & 0\\
-      (\gamma-1)H- u^2-c^2 & (3-\gamma) u & -(\gamma-1)v & -(\gamma-1)w & \gamma-1\\
+      -u^2 + (\gamma-1)\frac{V^2}{2} & (3-\gamma) u & -(\gamma-1)v & -(\gamma-1)w & \gamma-1\\
       -u v & v & u & 0 & 0\\
       -u w & w & 0 & u & 0\\
-      \frac{1}{2} u [(\gamma-3)H-c^2] & H-(\gamma-1)u^2 & -(\gamma-1)uv &-(\gamma-1)uw & \gamma u
+      -u [ H - (\gamma-1)\frac{V^2}{2} ] & H-(\gamma-1)u^2 & -(\gamma-1)uv &-(\gamma-1)uw & \gamma u
     \end{array}
    \right]
 \end{eqnarray}
 
+% 3D B(U)
 \begin{eqnarray}
   B(U) = \frac{\partial G}{\partial U} = \left[ \partial g_i/\partial u_j \right] & = & \left[
-     \right]\\
-  & = & \left[
     \begin{array}{ccccc}
       0 & 0 & 1 & 0 & 0\\
-      -v u & 0 & w & v & 0\\
-      (\gamma-1)H- v^2-c^2 & -(\gamma-1)u & (3-\gamma) v & -(\gamma-1)w &  \gamma-1\\
-      -v w & w & v & 0 & 0\\
-      \frac{1}{2} u [(\gamma-3)H-c^2] & -(\gamma-1)vu & H-(\gamma-1)v^2 & -(\gamma-1)vw & \gamma v
+      -v u & v & u & 0 & 0\\
+      -v^2+(\gamma-1)\frac{V^2}{2} & -(\gamma-1)u & (3-\gamma) v & -(\gamma-1)w &  \gamma-1\\
+      -v w & 0 & w & v & 0\\
+      -v [H - (\gamma-1)\frac{V^2}{2}] & -(\gamma-1)vu & H-(\gamma-1)v^2 & -(\gamma-1)vw & \gamma v
+    \end{array}
+  \right]
+\end{eqnarray}
+
+% 3D C(U)
+\begin{eqnarray}
+  C(U) = \frac{\partial H}{\partial U} = \left[ \partial h_i/\partial u_j \right] & = & \left[
+    \begin{array}{ccccc}
+      0 & 0 & 0 & 1 & 0\\
+      -w u & w & 0 & u & 0\\
+      -w v & 0 & w & v & 0\\
+      -w^2+(\gamma-1)\frac{V^2}{2} & -(\gamma-1)u & -(\gamma-1)v & (3-\gamma) w &  \gamma-1\\
+      -w [H - (\gamma-1)\frac{V^2}{2}] & -(\gamma-1)wu & -(\gamma-1)wv & H-(\gamma-1)w^2 & \gamma w
     \end{array}
   \right]
 \end{eqnarray}
