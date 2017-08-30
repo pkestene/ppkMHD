@@ -11,13 +11,60 @@ import numpy as np
 import random as rd
 
 rd.seed(12)
+rho = rd.random()
+c =  rd.random()
+u = rd.random()
+v = rd.random()
+w = rd.random()
+g = rd.random()
 
+def eigen_cons_1d():
+
+    # enthalpy
+    H = u*u/2+c*c/(g-1)
+
+    # intermediate value: scaling factor for the left eigen vector matrix
+    D = 2*c*(H-u*u/2)
+    
+    A = np.array([[0, 1, 0],
+                  [0.5*(g-3)*u*u,(3-g)*u,g-1],
+                  [u*(0.5*(g-1)*u*u-H),H-(g-1)*u*u, g*u]])
+
+    print("Euler Jacobian matrix in 1d")
+    print(A)
+
+    print("Eigenvalues of A")
+    print(np.linalg.eigvals(A))
+    print("to be compared with u+c={} u={} and u-c={}".format(u+c,u,u-c))
+
+    #printf("Determinant of A={} compared to ".format(np.linalg.det(A)))
+    
+    # eigenvalues matrix
+    L_eig=np.array([[u-c,0,0],
+                    [0,u,0],
+                    [0,0,u+c]])
+
+    
+    # right eigenvectors
+    R = np.array([[1,1,1],
+                  [u-c,u,u+c],
+                  [H-u*c,u*u/2,H+u*c]])
+
+    
+    # left eigenvectors (R^-1)
+    L = np.array([[u*(H-u*u/2+c*u/2), -H-c*u+u*u/2,    c],
+                  [2*c*(H-u*u),        2*c*u,       -2*c],
+                  [u*(-H+c*u/2+u*u/2), H-c*u-u*u/2,    c]])/D
+
+    # check
+    print("Checking that L.R=identy")
+    print(np.dot(L,R))
+
+    print("Checking that Lamba = L.A.R")
+    print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(L,A),R)-L_eig)))
+    
 def test2d_A():
 
-    rho = rd.random()
-    c =  rd.random()
-    u = rd.random()
-    v = rd.random()
 
     print("rho={} c={} u={} v={}".format(rho,c,u,v))
     
@@ -48,11 +95,6 @@ def test2d_A():
     print(np.linalg.inv(Ra))
 
 def test2d_B():
-
-    rho = rd.random()
-    c =  rd.random()
-    u = rd.random()
-    v = rd.random()
 
     print("rho={} c={} u={} v={}".format(rho,c,u,v))
     
@@ -91,12 +133,6 @@ def test2d_B():
 
 
 def test3d_A():
-
-    rho = rd.random()
-    c =  rd.random()
-    u = rd.random()
-    v = rd.random()
-    w = rd.random()
 
     print("rho={} c={} u={} v={} w={}".format(rho,c,u,v,w))
     
@@ -141,11 +177,6 @@ def test3d_A():
     
 def test3d_B():
 
-    rho = rd.random()
-    c =  rd.random()
-    u = rd.random()
-    v = rd.random()
-    w = rd.random()
 
     print("rho={} c={} u={} v={} w={}".format(rho,c,u,v,w))
     
@@ -193,12 +224,6 @@ def test3d_B():
     
 def test3d_C():
 
-    rho = rd.random()
-    c =  rd.random()
-    u = rd.random()
-    v = rd.random()
-    w = rd.random()
-
     print("rho={} c={} u={} v={} w={}".format(rho,c,u,v,w))
     
     # right eigen matrix of x flux
@@ -240,5 +265,7 @@ if __name__ == "__main__":
 
     #print("Test 2d")
     #test2d_B()
-    print("Test 3d")
-    test3d_C()
+    #print("Test 3d")
+    #test3d_C()
+
+    eigen_cons_1d()

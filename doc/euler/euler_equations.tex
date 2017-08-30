@@ -26,15 +26,13 @@
 Just gathering important equations about the compressible Euler system of equations in 1D, 2D and 3D space. In particular, we give all the flux Jacobian matrix, and the corresponding eigen decomposition in conservative and primitive variables in the case of perfect gas EOS.
 \end{abstract}
 
-\section{Compressible Euler equations}
-
 Let's define the vector of conservative variables $U=(\rho, \rho u, \rho v, \rho w, E)$ and the corresponding vector of primitive variables $W=(\rho, u, v, w, p)$, where $\rho$ is the fluid density, $u,v,w$ are the three cartesian components of the velocity vector field, $E$ is the total energy per unit volume and $p$ is the pressure.
 
 Speed of sound $c=\sqrt{\left(\frac{\partial p}{\partial \rho}\right)_s} = \sqrt{\frac{\gamma p}{\rho}}$
 
-\subsection{Euler system in conservative variables}
+\section{Euler system in conservative variables}
 
-\subsubsection*{1D Euler system in conservative variables}
+\subsection*{1D Euler system in conservative variables}
 The compressible Euler system reads in conservative variables:\\
 \begin{equation}
   \begin{array}{ccccc}
@@ -67,7 +65,7 @@ where the flux function is defined by
 \end{itemize}
 
 
-\subsubsection*{2D Euler system in conservative variables}
+\subsection*{2D Euler system in conservative variables}
 The compressible Euler system reads in conservative variables:\\
 \begin{equation}
   \begin{array}{ccccccc}
@@ -106,7 +104,7 @@ Total (internal + kinetic) energy $E = \rho \left( e + \frac{1}{2} (u^2+v^2) \ri
 
 Energy-enthalpy relation: $\frac{\gamma E}{\rho}=H+(\gamma-1)(u^2+v^2)/2$.
 
-\subsubsection*{3D Euler system in conservative variables}
+\subsection*{3D Euler system in conservative variables}
 The compressible Euler system reads in conservative variables:\\
 \begin{equation}
   \begin{array}{ccccccccc}
@@ -157,9 +155,9 @@ Total (internal + kinetic) energy $E = \rho \left( e + \frac{1}{2} (u^2+v^2+w^2)
 
 Energy-enthalpy relation: $\frac{\gamma E}{\rho}=H+(\gamma-1)(u^2+v^2+w^2)/2$.
 
-\subsection{Euler system in primitive variables}
+\section{Euler system in primitive variables}
 
-\subsubsection*{1D Euler system in primitive variables}
+\subsection*{1D Euler system in primitive variables}
 The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
 
 \begin{equation}
@@ -254,7 +252,7 @@ Eigen identity : $\Lambda = L A(W) R$, where the matrix $L$ and $R$ are formed w
 
 You can also check that $L$ is the the matrix inverse of $R$: $L = R^{-1}$.
 
-\subsubsection*{2D Euler system in primitive variables}
+\subsection*{2D Euler system in primitive variables}
 The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
 
 \begin{equation}
@@ -355,7 +353,7 @@ Eigen decompostions are: $\Lambda_A = L_A A(W) R_A$ and $\Lambda_B = L_B B(W) R_
 
 
 
-\subsubsection*{3D Euler system in primitive variables}
+\subsection*{3D Euler system in primitive variables}
 The compressible Euler system reads in primitive variables~\cite{toro} (section 3.2.3):\\
 
 \begin{equation}
@@ -526,7 +524,7 @@ L_C = \left[
   \right],\;\;
 \end{equation}
 
-\subsection{Quasi-linear form in conservative variables}
+\section{Quasi-linear form in conservative variables}
 
 The compressible Euler system can be rewritten in a quasi-linear form:
 
@@ -552,7 +550,7 @@ When using the following notation for the conservative variables vector $U=[u_1,
     \end{array} \right ]
 \end{equation}
 
-\subsubsection*{Jacobian matrix in 1D: \boldmath $\partial F/\partial U$}
+\subsection{Jacobian matrix in 1D: \boldmath $\partial F/\partial U$}
 
 Let's define the vector of conservative variables:
 \begin{equation}
@@ -621,7 +619,36 @@ Recall the energy-enthalpy relation: $\frac{\gamma E}{\rho} = H+(\gamma-1)\frac{
   \right]
 \end{eqnarray}
 
-\subsubsection*{Jacobian matrix in 2D: \boldmath $\partial F/\partial U, \; \partial G/\partial U$}
+\subsubsection{Eigen decomposition of the Jacobian matrix in 1D}
+
+Eigen decomposition : $\Lambda = L A(U) R$, where the matrix $L$ and $R$ are formed with the corresponding left and right eigenvectors:
+\begin{equation}
+  \Lambda = \left[
+    \begin{array}{ccc}
+      u-c& 0 & 0\\
+      0  & u & 0\\
+      0  & 0 & u+c
+    \end{array}
+  \right],\;
+  L=\frac{1}{D}\left[
+    \begin{array}{ccc}
+      u(H-\frac{u^2}{2}+\frac{cu}{2}) & -H+\frac{u^2}{2}-cu & c\\
+      2c(H-u^2) & 2cu & -2c\\
+      u(-H+\frac{u^2}{2}\frac{cu}{2}) & H-\frac{u^2}{2}-cu & c
+    \end{array}
+  \right],\;
+  R=\left[
+    \begin{array}{ccc}
+      1    & 1             & 1\\
+      u-c  & u             & u+c\\
+      H-uc & \frac{u^2}{2} & H+uc
+    \end{array}
+  \right],
+\end{equation}
+with $D=2 c(H-\frac{u^2}{2})$.
+
+
+\subsection{Jacobian matrix in 2D: \boldmath $\partial F/\partial U, \; \partial G/\partial U$}
 
 Let's define the vector of conservative variables:
 \begin{equation}
@@ -754,7 +781,7 @@ Then the flux vectors become:
 \end{eqnarray}
 
 \newpage 
-\subsubsection*{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
+\subsection{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
 
 Let's define the vector of conservative variables:
 \begin{equation}
