@@ -780,6 +780,35 @@ Then the flux vectors become:
   \right]
 \end{eqnarray}
 
+\subsubsection{Eigen decomposition of the Jacobian matrix in 2D}
+
+Eigen decompositions : $\Lambda_A = L_A A(U) R_A$, and $\Lambda_A = L_A A(U) R_A$
+\begin{equation}
+  \Lambda = \left[
+    \begin{array}{cccc}
+      u-c& 0 & 0 & 0\\
+      0  & u & 0 & 0\\
+      0  & 0 & u & 0\\
+      0  & 0 & 0 & u+c
+    \end{array}
+  \right],\;
+  L=\frac{1}{D}\left[
+    \begin{array}{cccc}
+      %u(H-\frac{u^2}{2}+\frac{cu}{2}) & -H+\frac{u^2}{2}-cu & c\\
+      %2c(H-u^2) & 2cu & -2c\\
+      %u(-H+\frac{u^2}{2}\frac{cu}{2}) & H-\frac{u^2}{2}-cu & c
+    \end{array}
+  \right],\;
+  R=\left[
+    \begin{array}{cccc}
+      1    & 1             & 0 & 1\\
+      u-c  & u             & 0 & u+c\\
+      v    & v             & 1 & v\\
+      H-uc & \frac{V^2}{2} & v & H+uc
+    \end{array}
+  \right],
+\end{equation}
+
 \newpage 
 \subsection{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
 
