@@ -782,9 +782,16 @@ Then the flux vectors become:
 
 \subsubsection{Eigen decomposition of the Jacobian matrix in 2D}
 
-Eigen decompositions : $\Lambda_A = L_A A(U) R_A$, and $\Lambda_A = L_A A(U) R_A$
+Let's define the following variables: 
+\begin{itemize}
+\item $\beta = \frac{1}{c^2}$
+\item $g_1 = \gamma-1$
+\item $\phi_2 = \frac{\gamma-1}{2}V^2 = (\gamma-1) H - c^2$
+\end{itemize}
+
+One can obtain the eigen decompositions : $\Lambda_A = L_A A(U) R_A$, and $\Lambda_A = L_A A(U) R_A$ where
 \begin{equation}
-  \Lambda = \left[
+  \Lambda_A = \left[
     \begin{array}{cccc}
       u-c& 0 & 0 & 0\\
       0  & u & 0 & 0\\
@@ -792,14 +799,15 @@ Eigen decompositions : $\Lambda_A = L_A A(U) R_A$, and $\Lambda_A = L_A A(U) R_A
       0  & 0 & 0 & u+c
     \end{array}
   \right],\;
-  L=\frac{1}{D}\left[
+  L_A=\left[
     \begin{array}{cccc}
-      %u(H-\frac{u^2}{2}+\frac{cu}{2}) & -H+\frac{u^2}{2}-cu & c\\
-      %2c(H-u^2) & 2cu & -2c\\
-      %u(-H+\frac{u^2}{2}\frac{cu}{2}) & H-\frac{u^2}{2}-cu & c
+      \beta(\phi_2 + u c) & -\beta (g_1 u + c) & -\beta g_1 v & \beta g_1 \\
+      1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & -\frac{g_1}{c^2}\\
+      -v & 0 & 1 & 0\\
+      \beta(\phi_2 - u c) & -\beta (g_1 u - c) & -\beta g_1 v & g_1 \beta
     \end{array}
   \right],\;
-  R=\left[
+  R_A=\left[
     \begin{array}{cccc}
       1    & 1             & 0 & 1\\
       u-c  & u             & 0 & u+c\\
@@ -809,7 +817,33 @@ Eigen decompositions : $\Lambda_A = L_A A(U) R_A$, and $\Lambda_A = L_A A(U) R_A
   \right],
 \end{equation}
 
-\newpage 
+\begin{equation}
+  \Lambda_B = \left[
+    \begin{array}{cccc}
+      v-c& 0 & 0 & 0\\
+      0  & v & 0 & 0\\
+      0  & 0 & v & 0\\
+      0  & 0 & 0 & v+c
+    \end{array}
+  \right],\;
+  L_B=\left[
+    \begin{array}{cccc}
+      \beta(\phi_2 + v c) & -\beta g_1 u & -\beta (g_1 v + c) & \beta g_1 \\
+      1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & -\frac{g_1}{c^2}\\
+      -u & 1 & 0 & 0\\
+      \beta(\phi_2 - v c) & -\beta g_1 u & -\beta (g_1 v - c) & g_1 \beta
+    \end{array}
+  \right],\;
+  R_B=\left[
+    \begin{array}{cccc}
+      1    & 1             & 0 & 1\\
+      u    & u             & 1 & u\\
+      v-c  & v             & 0 & v+c\\
+      H-vc & \frac{V^2}{2} & u & H+vc
+    \end{array}
+  \right],
+\end{equation}
+
 \subsection{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
 
 Let's define the vector of conservative variables:
@@ -998,6 +1032,43 @@ Then the flux vectors become:
   \right]
 \end{eqnarray}
 
+\subsubsection{Eigen decomposition of the Jacobian matrix in 3D}
+
+Let's define the following variables: 
+\begin{itemize}
+\item $\beta = \frac{1}{c^2}$
+\item $g_1 = \gamma-1$
+\item $\phi_2 = \frac{\gamma-1}{2}V^2 = (\gamma-1) H - c^2$
+\end{itemize}
+
+One can obtain the eigen decompositions : $\Lambda_A = L_A A(U) R_A$, $\Lambda_B = L_B B(U) R_B$ and $\Lambda_C = L_C C(U) R_C$ where
+\begin{equation}
+  \Lambda_A = \left[
+    \begin{array}{ccccc}
+      u-c& 0 & 0 & 0 & 0\\
+      0  & u & 0 & 0 & 0\\
+      0  & 0 & u & 0 & 0\\
+      0  & 0 & 0 & u & 0\\
+      0  & 0 & 0 & 0 & u+c
+    \end{array}
+  \right],\;
+  % L_A=\left[
+  %   \begin{array}{ccccc}
+  %     \beta(\phi_2 + u c) & -\beta (g_1 u + c) & -\beta g_1 v & \beta g_1 \\
+  %     1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & -\frac{g_1}{c^2}\\
+  %     -v & 0 & 1 & 0\\
+  %     \beta(\phi_2 - u c) & -\beta (g_1 u - c) & -\beta g_1 v & g_1 \beta
+  %   \end{array}
+  % \right],\;
+  % R_A=\left[
+  %   \begin{array}{ccccc}
+  %     1    & 1             & 0 & 1\\
+  %     u-c  & u             & 0 & u+c\\
+  %     v    & v             & 1 & v\\
+  %     H-uc & \frac{V^2}{2} & v & H+uc
+  %   \end{array}
+  % \right],
+\end{equation}
 
 \begin{thebibliography}{9}
 \bibitem[Toro]{toro} \emph{Riemann solvers and numerical methods for fluid dynamics. A practical introduction.}, E.F. Toro , Springer, 2nd edition, 1999.
