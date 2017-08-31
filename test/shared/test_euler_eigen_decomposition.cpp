@@ -17,17 +17,18 @@
  * order is the number of solution points per direction.
  *
  */
-void test_2d()
+template<int dim, int dir>
+void test()
 {
 
   std::cout << "===========\n";
-  std::cout << "=====2D====\n";
+  std::cout << "=====" << dim << "D" << "====\n";
   std::cout << "===========\n";
   
   
-  ppkMHD::EulerEquations<2> eq;
+  ppkMHD::EulerEquations<dim> eq;
 
-  using HydroState = ppkMHD::EulerEquations<2>::HydroState;
+  using HydroState = typename ppkMHD::EulerEquations<dim>::HydroState;
 
   real_t gamma0 = 1.4;
   
@@ -36,8 +37,11 @@ void test_2d()
   q[ID] = 2.3;
   q[IE] = 5;
   q[IU] = 0.4;
-  q[IU] = -0.2;
-
+  q[IV] = -0.2;
+  if (dim == 3)
+    q[IW] = 1.0;
+  
+  
   // primitive variables
   HydroState w;
   eq.convert_to_primitive(q,w,gamma0);
@@ -53,33 +57,27 @@ void test_2d()
   // input / out state
   HydroState in, out, out2;
   in[ID] = 0.123;
+  in[IE] = 0.876;
   in[IU] = 0.456;
   in[IV] = 0.789;
-  in[IE] = 0.876;
+  if (dim == 3)
+    in[IW] = 0.246;
 
-  eq.cons_to_charac<IX>(in, q, c, gamma0, out);
+  eq.template cons_to_charac<dir>(in, q, c, gamma0, out);
 
-  eq.charac_to_cons<IX>(out, q, c, gamma0, out2);
+  eq.template charac_to_cons<dir>(out, q, c, gamma0, out2);
 
+  std::cout << "===============================\n";
+  std::cout << "Testing dim=" << dim << " dir=" << dir << "\n";
   std::cout << "compare out2 to in:\n";
-  std::cout << in[ID] << " " << out2[ID] << "\n";
-  std::cout << in[IU] << " " << out2[IU] << "\n";
-  std::cout << in[IV] << " " << out2[IV] << "\n";
-  std::cout << in[IE] << " " << out2[IE] << "\n";
-  
-  
-} // test_2d
-
-void test_3d()
-{
-
-  std::cout << "===========\n";
-  std::cout << "=====3D====\n";
-  std::cout << "===========\n";
-  
-  ppkMHD::EulerEquations<2> eq;
-  
-} // test_3d
+  std::cout << in[ID] << " " << out[ID] << " " << out2[ID] << "\n";
+  std::cout << in[IE] << " " << out[IE] << " " << out2[IE] << "\n";
+  std::cout << in[IU] << " " << out[IU] << " " << out2[IU] << "\n";
+  std::cout << in[IV] << " " << out[IV] << " " << out2[IV] << "\n";
+  if (dim == 3)
+    std::cout << in[IW] << " " << out[IW] << " " << out2[IW] << "\n";
+    
+} // test
 
 int main(int argc, char* argv[])
 {
@@ -111,8 +109,13 @@ int main(int argc, char* argv[])
 
 
   // instantiate some tests
-  test_2d();
-  test_3d();
+  test<2,0>();
+  test<2,1>();
+
+  test<3,0>();
+  test<3,1>();
+  test<3,2>();
+
 
   Kokkos::finalize();
 

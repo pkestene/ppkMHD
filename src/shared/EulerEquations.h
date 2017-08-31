@@ -784,7 +784,7 @@ struct EulerEquations<3>
       out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2      + in[IV]*g1*v/c2          + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
       out[IV] = in[ID]*(-u)            + in[IU];
       out[IW] = in[ID]*(-v)                                  + in[IV];
-      out[IE] = in[ID]*beta*(phi2-w*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*g1*v)     + in[IW]*(-beta*(g1*w+c)) + in[IE]*beta*g1;
+      out[IE] = in[ID]*beta*(phi2-w*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*g1*v)     + in[IW]*(-beta*(g1*w-c)) + in[IE]*beta*g1;
 
     }
     
