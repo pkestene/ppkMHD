@@ -1,4 +1,5 @@
 add_subdirectory(kokkos)
+add_subdirectory(shared)
 
 if(USE_MOOD)
   add_subdirectory(mood)
