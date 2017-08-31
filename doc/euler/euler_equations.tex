@@ -23,7 +23,7 @@
 \maketitle
 
 \begin{abstract}
-Just gathering important equations about the compressible Euler system of equations in 1D, 2D and 3D space. In particular, we give all the flux Jacobian matrix, and the corresponding eigen decomposition in conservative and primitive variables in the case of perfect gas EOS.
+Just gathering important equations about the compressible Euler system of equations in 1D, 2D and 3D space. In particular, we give all the flux Jacobian matrix, and the corresponding eigen decompositions in both conservative and primitive variables in the case of perfect gas equation of state. This eigen decompition is useful to implementation limiters in the characteristic variables.
 \end{abstract}
 
 Let's define the vector of conservative variables $U=(\rho, \rho u, \rho v, \rho w, E)$ and the corresponding vector of primitive variables $W=(\rho, u, v, w, p)$, where $\rho$ is the fluid density, $u,v,w$ are the three cartesian components of the velocity vector field, $E$ is the total energy per unit volume and $p$ is the pressure.
@@ -647,7 +647,7 @@ Eigen decomposition : $\Lambda = L A(U) R$, where the matrix $L$ and $R$ are for
 \end{equation}
 with $D=2 c(H-\frac{u^2}{2})$.
 
-
+\newpage
 \subsection{Jacobian matrix in 2D: \boldmath $\partial F/\partial U, \; \partial G/\partial U$}
 
 Let's define the vector of conservative variables:
@@ -844,6 +844,7 @@ One can obtain the eigen decompositions : $\Lambda_A = L_A A(U) R_A$, and $\Lamb
   \right],
 \end{equation}
 
+\newpage
 \subsection{Jacobian matrix in 3D: \boldmath $\partial F/\partial U, \; \partial G/\partial U, \; \partial H/\partial U$}
 
 Let's define the vector of conservative variables:
@@ -983,7 +984,7 @@ Then the flux vectors become:
   \right]
 \end{equation}
 
-\newpage
+%\newpage
 % 3D A(U)
 \begin{eqnarray}
   A(U) = \frac{\partial F}{\partial U} = \left[ \frac{\partial f_i}{\partial u_j} \right] & = & \left[
@@ -1052,22 +1053,87 @@ One can obtain the eigen decompositions : $\Lambda_A = L_A A(U) R_A$, $\Lambda_B
       0  & 0 & 0 & 0 & u+c
     \end{array}
   \right],\;
-  % L_A=\left[
-  %   \begin{array}{ccccc}
-  %     \beta(\phi_2 + u c) & -\beta (g_1 u + c) & -\beta g_1 v & \beta g_1 \\
-  %     1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & -\frac{g_1}{c^2}\\
-  %     -v & 0 & 1 & 0\\
-  %     \beta(\phi_2 - u c) & -\beta (g_1 u - c) & -\beta g_1 v & g_1 \beta
-  %   \end{array}
-  % \right],\;
-  % R_A=\left[
-  %   \begin{array}{ccccc}
-  %     1    & 1             & 0 & 1\\
-  %     u-c  & u             & 0 & u+c\\
-  %     v    & v             & 1 & v\\
-  %     H-uc & \frac{V^2}{2} & v & H+uc
-  %   \end{array}
-  % \right],
+  \Lambda_B = \left[
+    \begin{array}{ccccc}
+      v-c& 0 & 0 & 0 & 0\\
+      0  & v & 0 & 0 & 0\\
+      0  & 0 & v & 0 & 0\\
+      0  & 0 & 0 & v & 0\\
+      0  & 0 & 0 & 0 & v+c
+    \end{array}
+  \right],\;
+  \Lambda_C = \left[
+    \begin{array}{ccccc}
+      w-c& 0 & 0 & 0 & 0\\
+      0  & w & 0 & 0 & 0\\
+      0  & 0 & w & 0 & 0\\
+      0  & 0 & 0 & w & 0\\
+      0  & 0 & 0 & 0 & w+c
+    \end{array}
+  \right],\;
+\end{equation}
+
+\begin{equation}
+  L_A=\left[
+    \begin{array}{ccccc}
+      \beta(\phi_2 + u c) & -\beta (g_1 u + c) & -\beta g_1 v & -\beta g_1 w & \beta g_1 \\
+      1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & \frac{g_1 w}{c^2} & -\frac{g_1}{c^2}\\
+      -v & 0 & 1 & 0 & 0\\
+      -w & 0 & 0 & 1 & 0\\
+      \beta(\phi_2 - u c) & -\beta (g_1 u - c) & -\beta g_1 v & -\beta g_1 w & \beta g_1
+    \end{array}
+  \right],\;
+  R_A=\left[
+    \begin{array}{ccccc}
+      1    & 1             & 0 & 0 & 1\\
+      u-c  & u             & 0 & 0 & u+c\\
+      v    & v             & 1 & 0 & v\\
+      w    & w             & 0 & 1 & w\\
+      H-uc & \frac{V^2}{2} & v & w & H+uc
+    \end{array}
+  \right],
+\end{equation}
+
+\begin{equation}
+  L_B=\left[
+    \begin{array}{ccccc}
+      \beta(\phi_2 + v c) & -\beta g_1 u & -\beta (g_1 v + c) & -\beta g_1 w & \beta g_1 \\
+      1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & \frac{g_1 w}{c^2} & -\frac{g_1}{c^2}\\
+      -u & 1 & 0 & 0 & 0\\
+      -w & 0 & 0 & 1 & 0\\
+      \beta(\phi_2 - v c) & -\beta g_1 u & -\beta (g_1 v - c) & -\beta g_1 w & \beta g_1
+    \end{array}
+  \right],\;
+  R_B=\left[
+    \begin{array}{ccccc}
+      1    & 1             & 0 & 0 & 1\\
+      u    & u             & 1 & 0 & u\\
+      v-c  & v             & 0 & 0 & v+c\\
+      w    & w             & 0 & 1 & w\\
+      H-vc & \frac{V^2}{2} & u & w & H+vc
+    \end{array}
+  \right],
+\end{equation}
+
+\begin{equation}
+  L_C=\left[
+    \begin{array}{ccccc}
+      \beta(\phi_2 + w c) & -\beta g_1 u & -\beta g_1 v & -\beta g_1 (w  + c) & \beta g_1 \\
+      1 - \phi_2/c^2     & \frac{g_1 u}{c^2}   & \frac{g_1 v}{c^2} & \frac{g_1 w}{c^2} & -\frac{g_1}{c^2}\\
+      -u & 1 & 0 & 0 & 0\\
+      -v & 0 & 1 & 0 & 0\\
+      \beta(\phi_2 - w c) & -\beta g_1 u & -\beta g_1 v & -\beta (g_1 w - c) & \beta g_1
+    \end{array}
+  \right],\;
+  R_C=\left[
+    \begin{array}{ccccc}
+      1    & 1             & 0 & 0 & 1\\
+      u    & u             & 1 & 0 & u\\
+      v    & v             & 0 & 1 & v\\
+      w-c  & w             & 0 & 0 & w+c\\
+      H-wc & \frac{V^2}{2} & u & v & H+wc
+    \end{array}
+  \right],
 \end{equation}
 
 \begin{thebibliography}{9}

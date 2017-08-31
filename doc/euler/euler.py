@@ -143,6 +143,132 @@ def eigen_cons_2d():
     print("Checking that eigB = Lb.B.Rb")
     print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(Lb,B),Rb)-eigB)))
     
+def eigen_cons_3d():
+
+    # enthalpy
+    H = (u*u+v*v+w*w)/2+c*c/(g-1)
+    V2=u*u+v*v+w*w
+    
+    c2 = c*c
+    g1 = g-1
+    beta = 1.0/2/c2
+    
+    phi2 = g1*H-c2
+    
+    A = np.array([[0, 1, 0, 0, 0],
+                  [phi2-u*u, (3-g)*u, -g1*v, -g1*w, g1],
+                  [-u*v, v,u,0,0],
+                  [-u*w, w,0,u,0],
+                  [-u*(H-phi2),H-g1*u*u, -g1*u*v, -g1*u*w, g*u]])
+
+    B = np.array([[0, 0, 1, 0, 0],
+                  [-v*u, v,u,0,0],
+                  [phi2-v*v, -g1*u, (3-g)*v, -g1*w, g1],
+                  [-v*w, 0,w,v,0],
+                  [-v*(H-phi2),-g1*v*u, H-g1*v*v, -g1*v*w, g*v]])
+
+    C = np.array([[0, 0, 0, 1, 0],
+                  [-w*u, w,0,u,0],
+                  [-w*v, 0,w,v,0],
+                  [phi2-w*w, -g1*u, -g1*v, (3-g)*w, g1],
+                  [-w*(H-phi2),-g1*w*u, -g1*w*v, H-g1*w*w, g*w]])
+
+    print("Euler Jacobian matrix in 2d : A")
+    print(A)
+
+    print("Eigenvalues of A")
+    print(np.linalg.eigvals(A))
+    print("to be compared with u+c={} u={} and u-c={}".format(u+c,u,u-c))
+
+    print("Eigenvalues of B")
+    print(np.linalg.eigvals(B))
+    print("to be compared with v+c={} v={} and v-c={}".format(v+c,v,v-c))
+
+    print("Eigenvalues of C")
+    print(np.linalg.eigvals(C))
+    print("to be compared with w+c={} w={} and w-c={}".format(w+c,w,w-c))
+
+    # eigenvalues matrix
+    eigA = np.array([[u-c,0,0,0,0],
+                     [0,u,0,0,0],
+                     [0,0,u,0,0],
+                     [0,0,0,u,0],
+                     [0,0,0,0,u+c]])
+
+    eigB = np.array([[v-c,0,0,0,0],
+                     [0,v,0,0,0],
+                     [0,0,v,0,0],
+                     [0,0,0,v,0],
+                     [0,0,0,0,v+c]])
+
+    eigC = np.array([[w-c,0,0,0,0],
+                     [0,w,0,0,0],
+                     [0,0,w,0,0],
+                     [0,0,0,w,0],
+                     [0,0,0,0,w+c]])
+
+
+    
+    # right eigenvectors
+    Ra = np.array([[1,    1,    0, 0, 1],
+                   [u-c,  u,    0, 0, u+c],
+                   [v,    v,    1, 0, v],
+                   [w,    w,    0, 1, w],
+                   [H-u*c,V2/2, v, w, H+u*c]])
+
+    Rb = np.array([[1,    1,    0, 0, 1],
+                   [u,    u,    1, 0, u],
+                   [v-c,  v,    0, 0, v+c],
+                   [w,    w,    0, 1, w],
+                   [H-v*c,V2/2, u, w, H+v*c]])
+
+    Rc = np.array([[1,    1,    0, 0, 1],
+                   [u,    u,    1, 0, u],
+                   [v  ,  v,    0, 1, v],
+                   [w-c,  w,    0, 0, w+c],
+                   [H-w*c,V2/2, u, v, H+w*c]])
+
+    # left eigenvectors (R^-1)
+    La = np.array([[beta*(phi2+u*c), -beta*(g1*u+c), -beta*g1*v,    -beta*g1*w,     beta*g1],
+                   [1.0-phi2/c2,     g1*u/c2,        g1*v/c2,       g1*w/c2,        -g1/c2],
+                   [-v,              0,              1,             0,              0],
+                   [-w,              0,              0,             1,              0],
+                   [beta*(phi2-u*c), -beta*(g1*u-c), -beta*g1*v,    -beta*g1*w,     beta*g1]])
+        
+    Lb = np.array([[beta*(phi2+v*c), -beta*g1*u,    -beta*(g1*v+c), -beta*g1*w,     beta*g1],
+                   [1.0-phi2/c2,     g1*u/c2,       g1*v/c2,        g1*w/c2,        -g1/c2],
+                   [-u,              1,             0,              0,              0],
+                   [-w,              0,             0,              1,              0],
+                   [beta*(phi2-v*c), -beta*g1*u,    -beta*(g1*v-c), -beta*g1*w,     beta*g1]])
+        
+    Lc = np.array([[beta*(phi2+w*c), -beta*g1*u, -beta*g1*v,        -beta*(g1*w+c), beta*g1],
+                   [1.0-phi2/c2,     g1*u/c2,    g1*v/c2,           g1*w/c2,        -g1/c2],
+                   [-u,              1,          0,                 0,              0],
+                   [-v,              0,          1,                 0,              0],
+                   [beta*(phi2-w*c), -beta*g1*u, -beta*g1*v,        -beta*(g1*w-c), beta*g1]])
+        
+    # check
+    print("Checking that La.Ra=identy")
+    print(np.dot(La,Ra))
+    print("norm of La.Ra-Id = {}".format(np.linalg.norm(np.dot(La,Ra)-np.eye(5))))
+
+    print("Checking that Lb.Rb=identy")
+    print(np.dot(Lb,Rb))
+    print("norm of Lb.Rb-Id = {}".format(np.linalg.norm(np.dot(Lb,Rb)-np.eye(5))))
+
+    print("Checking that Lc.Rc=identy")
+    print(np.dot(Lc,Rc))
+    print("norm of Lc.Rc-Id = {}".format(np.linalg.norm(np.dot(Lc,Rc)-np.eye(5))))
+
+    print("Checking that eigA = La.A.Ra")
+    print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(La,A),Ra)-eigA)))
+
+    print("Checking that eigB = Lb.B.Rb")
+    print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(Lb,B),Rb)-eigB)))
+    
+    print("Checking that eigB = Lc.C.Rc")
+    print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(Lc,C),Rc)-eigC)))
+    
 def test2d_A():
 
 
@@ -349,4 +475,5 @@ if __name__ == "__main__":
     #test3d_C()
 
     #eigen_cons_1d()
-    eigen_cons_2d()
+    #eigen_cons_2d()
+    eigen_cons_3d()
