@@ -304,7 +304,7 @@ struct EulerEquations<2>
       // compute matrix vector multiply: out = Lx . in
       out[ID] = in[ID]*beta*(phi2+u*c) + in[IU]*(-beta*(g1*u+c)) + in[IV]*(-beta*g1*v) + in[IE]*beta*g1;
       out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2          + in[IV]*g1*v/c2      + in[IE]*(-g1/c2);
-      out[IV] = in[ID]*(-v)                                       + in[IV];
+      out[IV] = in[ID]*(-v)                                      + in[IV];
       out[IE] = in[ID]*beta*(phi2-u*c) + in[IU]*(-beta*(g1*u-c)) + in[IV]*(-beta*g1*v) + in[IE]*beta*g1;
 
     } else if (dir == IY) {
@@ -691,6 +691,203 @@ struct EulerEquations<3>
     flux[IW] = tau_zz;
     flux[IE] = v[IX]*tau_xz + v[IY]*tau_yz + v[IZ]*tau_zz + f[IZ];
   };
+
+  /**
+   * Compute characteristic variables by multiply input vector 
+   * by L (left eigenvalue matrix of Euler Jacobian).
+   *
+   * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex 
+   * and also copied here using python syntax
+   *
+   * # left eigenvectors (R^-1)
+   * Lx = np.array([[beta*(phi2+u*c), -beta*(g1*u+c), -beta*g1*v,    -beta*g1*w,     beta*g1],
+   *                [1.0-phi2/c2,     g1*u/c2,        g1*v/c2,       g1*w/c2,        -g1/c2],
+   *                [-v,              0,              1,             0,              0],
+   *                [-w,              0,              0,             1,              0],
+   *                [beta*(phi2-u*c), -beta*(g1*u-c), -beta*g1*v,    -beta*g1*w,     beta*g1]])
+   *     
+   * Ly = np.array([[beta*(phi2+v*c), -beta*g1*u,    -beta*(g1*v+c), -beta*g1*w,     beta*g1],
+   *                [1.0-phi2/c2,     g1*u/c2,       g1*v/c2,        g1*w/c2,        -g1/c2],
+   *                [-u,              1,             0,              0,              0],
+   *                [-w,              0,             0,              1,              0],
+   *                [beta*(phi2-v*c), -beta*g1*u,    -beta*(g1*v-c), -beta*g1*w,     beta*g1]])
+   *     
+   * Lz = np.array([[beta*(phi2+w*c), -beta*g1*u, -beta*g1*v,        -beta*(g1*w+c), beta*g1],
+   *                [1.0-phi2/c2,     g1*u/c2,    g1*v/c2,           g1*w/c2,        -g1/c2],
+   *                [-u,              1,          0,                 0,              0],
+   *                [-v,              0,          1,                 0,              0],
+   *                [beta*(phi2-w*c), -beta*g1*u, -beta*g1*v,        -beta*(g1*w-c), beta*g1]])
+   *
+   * If \f$ \Lambda \f$ is the diagonal matrix with eigenvalues u-c, u, u, u, u+c, one has the
+   * following eigen decomposition:
+   * \f$ \Lambda = L  A(U)  R \f$
+   * where \f$ A(U) = \partial F / \partial U \f$.
+   *
+   * \tparam dir allows to select which flux function / Jacobian to use : Ax(U), Ay(U) or Az(U)
+   *
+   * \param[in] in input vector of conservative variables
+   * \param[in] q local hydro state vector of conservative variables
+   * \param[in] c speed of sound
+   * \param[in] gamma0 is the heat capacity ratio
+   * \param[out] out output vector of characteristics variables
+   */
+  template<int dir>
+  static
+  KOKKOS_INLINE_FUNCTION
+  void cons_to_charac(const HydroState& in,
+		      const HydroState& q,
+		      const real_t c,
+		      const real_t gamma0,
+		      HydroState& out)
+  {
+    
+    // some useful intermediate values
+    const real_t u = q[IU]/q[ID];
+    const real_t v = q[IV]/q[ID];
+    const real_t w = q[IW]/q[ID];
+    const real_t c2 = c*c;
+
+    const real_t g1 = gamma0-1.0;
+
+    const real_t beta = 1.0/2/c2;
+
+    const real_t V2=u*u+v*v+w*w;
+    
+    // enthalpy
+    const real_t H = 0.5*V2 + c2/g1;
+
+    // also equal to g1*V2
+    const real_t phi2 = g1*H-c2;
+
+    if (dir == IX) {
+      
+      // compute matrix vector multiply: out = Lx . in
+      out[ID] = in[ID]*beta*(phi2+u*c) + in[IU]*(-beta*(g1*u+c)) + in[IV]*(-beta*g1*v) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
+      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2          + in[IV]*g1*v/c2      + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
+      out[IV] = in[ID]*(-v)                                      + in[IV];
+      out[IW] = in[ID]*(-w)                                                            + in[IW];
+      out[IE] = in[ID]*beta*(phi2-u*c) + in[IU]*(-beta*(g1*u-c)) + in[IV]*(-beta*g1*v) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
+
+    } else if (dir == IY) {
+      
+      // compute matrix vector multiply: out = Ly . in
+      out[ID] = in[ID]*beta*(phi2+v*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*(g1*v+c)) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
+      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2      + in[IV]*g1*v/c2          + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
+      out[IV] = in[ID]*(-u)            + in[IU];
+      out[IW] = in[ID]*(-w)                                                            + in[IW];
+      out[IE] = in[ID]*beta*(phi2-v*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*(g1*v-c)) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
+
+    } else if (dir == IZ) {
+
+      // compute matrix vector multiply: out = Lz . in
+      out[ID] = in[ID]*beta*(phi2+w*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*g1*v)     + in[IW]*(-beta*(g1*w+c)) + in[IE]*beta*g1;
+      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2      + in[IV]*g1*v/c2          + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
+      out[IV] = in[ID]*(-u)            + in[IU];
+      out[IW] = in[ID]*(-v)                                  + in[IV];
+      out[IE] = in[ID]*beta*(phi2-w*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*g1*v)     + in[IW]*(-beta*(g1*w+c)) + in[IE]*beta*g1;
+
+    }
+    
+  }; // cons_to_charac
+
+  /**
+   * Transform from characteristic variables to conservative by multiply input vector 
+   * by R (right eigenvalue matrix of Euler Jacobian).
+   *
+   * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
+   * and also copied here using python syntax
+   *
+   * # right eigenvectors
+   * Rx = np.array([[1,    1,    0, 0, 1],
+   *                [u-c,  u,    0, 0, u+c],
+   *                [v,    v,    1, 0, v],
+   *                [w,    w,    0, 1, w],
+   *                [H-u*c,V2/2, v, w, H+u*c]])
+   *
+   * Ry = np.array([[1,    1,    0, 0, 1],
+   *                [u,    u,    1, 0, u],
+   *                [v-c,  v,    0, 0, v+c],
+   *                [w,    w,    0, 1, w],
+   *                [H-v*c,V2/2, u, w, H+v*c]])
+   *
+   * Rz = np.array([[1,    1,    0, 0, 1],
+   *                [u,    u,    1, 0, u],
+   *                [v  ,  v,    0, 1, v],
+   *                [w-c,  w,    0, 0, w+c],
+   *                [H-w*c,V2/2, u, v, H+w*c]])
+   *
+   * 
+   * If \f$ \Lambda \f$ is the diagonal matrix with eigenvalues u-c, u, u, u, u+c, one has the
+   * following eigen decomposition:
+   * \f$ \Lambda = L  A(U)  R \f$
+   * where \f$ A(U) = \partial F / \partial U \f$.
+   *
+   * \tparam dir allows to select which flux function / Jacobian to use : Ax(U), Ay(U) or Az(U)
+   *
+   * \param[in] in input vector of characteristics variables
+   * \param[in] q local hydro state vector of conservative variables
+   * \param[in] c speed of sound
+   * \param[in] gamma0 is the heat capacity ratio
+   * \param[out] out output vector of conservative variables
+   */
+  template<int dir>
+  static
+  KOKKOS_INLINE_FUNCTION
+  void charac_to_cons(const HydroState& in,
+		      const HydroState& q,
+		      const real_t c,
+		      const real_t gamma0,
+		      HydroState& out)
+  {
+    
+    // some useful intermediate values
+    const real_t u = q[IU]/q[ID];
+    const real_t v = q[IV]/q[ID];
+    const real_t w = q[IW]/q[ID];
+    const real_t c2 = c*c;
+
+    const real_t g1 = gamma0-1.0;
+
+    //const real_t beta = 1.0/2/c2;
+
+    const real_t V2=u*u+v*v+w*w;
+    
+    // enthalpy
+    const real_t H = 0.5*V2 + c2/g1;
+
+    // also equal to g1*V2
+    //const real_t phi2 = g1*H-c2;
+
+    if (dir == IX) {
+      
+      // compute matrix vector multiply: out = Rx . in
+      out[ID] = in[ID]         + in[IU]                            + in[IE];
+      out[IU] = in[ID]*(u-c)   + in[IU]*u                          + in[IE]*(u+c);
+      out[IV] = in[ID]*v       + in[IU]*v    + in[IV]              + in[IE]*v;
+      out[IW] = in[ID]*w       + in[IU]*w               + in[IW]   + in[IE]*w;
+      out[IE] = in[ID]*(H-u*c) + in[IU]*V2/2 + in[IV]*v + in[IW]*w + in[IE]*(H+u*c);
+
+    } else if (dir == IY) {
+      
+      // compute matrix vector multiply: out = Ry . in
+      out[ID] = in[ID]         + in[IU]                            + in[IE];
+      out[IU] = in[ID]*u       + in[IU]*u    + in[IV]              + in[IE]*u;
+      out[IV] = in[ID]*(v-c)   + in[IU]*v                          + in[IE]*(v+c);
+      out[IW] = in[ID]*w       + in[IU]*w               + in[IW]   + in[IE]*w;
+      out[IE] = in[ID]*(H-v*c) + in[IU]*V2/2 + in[IV]*u + in[IW]*w + in[IE]*(H+v*c);
+
+    } else if (dir == IZ) {
+      
+      // compute matrix vector multiply: out = Rz . in
+      out[ID] = in[ID]         + in[IU]                            + in[IE];
+      out[IU] = in[ID]*u       + in[IU]*u    + in[IV]              + in[IE]*u;
+      out[IV] = in[ID]*v       + in[IU]*v               + in[IW]   + in[IE]*v;
+      out[IW] = in[ID]*(w-c)   + in[IU]*w                          + in[IE]*(w+c);
+      out[IE] = in[ID]*(H-w*c) + in[IU]*V2/2 + in[IV]*u + in[IW]*v + in[IE]*(H+w*c);
+
+    }
+    
+  }; // charac_to_cons
 
 }; //struct EulerEquations<3>
 
