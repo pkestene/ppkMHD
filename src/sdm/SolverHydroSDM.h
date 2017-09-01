@@ -801,6 +801,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
     
     Apply_limiter_Functor<dim,N> functor(params,
 					 sdm_geom,
+					 euler,
 					 Udata,
 					 Uaverage,
 					 Ugradx,

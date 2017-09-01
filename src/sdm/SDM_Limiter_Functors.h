@@ -12,6 +12,8 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "shared/EulerEquations.h"
+
 namespace sdm {
 
 /*************************************************/
@@ -744,6 +746,7 @@ public:
 
   Apply_limiter_Functor(HydroParams         params,
 			SDM_Geometry<dim,N> sdm_geom,
+			ppkMHD::EulerEquations<dim> euler,
 			DataArray           Udata,
 			DataArray           Uaverage,
 			DataArray           Ugradx,
@@ -751,6 +754,7 @@ public:
 			DataArray           Ugradz,
 			const real_t        Mdx2) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
+    euler(euler),
     Udata(Udata),
     Uaverage(Uaverage),
     Ugradx(Ugradx),
@@ -763,18 +767,18 @@ public:
    * TVB version of minmod limiter. If Mdx2=0 then it is TVD limiter.
    */
   KOKKOS_INLINE_FUNCTION
-  real_t minmod (const real_t& a,
-		 const real_t& b,
-		 const real_t& c,
-		 const real_t& Mdx2) const 
+  real_t minmod (const real_t a,
+		 const real_t b,
+		 const real_t c,
+		 const real_t Mdx2_) const 
   {
     real_t aa = fabs(a);
-    if(aa < Mdx2) return a;
+    if(aa < Mdx2_) return a;
     
     if(a*b > 0 && b*c > 0)
       {
-	real_t s = (a > 0) ? 1.0 : -1.0;
-	return s * fmin(aa, fmin(fabs(b), fabs(c)));
+    	real_t s = (a > 0) ? 1.0 : -1.0;
+    	return s * fmin(aa, fmin(fabs(b), fabs(c)));
       }
     else
       return 0;
@@ -797,47 +801,112 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    HydroState DuX, DuX_new;
+    const real_t gamma0 = this->params.settings.gamma0;
+
+    HydroState DuX;
+    HydroState DuX_new;
     HydroState DuXL; // neighbor on the left
     HydroState DuXR; // neighbor on the right
     
-    HydroState DuY, DuY_new;
+    HydroState DuY;
+    HydroState DuY_new;
     HydroState DuYL; // neighbor on the left
     HydroState DuYR; // neighbor on the right
+
+    const real_t dx = this->params.dx;
     
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
+    if (i==0 or i==isize-1 or
+	j==0 or j==jsize-1 )
+      return;
+    
+    // speed of sound
+    HydroState Uave; Uave[IE]=0;
+    for (int ivar = 0; ivar<nbvar; ++ivar) {
+      Uave[ivar] = Uaverage(i,j,ivar);
+    }
+    const real_t c = euler.compute_speed_of_sound(Uave, gamma0);
+
     // read cell-averaged gradient, and difference neighbor
     for (int ivar = 0; ivar<nbvar; ++ivar) {
 
-      DuX[ivar] = Ugradx(i,j,ivar);
-      DuXL[i]   = Uaverage(i  ,j,ivar) - Uaverage(i-1,j,ivar);
-      DuXR[i]   = Uaverage(i+1,j,ivar) - Uaverage(i  ,j,ivar);
+      DuX[ivar]  = Ugradx(i,j,ivar) * dx;
+      DuXL[ivar] = Uaverage(i  ,j,ivar) - Uaverage(i-1,j,ivar);
+      DuXR[ivar] = Uaverage(i+1,j,ivar) - Uaverage(i  ,j,ivar);
 
-      DuY[ivar] = Ugrady(i,j,ivar);
-      DuYL[i]   = Uaverage(i,j  ,ivar) - Uaverage(i,j-1,ivar);
-      DuYR[i]   = Uaverage(i,j+1,ivar) - Uaverage(i,j  ,ivar);
+      DuY[ivar]  = Ugrady(i,j,ivar) * dx;
+      DuYL[ivar] = Uaverage(i,j  ,ivar) - Uaverage(i,j-1,ivar);
+      DuYR[ivar] = Uaverage(i,j+1,ivar) - Uaverage(i,j  ,ivar);
     }
-
-    // if limiter_characteristics_enabled ...
     
+    // if limiter_characteristics_enabled ...
+    // transform to characteristics variables
+    euler.template cons_to_charac<IX>(DuX,  Uave, c, gamma0);
+    euler.template cons_to_charac<IX>(DuXL, Uave, c, gamma0);
+    euler.template cons_to_charac<IX>(DuXR, Uave, c, gamma0);
+
+    euler.template cons_to_charac<IY>(DuY,  Uave, c, gamma0);
+    euler.template cons_to_charac<IY>(DuYL, Uave, c, gamma0);
+    euler.template cons_to_charac<IY>(DuYR, Uave, c, gamma0);
 
     // Apply minmod limiter
     double change_x = 0;
     double change_y = 0;
-
-    // for(int ivar=0; i<nbvar; ++ivar) {
-    //   Du_new[ivar] = minmod(Dx(i), beta*Du_left[ivar], beta*Du_right[ivar], Mdx2);
-    //   change_x += fabs(Du_new[ivar] - Du[ivar]);
-    // }
-    // change_x /= nbvar;
-    // change_y /= nbvar;
+    const double beta = 1.0;
     
+    for(int ivar=0; ivar<nbvar; ++ivar) {
+
+      DuX_new[ivar] = minmod(DuX[ivar],  beta*DuXL[ivar], beta*DuXR[ivar], Mdx2);
+      change_x += fabs(DuX_new[ivar] - DuX[ivar]);
+
+      DuY_new[ivar] = minmod(DuY[ivar],  beta*DuYL[ivar], beta*DuYR[ivar], Mdx2);
+      change_y += fabs(DuY_new[ivar] - DuY[ivar]);
+
+    }
+    change_x /= nbvar;
+    change_y /= nbvar;
+    
+    // If limiter is active, reduce polynomial to linear
+    // recompute all DoF in current cell
+    if(change_x + change_y > 1.0e-10) {
+
+      for(int ivar=0; ivar<nbvar; ++ivar) {
+      	DuX_new[ivar] /= dx;
+      	DuY_new[ivar] /= dx;
+      }
+      
+      euler.template charac_to_cons<IX> (DuX_new, Uave, c, gamma0);
+      euler.template charac_to_cons<IY> (DuY_new, Uave, c, gamma0);
+      
+      // for each variable : ID, IE, IU, IV
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+	
+    	// for each dof
+    	for (int idy=0; idy<N; ++idy) {
+	  
+    	  real_t ry = this->sdm_geom.solution_pts_1d(idy) - 0.5;
+	  
+    	  for (int idx=0; idx<N; ++idx) {
+	    
+    	    real_t rx = this->sdm_geom.solution_pts_1d(idx) - 0.5;
+	    
+    	    Udata(i,j,dofMap(idx,idy,0,ivar)) = Uave[ivar] +
+    	      rx*DuX_new[ivar] +
+    	      ry*DuY_new[ivar];
+	    
+    	  } // end for idx
+	  
+    	} // end for idy
+	
+      } // end for ivar
+
+    } // end change_x + change_y
     
   } // operator () - 2d
-
+    
   // ================================================
   //
   // 3D version.
@@ -853,7 +922,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
 
-    const int nbvar = this->params.nbvar;
+    //const int nbvar = this->params.nbvar;
 
     // local cell index
     int i,j,k;
@@ -861,6 +930,7 @@ public:
     
   } // operator () - 3d
   
+  ppkMHD::EulerEquations<dim> euler;
   DataArray Udata;
   DataArray Uaverage;
   DataArray Ugradx;
