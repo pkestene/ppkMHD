@@ -243,7 +243,7 @@ struct EulerEquations<2>
 
   /**
    * Compute characteristic variables by multiply input vector 
-   * by L (left eigenvalue matrix of Euler Jacobian).
+   * by L (left eigenvalue matrix of Euler Jacobian). Computation is done in place
    *
    * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex 
    * and also copied here using python syntax
@@ -266,7 +266,7 @@ struct EulerEquations<2>
    *
    * \tparam dir allows to select which flux function / Jacobian to use : A(U) or B(U)
    *
-   * \param[in] in input vector of conservative variables
+   * \param[in,out] data input vector of conservative variables and characteristics var in output
    * \param[in] q local hydro state vector of conservative variables
    * \param[in] c speed of sound
    * \param[in] gamma0 is the heat capacity ratio
@@ -275,12 +275,12 @@ struct EulerEquations<2>
   template<int dir>
   static
   KOKKOS_INLINE_FUNCTION
-  void cons_to_charac(const HydroState& in,
+  void cons_to_charac(HydroState& data,
 		      const HydroState& q,
 		      const real_t c,
-		      const real_t gamma0,
-		      HydroState& out)
+		      const real_t gamma0)
   {
+    HydroState tmp;
     
     // some useful intermediate values
     const real_t u = q[IU]/q[ID];
@@ -301,27 +301,32 @@ struct EulerEquations<2>
 
     if (dir == IX) {
       
-      // compute matrix vector multiply: out = Lx . in
-      out[ID] = in[ID]*beta*(phi2+u*c) + in[IU]*(-beta*(g1*u+c)) + in[IV]*(-beta*g1*v) + in[IE]*beta*g1;
-      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2          + in[IV]*g1*v/c2      + in[IE]*(-g1/c2);
-      out[IV] = in[ID]*(-v)                                      + in[IV];
-      out[IE] = in[ID]*beta*(phi2-u*c) + in[IU]*(-beta*(g1*u-c)) + in[IV]*(-beta*g1*v) + in[IE]*beta*g1;
+      // compute matrix vector multiply: tmp = Lx . data
+      tmp[ID] = data[ID]*beta*(phi2+u*c) + data[IU]*(-beta*(g1*u+c)) + data[IV]*(-beta*g1*v) + data[IE]*beta*g1;
+      tmp[IU] = data[ID]*(1.0-phi2/c2)   + data[IU]*g1*u/c2          + data[IV]*g1*v/c2      + data[IE]*(-g1/c2);
+      tmp[IV] = data[ID]*(-v)                                      + data[IV];
+      tmp[IE] = data[ID]*beta*(phi2-u*c) + data[IU]*(-beta*(g1*u-c)) + data[IV]*(-beta*g1*v) + data[IE]*beta*g1;
 
     } else if (dir == IY) {
       
-      // compute matrix vector multiply: out = Ly . in
-      out[ID] = in[ID]*beta*(phi2+v*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*(g1*v+c)) + in[IE]*beta*g1;
-      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2      + in[IV]*g1*v/c2          + in[IE]*(-g1/c2);
-      out[IV] = in[ID]*(-u)            + in[IU];
-      out[IE] = in[ID]*beta*(phi2-v*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*(g1*v-c)) + in[IE]*beta*g1;
+      // compute matrix vector multiply: tmp = Ly . data
+      tmp[ID] = data[ID]*beta*(phi2+v*c) + data[IU]*(-beta*g1*u) + data[IV]*(-beta*(g1*v+c)) + data[IE]*beta*g1;
+      tmp[IU] = data[ID]*(1.0-phi2/c2)   + data[IU]*g1*u/c2      + data[IV]*g1*v/c2          + data[IE]*(-g1/c2);
+      tmp[IV] = data[ID]*(-u)            + data[IU];
+      tmp[IE] = data[ID]*beta*(phi2-v*c) + data[IU]*(-beta*g1*u) + data[IV]*(-beta*(g1*v-c)) + data[IE]*beta*g1;
 
     }
+
+    data[ID] = tmp[ID];
+    data[IE] = tmp[IE];
+    data[IU] = tmp[IU];
+    data[IV] = tmp[IV];
     
   }; // cons_to_charac
   
   /**
    * Transform from characteristic variables to conservative by multiply input vector 
-   * by R (right eigenvalue matrix of Euler Jacobian).
+   * by R (right eigenvalue matrix of Euler Jacobian). Computation is done in place
    *
    * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
    * and also copied here using python syntax
@@ -346,21 +351,21 @@ struct EulerEquations<2>
    *
    * \tparam dir allows to select which flux function / Jacobian to use : A(U) or B(U)
    *
-   * \param[in] in input vector of characteristics variables
+   * \param[in,out] on input vector of characteristics variables, on output conservative var
    * \param[in] q local hydro state vector of conservative variables
    * \param[in] c speed of sound
    * \param[in] gamma0 is the heat capacity ratio
-   * \param[out] out output vector of conservative variables
    */
   template<int dir>
   static
   KOKKOS_INLINE_FUNCTION
-  void charac_to_cons(const HydroState& in,
+  void charac_to_cons(HydroState& data,
 		      const HydroState& q,
 		      const real_t c,
-		      const real_t gamma0,
-		      HydroState& out)
+		      const real_t gamma0)
   {
+    
+    HydroState tmp;
     
     // some useful intermediate values
     const real_t u = q[IU]/q[ID];
@@ -381,21 +386,26 @@ struct EulerEquations<2>
 
     if (dir == IX) {
       
-      // compute matrix vector multiply: out = Rx . in
-      out[ID] = in[ID]         + in[IU]                 + in[IE];
-      out[IU] = in[ID]*(u-c)   + in[IU]*u               + in[IE]*(u+c);
-      out[IV] = in[ID]*v       + in[IU]*v    + in[IV]   + in[IE]*v;
-      out[IE] = in[ID]*(H-u*c) + in[IU]*V2/2 + in[IV]*v + in[IE]*(H+u*c);
+      // compute matrix vector multiply: tmp = Rx . data
+      tmp[ID] = data[ID]         + data[IU]                   + data[IE];
+      tmp[IU] = data[ID]*(u-c)   + data[IU]*u                 + data[IE]*(u+c);
+      tmp[IV] = data[ID]*v       + data[IU]*v    + data[IV]   + data[IE]*v;
+      tmp[IE] = data[ID]*(H-u*c) + data[IU]*V2/2 + data[IV]*v + data[IE]*(H+u*c);
 
     } else if (dir == IY) {
       
-      // compute matrix vector multiply: out = Ry . in
-      out[ID] = in[ID]         + in[IU]                 + in[IE];
-      out[IU] = in[ID]*u       + in[IU]*u    + in[IV]   + in[IE]*u;
-      out[IV] = in[ID]*(v-c)   + in[IU]*v               + in[IE]*(v+c);
-      out[IE] = in[ID]*(H-v*c) + in[IU]*V2/2 + in[IV]*u + in[IE]*(H+v*c);
+      // compute matrix vector multiply: tmp = Ry . data
+      tmp[ID] = data[ID]         + data[IU]                   + data[IE];
+      tmp[IU] = data[ID]*u       + data[IU]*u    + data[IV]   + data[IE]*u;
+      tmp[IV] = data[ID]*(v-c)   + data[IU]*v                 + data[IE]*(v+c);
+      tmp[IE] = data[ID]*(H-v*c) + data[IU]*V2/2 + data[IV]*u + data[IE]*(H+v*c);
 
     }
+
+    data[ID] = tmp[ID];
+    data[IE] = tmp[IE];
+    data[IU] = tmp[IU];
+    data[IV] = tmp[IV];
     
   }; // charac_to_cons
   
@@ -694,7 +704,7 @@ struct EulerEquations<3>
 
   /**
    * Compute characteristic variables by multiply input vector 
-   * by L (left eigenvalue matrix of Euler Jacobian).
+   * by L (left eigenvalue matrix of Euler Jacobian). Computation is done in place.
    *
    * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex 
    * and also copied here using python syntax
@@ -725,21 +735,20 @@ struct EulerEquations<3>
    *
    * \tparam dir allows to select which flux function / Jacobian to use : Ax(U), Ay(U) or Az(U)
    *
-   * \param[in] in input vector of conservative variables
+   * \param[in,out] on input vector of conservative variables, on output characteristics var
    * \param[in] q local hydro state vector of conservative variables
    * \param[in] c speed of sound
    * \param[in] gamma0 is the heat capacity ratio
-   * \param[out] out output vector of characteristics variables
    */
   template<int dir>
   static
   KOKKOS_INLINE_FUNCTION
-  void cons_to_charac(const HydroState& in,
+  void cons_to_charac(HydroState& data,
 		      const HydroState& q,
 		      const real_t c,
-		      const real_t gamma0,
-		      HydroState& out)
+		      const real_t gamma0)
   {
+    HydroState tmp;
     
     // some useful intermediate values
     const real_t u = q[IU]/q[ID];
@@ -761,38 +770,44 @@ struct EulerEquations<3>
 
     if (dir == IX) {
       
-      // compute matrix vector multiply: out = Lx . in
-      out[ID] = in[ID]*beta*(phi2+u*c) + in[IU]*(-beta*(g1*u+c)) + in[IV]*(-beta*g1*v) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
-      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2          + in[IV]*g1*v/c2      + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
-      out[IV] = in[ID]*(-v)                                      + in[IV];
-      out[IW] = in[ID]*(-w)                                                            + in[IW];
-      out[IE] = in[ID]*beta*(phi2-u*c) + in[IU]*(-beta*(g1*u-c)) + in[IV]*(-beta*g1*v) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
+      // compute matrix vector multiply: tmp = Lx . data
+      tmp[ID] = data[ID]*beta*(phi2+u*c) + data[IU]*(-beta*(g1*u+c)) + data[IV]*(-beta*g1*v) + data[IW]*(-beta*g1*w) + data[IE]*beta*g1;
+      tmp[IU] = data[ID]*(1.0-phi2/c2)   + data[IU]*g1*u/c2          + data[IV]*g1*v/c2      + data[IW]*g1*w/c2      + data[IE]*(-g1/c2);
+      tmp[IV] = data[ID]*(-v)                                        + data[IV];
+      tmp[IW] = data[ID]*(-w)                                                                + data[IW];
+      tmp[IE] = data[ID]*beta*(phi2-u*c) + data[IU]*(-beta*(g1*u-c)) + data[IV]*(-beta*g1*v) + data[IW]*(-beta*g1*w) + data[IE]*beta*g1;
 
     } else if (dir == IY) {
       
-      // compute matrix vector multiply: out = Ly . in
-      out[ID] = in[ID]*beta*(phi2+v*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*(g1*v+c)) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
-      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2      + in[IV]*g1*v/c2          + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
-      out[IV] = in[ID]*(-u)            + in[IU];
-      out[IW] = in[ID]*(-w)                                                            + in[IW];
-      out[IE] = in[ID]*beta*(phi2-v*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*(g1*v-c)) + in[IW]*(-beta*g1*w) + in[IE]*beta*g1;
+      // compute matrix vector multiply: tmp = Ly . data
+      tmp[ID] = data[ID]*beta*(phi2+v*c) + data[IU]*(-beta*g1*u) + data[IV]*(-beta*(g1*v+c)) + data[IW]*(-beta*g1*w) + data[IE]*beta*g1;
+      tmp[IU] = data[ID]*(1.0-phi2/c2)   + data[IU]*g1*u/c2      + data[IV]*g1*v/c2          + data[IW]*g1*w/c2      + data[IE]*(-g1/c2);
+      tmp[IV] = data[ID]*(-u)            + data[IU];
+      tmp[IW] = data[ID]*(-w)                                                                + data[IW];
+      tmp[IE] = data[ID]*beta*(phi2-v*c) + data[IU]*(-beta*g1*u) + data[IV]*(-beta*(g1*v-c)) + data[IW]*(-beta*g1*w) + data[IE]*beta*g1;
 
     } else if (dir == IZ) {
 
-      // compute matrix vector multiply: out = Lz . in
-      out[ID] = in[ID]*beta*(phi2+w*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*g1*v)     + in[IW]*(-beta*(g1*w+c)) + in[IE]*beta*g1;
-      out[IU] = in[ID]*(1.0-phi2/c2)   + in[IU]*g1*u/c2      + in[IV]*g1*v/c2          + in[IW]*g1*w/c2      + in[IE]*(-g1/c2);
-      out[IV] = in[ID]*(-u)            + in[IU];
-      out[IW] = in[ID]*(-v)                                  + in[IV];
-      out[IE] = in[ID]*beta*(phi2-w*c) + in[IU]*(-beta*g1*u) + in[IV]*(-beta*g1*v)     + in[IW]*(-beta*(g1*w-c)) + in[IE]*beta*g1;
+      // compute matrix vector multiply: tmp = Lz . data
+      tmp[ID] = data[ID]*beta*(phi2+w*c) + data[IU]*(-beta*g1*u) + data[IV]*(-beta*g1*v)     + data[IW]*(-beta*(g1*w+c)) + data[IE]*beta*g1;
+      tmp[IU] = data[ID]*(1.0-phi2/c2)   + data[IU]*g1*u/c2      + data[IV]*g1*v/c2          + data[IW]*g1*w/c2          + data[IE]*(-g1/c2);
+      tmp[IV] = data[ID]*(-u)            + data[IU];
+      tmp[IW] = data[ID]*(-v)                                    + data[IV];
+      tmp[IE] = data[ID]*beta*(phi2-w*c) + data[IU]*(-beta*g1*u) + data[IV]*(-beta*g1*v)     + data[IW]*(-beta*(g1*w-c)) + data[IE]*beta*g1;
 
     }
-    
+
+    data[ID] = tmp[ID];
+    data[IE] = tmp[IE];
+    data[IU] = tmp[IU];
+    data[IV] = tmp[IV];
+    data[IW] = tmp[IW];
+
   }; // cons_to_charac
 
   /**
    * Transform from characteristic variables to conservative by multiply input vector 
-   * by R (right eigenvalue matrix of Euler Jacobian).
+   * by R (right eigenvalue matrix of Euler Jacobian). Computation done in place.
    *
    * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
    * and also copied here using python syntax
@@ -824,21 +839,20 @@ struct EulerEquations<3>
    *
    * \tparam dir allows to select which flux function / Jacobian to use : Ax(U), Ay(U) or Az(U)
    *
-   * \param[in] in input vector of characteristics variables
+   * \param[in,out] on input vector of characteristics variables, on output conservative vars
    * \param[in] q local hydro state vector of conservative variables
    * \param[in] c speed of sound
    * \param[in] gamma0 is the heat capacity ratio
-   * \param[out] out output vector of conservative variables
    */
   template<int dir>
   static
   KOKKOS_INLINE_FUNCTION
-  void charac_to_cons(const HydroState& in,
+  void charac_to_cons(HydroState& data,
 		      const HydroState& q,
 		      const real_t c,
-		      const real_t gamma0,
-		      HydroState& out)
+		      const real_t gamma0)
   {
+    HydroState tmp;
     
     // some useful intermediate values
     const real_t u = q[IU]/q[ID];
@@ -860,32 +874,38 @@ struct EulerEquations<3>
 
     if (dir == IX) {
       
-      // compute matrix vector multiply: out = Rx . in
-      out[ID] = in[ID]         + in[IU]                            + in[IE];
-      out[IU] = in[ID]*(u-c)   + in[IU]*u                          + in[IE]*(u+c);
-      out[IV] = in[ID]*v       + in[IU]*v    + in[IV]              + in[IE]*v;
-      out[IW] = in[ID]*w       + in[IU]*w               + in[IW]   + in[IE]*w;
-      out[IE] = in[ID]*(H-u*c) + in[IU]*V2/2 + in[IV]*v + in[IW]*w + in[IE]*(H+u*c);
+      // compute matrix vector multiply: tmp = Rx . data
+      tmp[ID] = data[ID]         + data[IU]                                + data[IE];
+      tmp[IU] = data[ID]*(u-c)   + data[IU]*u                              + data[IE]*(u+c);
+      tmp[IV] = data[ID]*v       + data[IU]*v    + data[IV]                + data[IE]*v;
+      tmp[IW] = data[ID]*w       + data[IU]*w                 + data[IW]   + data[IE]*w;
+      tmp[IE] = data[ID]*(H-u*c) + data[IU]*V2/2 + data[IV]*v + data[IW]*w + data[IE]*(H+u*c);
 
     } else if (dir == IY) {
       
-      // compute matrix vector multiply: out = Ry . in
-      out[ID] = in[ID]         + in[IU]                            + in[IE];
-      out[IU] = in[ID]*u       + in[IU]*u    + in[IV]              + in[IE]*u;
-      out[IV] = in[ID]*(v-c)   + in[IU]*v                          + in[IE]*(v+c);
-      out[IW] = in[ID]*w       + in[IU]*w               + in[IW]   + in[IE]*w;
-      out[IE] = in[ID]*(H-v*c) + in[IU]*V2/2 + in[IV]*u + in[IW]*w + in[IE]*(H+v*c);
+      // compute matrix vector multiply: tmp = Ry . data
+      tmp[ID] = data[ID]         + data[IU]                                + data[IE];
+      tmp[IU] = data[ID]*u       + data[IU]*u    + data[IV]                + data[IE]*u;
+      tmp[IV] = data[ID]*(v-c)   + data[IU]*v                              + data[IE]*(v+c);
+      tmp[IW] = data[ID]*w       + data[IU]*w                 + data[IW]   + data[IE]*w;
+      tmp[IE] = data[ID]*(H-v*c) + data[IU]*V2/2 + data[IV]*u + data[IW]*w + data[IE]*(H+v*c);
 
     } else if (dir == IZ) {
       
-      // compute matrix vector multiply: out = Rz . in
-      out[ID] = in[ID]         + in[IU]                            + in[IE];
-      out[IU] = in[ID]*u       + in[IU]*u    + in[IV]              + in[IE]*u;
-      out[IV] = in[ID]*v       + in[IU]*v               + in[IW]   + in[IE]*v;
-      out[IW] = in[ID]*(w-c)   + in[IU]*w                          + in[IE]*(w+c);
-      out[IE] = in[ID]*(H-w*c) + in[IU]*V2/2 + in[IV]*u + in[IW]*v + in[IE]*(H+w*c);
+      // compute matrix vector multiply: tmp = Rz . data
+      tmp[ID] = data[ID]         + data[IU]                                + data[IE];
+      tmp[IU] = data[ID]*u       + data[IU]*u    + data[IV]                + data[IE]*u;
+      tmp[IV] = data[ID]*v       + data[IU]*v                 + data[IW]   + data[IE]*v;
+      tmp[IW] = data[ID]*(w-c)   + data[IU]*w                              + data[IE]*(w+c);
+      tmp[IE] = data[ID]*(H-w*c) + data[IU]*V2/2 + data[IV]*u + data[IW]*v + data[IE]*(H+w*c);
 
     }
+
+    data[ID] = tmp[ID];
+    data[IE] = tmp[IE];
+    data[IU] = tmp[IU];
+    data[IV] = tmp[IV];
+    data[IW] = tmp[IW];
     
   }; // charac_to_cons
 
