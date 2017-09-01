@@ -43,15 +43,47 @@ void compute_Uaverage(sdm::SolverHydroSDM<dim,N>& solver) {
     solver.params.isize * solver.params.jsize :
     solver.params.isize * solver.params.jsize * solver.params.ksize;
   
-  // alias to the computational functor, dimension dependend
-  sdm::Average_Conservative_Variables_Functor<dim,N>
-    functor(solver.params,
-	    solver.sdm_geom,
-	    solver.U,
-	    solver.Uaverage);
+  // compute cell average
+  {
+    sdm::Average_Conservative_Variables_Functor<dim,N>
+      functor(solver.params,
+	      solver.sdm_geom,
+	      solver.U,
+	      solver.Uaverage);
   
-  Kokkos::parallel_for(nbCells, functor);
-    
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // compute x gradient cell-averaged
+  {
+    sdm::Average_Gradient_Functor<dim,N,IX> functor(solver.params,
+						    solver.sdm_geom,
+						    solver.U,
+						    solver.Ugradx);
+    Kokkos::parallel_for(nbCells, functor);
+
+  }
+
+  // compute y gradient cell-averaged
+  {
+    sdm::Average_Gradient_Functor<dim,N,IY> functor(solver.params,
+						    solver.sdm_geom,
+						    solver.U,
+						    solver.Ugrady);
+    Kokkos::parallel_for(nbCells, functor);
+
+  }
+
+  // compute z gradient cell-averaged
+  if (dim==3) {
+    sdm::Average_Gradient_Functor<dim,N,IZ> functor(solver.params,
+						    solver.sdm_geom,
+						    solver.U,
+						    solver.Ugradz);
+    Kokkos::parallel_for(nbCells, functor);
+
+  }
+
   return;
   
 } // compute_Uaverage
@@ -117,8 +149,26 @@ void test_compute_average_functor()
 
   using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
 
-  typename DataArray::HostMirror Average_host = Kokkos::create_mirror(solver.Uaverage);
-  io_writer_average->save_data(solver.Uaverage, Average_host, 0, 0.0, "");
+  {
+    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Uaverage);
+    io_writer_average->save_data(solver.Uaverage, data_host, 0, 0.0, "");
+  }
+
+  {
+    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Ugradx);
+    io_writer_average->save_data(solver.Ugradx, data_host, 0, 0.0, "gradx");
+  }
+
+  {
+    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Ugrady);
+    io_writer_average->save_data(solver.Ugrady, data_host, 0, 0.0, "grady");
+  }
+
+  if (dim==3) {
+    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Ugradz);
+    io_writer_average->save_data(solver.Ugradz, data_host, 0, 0.0, "gradz");
+  }
+
   
 } // test_compute_dt_functors
 
