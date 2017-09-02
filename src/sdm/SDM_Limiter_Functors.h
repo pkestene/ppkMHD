@@ -813,7 +813,7 @@ public:
     HydroState DuYL; // neighbor on the left
     HydroState DuYR; // neighbor on the right
 
-    const real_t dx = this->params.dx;
+    const real_t dx = 1.0; //this->params.dx;
     
     // local cell index
     int i,j;
@@ -869,6 +869,7 @@ public:
     change_x /= nbvar;
     change_y /= nbvar;
     
+
     // If limiter is active, reduce polynomial to linear
     // recompute all DoF in current cell
     if(change_x + change_y > 1.0e-10) {

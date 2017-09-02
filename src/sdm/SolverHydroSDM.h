@@ -790,26 +790,27 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
       Kokkos::parallel_for(nbCells, functor);
     }
 
-  } // end computing cell-average gradient
-
-  // retrieve parameter M_TVB (used in the modified minmod routine)
-  real_t M_TVB = configMap.getFloat("sdm","M_TVB",40);
-  const real_t dx = this->params.dx;
-  const real_t Mdx2 = M_TVB * dx * dx;
-  
-  {
+    // retrieve parameter M_TVB (used in the modified minmod routine)
+    real_t M_TVB = configMap.getFloat("sdm","M_TVB",40);
+    //const real_t dx = this->params.dx;
+    //const real_t Mdx2 = M_TVB * dx * dx;
+    const real_t Mdx2 = M_TVB;
     
-    Apply_limiter_Functor<dim,N> functor(params,
-					 sdm_geom,
-					 euler,
-					 Udata,
-					 Uaverage,
-					 Ugradx,
-					 Ugrady,
-					 Ugradz,
-					 Mdx2);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+    {
+      
+      Apply_limiter_Functor<dim,N> functor(params,
+					   sdm_geom,
+					   euler,
+					   Udata,
+					   Uaverage,
+					   Ugradx,
+					   Ugrady,
+					   Ugradz,
+					   Mdx2);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+  } // end limiter_enabled
   
 } // SolverHydroSDM<dim,N>::apply_limiting
 
