@@ -1309,7 +1309,7 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
     make_boundary_sdm_wedge<FACE_YMIN>(Udata, wparams);
     make_boundary_sdm_wedge<FACE_YMAX>(Udata, wparams);
 
-  } else if (dim==2 and !m_problem_name.compare("wedge")) {
+  } else if (dim==2 and !m_problem_name.compare("jet")) {
 
     JetParams jparams(configMap);
     

@@ -179,7 +179,7 @@ public:
 	    
 	    for ( int iVar=0; iVar<nbvar; iVar++ ) {
 	      Udata(i,j,dofMap(idx,idy,0,iVar)) =
-		Udata(i,j0,dofMap(idx,N-1-idy,0,iVar));
+		Udata(i,j0,dofMap(idx,/*N-1-*/idy,0,iVar));
 	    }
 	    
 	  } // end for idx
@@ -207,7 +207,7 @@ public:
 	    
 	    for ( int iVar=0; iVar<nbvar; iVar++ ) {
 	      Udata(i,j,dofMap(idx,idy,0,iVar)) =
-		Udata(i,j0,dofMap(idx,N-1-idy,0,iVar));
+		Udata(i,j0,dofMap(idx,/*N-1-*/idy,0,iVar));
 	    }
 
 	  } // end idx

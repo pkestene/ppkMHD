@@ -4,6 +4,7 @@ set (sdm_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SDMBaseFunctor.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Boundaries_Functors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Boundaries_Functors_Wedge.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Boundaries_Functors_Jet.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Compute_error.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Dt_Functors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/SDM_Flux_Functors.h
