@@ -38,6 +38,12 @@ struct JetParams {
   
   //! conservative variable in the bulk
   real_t rho2, rho_u2, rho_v2, rho_w2, e_tot2;
+
+  //! jet position center
+  real_t pos_jet;
+
+  //! jet width
+  real_t width_jet;
   
   JetParams (ConfigMap& configMap)
   {
@@ -50,7 +56,7 @@ struct JetParams {
     w_jet   = configMap.getFloat("jet", "w_jet", 0.0);
     p_jet   = configMap.getFloat("jet", "p_jet", 0.4127);
 
-    rho1 = rho_jet
+    rho1 = rho_jet;
     rho_u1 = rho1 * u_jet;
     rho_v1 = rho1 * v_jet;
     rho_w1 = rho1 * w_jet;
@@ -59,6 +65,9 @@ struct JetParams {
 		     v_jet*v_jet +
 		     w_jet*w_jet );
 
+    pos_jet = configMap.getFloat("jet", "pos_jet", 0.0);
+    width_jet = configMap.getFloat("jet", "width_jet", 0.1);
+    
     // read bulk (ambiant) region
     rho_bulk = configMap.getFloat("jet", "rho_bulk", 0.5);
     u_bulk   = configMap.getFloat("jet", "u_bulk", 0.0);

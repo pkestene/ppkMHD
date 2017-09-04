@@ -32,6 +32,7 @@
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
 #include "sdm/SDM_Boundaries_Functors_Wedge.h"
+#include "sdm/SDM_Boundaries_Functors_Jet.h"
 #include "sdm/SDM_Limiter_Functors.h"
 #include "sdm/SDM_Positivity_preserving.h"
 
@@ -42,6 +43,7 @@
 #include "shared/BlastParams.h"
 #include "shared/KHParams.h"
 #include "shared/WedgeParams.h"
+#include "shared/JetParams.h"
 
 namespace sdm {
 
@@ -244,6 +246,11 @@ public:
   void make_boundary_sdm_wedge(DataArray   Udata,
 			       WedgeParams wparams);
 
+  //! special boundary condition for the jet test case
+  template<FaceIdType faceId>
+  void make_boundary_sdm_jet(DataArray   Udata,
+			     JetParams   jparams);
+
   //! main boundaries routine (this is were serial / mpi switch happens)
   void make_boundaries(DataArray Udata);
 
@@ -256,6 +263,7 @@ public:
   void init_four_quadrant(DataArray Udata);
   void init_kelvin_helmholtz(DataArray Udata);
   void init_wedge(DataArray Udata);
+  void init_jet(DataArray Udata);
   void init_isentropic_vortex(DataArray Udata);
   
   void save_solution_impl();
@@ -486,6 +494,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   } else if ( !m_problem_name.compare("wedge") ) {
     
     init_wedge(U);
+    
+  } else if ( !m_problem_name.compare("jet") ) {
+    
+    init_jet(U);
     
   } else if ( !m_problem_name.compare("isentropic_vortex") ) {
 
@@ -1236,6 +1248,32 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_wedge(DataArray   Udata,
 
 // =======================================================
 // =======================================================
+template<int dim, int N>
+template<FaceIdType faceId>
+void SolverHydroSDM<dim,N>::make_boundary_sdm_jet(DataArray   Udata,
+						  JetParams   jparams)
+{
+
+  const int ghostWidth=params.ghostWidth;
+  int max_size = std::max(params.isize,params.jsize);
+  int nbIter = ghostWidth * max_size;
+
+  if (dim==3) {
+    max_size = std::max(max_size,params.ksize);
+    nbIter = ghostWidth * max_size * max_size;
+  }
+
+  {
+
+    MakeBoundariesFunctor_SDM_Jet<dim,N,faceId> functor(params, sdm_geom, jparams, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+
+  }
+    
+} // SolverHydroSDM<dim,N>::make_boundary_sdm_jet
+
+// =======================================================
+// =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
 // absorbant, reflexive or periodic
@@ -1270,6 +1308,15 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
     make_boundary_sdm_wedge<FACE_XMAX>(Udata, wparams);
     make_boundary_sdm_wedge<FACE_YMIN>(Udata, wparams);
     make_boundary_sdm_wedge<FACE_YMAX>(Udata, wparams);
+
+  } else if (dim==2 and !m_problem_name.compare("wedge")) {
+
+    JetParams jparams(configMap);
+    
+    make_boundary_sdm_jet<FACE_XMIN>(Udata, jparams);
+    make_boundary_sdm_jet<FACE_XMAX>(Udata, jparams);
+    make_boundary_sdm_jet<FACE_YMIN>(Udata, jparams);
+    make_boundary_sdm_jet<FACE_YMAX>(Udata, jparams);
 
   } else {
 
@@ -1394,6 +1441,23 @@ void SolverHydroSDM<dim,N>::init_wedge(DataArray Udata)
   Kokkos::parallel_for(nbCells, functor);
   
 } // init_wedge
+
+// =======================================================
+// =======================================================
+/**
+ * 
+ * 
+ */
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::init_jet(DataArray Udata)
+{
+  
+  JetParams jparams(configMap);
+  
+  InitJetFunctor<dim,N> functor(params, sdm_geom, jparams, Udata);
+  Kokkos::parallel_for(nbCells, functor);
+  
+} // init_jet
 
 // =======================================================
 // =======================================================
