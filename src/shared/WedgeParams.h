@@ -37,7 +37,7 @@ struct WedgeParams {
     angle_f = configMap.getFloat("wedge", "front_angle", M_PI/3.0);
     slope_f = tan(angle_f);
 
-    shock_speed = configMap.getFloat("wedge", "shock_speed", 1.0);
+    shock_speed = configMap.getFloat("wedge", "shock_speed", 10.0);
     shock_speed /= cos(M_PI/2.0-angle_f);
 
     delta_x = shock_speed*t;
