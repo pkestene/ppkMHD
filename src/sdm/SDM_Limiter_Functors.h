@@ -822,15 +822,17 @@ public:
     if (i==0 or i==isize-1 or
 	j==0 or j==jsize-1 )
       return;
-    
-    // speed of sound
+
+    // read cell-average conservative variables
     HydroState Uave; Uave[IE]=0;
     for (int ivar = 0; ivar<nbvar; ++ivar) {
       Uave[ivar] = Uaverage(i,j,ivar);
     }
+
+    // speed of sound from cell-averaged values
     const real_t c = euler.compute_speed_of_sound(Uave, gamma0);
 
-    // read cell-averaged gradient, and difference neighbor
+    // read cell-averaged gradient, and compute difference with close neighbors
     for (int ivar = 0; ivar<nbvar; ++ivar) {
 
       DuX[ivar]  = Ugradx(i,j,ivar) * dx;
