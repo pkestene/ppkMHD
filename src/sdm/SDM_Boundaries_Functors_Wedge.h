@@ -58,6 +58,14 @@ public:
     const int jmin = this->params.jmin;
     const int jmax = this->params.jmax;
     
+#ifdef USE_MPI
+    const int i_mpi = this->params.myMpiPos[IX];
+    const int j_mpi = this->params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
+
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
 
@@ -68,6 +76,11 @@ public:
     const real_t rho_u1 = wparams.rho_u1;
     const real_t rho_v1 = wparams.rho_v1;
     const real_t e_tot1 = wparams.e_tot1;
+
+    const real_t rho2   = wparams.rho2;
+    const real_t rho_u2 = wparams.rho_u2;
+    const real_t rho_v2 = wparams.rho_v2;
+    const real_t e_tot2 = wparams.e_tot2;
 
     int i,j;
     
@@ -113,9 +126,9 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 	    for ( int iVar=0; iVar<nbvar; iVar++ ) {
-	      // copy the last Dof from cell i0,j into every Dof of cell i,j
+	      // copy Dof from cell i0,j into cell i,j with a mirror
 	      Udata(i,j,dofMap(idx,idy,0,iVar)) =
-		Udata(i0,j,dofMap(N-1,idy,0,iVar));
+		Udata(i0,j,dofMap(N-1-idx,idy,0,iVar));
 	    }
 	  } // end for idx
 	} // end for idy
@@ -132,44 +145,41 @@ public:
 
       i = index / ghostWidth;
       j = index - i*ghostWidth;
-
-      real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-      //real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
       
       if(i >= imin && i <= imax    &&
 	 j >= 0    && j <ghostWidth) {
 
-	if (x < wparams.x_f) { // inflow
-
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
-	      Udata(i,j,dofMap(idx,idy,0,ID)) = rho1;
-	      Udata(i,j,dofMap(idx,idy,0,IE)) = e_tot1;
-	      Udata(i,j,dofMap(idx,idy,0,IU)) = rho_u1;
-	      Udata(i,j,dofMap(idx,idy,0,IV)) = rho_v1;
-	    } // end for idx
-	  } // end for idy
-	  
-	} else { // reflective
-	  
-	  // mirror DoFs idy <-> N-1-idy
-
-	  real_t sign=1.0;
-	  j0=2*ghostWidth-1-j;
-
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 
-	      for ( int iVar=0; iVar<nbvar; iVar++ ) {
-		if (iVar==IV) sign=-ONE_F;
-		Udata(i,j,dofMap(idx,idy,0,iVar)) =
-		  Udata(i,j0,dofMap(idx,N-1-idy,0,iVar))*sign;
-	      }
-	      
+	      // lower left corner
+	      real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+	      x += this->sdm_geom.solution_pts_1d(idx) * dx;
+
+	      if (x < wparams.x_f) { // inflow
+		
+		Udata(i,j,dofMap(idx,idy,0,ID)) = rho1;
+		Udata(i,j,dofMap(idx,idy,0,IE)) = e_tot1;
+		Udata(i,j,dofMap(idx,idy,0,IU)) = rho_u1;
+		Udata(i,j,dofMap(idx,idy,0,IV)) = rho_v1;
+	  
+	      } else { // reflective
+		
+		// mirror DoFs idy <-> N-1-idy
+		
+		real_t sign=1.0;
+		j0=2*ghostWidth-1-j;
+		
+		for ( int iVar=0; iVar<nbvar; iVar++ ) {
+		  if (iVar==IV) sign=-ONE_F;
+		  Udata(i,j,dofMap(idx,idy,0,iVar)) =
+		    Udata(i,j0,dofMap(idx,N-1-idy,0,iVar))*sign;
+		}
+
+	      } // end inflow / reflective
+
 	    } // end for idx
 	  } // end for idy
-
-	}
 	
       } // end if i,j
       
@@ -184,40 +194,46 @@ public:
       i = index / ghostWidth;
       j = index - i*ghostWidth;
       j += (ny+ghostWidth);
-
-      real_t x = xmin + dx/2 + (i-ghostWidth)*dx;
-      real_t y = ymin + dy/2 + (j-ghostWidth)*dy;
-
+      
       if(i >= imin          && i <= imax              &&
 	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
+	
+	for (int idy=0; idy<N; ++idy) {
+	  for (int idx=0; idx<N; ++idx) {
+	    
+	    // lower left corner
+	    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+	    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+	    
+	    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+	    y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
-	if (x < wparams.x_f + y/wparams.slope_f + wparams.delta_x) { // inflow
+	    if (x < wparams.x_f + y/wparams.slope_f + wparams.delta_x) { // inflow
 
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
 	      Udata(i,j,dofMap(idx,idy,0,ID)) = rho1;
 	      Udata(i,j,dofMap(idx,idy,0,IP)) = e_tot1;
 	      Udata(i,j,dofMap(idx,idy,0,IU)) = rho_u1;
 	      Udata(i,j,dofMap(idx,idy,0,IV)) = rho_v1;
-	    } // end for idx
-	  } // end for idy
-	  
-	} else { // outflow
-	  
-	  j0=ny+ghostWidth-1;
-
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
-
-	      // copy the last Dof from cell i,j0 into every Dof of cell i,j
-	      for ( int iVar=0; iVar<nbvar; iVar++ ) {
-		Udata(i,j,dofMap(idx,idy,0,iVar)) = Udata(i,j0,dofMap(idx,N-1,0,iVar));
-	      }
 	      
-	    } // end idx
-	  } // end idy
+	    } else { // outflow
 	  
-	}
+	      // j0=ny+ghostWidth-1;
+	      
+	      // // copy the last Dof from cell i,j0 into every Dof of cell i,j
+	      // for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	      // 	Udata(i,j,dofMap(idx,idy,0,iVar)) =
+	      // 	  Udata(i,j0,dofMap(idx,N-1-idy,0,iVar));
+	      // }
+	      
+	      Udata(i,j,dofMap(idx,idy,0,ID)) = rho2;
+	      Udata(i,j,dofMap(idx,idy,0,IP)) = e_tot2;
+	      Udata(i,j,dofMap(idx,idy,0,IU)) = rho_u2;
+	      Udata(i,j,dofMap(idx,idy,0,IV)) = rho_v2;
+
+	    } // end inflow / outflow
+
+	  } // end idx
+	} // end idy
 	
       } // end if i,j
       
