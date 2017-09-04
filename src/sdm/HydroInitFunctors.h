@@ -86,12 +86,12 @@ public:
 	real_t tmp = x+y*y;
 	if (tmp > 0.5 && tmp < 1.5) {
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 1.0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 1.0/(gamma0-1.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = 1.0/(gamma0-1.0);
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0.0;
 	} else {
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 0.125;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 0.14/(gamma0-1.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = 0.14/(gamma0-1.0);
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0.0;
 	}
@@ -160,13 +160,13 @@ public:
 	  real_t tmp = x+y+z;
 	  if (tmp > 0.5 && tmp < 2.5) {
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 1.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 1.0/(gamma0-1.0);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = 1.0/(gamma0-1.0);
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
 	  } else {
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 0.125;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 0.14/(gamma0-1.0);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = 0.14/(gamma0-1.0);
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
@@ -631,14 +631,14 @@ public:
 	if ( y > slope_f*(x-x_f) ) {
     
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = wparams.rho1;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = wparams.e_tot1;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = wparams.e_tot1;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = wparams.rho_u1;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = wparams.rho_v1;
 	  
 	} else {
 	  
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = wparams.rho2;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = wparams.e_tot2;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = wparams.e_tot2;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = wparams.rho_u2;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = wparams.rho_v2;
 	  
@@ -711,7 +711,7 @@ public:
 	  if ( y > slope_f*(x-x_f) ) {
 	    
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = wparams.rho1;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = wparams.e_tot1;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = wparams.e_tot1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = wparams.rho_u1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = wparams.rho_v1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = wparams.rho_w1;
@@ -719,7 +719,7 @@ public:
 	  } else {
 	    
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = wparams.rho2;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = wparams.e_tot2;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = wparams.e_tot2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = wparams.rho_u2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = wparams.rho_v2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = wparams.rho_w2;
