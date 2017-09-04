@@ -16,6 +16,7 @@
 #include "shared/BlastParams.h"
 #include "shared/IsentropicVortexParams.h"
 #include "shared/initRiemannConfig2d.h"
+#include "shared/WedgeParams.h"
 
 namespace sdm {
 

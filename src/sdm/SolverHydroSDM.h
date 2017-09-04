@@ -15,8 +15,8 @@
 #include "shared/SolverBase.h"
 #include "shared/HydroParams.h"
 #include "shared/kokkos_shared.h"
-#include "shared/BoundariesFunctors.h"
-#include "shared/BoundariesFunctorsWedge.h"
+//#include "shared/BoundariesFunctors.h"
+//#include "shared/BoundariesFunctorsWedge.h"
 #include "shared/initRiemannConfig2d.h"
 #include "shared/EulerEquations.h"
 
@@ -31,6 +31,7 @@
 #include "sdm/SDM_Flux_with_Limiter_Functors.h"
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
+#include "sdm/SDM_Boundaries_Functors_Wedge.h"
 #include "sdm/SDM_Limiter_Functors.h"
 #include "sdm/SDM_Positivity_preserving.h"
 
@@ -234,14 +235,21 @@ public:
   void erase(DataArray data);
 
   //! avoid override the base class make_boundary method
+  template<FaceIdType faceId>
   void make_boundary_sdm(DataArray  Udata,
-			 FaceIdType faceId,
 			 bool       mhd_enabled);
 
+  //! special boundary condition for the wedge test case
+  template<FaceIdType faceId>
+  void make_boundary_sdm_wedge(DataArray   Udata,
+			       WedgeParams wparams);
+
+  //! main boundaries routine (this is were serial / mpi switch happens)
   void make_boundaries(DataArray Udata);
 
+  //! here we call boundaries condition for serial execution
   void make_boundaries_sdm_serial(DataArray Udata, bool mhd_enabled);
-  
+
   // host routines (initialization)
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
@@ -261,6 +269,10 @@ public:
   bool ssprk2_enabled;
   bool ssprk3_enabled;
   bool ssprk54_enabled;
+
+  //! when space order is >=3, and time integration is Runge-Kutta, we may
+  //! want to rescale dt, to match time and space order
+  bool rescale_dt_enabled;
 
   //! limiter (for shock capturing features)
   bool limiter_enabled;
@@ -1167,8 +1179,8 @@ void SolverHydroSDM<dim,N>::erase(DataArray data)
 // =======================================================
 // =======================================================
 template<int dim, int N>
+template<FaceIdType faceId>
 void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
-					      FaceIdType faceId,
 					      bool mhd_enabled)
 {
 
@@ -1183,51 +1195,40 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
     nbIter = ghostWidth * max_size * max_size;
   }
 
-  if (faceId == FACE_XMIN) {
+  {
 
-    MakeBoundariesFunctor_SDM<dim,N,FACE_XMIN> functor(params, sdm_geom, Udata);
+    MakeBoundariesFunctor_SDM<dim,N,faceId> functor(params, sdm_geom, Udata);
     Kokkos::parallel_for(nbIter, functor);
 
   }
-
-  if (faceId == FACE_XMAX) {
-
-    MakeBoundariesFunctor_SDM<dim,N,FACE_XMAX> functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-
-  }
-  
-  if (faceId == FACE_YMIN) {
-
-    MakeBoundariesFunctor_SDM<dim,N,FACE_YMIN> functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-
-  }
-
-  if (faceId == FACE_YMAX) {
-
-    MakeBoundariesFunctor_SDM<dim,N,FACE_YMAX> functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-
-  }
-
-  if (dim == 3) {
-    if (faceId == FACE_ZMIN) {
-      
-      MakeBoundariesFunctor_SDM<dim,N,FACE_ZMIN> functor(params, sdm_geom, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-      
-    }
     
-    if (faceId == FACE_ZMAX) {
-      
-      MakeBoundariesFunctor_SDM<dim,N,FACE_ZMAX> functor(params, sdm_geom, Udata);
-      Kokkos::parallel_for(nbIter, functor);
-      
-    }
+} // SolverHydroSDM<dim,N>::make_boundary_sdm
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+template<FaceIdType faceId>
+void SolverHydroSDM<dim,N>::make_boundary_sdm_wedge(DataArray   Udata,
+						    WedgeParams wparams)
+{
+
+  const int ghostWidth=params.ghostWidth;
+  int max_size = std::max(params.isize,params.jsize);
+  int nbIter = ghostWidth * max_size;
+
+  if (dim==3) {
+    max_size = std::max(max_size,params.ksize);
+    nbIter = ghostWidth * max_size * max_size;
   }
-  
-} // SolverHydroSDM<dim,N>::make_boundary
+
+  {
+
+    MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId> functor(params, sdm_geom, wparams, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+
+  }
+    
+} // SolverHydroSDM<dim,N>::make_boundary_sdm_wedge
 
 // =======================================================
 // =======================================================
@@ -1252,15 +1253,37 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
 						       bool mhd_enabled)
 {
 
-  make_boundary_sdm(Udata, FACE_XMIN, mhd_enabled);
-  make_boundary_sdm(Udata, FACE_XMAX, mhd_enabled);
-  make_boundary_sdm(Udata, FACE_YMIN, mhd_enabled);
-  make_boundary_sdm(Udata, FACE_YMAX, mhd_enabled);
+  /*
+   * deal with special cases
+   */
 
-  if (dim==3) {
+  // wedge has a different border condition
+  if (dim==2 and !m_problem_name.compare("wedge")) {
 
-    make_boundary_sdm(Udata, FACE_ZMIN, mhd_enabled);
-    make_boundary_sdm(Udata, FACE_ZMAX, mhd_enabled);
+    WedgeParams wparams(configMap, m_t);
+    
+    make_boundary_sdm_wedge<FACE_XMIN>(Udata, wparams);
+    make_boundary_sdm_wedge<FACE_XMAX>(Udata, wparams);
+    make_boundary_sdm_wedge<FACE_YMIN>(Udata, wparams);
+    make_boundary_sdm_wedge<FACE_YMAX>(Udata, wparams);
+
+  } else {
+
+    /*
+     * General case
+     */
+    
+    make_boundary_sdm<FACE_XMIN>(Udata, mhd_enabled);
+    make_boundary_sdm<FACE_XMAX>(Udata, mhd_enabled);
+    make_boundary_sdm<FACE_YMIN>(Udata, mhd_enabled);
+    make_boundary_sdm<FACE_YMAX>(Udata, mhd_enabled);
+    
+    if (dim==3) {
+      
+      make_boundary_sdm<FACE_ZMIN>(Udata, mhd_enabled);
+      make_boundary_sdm<FACE_ZMAX>(Udata, mhd_enabled);
+      
+    }
 
   }
     
