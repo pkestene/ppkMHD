@@ -100,6 +100,7 @@ void generate_input_file(int N, int size, int runge_kutta)
     outFile << "forward_euler=no\n";
     outFile << "ssprk2=no\n";
     outFile << "ssprk3=yes\n";
+    outFile << "rescale_dt_enabled=yes\n";
   }
   outFile << "\n";
   

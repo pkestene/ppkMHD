@@ -307,6 +307,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ssprk2_enabled(false),
   ssprk3_enabled(false),
   ssprk54_enabled(false),
+  rescale_dt_enabled(false),
   limiter_enabled(false),
   limiter_characteristics_enabled(false),
   positivity_enabled(false),
@@ -376,6 +377,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   ssprk3_enabled        = configMap.getBool("sdm", "ssprk3", false);
   ssprk54_enabled       = configMap.getBool("sdm", "ssprk54", false);
 
+  // rescale dt to make time order "match" space order ?
+  rescale_dt_enabled    = configMap.getBool("sdm", "rescale_dt_enabled", false);
+  
   if (ssprk2_enabled) {
 
     if (dim == 2) {
@@ -615,7 +619,7 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   dt = params.settings.cfl/invDt;
 
   // rescale dt to match the space order N+1
-  if (N >= 2 and ssprk3_enabled)
+  if (rescale_dt_enabled and N >= 2 and ssprk3_enabled)
     dt = pow(dt, (N+1.0)/3.0);
   
   return dt;
