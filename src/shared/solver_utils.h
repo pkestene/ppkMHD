@@ -29,8 +29,8 @@ inline void print_solver_monitoring_info(SolverBase* solver)
 
 #ifdef USE_SDM
   if (solver->solver_type == SOLVER_SDM) {
-    int nCells = solver->m_nCells;
-    int nb_dof_per_cell = solver->m_nDofsPerCell;
+    long long int nCells = solver->m_nCells;
+    long long int nb_dof_per_cell = solver->m_nDofsPerCell;
      printf("Perf (DoF)       : %5.3f number of MDoF-updates/s\n",solver->m_iteration*nCells*nb_dof_per_cell/t_tot*1e-6);
   }
 #endif // USE_SDM
