@@ -15,6 +15,7 @@
 #include "shared/SolverBase.h"
 #include "shared/HydroParams.h"
 #include "shared/kokkos_shared.h"
+#include "shared/mpiBorderUtils.h"
 //#include "shared/BoundariesFunctors.h"
 //#include "shared/BoundariesFunctorsWedge.h"
 #include "shared/initRiemannConfig2d.h"
@@ -257,6 +258,11 @@ public:
   //! here we call boundaries condition for serial execution
   void make_boundaries_sdm_serial(DataArray Udata, bool mhd_enabled);
 
+#ifdef USE_MPI
+  //! here we call boundaries condition for mpi execution
+  void make_boundaries_sdm_mpi(DataArray Udata, bool mhd_enabled);
+#endif // USE_MPI
+  
   // host routines (initialization)
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
@@ -1284,7 +1290,15 @@ void SolverHydroSDM<dim,N>::make_boundaries(DataArray Udata)
   
   bool mhd_enabled = false;
 
+#ifdef USE_MPI
+  
+  make_boundaries_sdm_mpi(Udata, mhd_enabled);
+
+#else
+
   make_boundaries_sdm_serial(Udata, mhd_enabled);
+
+#endif // USE_MPI
   
 } // SolverHydroSDM::make_boundaries
 
@@ -1339,7 +1353,20 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
   }
     
 } // SolverHydroSDM<dim,N>::make_boundaries_sdm_serial
-    
+
+#ifdef USE_MPI
+// =======================================================
+// =======================================================
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
+						    bool mhd_enabled)
+{
+
+  // TODO
+  
+} // SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi
+#endif // USE_MPI
+
 // =======================================================
 // =======================================================
 /**
