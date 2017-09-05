@@ -322,7 +322,7 @@ struct EulerEquations<2>
     data[IU] = tmp[IU];
     data[IV] = tmp[IV];
     
-  }; // cons_to_charac
+  } // cons_to_charac
   
   /**
    * Transform from characteristic variables to conservative by multiply input vector 
@@ -407,7 +407,7 @@ struct EulerEquations<2>
     data[IU] = tmp[IU];
     data[IV] = tmp[IV];
     
-  }; // charac_to_cons
+  } // charac_to_cons
   
 }; //struct EulerEquations<2>
 
@@ -803,7 +803,7 @@ struct EulerEquations<3>
     data[IV] = tmp[IV];
     data[IW] = tmp[IW];
 
-  }; // cons_to_charac
+  } // cons_to_charac
 
   /**
    * Transform from characteristic variables to conservative by multiply input vector 
@@ -907,7 +907,7 @@ struct EulerEquations<3>
     data[IV] = tmp[IV];
     data[IW] = tmp[IW];
     
-  }; // charac_to_cons
+  } // charac_to_cons
 
 }; //struct EulerEquations<3>
 

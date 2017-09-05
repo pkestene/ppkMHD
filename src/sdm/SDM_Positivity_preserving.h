@@ -957,8 +957,8 @@ public:
     if (theta1 < 1.0) {
       
       // vector of values at solution points
-      solution_values_t sol;
-      flux_values_t     flux;
+      //solution_values_t sol;
+      //flux_values_t     flux;
 	
       // sweep solution points
       for (int idy=0; idy<N; ++idy) {
@@ -1305,8 +1305,8 @@ public:
     if (theta1 < 1.0) {
       
       // vector of values at solution points
-      solution_values_t sol;
-      flux_values_t     flux;
+      //solution_values_t sol;
+      //flux_values_t     flux;
 	
       // sweep solution points
       for (int idz=0; idz<N; ++idz) {
