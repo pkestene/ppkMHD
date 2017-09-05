@@ -51,9 +51,6 @@ void test()
 
   std::cout << "speed of sound is " << c << "\n";
 
-  // characteristic variables
-  HydroState ch;
-
   // conservative in/ characterics / conservative out states
   HydroState cons_in, charac, cons_out;
   cons_in[ID] = 0.123;
