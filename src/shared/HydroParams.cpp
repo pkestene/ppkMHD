@@ -32,6 +32,7 @@ void HydroParams::setup(ConfigMap &configMap)
     enableOutput = false;
 
   std::string solver_name = configMap.getString("run", "solver_name", "unknown");
+
   if ( !solver_name.compare("Hydro_Muscl_2D") ) {
     
     dimType = TWO_D;
@@ -58,6 +59,28 @@ void HydroParams::setup(ConfigMap &configMap)
     ghostWidth = 3;
     mhdEnabled = true;
     
+  } else if ( solver_name.find("Hydro_Sdm_2D") != std::string::npos ||
+	      solver_name.find("Hydro_SDM_2D") != std::string::npos ) {
+    
+#if USE_SDM
+    
+    dimType = TWO_D;
+    nbvar = 4;
+    ghostWidth = 1;
+    
+#endif // USE_SDM
+    
+  } else if ( solver_name.find("Hydro_Sdm_3D") != std::string::npos ||
+	      solver_name.find("Hydro_SDM_3D") != std::string::npos ) {
+
+#if USE_SDM
+
+    dimType = THREE_D;
+    nbvar = 5;
+    ghostWidth = 1;
+
+#endif // USE_SDM
+    
   } else if ( solver_name.find("Hydro_Mood_2D") != std::string::npos ) {
 
 #ifdef USE_MOOD
@@ -71,7 +94,7 @@ void HydroParams::setup(ConfigMap &configMap)
     ghostWidth = mood::get_stencil_ghostwidth(stencilId);
 #endif // USE_MOOD
     
-  } else if ( !solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
+  } else if ( solver_name.find("Hydro_Mood_3D") != std::string::npos ) {
 
 #ifdef USE_MOOD
     // create the list of valid mood schemes names

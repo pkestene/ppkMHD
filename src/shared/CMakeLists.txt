@@ -5,6 +5,7 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/BlastParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/KHParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/WedgeParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/JetParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/IsentropicVortexParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/initRiemannConfig2d.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctors.h

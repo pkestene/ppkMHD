@@ -756,8 +756,8 @@ public:
 	HydroState qNeighbors_3;
 
 	// Local slopes and neighbor slopes
-	HydroState dqX;
-	HydroState dqY;
+	HydroState dqX{};
+	HydroState dqY{};
 
 	// get primitive variables state vector
 	qLoc[ID]         = Qdata(i  ,j  , ID);

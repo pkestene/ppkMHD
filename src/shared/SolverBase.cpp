@@ -20,7 +20,8 @@ namespace ppkMHD {
 // =======================================================
 SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   params(params),
-  configMap(configMap)
+  configMap(configMap),
+  solver_type(SOLVER_UNDEFINED)
 {
 
   /*
@@ -32,8 +33,9 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
    * other variables initialization.
    */
   m_times_saved = 0;
-  m_nCells = 0;
-
+  m_nCells = -1;
+  m_nDofsPerCell = -1;
+  
   // create the timers
   timers[TIMER_TOTAL]      = std::make_shared<Timer>();
   timers[TIMER_IO]         = std::make_shared<Timer>();
@@ -51,8 +53,10 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   m_variables_names[IB] = "by"; // mag field Y
   m_variables_names[IC] = "bz"; // mag field Z
 
-  m_io_writer = new io::IO_Writer(params, configMap, m_variables_names);
-
+  // init io writer is/should/must be called outside of constructor
+  // right now we moved that in SolverFactory's method create
+  //init_io_writer();
+  
 #ifdef USE_MPI
   const int gw = params.ghostWidth;
   const int isize = params.isize;
@@ -94,7 +98,8 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
 SolverBase::~SolverBase()
 {
 
-  delete m_io_writer;
+  // m_io_writer is now a shared (managed) pointer
+  //delete m_io_writer;
   
 } // SolverBase::~SolverBase
 
@@ -998,6 +1003,15 @@ SolverBase::copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc)
 } // SolverBase::copy_boundaries_back - 3d
 
 #endif // USE_MPI
+
+// =======================================================
+// =======================================================
+void SolverBase::init_io_writer()
+{
+  
+  m_io_writer = std::make_shared<io::IO_Writer>(params, configMap, m_variables_names);
+
+} // SolverBase::init_io_writer
 
 // =======================================================
 // =======================================================

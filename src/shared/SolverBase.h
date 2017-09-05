@@ -6,7 +6,7 @@
 #include "shared/kokkos_shared.h"
 
 #include <map>
-#include <memory> // for std::unique_ptr
+#include <memory> // for std::unique_ptr / std::shared_ptr
 
 // for timer
 #ifdef CUDA
@@ -14,6 +14,14 @@
 #else
 #include "utils/monitoring/OpenMPTimer.h"
 #endif
+
+//! this enum helps identifying the type of solver used
+enum solver_type_t {
+  SOLVER_UNDEFINED=0,
+  SOLVER_MUSCL_HANCOCK=1,
+  SOLVER_SDM=2,
+  SOLVER_MOOD=3
+};
 
 namespace ppkMHD { namespace io {
 class IO_WriterBase;
@@ -44,7 +52,8 @@ public:
   ConfigMap& configMap;
 
   /* some common member data */
-
+  solver_type_t solver_type;
+  
   //! is this a restart run ?
   int m_restart_run_enabled;
 
@@ -58,7 +67,8 @@ public:
   double               m_tEnd;      //!< maximun time
   double               m_cfl;       //!< Courant number
 
-  long long int        m_nCells;    //!< number of cells
+  long long int        m_nCells;       //!< number of cells
+  long long int        m_nDofsPerCell; //!< number of degrees of freedom per cell 
 
   //! init condition name (or problem)
   std::string          m_problem_name;
@@ -165,11 +175,14 @@ public:
   void copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc);
 
 #endif // USE_MPI
+
+  //! initialize m_io_writer (can be override in a derived class)
+  virtual void init_io_writer();
   
 protected:
 
   //! io writer
-  io::IO_WriterBase*       m_io_writer;
+  std::shared_ptr<io::IO_WriterBase>  m_io_writer;
 
 #ifdef USE_MPI
   //! \defgroup BorderBuffer data arrays for border exchange handling

@@ -10,21 +10,35 @@
 
 #include "shared/kokkos_shared.h"
 
-#include "shared/real_type.h"   // choose between single and double precision
-#include "shared/HydroParams.h" // read parameter file
+#include "shared/real_type.h"    // choose between single and double precision
+#include "shared/HydroParams.h"  // read parameter file
+#include "shared/solver_utils.h" // print monitoring information
 
 // solver
 #include "shared/SolverFactory.h"
 
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
-//#include "shared/HydroParamsMpi.h" // read parameter file
 #include <mpi.h>
 #endif // USE_MPI
 
 #ifdef USE_HDF5
 #include "utils/io/IO_HDF5.h"
 #endif // USE_HDF5
+
+#ifdef USE_FPE_DEBUG
+// for catching floating point errors
+#include <fenv.h>
+#include <signal.h>
+
+// signal handler for catching floating point errors
+void fpehandler(int sig_num)
+{
+  signal(SIGFPE, fpehandler);
+  printf("SIGFPE: floating point exception occured of type %d, exiting.\n",sig_num);
+  abort();
+}
+#endif // USE_FPE_DEBUG
 
 // ===============================================================
 // ===============================================================
@@ -72,6 +86,16 @@ int main(int argc, char *argv[])
     std::cout << msg.str();
     std::cout << "##########################\n";
 
+#ifdef USE_FPE_DEBUG
+    /*
+     * Install a signal handler for floating point errors.
+     * This only usefull when debugging, doing a backtrace in gdb,
+     * tracking for NaN 
+     */
+    feenableexcept(FE_DIVBYZERO | FE_INVALID);
+    signal(SIGFPE, fpehandler);
+#endif // USE_FPE_DEBUG
+    
 #ifdef USE_MPI
 # ifdef CUDA
     {
@@ -143,21 +167,8 @@ int main(int argc, char *argv[])
   
   printf("final time is %f\n", solver->m_t);
   
-  // print monitoring information
-  {    
-    real_t t_tot   = solver->timers[TIMER_TOTAL]->elapsed();
-    real_t t_comp  = solver->timers[TIMER_NUM_SCHEME]->elapsed();
-    real_t t_dt    = solver->timers[TIMER_DT]->elapsed();
-    real_t t_bound = solver->timers[TIMER_BOUNDARIES]->elapsed();
-    real_t t_io    = solver->timers[TIMER_IO]->elapsed();
-    printf("total       time : %5.3f secondes\n",t_tot);
-    printf("godunov     time : %5.3f secondes %5.2f%%\n",t_comp,100*t_comp/t_tot);
-    printf("compute dt  time : %5.3f secondes %5.2f%%\n",t_dt,100*t_dt/t_tot);
-    printf("boundaries  time : %5.3f secondes %5.2f%%\n",t_bound,100*t_bound/t_tot);
-    printf("io          time : %5.3f secondes %5.2f%%\n",t_io,100*t_io/t_tot);
-    printf("Perf             : %10.2f number of Mcell-updates/s\n",solver->m_iteration*solver->m_nCells/t_tot*1e-6);
-  }
-
+  print_solver_monitoring_info(solver);
+  
   delete solver;
 
 #ifdef CUDA

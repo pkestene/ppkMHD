@@ -7,8 +7,10 @@ option (USE_MPI "Activate / want MPI build" ON)
 option (USE_VTK "Activate / want VTK build" OFF)
 option (USE_DOUBLE "build with double precision" ON)
 option (USE_MOOD "build MOOD numerical schemes" OFF)
+option (USE_SDM "build Spectral Difference Method numerical schemes" OFF)
 option (USE_HDF5 "build HDF5 input/output support" OFF)
 option (USE_PNETCDF "build PNETCDF input/output support (MPI required)" OFF)
+option (USE_FPE_DEBUG "build with floating point Nan tracing (signal handler)" OFF)
 
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
@@ -155,14 +157,16 @@ endif(USE_MPI)
 #####################################################################
 # Lapack with C interface --> OpenBLAS
 #####################################################################
-# LAPACK / LAPACKE (for MOOD) - for DGEQRF and DTRSM (on host, not device)
-#set(BLA_VENDOR "OpenBLAS")
-#find_package(BLAS REQUIRED)
-find_package(OpenBLAS)
-find_package(LAPACKE REQUIRED)
-if ( NOT LAPACKE_FOUND )
-  message(FATAL_ERROR "Package LAPACKE required, but not found!")
-endif( NOT LAPACKE_FOUND )
+if (USE_MOOD)
+   # LAPACK / LAPACKE (for MOOD) - for DGEQRF and DTRSM (on host, not device)
+   #set(BLA_VENDOR "OpenBLAS")
+   #find_package(BLAS REQUIRED)
+   find_package(OpenBLAS)
+   find_package(LAPACKE)
+   if ( NOT LAPACKE_FOUND )
+     message(FATAL_ERROR "Package LAPACKE required, but not found!")
+   endif( NOT LAPACKE_FOUND )
+endif( USE_MOOD)
 
 #####################################################################
 # PAPI for performance conuters
@@ -189,9 +193,25 @@ if (USE_MOOD)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MOOD" )
 endif()
 
+if (USE_SDM)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SDM" )
+endif()
+
 if (USE_MPI)
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MPI" )
 endif()
+
+if (USE_FPE_DEBUG)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_FPE_DEBUG" )
+endif()
+
+##
+## Using flags -Wextra, it's to strong for Kokkos, too many warnings
+## But -Wall is really a minimum
+##
+#add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual  -pedantic )
+#add_definitions( -Wall -Wextra )
+add_definitions( -Wall )
 
 #
 # sources
@@ -209,6 +229,7 @@ message(STATUS "MPI      enabled : ${USE_MPI}")
 message(STATUS "CUDA     enabled : ${KOKKOS_ENABLE_CUDA}")
 message(STATUS "HDF5     enabled : ${USE_HDF5}")
 message(STATUS "PNETCDF  enabled : ${USE_PNETCDF}")
+message(STATUS "SDM      enabled : ${USE_SDM}")
 message(STATUS "MOOD     enabled : ${USE_MOOD}")
 message(STATUS "DOUBLE precision : ${USE_DOUBLE}")
 

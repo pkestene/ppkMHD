@@ -35,7 +35,11 @@ target_include_directories(${EXE_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
-target_link_libraries(${EXE_NAME} solver_factory config kokkos hwloc dl muscl shared monitoring io)
+target_link_libraries(${EXE_NAME} solver_factory config kokkos hwloc dl muscl io shared monitoring)
+
+# if (USE_SDM)
+#   target_link_libraries(${EXE_NAME} sdm)
+# endif()
 
 if (USE_MOOD)
   target_link_libraries(${EXE_NAME} mood ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})

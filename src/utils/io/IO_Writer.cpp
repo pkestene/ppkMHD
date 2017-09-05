@@ -44,12 +44,11 @@ IO_Writer::IO_Writer(HydroParams& params,
 
 // =======================================================
 // =======================================================
-template<>
-void IO_Writer::save_data_impl<DataArray2d>(DataArray2d             Udata,
-					    DataArray2d::HostMirror Uhost,
-					    int iStep,
-					    real_t time,
-					    std::string debug_name)
+void IO_Writer::save_data_impl(DataArray2d             Udata,
+			       DataArray2d::HostMirror Uhost,
+			       int iStep,
+			       real_t time,
+			       std::string debug_name)
 {
 
   if (vtk_enabled) {
@@ -87,12 +86,11 @@ void IO_Writer::save_data_impl<DataArray2d>(DataArray2d             Udata,
 
 // =======================================================
 // =======================================================
-template<>
-void IO_Writer::save_data_impl<DataArray3d>(DataArray3d             Udata,
-					    DataArray3d::HostMirror Uhost,
-					    int iStep,
-					    real_t time,
-					    std::string debug_name)
+void IO_Writer::save_data_impl(DataArray3d             Udata,
+			       DataArray3d::HostMirror Uhost,
+			       int iStep,
+			       real_t time,
+			       std::string debug_name)
 {
 
   if (vtk_enabled) {
@@ -136,7 +134,7 @@ void IO_Writer::save_data(DataArray2d             Udata,
 			  real_t time,
 			  std::string debug_name) {
 
-  save_data_impl<DataArray2d>(Udata, Uhost, iStep, time, debug_name);
+  save_data_impl(Udata, Uhost, iStep, time, debug_name);
 
 } // IO_Writer::save_data
   
@@ -148,7 +146,7 @@ void IO_Writer::save_data(DataArray3d             Udata,
 			  real_t time,
 			  std::string debug_name) {
 
-  save_data_impl<DataArray3d>(Udata, Uhost, iStep, time, debug_name);
+  save_data_impl(Udata, Uhost, iStep, time, debug_name);
   
 } // IO_Writer::save_data
 

@@ -1,0 +1,28 @@
+load("eigen");
+
+/* Jacobian matrix A */
+A: matrix([0, 1, 0],[(gamma-3)/2*u^2, (3-gamma)*u, gamma-1],[u*( (gamma-1)*u^2/2-H), H-(gamma-1)*u^2, gamma*u]);
+
+/* right eigen vectors */
+v1:columnvector([1,u-c,H-u*c]);
+v2:columnvector([1,u,u^2/2]);
+v3:columnvector([1,u+c,H+u*c]);
+
+/* right eigen matrix */
+R: matrix([1,     1,     1],
+	  [u-c,   u,     u+c],
+  	  [H-u*c, u^2/2, H+u*c]);
+
+/* compute left eigenvector matrix */
+L:invert(R);
+
+R2: matrix([1,     1,     1    ],
+    	   [u,       u+c,   u-c],
+  	   [u^2/2, H+u*c, H-u*c]);
+
+L2:invert(R2);
+
+R3: matrix([1,            0,    1,      1],
+    	   [u,            0,  u+c,    u-c],
+    	   [v,           -1,    v,      v],
+  	   [(u^2+v^2)/2, -v, H+u*c, H-u*c]);

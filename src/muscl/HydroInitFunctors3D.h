@@ -203,8 +203,8 @@ public:
     
   } // end operator ()
   
-  DataArray3d Udata;
   BlastParams bParams;
+  DataArray3d Udata;
   
 }; // InitBlastFunctor3D
 

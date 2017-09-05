@@ -152,11 +152,14 @@ SolverHydroMuscl<dim>::SolverHydroMuscl(HydroParams& params,
   nbCells(params.isize*params.jsize)
 {
 
+  solver_type = SOLVER_MUSCL_HANCOCK;
+
   if (dim==3)
     nbCells = params.isize*params.jsize*params.ksize;
   
   m_nCells = nbCells;
-  
+  m_nDofsPerCell = 1;
+
   int nbvar = params.nbvar;
  
   long long int total_mem_size = 0;
@@ -242,16 +245,23 @@ SolverHydroMuscl<dim>::SolverHydroMuscl(HydroParams& params,
   // compute initialize time step
   compute_dt();
 
-  std::cout << "##########################" << "\n";
-  std::cout << "Solver is " << m_solver_name << "\n";
-  std::cout << "Problem (init condition) is " << m_problem_name << "\n";
-  std::cout << "##########################" << "\n";
+  int myRank=0;
+#ifdef USE_MPI
+  myRank = params.myRank;
+#endif // USE_MPI
 
-  // print parameters on screen
-  params.print();
-  std::cout << "##########################" << "\n";
-  std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n"; 
-  std::cout << "##########################" << "\n";
+  if (myRank==0) {
+    std::cout << "##########################" << "\n";
+    std::cout << "Solver is " << m_solver_name << "\n";
+    std::cout << "Problem (init condition) is " << m_problem_name << "\n";
+    std::cout << "##########################" << "\n";
+    
+    // print parameters on screen
+    params.print();
+    std::cout << "##########################" << "\n";
+    std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n"; 
+    std::cout << "##########################" << "\n";
+  }
 
 } // SolverHydroMuscl::SolverHydroMuscl
 

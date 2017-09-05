@@ -1,0 +1,24 @@
+load("eigen");
+
+V2: u^2+v^2;
+H: V2/2+c^2/(gamma-1);
+
+/* Jacobian matrix A */
+A: matrix([0, 1, 0, 0],
+          [(gamma-1)/2 * V2-u^2 , (3-gamma)*u , -(gamma-1)*v , gamma-1],
+      	  [-u*v, v,  u, 0],
+	  [-u*(H-(gamma-1)/2* V2) , H-(gamma-1)*u^2 , -(gamma-1)*u*v , gamma*u]);
+
+/* right eigen vectors */
+Ra: matrix([1,     1,     0, 1],
+	  [u-c,   u,     0, u+c],
+	  [v,     v,     1, v],
+  	  [H-u*c, V2/2, v, H+u*c]);
+
+expand(invert(Ra));
+
+/* Jacobian matrix B */
+B: matrix([0, 1, 0, 0],
+          [(gamma-1)/2 * V2-u^2 , (3-gamma)*u , -(gamma-1)*v , gamma-1],
+      	  [-u*v, v,  u, 0],
+	  [-u*(H-(gamma-1)/2* V2) , H-(gamma-1)*u^2 , -(gamma-1)*u*v , gamma*u]);
