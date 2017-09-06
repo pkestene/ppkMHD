@@ -60,6 +60,7 @@ struct HydroParams {
   int    nOutput;    /*!< number of time steps between 2 consecutive outputs. */
   bool   enableOutput; /*!< enable output file write. */
   bool   mhdEnabled;
+  int    nlog;      /*!<  number of time steps between 2 consecutive logs. */
   
   // geometry parameters
   int nx;     /*!< logical size along X (without ghost cells).*/
@@ -147,6 +148,7 @@ struct HydroParams {
   
   HydroParams() :
     nStepmax(0), tEnd(0.0), nOutput(0), enableOutput(true), mhdEnabled(false),
+    nlog(10),
     nx(0), ny(0), nz(0), ghostWidth(2), nbvar(4), dimType(TWO_D),
     imin(0), imax(0), jmin(0), jmax(0), kmin(0), kmax(0),
     isize(0), jsize(0), ksize(0),
