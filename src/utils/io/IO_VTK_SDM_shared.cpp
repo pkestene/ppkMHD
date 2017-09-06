@@ -110,7 +110,7 @@ void write_pvtu_header(std::string headerFilename,
   bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
   const char* dataType = useDouble ? "Float64" : "Float32";
   
-  const int dimType = params.dimType;
+  //const int dimType = params.dimType;
   const int nProcs = params.nProcs;
   
   // write iStep in string timeFormat
@@ -120,18 +120,18 @@ void write_pvtu_header(std::string headerFilename,
   timeFormat << iStep;
   
   // local sub-domain sizes
-  const int nx = params.nx;
-  const int ny = params.ny;
-  const int nz = params.nz;
+  // const int nx = params.nx;
+  // const int ny = params.ny;
+  // const int nz = params.nz;
 
   // sizes of MPI Cartesian topology
-  const int mx = params.mx;
-  const int my = params.my;
-  const int mz = params.mz;
+  // const int mx = params.mx;
+  // const int my = params.my;
+  // const int mz = params.mz;
 
-  const real_t dx = params.dx;
-  const real_t dy = params.dy;
-  const real_t dz = (dimType == THREE_D) ? params.dz : params.dx;
+  // const real_t dx = params.dx;
+  // const real_t dy = params.dy;
+  // const real_t dz = (dimType == THREE_D) ? params.dz : params.dx;
 
   // open pvtu header file
   outHeader.open (headerFilename.c_str(), std::ios_base::out);
