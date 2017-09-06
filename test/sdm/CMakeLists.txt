@@ -132,6 +132,9 @@ target_include_directories(test_sdm_isentropic_vortex
   ${CMAKE_SOURCE_DIR}/src
   )
 target_link_libraries(test_sdm_isentropic_vortex solver_factory config kokkos muscl io shared monitoring kokkos hwloc dl)
+if (USE_MPI)
+  target_link_libraries(test_sdm_isentropic_vortex mpiUtils)
+endif()
 
 ##############################################
 add_executable(test_sdm_average_functor

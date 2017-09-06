@@ -64,6 +64,9 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   const int ksize = params.ksize;
   const int nbvar = params.nbvar;
   
+  // Please note that for MOOD or SDM or any other scheme that uses a different
+  // number of per cell, the following border buffer will have to be RESIZED
+  
   if (params.dimType == TWO_D) {
     borderBufSend_xmin_2d = DataArray2d("borderBufSend_xmin",    gw, jsize, nbvar);
     borderBufSend_xmax_2d = DataArray2d("borderBufSend_xmax",    gw, jsize, nbvar);

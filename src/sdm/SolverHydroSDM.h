@@ -520,6 +520,39 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   }
 
+  /*
+   * Border buffer for MPI
+   */
+#ifdef USE_MPI
+  const int gw = params.ghostWidth;
+    
+  if (params.dimType == TWO_D) {
+    Kokkos::resize(borderBufSend_xmin_2d,    gw, jsize, nb_dof);
+    Kokkos::resize(borderBufSend_xmax_2d,    gw, jsize, nb_dof);
+    Kokkos::resize(borderBufSend_ymin_2d, isize,    gw, nb_dof);
+    Kokkos::resize(borderBufSend_ymax_2d, isize,    gw, nb_dof);
+
+    Kokkos::resize(borderBufRecv_xmin_2d,    gw, jsize, nb_dof);
+    Kokkos::resize(borderBufRecv_xmax_2d,    gw, jsize, nb_dof);
+    Kokkos::resize(borderBufRecv_ymin_2d, isize,    gw, nb_dof);
+    Kokkos::resize(borderBufRecv_ymax_2d, isize,    gw, nb_dof);
+  } else {
+    Kokkos::resize(borderBufSend_xmin_3d,    gw, jsize, ksize, nb_dof);
+    Kokkos::resize(borderBufSend_xmax_3d,    gw, jsize, ksize, nb_dof);
+    Kokkos::resize(borderBufSend_ymin_3d, isize,    gw, ksize, nb_dof);
+    Kokkos::resize(borderBufSend_ymax_3d, isize,    gw, ksize, nb_dof);
+    Kokkos::resize(borderBufSend_zmin_3d, isize, jsize,    gw, nb_dof);
+    Kokkos::resize(borderBufSend_zmax_3d, isize, jsize,    gw, nb_dof);
+    
+    Kokkos::resize(borderBufRecv_xmin_3d,    gw, jsize, ksize, nb_dof);
+    Kokkos::resize(borderBufRecv_xmax_3d,    gw, jsize, ksize, nb_dof);
+    Kokkos::resize(borderBufRecv_ymin_3d, isize,    gw, ksize, nb_dof);
+    Kokkos::resize(borderBufRecv_ymax_3d, isize,    gw, ksize, nb_dof);
+    Kokkos::resize(borderBufRecv_zmin_3d, isize, jsize,    gw, nb_dof);
+    Kokkos::resize(borderBufRecv_zmax_3d, isize, jsize,    gw, nb_dof);
+  }
+#endif // USE_MPI
+
   int myRank=0;
 #ifdef USE_MPI
   myRank = params.myRank;
@@ -1362,7 +1395,128 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
 						    bool mhd_enabled)
 {
 
-  // TODO
+  using namespace hydroSimu;
+  
+  // for each direction:
+  // 1. copy boundary to MPI buffer
+  // 2. send/recv buffer
+  // 3. test if BC is BC_PERIODIC / BC_COPY then ... else ..
+
+  if (dim==2) {
+
+    // ======
+    // XDIR
+    // ======
+    copy_boundaries(Udata,XDIR);
+    transfert_boundaries_2d(XDIR);
+    
+    if (params.neighborsBC[X_MIN] == BC_COPY ||
+	params.neighborsBC[X_MIN] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, XMIN);
+    } else {
+      make_boundary_sdm<FACE_XMIN>(Udata, mhd_enabled);
+    }
+    
+    if (params.neighborsBC[X_MAX] == BC_COPY ||
+	params.neighborsBC[X_MAX] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, XMAX);
+    } else {
+      make_boundary_sdm<FACE_XMAX>(Udata, mhd_enabled);
+    }
+    
+    params.communicator->synchronize();
+    
+    // ======
+    // YDIR
+    // ======
+    copy_boundaries(Udata,YDIR);
+    transfert_boundaries_2d(YDIR);
+    
+    if (params.neighborsBC[Y_MIN] == BC_COPY ||
+	params.neighborsBC[Y_MIN] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, YMIN);
+    } else {
+      make_boundary_sdm<FACE_YMIN>(Udata, mhd_enabled);
+    }
+    
+    if (params.neighborsBC[Y_MAX] == BC_COPY ||
+	params.neighborsBC[Y_MAX] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, YMAX);
+    } else {
+      make_boundary_sdm<FACE_YMAX>(Udata, mhd_enabled);
+    }
+    
+    params.communicator->synchronize();
+  
+  } else {
+
+    // ======
+    // XDIR
+    // ======
+    copy_boundaries(Udata,XDIR);
+    transfert_boundaries_3d(XDIR);
+    
+    if (params.neighborsBC[X_MIN] == BC_COPY ||
+	params.neighborsBC[X_MIN] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, XMIN);
+    } else {
+      make_boundary_sdm<FACE_XMIN>(Udata, mhd_enabled);
+    }
+    
+    if (params.neighborsBC[X_MAX] == BC_COPY ||
+	params.neighborsBC[X_MAX] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, XMAX);
+    } else {
+      make_boundary_sdm<FACE_XMAX>(Udata, mhd_enabled);
+    }
+    
+    params.communicator->synchronize();
+    
+    // ======
+    // YDIR
+    // ======
+    copy_boundaries(Udata,YDIR);
+    transfert_boundaries_3d(YDIR);
+    
+    if (params.neighborsBC[Y_MIN] == BC_COPY ||
+	params.neighborsBC[Y_MIN] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, YMIN);
+    } else {
+      make_boundary_sdm<FACE_YMIN>(Udata, mhd_enabled);
+    }
+    
+    if (params.neighborsBC[Y_MAX] == BC_COPY ||
+	params.neighborsBC[Y_MAX] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, YMAX);
+    } else {
+      make_boundary_sdm<FACE_YMAX>(Udata, mhd_enabled);
+    }
+    
+    params.communicator->synchronize();
+    
+    // ======
+    // ZDIR
+    // ======
+    copy_boundaries(Udata,ZDIR);
+    transfert_boundaries_3d(ZDIR);
+    
+    if (params.neighborsBC[Z_MIN] == BC_COPY ||
+	params.neighborsBC[Z_MIN] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, ZMIN);
+    } else {
+      make_boundary_sdm<FACE_ZMIN>(Udata, mhd_enabled);
+    }
+    
+    if (params.neighborsBC[Z_MAX] == BC_COPY ||
+	params.neighborsBC[Z_MAX] == BC_PERIODIC) {
+      copy_boundaries_back(Udata, ZMAX);
+    } else {
+      make_boundary_sdm<FACE_ZMAX>(Udata, mhd_enabled);
+    }
+    
+    params.communicator->synchronize();
+    
+  } // end 3d
   
 } // SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi
 #endif // USE_MPI
