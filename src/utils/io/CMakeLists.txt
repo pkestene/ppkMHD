@@ -15,9 +15,9 @@ if(USE_SDM)
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM_shared.h
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM_shared.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM_Flux.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM_Flux.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM_Flux.cpp
     )
 endif(USE_SDM)
 
@@ -61,3 +61,8 @@ if (USE_PNETCDF)
     )
 endif()
   
+# if (USE_MPI)
+#   target_link_libraries(io
+#     ${MPI_CXX_LIBRARIES}
+#     )
+# endif()
