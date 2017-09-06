@@ -31,6 +31,8 @@ void HydroParams::setup(ConfigMap &configMap)
   if (nOutput == 0)
     enableOutput = false;
 
+  nlog     = configMap.getInteger("run","nlog",10);
+  
   std::string solver_name = configMap.getString("run", "solver_name", "unknown");
 
   if ( !solver_name.compare("Hydro_Muscl_2D") ) {
