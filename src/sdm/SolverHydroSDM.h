@@ -689,7 +689,8 @@ void SolverHydroSDM<dim,N>::next_iteration_impl()
 #endif // USE_MPI
   if (myRank==0) {
     if (m_iteration % params.nlog == 0) {
-      printf("time step=%7d (dt=% 10.8f t=% 10.8f)\n",m_iteration,m_dt, m_t);
+      //printf("time step=%7d (dt=% 10.8f t=% 10.8f)\n",m_iteration,m_dt, m_t);
+      printf("time step=%7d (dt=% 10.8g t=% 10.8f)\n",m_iteration,m_dt, m_t);
     }
   }
   
