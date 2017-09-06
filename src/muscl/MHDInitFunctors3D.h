@@ -243,8 +243,8 @@ public:
     const int i_mpi = 0;
     const int j_mpi = 0;
     const int k_mpi = 0;
-    UNUSED(k_mpi);
 #endif
+    UNUSED(k_mpi);
 
     const int nx = params.nx;
     const int ny = params.ny;
