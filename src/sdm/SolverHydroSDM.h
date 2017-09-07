@@ -450,10 +450,12 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     if (dim==2) {
       Ugradx   = DataArray("Ugradx"    ,isize,jsize,params.nbvar);
       Ugrady   = DataArray("Ugrady"    ,isize,jsize,params.nbvar);
+      total_mem_size += isize*jsize*params.nbvar * 2 * sizeof(real_t);
     } else if (dim==3) {
       Ugradx   = DataArray("Ugradx"    ,isize,jsize,ksize,params.nbvar);
       Ugrady   = DataArray("Ugrady"    ,isize,jsize,ksize,params.nbvar);
       Ugradz   = DataArray("Ugradz"    ,isize,jsize,ksize,params.nbvar);
+      total_mem_size += isize*jsize*ksize*params.nbvar * 3 * sizeof(real_t);
     }
 
   }
@@ -471,8 +473,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
     if (dim==2) {
       Uaverage = DataArray("Uaverage",isize,jsize,params.nbvar);
+      total_mem_size += isize*jsize*params.nbvar * 1 * sizeof(real_t);
     } else if (dim==3) {
       Uaverage = DataArray("Uaverage",isize,jsize,ksize,params.nbvar);
+      total_mem_size += isize*jsize*ksize*params.nbvar * 1 * sizeof(real_t);
     }
     
   }
@@ -527,6 +531,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   const int gw = params.ghostWidth;
     
   if (params.dimType == TWO_D) {
+
     Kokkos::resize(borderBufSend_xmin_2d,    gw, jsize, nb_dof);
     Kokkos::resize(borderBufSend_xmax_2d,    gw, jsize, nb_dof);
     Kokkos::resize(borderBufSend_ymin_2d, isize,    gw, nb_dof);
@@ -536,7 +541,12 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     Kokkos::resize(borderBufRecv_xmax_2d,    gw, jsize, nb_dof);
     Kokkos::resize(borderBufRecv_ymin_2d, isize,    gw, nb_dof);
     Kokkos::resize(borderBufRecv_ymax_2d, isize,    gw, nb_dof);
+
+    total_mem_size += gw    * jsize * nb_dof * 4 * sizeof(real_t);
+    total_mem_size += isize * gw    * nb_dof * 4 * sizeof(real_t);
+
   } else {
+
     Kokkos::resize(borderBufSend_xmin_3d,    gw, jsize, ksize, nb_dof);
     Kokkos::resize(borderBufSend_xmax_3d,    gw, jsize, ksize, nb_dof);
     Kokkos::resize(borderBufSend_ymin_3d, isize,    gw, ksize, nb_dof);
@@ -550,6 +560,11 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     Kokkos::resize(borderBufRecv_ymax_3d, isize,    gw, ksize, nb_dof);
     Kokkos::resize(borderBufRecv_zmin_3d, isize, jsize,    gw, nb_dof);
     Kokkos::resize(borderBufRecv_zmax_3d, isize, jsize,    gw, nb_dof);
+
+    total_mem_size += gw    * jsize * ksize * nb_dof * 4 * sizeof(real_t);
+    total_mem_size += isize * gw    * ksize * nb_dof * 4 * sizeof(real_t);
+    total_mem_size += isize * jsize * gw    * nb_dof * 4 * sizeof(real_t);
+    
   }
 #endif // USE_MPI
 
