@@ -64,7 +64,7 @@ namespace sdm {
  * a unique Dof among the N^2 Dof in 2D.
  * 
  * Time integration is configurable through parameter file. Allowed
- * possiblities are foward_euler, ssprk2 or ssprk3.
+ * possiblities are foward_euler, ssprk2, ssprk3 or ssprk54.
  * 
  * Shock capturing with limiters is a delicate subject.
  * It is disabled by default, but can be enable through parameter
@@ -147,7 +147,7 @@ public:
 
   DataArray     U;     /*!< hydrodynamics conservative variables arrays */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
-  DataArray     Uaux;  /*!< auxiliary hydrodynamics conservative variables arrays (used in computing fluxes divergence */
+  DataArray     Uaux;  /*!< auxiliary hydrodynamics conservative variables arrays (used in computing fluxes divergence) */
 
   DataArray     Uaverage; /*! used if limiting is enabled */
   //DataArray     Umin;     /*! used if limiting is enabled */
@@ -422,12 +422,14 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
       U_RK2 = DataArray("U_RK2",isize, jsize, nb_dof);
       U_RK3 = DataArray("U_RK3",isize, jsize, nb_dof);
-      total_mem_size += isize*jsize*nb_dof * 3 * sizeof(real_t);
+      U_RK4 = DataArray("U_RK4",isize, jsize, nb_dof);
+      total_mem_size += isize*jsize*nb_dof * 4 * sizeof(real_t);
     } else if (dim == 3) {
       U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
       U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nb_dof);
       U_RK3 = DataArray("U_RK3",isize, jsize, ksize, nb_dof);
-      total_mem_size += isize*jsize*ksize*nb_dof * 3 * sizeof(real_t);
+      U_RK4 = DataArray("U_RK4",isize, jsize, ksize, nb_dof);
+      total_mem_size += isize*jsize*ksize*nb_dof * 4 * sizeof(real_t);
     }
     
   }
@@ -685,7 +687,7 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   dt = params.settings.cfl/invDt;
 
   // rescale dt to match the space order N+1
-  if (rescale_dt_enabled and N >= 2 and ssprk3_enabled)
+  if (rescale_dt_enabled and N >= 2 and (ssprk3_enabled or ssprk54_enabled))
     dt = pow(dt, (N+1.0)/3.0);
   
   return dt;
@@ -1214,12 +1216,16 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
  * SIAM J. Numer. Anal, Vol 40, No 2, pp 469-491
  *
  * This scheme is call SSP-RK54
+ *
+ * see also article "On High Order Strong Stability Preserving Runge–Kutta and Multi Step Time Discretizations", S. Gottlieb, Journal of Scientific Computing, 25(1-2):105-128 · October 2005:
+ * https://www.researchgate.net/publication/220395406_On_High_Order_Strong_Stability_Preserving_Runge-Kutta_and_Multi_Step_Time_Discretizations
  * 
+ * Additional note:
  * It has been proved that no 4th order RK, 4 stages SSP-RK scheme
  * exists with positive coefficients (Goettlib and Shu, Total variation
  * diminishing Runge-Kutta schemes, Math. Comp., 67 (1998), pp. 73–85.).
- * This means a SSP-RK44 scheme will have negative coefficients, and we need to
- * have a flux operator backward in time stable.
+ * This means a SSP-RK44 scheme will have negative coefficients, and it
+ * requires a flux operator backward in time stable.
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata, 
@@ -1227,11 +1233,112 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
 					     real_t dt)
 {
 
-  UNUSED(Udata);
-  UNUSED(Udata_fdiv);
-  UNUSED(dt);
+  // first  index is RK stage index,
+  // for each stage, 3 coefficients required
+  // except for the last 5th stage, divided into sub-stages
+  const real_t rk54_coef[6][3] =
+    {
+      {1.0,               0.0,               -0.391752226571890}, /*stage1*/
+      {0.444370493651235, 0.555629506348765, -0.368410593050371}, /*stage2*/
+      {0.620101851488403, 0.379898148511597, -0.251891774271694}, /*stage3*/
+      {0.178079954393132, 0.821920045606868, -0.544974750228521}, /*stage4*/
+      {0.517231671970585, 0.096059710526147, -0.063692468666290}, /*stage51*/
+      {1.0,               0.386708617503269, -0.226007483236906}  /*stage52*/
+    };
+  
+  // ===============================================
+  // stage 1:
+  // perform : U_RK1 = rk_54[0][0] * U_{n} +
+  //                   rk_54[0][1] * U_{n} +
+  //                   rk_54[0][2] * dt * Udata_fdiv 
+  // ===============================================
+  compute_fluxes_divergence(Udata, Udata_fdiv, dt);
+  
+  {
+    const coefs_t coefs = {rk54_coef[0][0],
+			   rk54_coef[0][1],
+			   rk54_coef[0][2]};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
-  std::cout << "SSP-RK54 is currently unimplemented\n";
+  // ===============================================
+  // stage 2:
+  // perform : U_RK2 = rk_54[1][0] * U_{n} +
+  //                   rk_54[1][1] * U_RK1 +
+  //                   rk_54[1][2] * dt * Udata_fdiv 
+  // ===============================================
+  make_boundaries(U_RK1);
+  compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
+  
+  {
+    const coefs_t coefs = {rk54_coef[1][0],
+			   rk54_coef[1][1],
+			   rk54_coef[1][2]};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // ===============================================
+  // stage 3:
+  // perform : U_RK3 = rk_54[2][0] * U_{n} +
+  //                   rk_54[2][1] * U_RK2 +
+  //                   rk_54[2][2] * dt * Udata_fdiv 
+  // ===============================================
+  make_boundaries(U_RK2);
+  compute_fluxes_divergence(U_RK2, Udata_fdiv, dt);
+  
+  {
+    const coefs_t coefs = {rk54_coef[2][0],
+			   rk54_coef[2][1],
+			   rk54_coef[2][2]};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK3, Udata, U_RK2, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // ===============================================
+  // stage 4:
+  // perform : U_RK4 = rk_54[3][0] * U_{n} +
+  //                   rk_54[3][1] * U_RK3 +
+  //                   rk_54[3][2] * dt * Udata_fdiv 
+  // ===============================================
+  make_boundaries(U_RK3);
+  compute_fluxes_divergence(U_RK3, Udata_fdiv, dt);
+  
+  {
+    const coefs_t coefs = {rk54_coef[3][0],
+			   rk54_coef[3][1],
+			   rk54_coef[3][2]};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, U_RK4, Udata, U_RK3, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // ===============================================
+  // stage 5.1:
+  // ===============================================
+  {
+    const coefs_t coefs = {rk54_coef[4][0],
+			   rk54_coef[4][1],
+			   rk54_coef[4][2]};
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, U_RK2, U_RK3, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  
+  // ===============================================
+  // stage 5.2:
+  // ===============================================
+  make_boundaries(U_RK4);
+  compute_fluxes_divergence(U_RK4, Udata_fdiv, dt);
+  {
+    const coefs_t coefs = {rk54_coef[5][0],
+			   rk54_coef[5][1],
+			   rk54_coef[5][2]};
+    SDM_Update_RK_Functor<dim,N,RK_INCREMENT_TRUE> functor(params, sdm_geom, Udata, Udata, U_RK4, Udata_fdiv, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  //std::cout << "SSP-RK54 is currently partially implemented\n";
   
 } // SolverHydroSDM::time_int_ssprk54
 
