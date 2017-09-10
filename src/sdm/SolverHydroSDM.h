@@ -1334,7 +1334,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[5][0],
 			   rk54_coef[5][1],
 			   rk54_coef[5][2]};
-    SDM_Update_RK_Functor<dim,N,RK_INCREMENT_TRUE> functor(params, sdm_geom, Udata, Udata, U_RK4, Udata_fdiv, coefs, dt);
+    SDM_Update_RK_Functor<dim,N> functor(params, sdm_geom, Udata, Udata, U_RK4, Udata_fdiv, coefs, dt);
     Kokkos::parallel_for(nbCells, functor);
   }
 

@@ -339,11 +339,6 @@ public:
   
 }; // SDM_Update_sspRK2_Functor
 
-enum RK_Update_type {
-  RK_INCREMENT_FALSE=0,
-  RK_INCREMENT_TRUE=1
-};
-
 // =======================================================================
 // =======================================================================
 /**
@@ -352,10 +347,8 @@ enum RK_Update_type {
  *
  * \tparam dim dimension (2 or 3).
  * \tparam N SDM order
- * \tparam increment 
  */
-template<int dim, int N,
-	 RK_Update_type rk_update_type=RK_INCREMENT_FALSE>
+template<int dim, int N>
 class SDM_Update_RK_Functor : public SDMBaseFunctor<dim,N> {
   
 public:
@@ -427,17 +420,10 @@ public:
 	    c1   * U_1 (i,j,dofMap(idx,idy,0,IV)) +
 	    c2dt * U_2 (i,j,dofMap(idx,idy,0,IV)) ;
 
-	  if (rk_update_type == RK_INCREMENT_TRUE) {
-	    Uout(i,j,dofMap(idx,idy,0,ID)) += tmp[ID];
-	    Uout(i,j,dofMap(idx,idy,0,IE)) += tmp[IE];
-	    Uout(i,j,dofMap(idx,idy,0,IU)) += tmp[IU];
-	    Uout(i,j,dofMap(idx,idy,0,IV)) += tmp[IV];
-	  } else {
-	    Uout(i,j,dofMap(idx,idy,0,ID)) = tmp[ID];
-	    Uout(i,j,dofMap(idx,idy,0,IE)) = tmp[IE];
-	    Uout(i,j,dofMap(idx,idy,0,IU)) = tmp[IU];
-	    Uout(i,j,dofMap(idx,idy,0,IV)) = tmp[IV];
-	  }
+	  Uout(i,j,dofMap(idx,idy,0,ID)) = tmp[ID];
+	  Uout(i,j,dofMap(idx,idy,0,IE)) = tmp[IE];
+	  Uout(i,j,dofMap(idx,idy,0,IU)) = tmp[IU];
+	  Uout(i,j,dofMap(idx,idy,0,IV)) = tmp[IV];
 
 	} // for idx
       } // for idy
@@ -498,20 +484,11 @@ public:
 	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IW)) +
 	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IW)) ;
 	    
-	    
-	    if (rk_update_type == RK_INCREMENT_TRUE) {
-	      Uout(i,j,k,dofMap(idx,idy,idz,ID)) += tmp[ID];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IE)) += tmp[IE];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IU)) += tmp[IU];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IV)) += tmp[IV];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IW)) += tmp[IW];
-	    } else {
-	      Uout(i,j,k,dofMap(idx,idy,idz,ID)) = tmp[ID];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IE)) = tmp[IE];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IU)) = tmp[IU];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IV)) = tmp[IV];
-	      Uout(i,j,k,dofMap(idx,idy,idz,IW)) = tmp[IW];
-	    }
+	    Uout(i,j,k,dofMap(idx,idy,idz,ID)) = tmp[ID];
+	    Uout(i,j,k,dofMap(idx,idy,idz,IE)) = tmp[IE];
+	    Uout(i,j,k,dofMap(idx,idy,idz,IU)) = tmp[IU];
+	    Uout(i,j,k,dofMap(idx,idy,idz,IV)) = tmp[IV];
+	    Uout(i,j,k,dofMap(idx,idy,idz,IW)) = tmp[IW];
 	    
 	  } // for idx
 	} // for idy
