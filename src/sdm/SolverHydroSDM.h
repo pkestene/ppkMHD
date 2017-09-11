@@ -203,6 +203,8 @@ public:
   
   //! apply limiting procedure
   void apply_limiting(DataArray Udata);
+
+  //! apply viscous terms
   
   //! compute flux divergence, the main term to perform the actual update
   //! in one of the Runge-Kutta methods.
@@ -295,6 +297,11 @@ public:
   //! positivity preserving (density + pressure)
   bool positivity_enabled;
 
+  //! viscous terms
+  bool viscous_terms_enabled;
+
+  //! thermal diffusivity terms : kappa * rho * cp * gradient(T)
+  bool thermal_diffusivity_terms_enabled;
   
   int isize, jsize, ksize, nbCells;
 
@@ -325,6 +332,8 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   limiter_enabled(false),
   limiter_characteristics_enabled(false),
   positivity_enabled(false),
+  viscous_terms_enabled(false),
+  thermal_diffusivity_terms_enabled(false),
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
@@ -482,6 +491,18 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     }
     
   }
+
+  /*
+   * Viscous terms computations.
+   *
+   */
+  viscous_terms_enabled = (params.settings.mu > 0);
+  
+  /*
+   * Thermal diffusivity terms computations.
+   *
+   */
+  thermal_diffusivity_terms_enabled = (params.settings.kappa > 0);
   
   /*
    * initialize hydro array at t=0
@@ -956,8 +977,10 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
       Kokkos::parallel_for(nbCells, functor);
     }
 
-    // 3. viscous terms + source terms (TODO)
-
+    // 3. compute viscous terms and add them to Fluxes
+    //     
+    //apply_viscous_terms<IX>(Fluxes);
+    
     // 4. compute derivative and accumulate in Udata_fdiv
     {
 

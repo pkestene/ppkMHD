@@ -142,6 +142,15 @@ void HydroParams::setup(ConfigMap &configMap)
   settings.smallc         = configMap.getFloat("hydro","smallc", 1e-10);
   settings.smallr         = configMap.getFloat("hydro","smallr", 1e-10);
 
+  // specific heat
+  settings.cp             = configMap.getFloat("hydro", "cp", 0.0);
+
+  // dynamic viscosity
+  settings.mu             = configMap.getFloat("hydro", "mu", 0.0);
+
+  // thermal diffusivity
+  settings.kappa          = configMap.getFloat("hydro", "kappa", 0.0);
+  
   niter_riemann  = configMap.getInteger("hydro","niter_riemann", 10);
   std::string riemannSolverStr = std::string(configMap.getString("hydro","riemann", "approx"));
   if ( !riemannSolverStr.compare("approx") ) {
@@ -444,6 +453,9 @@ void HydroParams::print()
   printf( "smallc     : %12.10f\n", settings.smallc);
   printf( "smallp     : %12.10f\n", settings.smallp);
   printf( "smallpp    : %g\n", settings.smallpp);
+  printf( "cp (specific heat)          : %g\n", settings.cp);
+  printf( "mu (dynamic visosity)       : %g\n", settings.mu);
+  printf( "kappa (thermal diffusivity) : %g\n", settings.kappa);
   //printf( "niter_riemann : %d\n", niter_riemann);
   printf( "iorder     : %d\n", settings.iorder);
   printf( "slope_type : %f\n", settings.slope_type);
