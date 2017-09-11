@@ -28,6 +28,7 @@
 #include "sdm/HydroInitFunctors.h"
 #include "sdm/SDM_Dt_Functor.h"
 #include "sdm/SDM_Interpolate_Functors.h"
+#include "sdm/SDM_Interpolate_viscous_Functors.h"
 #include "sdm/SDM_Flux_Functors.h"
 #include "sdm/SDM_Flux_with_Limiter_Functors.h"
 #include "sdm/SDM_Run_Functors.h"
@@ -105,6 +106,10 @@ namespace sdm {
  * use parameter:
  * limiter_characteristics_enabled=true
  * in the sdm section of the ini parameter file.
+ *
+ * If viscous terms computation is enabled, we need Ugrax, Ugrady (and Ugradz) allocated;
+ * these arrays are used to store velocity gradients, and also if 
+ * thermal_diffusivity_terms_enabled they store temperature gradients.
  *
  */
 template<int dim, int N>
@@ -373,6 +378,18 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   long long int total_mem_size = 0;
   
   /*
+   * Viscous terms computations.
+   *
+   */
+  viscous_terms_enabled = (params.settings.mu > 0);
+  
+  /*
+   * Thermal diffusivity terms computations.
+   *
+   */
+  thermal_diffusivity_terms_enabled = (params.settings.kappa > 0);
+
+  /*
    * memory allocation (use sizes with ghosts included)
    */
   if (dim==2) {
@@ -462,16 +479,14 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    * limiter
    */
   limiter_enabled = configMap.getBool("sdm", "limiter_enabled", false);
-  if (limiter_enabled) {
-    
-    // if (dim==2) {
-    //   Umin     = DataArray("Umin"    ,isize,jsize,params.nbvar);
-    //   Umax     = DataArray("Umax"    ,isize,jsize,params.nbvar);
-    // } else if (dim==3) {
-    //   Umin     = DataArray("Umin"    ,isize,jsize,ksize,params.nbvar);
-    //   Umax     = DataArray("Umax"    ,isize,jsize,ksize,params.nbvar);
-    // }
 
+  /*
+   * Ugradx / Ugrady / Ugradz memory allocation
+   */
+  if (limiter_enabled or
+      viscous_terms_enabled or
+      thermal_diffusivity_terms_enabled) {
+    
     // memory allocation to store cell-averaged gradient components
     if (dim==2) {
       Ugradx   = DataArray("Ugradx"    ,isize,jsize,params.nbvar);
@@ -506,18 +521,6 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     }
     
   }
-
-  /*
-   * Viscous terms computations.
-   *
-   */
-  viscous_terms_enabled = (params.settings.mu > 0);
-  
-  /*
-   * Thermal diffusivity terms computations.
-   *
-   */
-  thermal_diffusivity_terms_enabled = (params.settings.kappa > 0);
   
   /*
    * initialize hydro array at t=0
@@ -1076,17 +1079,21 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
   // Dir X
   //
   if (dir == IX) {
+
+    // to be refactored (all these steps are common to compute velocity gradients)
     
     // 1. interpolate velocity from solution points to flux points
     {
       
-      // Interpolate_velocity_Sol2Flux_Functor<dim,N,IX> functor(params,
-      // 							      sdm_geom,
-      // 							      Udata,
-      // 							      Fluxes);
-      // Kokkos::parallel_for(nbCells, functor);
+      Interpolate_velocities_Sol2Flux_Functor<dim,N,IX> functor(params,
+								sdm_geom,
+								Udata,
+								Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
       
     }
+
+    // 2. compute derivative along X
     
   } // end dir IX
 
@@ -1130,6 +1137,8 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   compute_invicid_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
 
   if (viscous_terms_enabled) {
+    // compute_velocity_gradients(Udata); // results are stored in Ugradx, Ugrady and Ugradz
+    
     compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
