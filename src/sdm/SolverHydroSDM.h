@@ -160,7 +160,8 @@ public:
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
 
-  //! fluxes
+  //! fluxes : intermediate array containing fluxes, used in
+  //! compute_fluxes_divergence_per_dir
   DataArray Fluxes;
   
   /*
@@ -203,8 +204,22 @@ public:
   
   //! apply limiting procedure
   void apply_limiting(DataArray Udata);
+  
+  //! compute invicid hydro flux divergence per direction
+  //! this routine is designed to be called from inside compute_fluxes_divergence
+  //! \tparam dir identifies direction (IX, IY or IZ)
+  template<int dir>
+  void compute_invicid_fluxes_divergence_per_dir(DataArray Udata, 
+						 DataArray Udata_fdiv, 
+						 real_t    dt);
 
-  //! apply viscous terms
+  //! compute viscous hydro flux divergence per direction
+  //! this routine is designed to be called from inside compute_fluxes_divergence
+  //! \tparam dir identifies direction (IX, IY or IZ)
+  template<int dir>
+  void compute_viscous_fluxes_divergence_per_dir(DataArray Udata, 
+						 DataArray Udata_fdiv, 
+						 real_t    dt);
   
   //! compute flux divergence, the main term to perform the actual update
   //! in one of the Runge-Kutta methods.
@@ -922,6 +937,163 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
 
 // =======================================================
 // =======================================================
+template<int dim, int N>
+template<int dir>
+void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray Udata, 
+								      DataArray Udata_fdiv,
+								      real_t dt)
+{
+
+  //
+  // Dir X
+  //
+  if (dir == IX) {
+    
+    // 1. interpolate conservative variables from solution points to flux points
+    {
+      
+      Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(params,
+							  sdm_geom,
+							  Udata,
+							  Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+    // 2. inplace computation of fluxes along X direction at flux points
+    {
+      ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(params,
+							sdm_geom,
+							euler,
+							Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+    // 3. compute derivative and accumulate in Udata_fdiv
+    {
+
+      Interpolate_At_SolutionPoints_Functor<dim,N,IX> functor(params,
+							      sdm_geom,
+							      Fluxes,
+							      Udata_fdiv);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+  } // end dir X
+  
+
+  //
+  // Dir Y
+  //
+  if (dir == IY) {
+    // 1. interpolate conservative variables from solution points to flux points
+    {
+      
+      Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(params,
+							  sdm_geom,
+							  Udata,
+							  Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+    // 2. inplace computation of fluxes along Y direction at flux points
+    {
+      ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(params,
+							sdm_geom,
+							euler,
+							Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+
+    // 3. compute derivative and accumulate in Udata_fdiv
+    {
+
+      Interpolate_At_SolutionPoints_Functor<dim,N,IY> functor(params,
+							      sdm_geom,
+							      Fluxes,
+							      Udata_fdiv);
+      Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+  } // end dir Y
+
+  
+  if (dim == 3) {
+    //
+    // Dir Z
+    //
+    if (dir == IZ) {
+      // 1. interpolate conservative variables from solution points to flux points
+      {
+	
+	Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(params,
+							    sdm_geom,
+							    Udata,
+							    Fluxes);
+	Kokkos::parallel_for(nbCells, functor);
+	
+      }
+            
+      // 2. inplace computation of fluxes along Z direction at flux points      
+      {
+	ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(params,
+							  sdm_geom,
+							  euler,
+							  Fluxes);
+	Kokkos::parallel_for(nbCells, functor);
+      }
+      
+      // 3. compute derivative and accumulate in Udata_fdiv
+      {
+	
+	Interpolate_At_SolutionPoints_Functor<dim,N,IZ> functor(params,
+								sdm_geom,
+								Fluxes,
+								Udata_fdiv);
+	Kokkos::parallel_for(nbCells, functor);
+	
+      }
+      
+    } // end dir Z
+    
+  } // end dim == 3
+  
+} // SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir
+
+// =======================================================
+// =======================================================
+template<int dim, int N>
+template<int dir>
+void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray Udata, 
+								      DataArray Udata_fdiv,
+								      real_t dt)
+{
+
+  //
+  // Dir X
+  //
+  if (dir == IX) {
+    
+    // 1. interpolate velocity from solution points to flux points
+    {
+      
+      // Interpolate_velocity_Sol2Flux_Functor<dim,N,IX> functor(params,
+      // 							      sdm_geom,
+      // 							      Udata,
+      // 							      Fluxes);
+      // Kokkos::parallel_for(nbCells, functor);
+      
+    }
+    
+  } // end dir IX
+
+} // 
+
+// =======================================================
+// =======================================================
 // //////////////////////////////////////////////////////////
 // Compute fluxes divergence (Udata_fdiv)
 // Taken the conservation law dU/dt + div F(U) = 0
@@ -952,130 +1124,16 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   apply_limiting(Udata);
   
   apply_positivity_preserving(Udata);
-    
-  //
-  // Dir X
-  //
-  {
-    // 1. interpolate conservative variables from solution points to flux points
-    {
-      
-      Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(params,
-							  sdm_geom,
-							  Udata,
-							  Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
-    
-    // 2. inplace computation of fluxes along X direction at flux points
-    {
-      ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(params,
-							sdm_geom,
-							euler,
-							Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-
-    // 3. compute viscous terms and add them to Fluxes
-    //     
-    //apply_viscous_terms<IX>(Fluxes);
-    
-    // 4. compute derivative and accumulate in Udata_fdiv
-    {
-
-      Interpolate_At_SolutionPoints_Functor<dim,N,IX> functor(params,
-							      sdm_geom,
-							      Fluxes,
-							      Udata_fdiv);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
-    
-  } // end dir X
-
-  //
-  // Dir Y
-  //
-  {
-    // 1. interpolate conservative variables from solution points to flux points
-    {
-      
-      Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(params,
-							  sdm_geom,
-							  Udata,
-							  Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
-    
-    // 2. inplace computation of fluxes along Y direction at flux points
-    {
-      ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(params,
-							sdm_geom,
-							euler,
-							Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-
-    // 3. viscous terms + source terms (TODO)
-
-    // 4. compute derivative and accumulate in Udata_fdiv
-    {
-
-      Interpolate_At_SolutionPoints_Functor<dim,N,IY> functor(params,
-							      sdm_geom,
-							      Fluxes,
-							      Udata_fdiv);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
-    
-  } // end dir Y
-
   
-  if (dim == 3) {
-    //
-    // Dir Z
-    //
-    {
-      // 1. interpolate conservative variables from solution points to flux points
-      {
-	
-	Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(params,
-							    sdm_geom,
-							    Udata,
-							    Fluxes);
-	Kokkos::parallel_for(nbCells, functor);
-	
-      }
-            
-      // 2. inplace computation of fluxes along Z direction at flux points      
-      {
-	ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(params,
-							  sdm_geom,
-							  euler,
-							  Fluxes);
-	Kokkos::parallel_for(nbCells, functor);
-      }
-      
-      // 3. viscous terms + source terms (TODO)
-      
-      // 4. compute derivative and accumulate in Udata_fdiv
-      {
-	
-	Interpolate_At_SolutionPoints_Functor<dim,N,IZ> functor(params,
-								sdm_geom,
-								Fluxes,
-								Udata_fdiv);
-	Kokkos::parallel_for(nbCells, functor);
-	
-      }
-      
-    } // end dir Z
-    
-  } // end dim == 3
-  
+  compute_invicid_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
+  compute_invicid_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
+  compute_invicid_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
+
+  if (viscous_terms_enabled) {
+    compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
+    compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
+    compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
+  }
   
 } // SolverHydroSDM<dim,N>::compute_fluxes_divergence
 
