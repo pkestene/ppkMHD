@@ -81,9 +81,9 @@ void test_lagrange_functor()
   // init data
   {
 
-    sdm::InitTestFunctor<dim,N> functor(solver.params,
-					solver.sdm_geom,
-					solver.U);
+    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,0> functor(solver.params,
+							  solver.sdm_geom,
+							  solver.U);
     Kokkos::parallel_for(nbCells, functor);
 
       
@@ -133,9 +133,9 @@ void test_lagrange_functor()
   // perform difference operator
   {
 
-    sdm::InitTestFunctor<dim,N,1> functor(solver.params,
-					  solver.sdm_geom,
-					  solver.U);
+    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,1> functor(solver.params,
+							  solver.sdm_geom,
+							  solver.U);
     Kokkos::parallel_for(nbCells, functor);
     
   }

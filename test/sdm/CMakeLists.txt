@@ -71,7 +71,8 @@ endif()
 
 ##############################################
 add_executable(test_sdm_lagrange_functor
-  test_sdm_lagrange_functor.cpp)
+  test_sdm_lagrange_functor.cpp
+  SDMTestFunctors.h)
 target_include_directories(test_sdm_lagrange_functor
   PUBLIC
   .
@@ -85,7 +86,8 @@ endif()
 
 ##############################################
 add_executable(test_sdm_flux_functor
-  test_sdm_flux_functor.cpp)
+  test_sdm_flux_functor.cpp
+  test_sdm_flux_functor_init.h)
 target_include_directories(test_sdm_flux_functor
   PUBLIC
   .

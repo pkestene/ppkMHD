@@ -14,12 +14,19 @@
 
 #include "shared/EulerEquations.h"
 
+enum data_type_for_test {
+  TEST_DATA_VALUE=0,
+  TEST_DATA_GRADX=1,
+  TEST_DATA_GRADY=2,
+  TEST_DATA_GRADZ=3
+};
+
 namespace sdm {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
-template<int dim, int N, int compare=0>
+template<int dim, int N, int data_type_test, int compare>
 class InitTestFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
@@ -28,8 +35,8 @@ public:
   static constexpr auto dofMap = DofMap<dim,N>;
   
   InitTestFunctor(HydroParams         params,
-		     SDM_Geometry<dim,N> sdm_geom,
-		     DataArray           Udata) :
+		  SDM_Geometry<dim,N> sdm_geom,
+		  DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
 
   KOKKOS_INLINE_FUNCTION
