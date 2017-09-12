@@ -121,23 +121,24 @@ void test_flux_functors()
       
     }
     
-    // compute some flux along X direction
-    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
-							   solver.sdm_geom,
-							   euler,
-							   solver.Fluxes);
-    Kokkos::parallel_for(nbCells, functor);
-  }
-   
-
-  /*
-   * thanks to this post on the template use
-   * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
-   */
-  io_writer-> template save_flux<IX>(solver.Fluxes,
-				     FluxHost,
-				     0,
-				     0.0);
+    {
+      // compute some flux along X direction
+      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
+							     solver.sdm_geom,
+							     euler,
+							     solver.Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
+    
+    /*
+     * thanks to this post on the template use
+     * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
+     */
+    io_writer-> template save_flux<IX>(solver.Fluxes,
+				       FluxHost,
+				       0,
+				       0.0);
+  } // end dir X
   
   //
   // Dir Y
@@ -153,28 +154,30 @@ void test_flux_functors()
       Kokkos::parallel_for(nbCells, functor);
       
     }
+
+    {
+      // compute some flux along X direction
+      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(solver.params,
+							     solver.sdm_geom,
+							     euler,
+							     solver.Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
     
-    // compute some flux along X direction
-    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(solver.params,
-							   solver.sdm_geom,
-							   euler,
-							   solver.Fluxes);
-    Kokkos::parallel_for(nbCells, functor);
-  }
-  
-  /*
-   * thanks to this post on the template use
-   * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
-   */
-  io_writer-> template save_flux<IY>(solver.Fluxes,
-				     FluxHost,
-				     0,
-				     0.0);
+    /*
+     * thanks to this post on the template use
+     * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
+     */
+    io_writer-> template save_flux<IY>(solver.Fluxes,
+				       FluxHost,
+				       0,
+				       0.0);
+  } // end dir Y
   
   //
   // Dir Z
   //
-  {  
+  if (dim==3) {  
     // interpolate conservative variables from solution points to flux points
     {
       
@@ -186,22 +189,24 @@ void test_flux_functors()
       
     }
     
-    // compute some flux along X direction
-    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
-							   solver.sdm_geom,
-							   euler,
-							   solver.Fluxes);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+    {
+      // compute some flux along X direction
+      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
+							     solver.sdm_geom,
+							     euler,
+							     solver.Fluxes);
+      Kokkos::parallel_for(nbCells, functor);
+    }
   
-  /*
-   * thanks to this post on the template use
-   * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
-   */
-  io_writer-> template save_flux<IZ>(solver.Fluxes,
-				     FluxHost,
-				     0,
-				     0.0);  
+    /*
+     * thanks to this post on the template use
+     * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
+     */
+    io_writer-> template save_flux<IZ>(solver.Fluxes,
+				       FluxHost,
+				       0,
+				       0.0);
+  } // end dim==3 / dir Z
 
 } // test_flux_functors
 

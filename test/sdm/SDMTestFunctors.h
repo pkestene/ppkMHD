@@ -32,7 +32,41 @@ public:
 		     DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
 
-  
+  KOKKOS_INLINE_FUNCTION
+  real_t f0(real_t x, real_t y, real_t z) const
+  {
+    UNUSED(z);
+    return x+y+z;
+  }
+    
+  KOKKOS_INLINE_FUNCTION
+  real_t f1(real_t x, real_t y, real_t z) const
+  {
+    UNUSED(z);
+    return x*x;
+  }
+    
+  KOKKOS_INLINE_FUNCTION
+  real_t f2(real_t x, real_t y, real_t z) const
+  {
+    UNUSED(z);
+    return x*x + x*y + y*y + y*z;
+  }
+    
+  KOKKOS_INLINE_FUNCTION
+  real_t f3(real_t x, real_t y, real_t z) const
+  {
+    UNUSED(z);
+    return x + 2 + cos(M_PI*y);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  real_t f4(real_t x, real_t y, real_t z) const
+  {
+    UNUSED(z);
+    return x + 2 + sin(M_PI*y);
+  }
+    
   /*
    * 2D version.
    */
@@ -78,15 +112,15 @@ public:
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
 	if (compare == 1) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) -= x+y;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) -= x*x;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) -= x*x + x*y + y*y;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) -= x + 2 + cos(M_PI*y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) -= f0(x,y,0.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) -= f1(x,y,0.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) -= f2(x,y,0.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) -= f3(x,y,0.0);
 	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = x+y;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = x*x;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = x*x + x*y + y*y;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = x + 2 + cos(M_PI*y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = f0(x,y,0.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = f1(x,y,0.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = f2(x,y,0.0);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = f3(x,y,0.0);
 	}
 	
       } // end for idx
@@ -149,17 +183,17 @@ public:
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 	  
 	  if (compare == 1) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= x+y+z;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) -= x*x;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= x*x + x*y + y*z;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) -= x + 2 + cos(M_PI*y);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) -= x + 2 + sin(M_PI*y);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= f0(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) -= f1(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= f2(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) -= f3(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) -= f4(x,y,z);
 	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = x+y+z;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = x*x;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = x*x + x*y + y*z;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = x + 2 + cos(M_PI*y);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = x + 2 + sin(M_PI*y);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = f0(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = f1(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = f2(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = f3(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = f4(x,y,z);
 	  }
 	  
 	} // end for idx
