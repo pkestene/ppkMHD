@@ -27,7 +27,7 @@ namespace sdm {
 /*************************************************/
 /*************************************************/
 template<int dim, int N, int data_type_test, int compare>
-class InitTestGradientvelocityFunctor : public SDMBaseFunctor<dim,N> {
+class InitTestGradientVelocityFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
