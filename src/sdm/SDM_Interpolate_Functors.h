@@ -530,7 +530,7 @@ public:
 	    
 	  } // end for ivar
 	  
-	} // end for idy
+	} // end for idx
       } // end for idz
 
     } // end for dir IY
@@ -566,8 +566,8 @@ public:
 	    
 	  } // end for ivar
 	  
-	} // end for idy
-      } // end for idz
+	} // end for idx
+      } // end for idy
 
     } // end for dir IZ
 
