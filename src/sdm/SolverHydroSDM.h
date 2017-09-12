@@ -225,6 +225,14 @@ public:
   void compute_viscous_fluxes_divergence_per_dir(DataArray Udata, 
 						 DataArray Udata_fdiv, 
 						 real_t    dt);
+
+  //! compute velocity gradients at solution points and store them
+  //! in global arrays Ugradx, Ugrady, Ugradz.
+  //! this routine is the first step towards viscous flux terms computations
+  //! \param[in] Udata (conservative variables at solution points)
+  //! \param[out] Ugrad (velocity gradient in direction dir, at solution points)
+  template<int dir>
+  void compute_velocity_gradients(DataArray Udata, DataArray Ugrad);
   
   //! compute flux divergence, the main term to perform the actual update
   //! in one of the Runge-Kutta methods.
@@ -1075,6 +1083,10 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
 								      real_t dt)
 {
 
+  // here we assume velocity gradients have already been computed
+  // i.e. calls to compute_velocity_gradients have been made, that is Ugrax, Ugrady, Ugradz
+  // are populated
+  
   //
   // Dir X
   //
@@ -1082,23 +1094,46 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
 
     // to be refactored (all these steps are common to compute velocity gradients)
     
-    // 1. interpolate velocity from solution points to flux points
-    {
-      
-      Interpolate_velocities_Sol2Flux_Functor<dim,N,IX> functor(params,
-								sdm_geom,
-								Udata,
-								Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
-
-    // 2. compute derivative along X
     
   } // end dir IX
 
 } // 
 
+// =======================================================
+// =======================================================
+template<int dim, int N>
+template<int dir>
+void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArray Ugrad)
+{
+
+  // Please note that Fluxes is used as an intermediate data array, containing data at flux points
+  
+  //
+  // VELOCITY GRADIENTS in direction <dir>
+  //
+  
+  // 1. interpolate velocity from solution points to flux points
+  {
+    Interpolate_velocities_Sol2Flux_Functor<dim,N,dir> functor(params, sdm_geom,
+							       Udata,  Fluxes);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  // 2. average velocity at cell borders
+  {
+    Average_velocity_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, Fluxes);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 3. compute derivative along direction <dir> at solution points
+  //    using derivative of Lagrange polynomial
+  {
+    Interp_grad_velocity_at_SolutionPoints_Functor<dim,N,dir> functor(params, sdm_geom, Fluxes, Ugrad);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+} // SolverHydroSDM<dim,N>::compute_velocity_gradients
+  
 // =======================================================
 // =======================================================
 // //////////////////////////////////////////////////////////
@@ -1137,11 +1172,13 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   compute_invicid_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
 
   if (viscous_terms_enabled) {
-    // compute_velocity_gradients(Udata); // results are stored in Ugradx, Ugrady and Ugradz
+    compute_velocity_gradients<IX>(Udata,Ugradx); // results are stored in Ugradx
+    compute_velocity_gradients<IY>(Udata,Ugrady); // results are stored in Ugradx
+    if (dim==3) compute_velocity_gradients<IZ>(Udata,Ugradz); // results are stored in Ugradx
     
     compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
-    compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
+    if (dim==3) compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
   }
   
 } // SolverHydroSDM<dim,N>::compute_fluxes_divergence
