@@ -19,7 +19,7 @@ namespace sdm {
 /*************************************************/
 /*************************************************/
 /*************************************************/
-template<int dim, int N, int compare=0>
+template<int dim, int N, int compare>
 class InitTestFluxFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
@@ -88,8 +88,7 @@ public:
 				       w(x,y,z)*w(x,y,z) );
     return p(x,y,z)/(this->params.settings.gamma0 - 1.0) + ekin;
   }
-  
-
+    
   /*
    * 2D version.
    */
@@ -134,10 +133,17 @@ public:
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
-	Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho(x,y);
-	Udata(i  ,j  , dofMap(idx,idy,0,IP)) = e(x,y);
-	Udata(i  ,j  , dofMap(idx,idy,0,IU)) = rho_u(x,y);
-	Udata(i  ,j  , dofMap(idx,idy,0,IV)) = rho_v(x,y);
+	if (compare == 1) {
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) -= rho(x,y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) -= e(x,y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) -= rho_u(x,y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) -= rho_v(x,y);
+	} else {
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho(x,y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = e(x,y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = rho_u(x,y);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = rho_v(x,y);
+	}
 	
       } // end for idx
     } // end for idy
@@ -198,11 +204,19 @@ public:
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 	  
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho(x,y,z);
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = e(x,y,z);
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = rho_u(x,y,z);
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = rho_v(x,y,z);
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = rho_w(x,y,z);
+	  if (compare == 1) {
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= rho(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) -= e(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= rho_u(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) -= rho_v(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) -= rho_w(x,y,z);
+	  } else {
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = e(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = rho_u(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = rho_v(x,y,z);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = rho_w(x,y,z);
+	  }
 	  	  
 	} // end for idx
       } // end for idy
