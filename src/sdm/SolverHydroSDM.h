@@ -1000,6 +1000,9 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
 								      real_t dt)
 {
 
+  if (dim==2 and dir==IZ)
+    return;
+
   // here we assume velocity gradients have already been computed
   // i.e. calls to compute_velocity_gradients have been made, that is Ugrax, Ugrady, Ugradz
   // are populated
@@ -1023,6 +1026,9 @@ template<int dir>
 void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArray Ugrad)
 {
 
+  if (dim==2 and dir==IZ)
+    return;
+  
   // Please note that Fluxes is used as an intermediate data array, containing data at flux points
   
   //
@@ -1091,11 +1097,11 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   if (viscous_terms_enabled) {
     compute_velocity_gradients<IX>(Udata,Ugradx); // results are stored in Ugradx
     compute_velocity_gradients<IY>(Udata,Ugrady); // results are stored in Ugradx
-    if (dim==3) compute_velocity_gradients<IZ>(Udata,Ugradz); // results are stored in Ugradx
+    compute_velocity_gradients<IZ>(Udata,Ugradz); // results are stored in Ugradx
     
     compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
-    if (dim==3) compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
+    compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
   }
   
 } // SolverHydroSDM<dim,N>::compute_fluxes_divergence
