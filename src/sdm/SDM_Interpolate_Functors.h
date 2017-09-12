@@ -426,7 +426,7 @@ public:
 	  
 	} // end for ivar
 	
-      } // end for idy
+      } // end for idx
 
     } // end for dir IY
     
