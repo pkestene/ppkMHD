@@ -88,7 +88,7 @@ namespace sdm {
  * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V: 
  * MultiDimensinal systems", Journal of Computational Physics, 141, 199-224 (1998).
  *
- * 1. compute cell-average of conservative variables, as well as cell-aveage gradient
+ * 1. compute cell-average of conservative variables, as well as cell-average gradient
  * of the conservative variables.
  * 2. for each space direction, for each cell, compute 3 state-vector:
  *    a. current cell average gradient times dx
