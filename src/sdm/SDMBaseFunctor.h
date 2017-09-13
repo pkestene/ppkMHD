@@ -36,6 +36,12 @@ public:
 
   virtual ~SDMBaseFunctor() {};
 
+  //! field indexes for velocity gradients computations (needed in viscous terms)
+  static constexpr int IGU = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGU);
+  static constexpr int IGV = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGV);
+  static constexpr int IGW = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGW);
+  static constexpr int IGT = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGT);
+  
   HydroParams params;
   SDM_Geometry<dim,N> sdm_geom;
   

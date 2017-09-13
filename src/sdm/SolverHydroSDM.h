@@ -107,7 +107,8 @@ namespace sdm {
  * limiter_characteristics_enabled=true
  * in the sdm section of the ini parameter file.
  *
- * If viscous terms computation is enabled, we need Ugrax, Ugrady (and Ugradz) allocated;
+ * If viscous terms computation is enabled, we need Ugrax_v, Ugrady_v 
+ * (and Ugradz_v) allocated;
  * these arrays are used to store velocity gradients, and also if 
  * thermal_diffusivity_terms_enabled they store temperature gradients.
  *
@@ -158,9 +159,19 @@ public:
   //DataArray     Umin;     /*! used if limiting is enabled */
   //DataArray     Umax;     /*! used if limiting is enabled */
 
-  DataArray     Ugradx; /*! used if limiting is enabled, cell-average gradient, x component */
-  DataArray     Ugrady; /*! used if limiting is enabled, cell-average gradient, y component */
-  DataArray     Ugradz; /*! used if limiting is enabled, cell-average gradient, z component */
+  /*
+   * limiter specific arrays
+   */
+  DataArray     Ugradx; /*! used if limiting is enabled, cell-averaged gradient, x component */
+  DataArray     Ugrady; /*! used if limiting is enabled, cell-averaged gradient, y component */
+  DataArray     Ugradz; /*! used if limiting is enabled, cell-averaged gradient, z component */
+
+  /*
+   * viscous terms specific array
+   */
+  DataArray     Ugradx_v; /* velocity gradient-x, used and allocated only if viscous terms enabled */
+  DataArray     Ugrady_v; /* velocity gradient-x, used and allocated only if viscous terms enabled */
+  DataArray     Ugradz_v; /* velocity gradient-x, used and allocated only if viscous terms enabled */
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
@@ -227,7 +238,10 @@ public:
 						 real_t    dt);
 
   //! compute velocity gradients at solution points and store them
-  //! in global arrays Ugradx, Ugrady, Ugradz.
+  //! in global arrays Ugradx_v, Ugrady_v, Ugradz_v.
+  //! Please note that these arrays must have at least dim components (for each
+  //! component of the velocity) + optionally 1 extra variable to store
+  //! temperature gradients.
   //! this routine is the first step towards viscous flux terms computations
   //! \param[in] Udata (conservative variables at solution points)
   //! \param[out] Ugrad (velocity gradient in direction dir, at solution points)
@@ -482,6 +496,35 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     }
     
   }
+
+  /*
+   * viscous terms arrays memory allocation: Ugradx_v, Ugrady_v, Ugradz_v
+   */
+  if (viscous_terms_enabled) {
+
+    int nb_solutions_pts = dim==2 ? N*N : N*N*N;
+
+    // allocate one variable per dim (vx,vy,vz) per solution point
+    int nb_components = dim * nb_solutions_pts;
+
+    // if thermal diffusivity is enabled, we need to store temperature gradient
+    // at solution points
+    if (thermal_diffusivity_terms_enabled)
+      nb_components += nb_solutions_pts;
+    
+    // memory allocation to store velocity gradients at solution points
+    if (dim==2) {
+      Ugradx_v   = DataArray("Ugradx_v"    ,isize,jsize,nb_components);
+      Ugrady_v   = DataArray("Ugrady_v"    ,isize,jsize,nb_components);
+      total_mem_size += isize*jsize*nb_components * 2 * sizeof(real_t);
+    } else if (dim==3) {
+      Ugradx_v   = DataArray("Ugradx_v"    ,isize,jsize,ksize,nb_components);
+      Ugrady_v   = DataArray("Ugrady_v"    ,isize,jsize,ksize,nb_components);
+      Ugradz_v   = DataArray("Ugradz_v"    ,isize,jsize,ksize,nb_components);
+      total_mem_size += isize*jsize*ksize*nb_components * 3 * sizeof(real_t);
+    }
+
+  }
   
   /*
    * limiter
@@ -491,9 +534,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   /*
    * Ugradx / Ugrady / Ugradz memory allocation
    */
-  if (limiter_enabled or
-      viscous_terms_enabled or
-      thermal_diffusivity_terms_enabled) {
+  if (limiter_enabled) {
     
     // memory allocation to store cell-averaged gradient components
     if (dim==2) {
@@ -1095,9 +1136,9 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   compute_invicid_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
 
   if (viscous_terms_enabled) {
-    compute_velocity_gradients<IX>(Udata,Ugradx); // results are stored in Ugradx
-    compute_velocity_gradients<IY>(Udata,Ugrady); // results are stored in Ugradx
-    compute_velocity_gradients<IZ>(Udata,Ugradz); // results are stored in Ugradx
+    compute_velocity_gradients<IX>(Udata,Ugradx_v); // results are stored in Ugradx_v
+    compute_velocity_gradients<IY>(Udata,Ugrady_v); // results are stored in Ugrady_v
+    compute_velocity_gradients<IZ>(Udata,Ugradz_v); // results are stored in Ugradz_v
     
     compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);

@@ -28,6 +28,22 @@ enum VarIndex {
   IBFZ = 2
 };
 
+//! enum class to enumerate field location in a velocity/temperature gradient array in 2d
+enum class VarIndexGrad2d {
+  IGU = 0, /* x-component of velocity gradient */
+  IGV = 1, /* y-component of velocity gradient */
+  IGW = -1, /* UNUSED */
+  IGT = 2 /* temperature gradient component */
+};
+
+//! enum class to enumerate field location in a velocity/temperature gradient array in 3d
+enum class VarIndexGrad3d {
+  IGU = 0, /* x-component of velocity gradient */
+  IGV = 1, /* y-component of velocity gradient */
+  IGW = 2, /* y-component of velocity gradient */
+  IGT = 3  /* temperature gradient component */
+};
+
 //! face index
 enum FaceIdType {
   FACE_XMIN=0,

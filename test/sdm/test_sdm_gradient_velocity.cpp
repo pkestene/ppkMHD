@@ -105,36 +105,40 @@ void test_gradient_velocity_functors()
   //
   // velocity gradient X
   //
-  solver.template compute_velocity_gradients<IX>(solver.U, solver.Ugradx);
+  solver.template compute_velocity_gradients<IX>(solver.U, solver.Ugradx_v);
   
-  {
-  //   // interpolate conservative variables from solution points to flux points
-  //   {
-      
-  //     sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(solver.params,
-  // 							       solver.sdm_geom,
-  // 							       solver.U,
-  // 							       solver.Fluxes);
-  //     Kokkos::parallel_for(nbCells, functor);
-      
-  //   }
-    
-  //   {
-  //     // compute some flux along X direction
-  //     sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
-  // 							     solver.sdm_geom,
-  // 							     euler,
-  // 							     solver.Fluxes);
-  //     Kokkos::parallel_for(nbCells, functor);
-  //   }
-    
-    //DataArrayHost Ugradx_Host = Kokkos::create_mirror(solver.Ugradx);
-    // solver.save_data_debug(solver.Ugradx,
-    // 			   Ugradx_Host,
-    // 			   0,
-    // 			   0.0,
-    // 			   "Ugradx");
-  } // end dir X
+  DataArrayHost Ugradx_Host = Kokkos::create_mirror(solver.Ugradx_v);
+  solver.save_data_debug(solver.Ugradx_v,
+			 Ugradx_Host,
+			 0,
+			 0.0,
+			 "Ugradx_v");
+
+  //
+  // velocity gradient Y
+  //
+  solver.template compute_velocity_gradients<IY>(solver.U, solver.Ugrady_v);
+  
+  DataArrayHost Ugrady_Host = Kokkos::create_mirror(solver.Ugrady_v);
+  solver.save_data_debug(solver.Ugrady_v,
+			 Ugrady_Host,
+			 0,
+			 0.0,
+			 "Ugrady_v");
+
+  if (dim==3) {
+    //
+    // velocity gradient Z
+    //
+    solver.template compute_velocity_gradients<IZ>(solver.U, solver.Ugradz_v);
+  
+    DataArrayHost Ugradz_Host = Kokkos::create_mirror(solver.Ugradz_v);
+    solver.save_data_debug(solver.Ugradz_v,
+			   Ugradz_Host,
+			   0,
+			   0.0,
+			   "Ugradz_v"); 
+  }
   
 
 } // test_gradient_velocity_functors
