@@ -94,50 +94,105 @@ void test_gradient_velocity_functors()
 
   }
 
-  
-  // create an io_writer
-  auto io_writer =
-    std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
-						       solver.configMap,
-						       solver.m_variables_names,
-						       solver.sdm_geom);
-  
+
   //
   // velocity gradient X
   //
-  solver.template compute_velocity_gradients<IX>(solver.U, solver.Ugradx_v);
-  
-  DataArrayHost Ugradx_Host = Kokkos::create_mirror(solver.Ugradx_v);
-  solver.save_data_debug(solver.Ugradx_v,
-			 Ugradx_Host,
-			 0,
-			 0.0,
-			 "Ugradx_v");
+  {
 
+    // create variables names for velocity gradients
+    std::map<int, std::string> var_names_gradx;
+    if (dim==2) {
+      var_names_gradx[(int)VarIndexGrad2d::IGU] = "gradx_u";
+      var_names_gradx[(int)VarIndexGrad2d::IGV] = "gradx_v";
+    } else {
+      var_names_gradx[(int)VarIndexGrad3d::IGU] = "gradx_u";
+      var_names_gradx[(int)VarIndexGrad3d::IGV] = "gradx_v";
+      var_names_gradx[(int)VarIndexGrad3d::IGW] = "gradx_w";
+    }
+    
+    // create an io_writer
+    auto io_writer =
+      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
+							 solver.configMap,
+							 var_names_gradx,
+							 solver.sdm_geom);
+
+    // actual computation
+    solver.template compute_velocity_gradients<IX>(solver.U, solver.Ugradx_v);
+    
+    DataArrayHost Ugradx_Host = Kokkos::create_mirror(solver.Ugradx_v);
+    io_writer->save_data_impl(solver.Ugradx_v,
+			      Ugradx_Host,
+			      0,
+			      0.0,
+			      "Ugradx_v");
+  }
+  
   //
   // velocity gradient Y
   //
-  solver.template compute_velocity_gradients<IY>(solver.U, solver.Ugrady_v);
-  
-  DataArrayHost Ugrady_Host = Kokkos::create_mirror(solver.Ugrady_v);
-  solver.save_data_debug(solver.Ugrady_v,
-			 Ugrady_Host,
-			 0,
-			 0.0,
-			 "Ugrady_v");
+  {
+    // create variables names for velocity gradients
+    std::map<int, std::string> var_names_grady;
+    if (dim==2) {
+      var_names_grady[(int)VarIndexGrad2d::IGU] = "grady_u";
+      var_names_grady[(int)VarIndexGrad2d::IGV] = "grady_v";
+    } else {
+      var_names_grady[(int)VarIndexGrad3d::IGU] = "grady_u";
+      var_names_grady[(int)VarIndexGrad3d::IGV] = "grady_v";
+      var_names_grady[(int)VarIndexGrad3d::IGW] = "grady_w";
+    }
+    
+    // create an io_writer
+    auto io_writer =
+      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
+							 solver.configMap,
+							 var_names_grady,
+							 solver.sdm_geom);
 
-  if (dim==3) {
-    //
-    // velocity gradient Z
-    //
-    solver.template compute_velocity_gradients<IZ>(solver.U, solver.Ugradz_v);
+    // actual computation
+    solver.template compute_velocity_gradients<IY>(solver.U, solver.Ugrady_v);
+    
+    DataArrayHost Ugrady_Host = Kokkos::create_mirror(solver.Ugrady_v);
+    io_writer->save_data_impl(solver.Ugrady_v,
+			      Ugrady_Host,
+			      0,
+			      0.0,
+			      "Ugrady_v");
+  }
   
+  //
+  // velocity gradient Z
+  //
+  if (dim==3) {
+    // create variables names for velocity gradients
+    std::map<int, std::string> var_names_gradz;
+    if (dim==2) {
+      var_names_gradz[(int)VarIndexGrad2d::IGU] = "gradz_u";
+      var_names_gradz[(int)VarIndexGrad2d::IGV] = "gradz_v";
+    } else {
+      var_names_gradz[(int)VarIndexGrad3d::IGU] = "gradz_u";
+      var_names_gradz[(int)VarIndexGrad3d::IGV] = "gradz_v";
+      var_names_gradz[(int)VarIndexGrad3d::IGW] = "gradz_w";
+    }
+    
+    // create an io_writer
+    auto io_writer =
+      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
+							 solver.configMap,
+							 var_names_gradz,
+							 solver.sdm_geom);
+
+    // actual computation
+    solver.template compute_velocity_gradients<IZ>(solver.U, solver.Ugradz_v);
+    
     DataArrayHost Ugradz_Host = Kokkos::create_mirror(solver.Ugradz_v);
-    solver.save_data_debug(solver.Ugradz_v,
-			   Ugradz_Host,
-			   0,
-			   0.0,
-			   "Ugradz_v"); 
+    io_writer->save_data_impl(solver.Ugradz_v,
+			      Ugradz_Host,
+			      0,
+			      0.0,
+			      "Ugradz_v"); 
   }
   
 

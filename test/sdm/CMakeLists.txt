@@ -121,6 +121,10 @@ endif()
 configure_file(test_sdm_gradient_velocity_2D.ini test_sdm_gradient_velocity_2D.ini COPYONLY)
 configure_file(test_sdm_gradient_velocity_3D.ini test_sdm_gradient_velocity_3D.ini COPYONLY)
 
+# copy a paraview state file just for eye cross-checking the 2d results of gradient
+# computations
+configure_file(test_sdm_gradient_velocity.pvsm test_sdm_gradient_velocity.pvsm COPYONLY) 
+  
 ##############################################
 add_executable(test_sdm_compute_dt_functor
   test_sdm_compute_dt_functor.cpp)
