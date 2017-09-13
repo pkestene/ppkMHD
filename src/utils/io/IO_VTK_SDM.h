@@ -540,6 +540,7 @@ void write_cells_data(std::ostream& outFile,
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
+  const int nbvar = variables_names.size();
   
   /*
    * write cell data.
@@ -547,7 +548,7 @@ void write_cells_data(std::ostream& outFile,
   outFile << "  <CellData>\n";
 
   // loop over scalar variables
-  for ( int iVar=0; iVar<params.nbvar; iVar++ ) {
+  for ( int iVar=0; iVar<nbvar; iVar++ ) {
     
     outFile << "    <DataArray type=\"" << dataType
 	    << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"" << ascii_or_binary << "\"";
@@ -616,13 +617,15 @@ void write_cells_data(std::ostream& outFile,
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
   const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
+  const int nbvar = variables_names.size();
+
   /*
    * write cell data.
    */
   outFile << "  <CellData>\n";
 
   // loop over scalar variables
-  for ( int iVar=0; iVar<params.nbvar; iVar++ ) {
+  for ( int iVar=0; iVar<nbvar; iVar++ ) {
     
     outFile << "    <DataArray type=\"" << dataType
 	    << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"" << ascii_or_binary << "\"";
@@ -702,6 +705,8 @@ void write_appended_binary_data(std::ostream& outFile,
   const int i_mpi = 0;
   const int j_mpi = 0;
 #endif
+
+  const int nbvar = variables_names.size();
 
   int nbNodesPerCell = (N+1)*(N+1); // in 2D
   int nbSubCells = N*N;
@@ -863,7 +868,7 @@ void write_appended_binary_data(std::ostream& outFile,
     std::vector<real_t> cells_data;
 
     // loop over scalar variables
-    for ( int iVar=0; iVar<params.nbvar; iVar++) {
+    for ( int iVar=0; iVar<nbvar; iVar++) {
 
       // no ghost !!
       for (int j=0; j<ny; ++j) {
@@ -931,6 +936,8 @@ void write_appended_binary_data(std::ostream& outFile,
   const int j_mpi = 0;
   const int k_mpi = 0;
 #endif
+
+  const int nbvar = variables_names.size();
 
   int nbNodesPerCell = (N+1)*(N+1)*(N+1); // in 3D
   int nbSubCells = N*N*N;
@@ -1112,7 +1119,7 @@ void write_appended_binary_data(std::ostream& outFile,
     std::vector<real_t> cells_data;
 
     // loop over scalar variables
-    for ( int iVar=0; iVar<params.nbvar; iVar++) {
+    for ( int iVar=0; iVar<nbvar; iVar++) {
 
       // no ghost !!
       for (int k=0; k<nz; ++k) {
