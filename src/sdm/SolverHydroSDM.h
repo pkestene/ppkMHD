@@ -107,10 +107,13 @@ namespace sdm {
  * limiter_characteristics_enabled=true
  * in the sdm section of the ini parameter file.
  *
- * If viscous terms computation is enabled, we need Ugrax_v, Ugrady_v 
- * (and Ugradz_v) allocated;
- * these arrays are used to store velocity gradients, and also if 
- * thermal_diffusivity_terms_enabled they store temperature gradients.
+ * If viscous terms computation is enabled, we need 
+ * - Ugrax_v, Ugrady_v (and Ugradz_v) allocated;
+ *   these arrays are used to store velocity gradients at soluton points.
+ * - FUgrad allocated;
+ *   this array is used to store both velocity and velocity gradients at flux points.
+ *
+ * If thermal_diffusivity_terms_enabled, temperature gradients need to be stored.
  *
  */
 template<int dim, int N>
@@ -170,8 +173,10 @@ public:
    * viscous terms specific array
    */
   DataArray     Ugradx_v; /* velocity gradient-x, used and allocated only if viscous terms enabled */
-  DataArray     Ugrady_v; /* velocity gradient-x, used and allocated only if viscous terms enabled */
-  DataArray     Ugradz_v; /* velocity gradient-x, used and allocated only if viscous terms enabled */
+  DataArray     Ugrady_v; /* velocity gradient-y, used and allocated only if viscous terms enabled */
+  DataArray     Ugradz_v; /* velocity gradient-z, used and allocated only if viscous terms enabled */
+
+  DataArray     FUgrad; /* velocity and velocity gradient at flux points */
   
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
@@ -524,6 +529,18 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       total_mem_size += isize*jsize*ksize*nb_components * 3 * sizeof(real_t);
     }
 
+    // number of flux points, as used to address array FUgrad
+    int nb_flux_pts = dim==2 ? (N+1)*N : (N+1)*N*N;
+
+    // number of components to address FUgrad : dim for velocity + dim*dim for velocity gradients (tensor)
+    int nb_components_FUgrad = dim + dim*dim; // that is 6 in 2D and 12 in 3D
+
+    // memory allocation for FUgrad
+    if (dim==2)
+      FUgrad = DataArray("FUgrad", isize, jsize,        nb_flux_pts*nb_components_FUgrad);
+    else
+      FUgrad = DataArray("FUgrad", isize, jsize, ksize, nb_flux_pts*nb_components_FUgrad);
+    
   }
   
   /*
@@ -1045,7 +1062,7 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
     return;
 
   // here we assume velocity gradients have already been computed
-  // i.e. calls to compute_velocity_gradients have been made, that is Ugrax, Ugrady, Ugradz
+  // i.e. calls to compute_velocity_gradients have been made, that is Ugrax_v, Ugrady_v, Ugradz_v
   // are populated
   
   //

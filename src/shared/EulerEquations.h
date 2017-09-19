@@ -199,10 +199,10 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_x(const GradTensor& g,
-		const Vector& v, const Vector& f,
-		real_t mu,
-		HydroState& flux)
+  void flux_visc_x(const GradTensor& g,
+		   const Vector& v, const Vector& f,
+		   real_t mu,
+		   HydroState& flux)
   {
     real_t tau_xx = 2*mu*(g[U_X]-ONE_HALF*(g[U_X]+g[V_Y]));
     real_t tau_xy =   mu*(g[V_X] + g[U_Y]);
@@ -227,10 +227,10 @@ struct EulerEquations<2>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_y(const GradTensor& g,
-		const Vector& v, const Vector& f,
-		real_t mu,
-		HydroState& flux)
+  void flux_visc_y(const GradTensor& g,
+		   const Vector& v, const Vector& f,
+		   real_t mu,
+		   HydroState& flux)
   {
     real_t tau_yy = 2*mu*(g[V_Y]-ONE_HALF*(g[U_X]+g[V_Y]));
     real_t tau_xy =   mu*(g[V_X] + g[U_Y]);
@@ -626,10 +626,10 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_x(const GradTensor& g,
-		const Vector& v, const Vector& f,
-		real_t mu,
-		HydroState& flux)
+  void flux_visc_x(const GradTensor& g,
+		   const Vector& v, const Vector& f,
+		   real_t mu,
+		   HydroState& flux)
   {
     real_t tau_xx = 2*mu*(g[U_X]-ONE_THIRD*(g[U_X]+g[V_Y]+g[W_Z]));
     real_t tau_yx =   mu*(g[V_X] + g[U_Y]);
@@ -656,10 +656,10 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_y(const GradTensor& g,
-		const Vector& v, const Vector& f,
-		real_t mu,
-		HydroState& flux)
+  void flux_visc_y(const GradTensor& g,
+		   const Vector& v, const Vector& f,
+		   real_t mu,
+		   HydroState& flux)
   {
     real_t tau_xy =   mu*(g[U_Y] + g[V_X]);
     real_t tau_yy = 2*mu*(g[V_Y]-ONE_THIRD*(g[U_X]+g[V_Y]+g[W_Z]));
@@ -686,10 +686,10 @@ struct EulerEquations<3>
    */
   static
   KOKKOS_INLINE_FUNCTION
-  void flux_v_z(const GradTensor& g,
-		const Vector& v, const Vector& f,
-		real_t mu,
-		HydroState& flux)
+  void flux_visc_z(const GradTensor& g,
+		   const Vector& v, const Vector& f,
+		   real_t mu,
+		   HydroState& flux)
   {
     real_t tau_xz =   mu*(g[U_Z] + g[W_X]);
     real_t tau_yz =   mu*(g[V_Z] + g[W_Y]);

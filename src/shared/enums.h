@@ -28,7 +28,7 @@ enum VarIndex {
   IBFZ = 2
 };
 
-//! enum class to enumerate field location in a velocity/temperature gradient array in 2d
+//! enum class to enumerate field location in a velocity/temperature gradient array in 2d at solution points
 enum class VarIndexGrad2d {
   IGU = 0, /* x-component of velocity gradient */
   IGV = 1, /* y-component of velocity gradient */
@@ -36,13 +36,40 @@ enum class VarIndexGrad2d {
   IGT = 2 /* temperature gradient component */
 };
 
-//! enum class to enumerate field location in a velocity/temperature gradient array in 3d
+//! enum class to enumerate field location in a velocity/temperature gradient array in 3d at solution points
 enum class VarIndexGrad3d {
   IGU = 0, /* x-component of velocity gradient */
   IGV = 1, /* y-component of velocity gradient */
   IGW = 2, /* y-component of velocity gradient */
   IGT = 3  /* temperature gradient component */
 };
+
+//! enum class to enumerate field location in a velocity / velocity tensor gradient array in 2d at flux points
+enum class VarIndexGradFlux2d {
+  IGU  = 0, /* x-component of velocity gradient */
+  IGV  = 1, /* y-component of velocity gradient */
+  IGUX = 2, /* partial U over partial x */
+  IGUY = 3, /* partial U over partial y */
+  IGVX = 4, /* partial V over partial x */
+  IGVY = 5, /* partial V over partial y */
+};
+
+//! enum class to enumerate field location in a velocity / velocity tensor gradient array in 3d at flux points
+enum class VarIndexGradFlux3d {
+  IGU  = 0, /* x-component of velocity gradient */
+  IGV  = 1, /* y-component of velocity gradient */
+  IGW  = 2, /* z-component of velocity gradient */
+  IGUX = 3, /* partial U over partial x */
+  IGUY = 4, /* partial U over partial y */
+  IGUZ = 5, /* partial U over partial z */
+  IGVX = 6, /* partial V over partial x */
+  IGVY = 7, /* partial V over partial y */
+  IGVZ = 8, /* partial V over partial z */
+  IGWX = 9, /* partial W over partial x */
+  IGWY =10, /* partial W over partial y */
+  IGWZ =11, /* partial W over partial z */
+};
+
 
 //! face index
 enum FaceIdType {
