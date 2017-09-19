@@ -40,7 +40,11 @@ public:
   
   static constexpr auto dofMapS = DofMap<dim,N>;
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
-  
+
+  /**
+   * \param[in] UdataSol array of conservative variables at solution points.
+   * \param[out] UdataFlux array of velocity components at flux points.
+   */
   Interpolate_velocities_Sol2Flux_Functor(HydroParams         params,
 					  SDM_Geometry<dim,N> sdm_geom,
 					  DataArray           UdataSol,
@@ -280,7 +284,7 @@ public:
 /*************************************************/
 /**
  * This functor takes as an input a flux array, and perform
- * a simple average (half sum) at cell borders.
+ * a simple average (half sum) of the velocity components at cell borders.
  *
  */
 template<int dim, int N, int dir>
@@ -490,10 +494,14 @@ public:
 /*************************************************/
 /**
  * This functor takes as an input a fluxes data array (only IU,IV, IW are used)
- * and perform interpolation at solution points.
+ * containing velocity at flux points, supposed to be continuous at flux points (i.e.
+ * an array ouput by function Average_velocity_at_cell_borders_Functor)
+ * and perform interpolation of velocity gradients at solution points.
  *
- * Its is essentially a wrapper arround interpolation method flux2sol_vector.
- *
+ * Only one direction of gradient is considered (specified as template parameter dir).
+ * 
+ * \todo we will need to modify this functor to include as an option the possibility to compute
+ * gradient of temperature.
  */
 template<int dim, int N, int dir,
 	 Interpolation_type_t itype=INTERPOLATE_DERIVATIVE>
@@ -511,7 +519,12 @@ public:
 
   static constexpr auto dofMapS = DofMap<dim,N>;
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
-  
+
+  /**
+   * \param[in] UdataFlux array containing velocity at flux points along given direction dir (template parameter)
+   * \param[out] UdataSol velocity gradient along dir at solution points
+   *
+   */
   Interp_grad_velocity_at_SolutionPoints_Functor(HydroParams         params,
 						 SDM_Geometry<dim,N> sdm_geom,
 						 DataArray           UdataFlux,
