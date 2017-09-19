@@ -1153,9 +1153,9 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
   compute_invicid_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
 
   if (viscous_terms_enabled) {
-    compute_velocity_gradients<IX>(Udata,Ugradx_v); // results are stored in Ugradx_v
-    compute_velocity_gradients<IY>(Udata,Ugrady_v); // results are stored in Ugrady_v
-    compute_velocity_gradients<IZ>(Udata,Ugradz_v); // results are stored in Ugradz_v
+    compute_velocity_gradients<IX>(Udata, Ugradx_v); // results are stored in Ugradx_v
+    compute_velocity_gradients<IY>(Udata, Ugrady_v); // results are stored in Ugrady_v
+    compute_velocity_gradients<IZ>(Udata, Ugradz_v); // results are stored in Ugradz_v
     
     compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);

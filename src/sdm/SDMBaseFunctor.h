@@ -37,10 +37,23 @@ public:
   virtual ~SDMBaseFunctor() {};
 
   //! field indexes for velocity gradients computations (needed in viscous terms)
-  static constexpr int IGU = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGU);
-  static constexpr int IGV = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGV);
-  static constexpr int IGW = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGW);
-  static constexpr int IGT = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGT);
+  static constexpr int IGU  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGU);
+  static constexpr int IGV  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGV);
+  static constexpr int IGW  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGW);
+
+  static constexpr int IGUX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUX);
+  static constexpr int IGUY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUY);
+  static constexpr int IGUZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUZ);
+
+  static constexpr int IGVX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVX);
+  static constexpr int IGVY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVY);
+  static constexpr int IGVZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVZ);
+
+  static constexpr int IGWX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWX);
+  static constexpr int IGWY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWY);
+  static constexpr int IGWZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWZ);
+
+  static constexpr int IGT  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGT);
   
   HydroParams params;
   SDM_Geometry<dim,N> sdm_geom;

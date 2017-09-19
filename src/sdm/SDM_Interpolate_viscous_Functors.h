@@ -27,6 +27,9 @@ namespace sdm {
  *
  * It is essentially a wrapper arround interpolation method sol2flux_vector.
  *
+ * Please note that velocity components in the flux out array must be addressed through 
+ * IGU, IGV, IGW defined in enum class VarIndexGrad2d and VarIndexGrad3d.
+ *
  * \sa Interpolate_At_FluxPoints_Functor
  *
  */
@@ -38,12 +41,22 @@ public:
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   using typename SDMBaseFunctor<dim,N>::flux_values_t;
   
+  using SDMBaseFunctor<dim,N>::IGU;
+  using SDMBaseFunctor<dim,N>::IGV;
+  using SDMBaseFunctor<dim,N>::IGW;
+  using SDMBaseFunctor<dim,N>::IGT;
+
   static constexpr auto dofMapS = DofMap<dim,N>;
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
 
   /**
    * \param[in] UdataSol array of conservative variables at solution points.
    * \param[out] UdataFlux array of velocity components at flux points.
+   *
+   * Please note that velocity components in the flux out array must be addressed through 
+   * IGU, IGV, IGW defined in enum class VarIndexGrad2d and VarIndexGrad3d.
+   *
+   * This means UdataFlux should have been allocated like FUgrad (see class SolverHydroSDM).
    */
   Interpolate_velocities_Sol2Flux_Functor(HydroParams         params,
 					  SDM_Geometry<dim,N> sdm_geom,
@@ -53,7 +66,6 @@ public:
     UdataSol(UdataSol),
     UdataFlux(UdataFlux)
   {};
-
   
   // =========================================================
   /*
@@ -75,6 +87,9 @@ public:
 
     solution_values_t sol;
     flux_values_t     flux;
+
+    const Kokkos::Array<int,2> ivar_in_list  = {IU,  IV};
+    const Kokkos::Array<int,2> ivar_out_list = {IGU, IGV};
     
     // loop over cell DoF's
     if (dir == IX) {
@@ -82,14 +97,17 @@ public:
       for (int idy=0; idy<N; ++idy) {
 
 	// for each velocity components
-	for (int ivar = IU; ivar<IU+dim; ++ivar) {
-	
+	for (int icomp = 0; icomp<dim; ++icomp) {
+
+	  const int ivar_in  = ivar_in_list[icomp];
+	  const int ivar_out = ivar_out_list[icomp];
+	  
 	  // get solution values vector along X direction
 	  for (int idx=0; idx<N; ++idx) {
 
 	    // divide momentum by density to obtain velocity
 	    sol[idx] =
-	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) /
+	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar_in)) /
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ID));
 
 	  }
@@ -100,11 +118,11 @@ public:
 	  // copy back interpolated value
 	  for (int idx=0; idx<N+1; ++idx) {
 	    
-	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idx];
+	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar_out)) = flux[idx];
 	    
 	  } // end for idx
 	  
-	} // end for ivar
+	} // end for icomp
 	
       } // end for idy
 
@@ -116,13 +134,16 @@ public:
       for (int idx=0; idx<N; ++idx) {
 
 	// for each variables
-	for (int ivar = IU; ivar<IU+dim; ++ivar) {
+	for (int icomp = 0; icomp<dim; ++icomp) {
+
+	  const int ivar_in  = ivar_in_list[icomp];
+	  const int ivar_out = ivar_out_list[icomp];
 	
 	  // get solution values vector along Y direction
 	  for (int idy=0; idy<N; ++idy) {
 	  
 	    sol[idy] =
-	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) /
+	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar_in)) /
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ID));
 	    
 	  }
@@ -133,11 +154,11 @@ public:
 	  // copy back interpolated value
 	  for (int idy=0; idy<N+1; ++idy) {
 	    
-	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idy];
+	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar_out)) = flux[idy];
 	    
 	  }
 	  
-	} // end for ivar
+	} // end for icomp
 	
       } // end for idx
 
@@ -167,6 +188,9 @@ public:
     solution_values_t sol;
     flux_values_t     flux;
     
+    const Kokkos::Array<int,3> ivar_in_list  = {IU,  IV,  IW};
+    const Kokkos::Array<int,3> ivar_out_list = {IGU, IGV, IGW};
+
     // loop over cell DoF's
     if (dir == IX) {
 
@@ -174,13 +198,16 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  
 	  // for each variables
-	  for (int ivar = IU; ivar<IU+dim; ++ivar) {
+	  for (int icomp = 0; icomp<dim; ++icomp) {
+
+	    const int ivar_in  = ivar_in_list[icomp];
+	    const int ivar_out = ivar_out_list[icomp];
 	    
 	    // get solution values vector along X direction
 	    for (int idx=0; idx<N; ++idx) {
 	      
 	      sol[idx] =
-		UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) /
+		UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar_in)) /
 		UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
 	      
 	    }
@@ -191,11 +218,11 @@ public:
 	    // copy back interpolated value
 	    for (int idx=0; idx<N+1; ++idx) {
 	      
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idx];
+	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar_out)) = flux[idx];
 	      
 	    }
 	    
-	  } // end for ivar
+	  } // end for icomp
 	  
 	} // end for idy
       } // end for idz
@@ -209,13 +236,16 @@ public:
 	for (int idx=0; idx<N; ++idx) {
 	  
 	  // for each variables
-	  for (int ivar = IU; ivar<IU+dim; ++ivar) {
+	  for (int icomp = 0; icomp<dim; ++icomp) {
+
+	    const int ivar_in  = ivar_in_list[icomp];
+	    const int ivar_out = ivar_out_list[icomp];
 	    
 	    // get solution values vector along Y direction
 	    for (int idy=0; idy<N; ++idy) {
 	      
 	      sol[idy] =
-		UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) /
+		UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar_in)) /
 		UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
 	    
 	    }
@@ -226,11 +256,11 @@ public:
 	    // copy back interpolated value
 	    for (int idy=0; idy<N+1; ++idy) {
 	      
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idy];
+	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar_out)) = flux[idy];
 	      
 	    }
 	  
-	  } // end for ivar
+	  } // end for icomp
 	
 	} // end for idx
       } // end for idz
@@ -244,13 +274,16 @@ public:
 	for (int idx=0; idx<N; ++idx) {
 	  
 	  // for each variables
-	  for (int ivar = IU; ivar<IU+dim; ++ivar) {
+	  for (int icomp = 0; icomp<dim; ++icomp) {
+
+	    const int ivar_in  = ivar_in_list[icomp];
+	    const int ivar_out = ivar_out_list[icomp];
 	    
 	    // get solution values vector along Y direction
 	    for (int idz=0; idz<N; ++idz) {
 	      
 	      sol[idz] =
-		UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) /
+		UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar_in)) /
 		UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
 	      
 	    }
@@ -261,11 +294,11 @@ public:
 	    // copy back interpolated value
 	    for (int idz=0; idz<N+1; ++idz) {
 	      
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idz];
+	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar_out)) = flux[idz];
 	      
 	    }
 	  
-	  } // end for ivar
+	  } // end for icomp
 	
 	} // end for idx
       } // end for idz
@@ -286,6 +319,9 @@ public:
  * This functor takes as an input a flux array, and perform
  * a simple average (half sum) of the velocity components at cell borders.
  *
+ * Please note that velocity components in the flux in,out array must be addressed through 
+ * IGU, IGV, IGW defined in enum class VarIndexGrad2d and VarIndexGrad3d.
+ *
  */
 template<int dim, int N, int dir>
 class Average_velocity_at_cell_borders_Functor : public SDMBaseFunctor<dim,N> {
@@ -294,6 +330,11 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
   
+  using SDMBaseFunctor<dim,N>::IGU;
+  using SDMBaseFunctor<dim,N>::IGV;
+  using SDMBaseFunctor<dim,N>::IGW;
+  using SDMBaseFunctor<dim,N>::IGT;
+
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
 
   /**
@@ -340,7 +381,7 @@ public:
 	// just deals with the left cell border
 	for (int idy=0; idy<N; ++idy) {
 
-	  for (int ivar : { IU,IV } ) {
+	  for (int ivar : { IGU,IGV } ) {
 	    dataL = UdataFlux(i-1,j, dofMapF(N,idy,0,ivar));
 	    dataR = UdataFlux(i  ,j, dofMapF(0,idy,0,ivar));
 	    data_average = 0.5*(dataL + dataR);
@@ -365,7 +406,7 @@ public:
 	// just deals with the left cell border
 	for (int idx=0; idx<N; ++idx) {
 
-	  for (int ivar : { IU,IV } ) {
+	  for (int ivar : { IGU,IGV } ) {
 	    dataL = UdataFlux(i,j-1, dofMapF(idx,N,0,ivar));
 	    dataR = UdataFlux(i,j  , dofMapF(idx,0,0,ivar));
 	    data_average = 0.5*(dataL + dataR);
@@ -414,7 +455,7 @@ public:
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idy=0; idy<N; ++idy) {
 
-	    for (int ivar : { IU,IV,IW } ) {
+	    for (int ivar : { IGU,IGV,IGW } ) {
 	      dataL = UdataFlux(i-1,j, k, dofMapF(N,idy,idz,ivar));
 	      dataR = UdataFlux(i  ,j, k, dofMapF(0,idy,idz,ivar));
 	      data_average = 0.5*(dataL + dataR);
@@ -441,7 +482,7 @@ public:
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    for (int ivar : { IU,IV,IW } ) {
+	    for (int ivar : { IGU,IGV,IGW } ) {
 	      dataL = UdataFlux(i,j-1, k, dofMapF(idx,N,idz,ivar));
 	      dataR = UdataFlux(i,j  , k, dofMapF(idx,0,idz,ivar));
 	      data_average = 0.5*(dataL + dataR);
@@ -468,7 +509,7 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    for (int ivar : { IU,IV,IW } ) {
+	    for (int ivar : { IGU,IGV,IGW } ) {
 	      dataL = UdataFlux(i,j, k-1, dofMapF(idx,idy,N,ivar));
 	      dataR = UdataFlux(i,j, k  , dofMapF(idx,idy,0,ivar));
 	      data_average = 0.5*(dataL + dataR);
@@ -521,7 +562,9 @@ public:
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
 
   /**
-   * \param[in] UdataFlux array containing velocity at flux points along given direction dir (template parameter)
+   *
+   * \param[in] UdataFlux array containing velocity at flux points along given direction dir (template parameter); UdataFlux must have the same memory layout as FUgrad in SolverHydroSDM
+   *
    * \param[out] UdataSol velocity gradient along dir at solution points
    *
    */
@@ -560,8 +603,7 @@ public:
     solution_values_t sol;
     flux_values_t     flux;
     
-    Kokkos::Array<int,2> index_in  = { IU, IV};
-    Kokkos::Array<int,2> index_out = {IGU,IGV};
+    const Kokkos::Array<int,2> index_list  = {IGU, IGV};
 
     // loop over cell DoF's
     if (dir == IX) {
@@ -570,10 +612,12 @@ public:
 
 	// for each variables
 	for (int ivar = 0; ivar<dim; ++ivar ) {
-	
+
+	  const int index_var = index_list[ivar];
+	  
 	  // get values at flux point along X direction
 	  for (int idx=0; idx<N+1; ++idx)
-	    flux[idx] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,index_in[ivar]));
+	    flux[idx] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,index_var));
 	    
 	  // interpolate at flux points for this given variable
 	  if (itype==INTERPOLATE_SOLUTION)
@@ -583,7 +627,7 @@ public:
 	  
 	  // copy back interpolated value
 	  for (int idx=0; idx<N; ++idx)
-	    UdataSol(i  ,j  , dofMapS(idx,idy,0,index_out[ivar])) = sol[idx];
+	    UdataSol(i  ,j  , dofMapS(idx,idy,0,index_var)) = sol[idx];
 	  
 	} // end for ivar
 	
@@ -599,9 +643,11 @@ public:
 	// for each variables
 	for (int ivar=0; ivar<dim; ++ivar ) {
 	
+	  const int index_var = index_list[ivar];
+
 	  // get values at flux point along Y direction
 	  for (int idy=0; idy<N+1; ++idy)
-	    flux[idy] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,index_in[ivar]));
+	    flux[idy] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,index_var));
 	    	  
 	  // interpolate at flux points for this given variable
 	  if (itype==INTERPOLATE_SOLUTION)
@@ -611,7 +657,7 @@ public:
 	  
 	  // copy back interpolated value
 	  for (int idy=0; idy<N; ++idy)
-	    UdataSol(i  ,j  , dofMapS(idx,idy,0,index_out[ivar])) += sol[idy];
+	    UdataSol(i  ,j  , dofMapS(idx,idy,0,index_var)) += sol[idy];
 	  
 	} // end for ivar
 	
@@ -650,8 +696,7 @@ public:
     solution_values_t sol;
     flux_values_t     flux;
     
-    Kokkos::Array<int,3> index_in  = { IU, IV, IW};
-    Kokkos::Array<int,3> index_out = {IGU,IGV,IGW};
+    const Kokkos::Array<int,3> index_list  = { IGU, IGV, IGW};
 
     // loop over cell DoF's
     if (dir == IX) {
@@ -662,9 +707,11 @@ public:
 	  // for each variables
 	  for (int ivar = 0; ivar<dim; ++ivar) {
 	    
+	    const int index_var = index_list[ivar];
+	    
 	    // get values at flux point along X direction
 	    for (int idx=0; idx<N+1; ++idx)
-	      flux[idx] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,index_in[ivar]));
+	      flux[idx] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,index_var));
 	  
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION)
@@ -674,7 +721,7 @@ public:
 	    
 	    // copy back interpolated value
 	    for (int idx=0; idx<N; ++idx)
-	      UdataSol(i,j,k, dofMapS(idx,idy,idz,index_out[ivar])) += sol[idx];
+	      UdataSol(i,j,k, dofMapS(idx,idy,idz,index_var)) += sol[idx];
 	    
 	  } // end for ivar
 	  
@@ -692,9 +739,11 @@ public:
 	  // for each variables
 	  for (int ivar=0; ivar<dim; ++ivar) {
 	    
+	    const int index_var = index_list[ivar];
+	    
 	    // get values at flux point along Y direction
 	    for (int idy=0; idy<N+1; ++idy)
-	      flux[idy] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,index_in[ivar]));
+	      flux[idy] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,index_var));
 	    
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION)
@@ -704,7 +753,7 @@ public:
 	    
 	    // copy back interpolated value
 	    for (int idy=0; idy<N; ++idy)
-	      UdataSol(i,j,k, dofMapS(idx,idy,idz,index_out[ivar])) += sol[idy];
+	      UdataSol(i,j,k, dofMapS(idx,idy,idz,index_var)) += sol[idy];
 	    
 	  } // end for ivar
 	  
@@ -722,9 +771,11 @@ public:
 	  // for each variables
 	  for (int ivar=0; ivar<dim; ++ivar) {
 	    
+	    const int index_var = index_list[ivar];
+	    
 	    // get values at flux point along Y direction
 	    for (int idz=0; idz<N+1; ++idz)
-	      flux[idz] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,index_in[ivar]));
+	      flux[idz] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,index_var));
 	    
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION)
@@ -734,7 +785,7 @@ public:
 	    
 	    // copy back interpolated value
 	    for (int idz=0; idz<N; ++idz)
-	      UdataSol(i,j,k, dofMapS(idx,idy,idz,index_out[ivar])) += sol[idz];
+	      UdataSol(i,j,k, dofMapS(idx,idy,idz,index_var)) += sol[idz];
 	    
 	  } // end for ivar
 	  
