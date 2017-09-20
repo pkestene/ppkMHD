@@ -56,7 +56,7 @@ public:
    * Please note that velocity components in the flux out array must be addressed through 
    * IGU, IGV, IGW defined in enum class VarIndexGrad2d and VarIndexGrad3d.
    *
-   * This means UdataFlux should have been allocated like FUgrad (see class SolverHydroSDM).
+   * This means UdataFlux should have been allocated with a number of fields of at leat "dim".
    */
   Interpolate_velocities_Sol2Flux_Functor(HydroParams         params,
 					  SDM_Geometry<dim,N> sdm_geom,
@@ -813,8 +813,14 @@ public:
  * Please note that velocity components in the flux out array must be addressed through 
  * indexes defined in enum class VarIndexGrad2d and VarIndexGrad3d.
  *
+ * \tparam dim is dimension (2 or 3)
+ * \tparam N is SDM order (number of solution point per dimension.
+ * \tparam dir specifies the flux points direction (IX, IY or IZ)
+ * \tparam dir_grad specifies the gradient direction (IX, IY or IZ)
+ * dir_grad controls the indexes used to adress the output array.
+ *
  */
-template<int dim, int N, int dir>
+template<int dim, int N, int dir, int dir_grad>
 class Interpolate_velocity_gradients_Sol2Flux_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
@@ -845,7 +851,7 @@ public:
 
   /**
    * \param[in] UdataSol array of a velocity gradient array at solution points (either Ugradx_v, Ugrady_v or Ugradz_v).
-   * \param[out] UdataFlux array of velocity gradient interpolated at flux points.
+   * \param[out] UdataFlux array of velocity gradients interpolated at flux points.
    *
    * Please note that velocity components in the flux out array must be addressed through 
    * indexes defined in enum class VarIndexGrad2d and VarIndexGrad3d.
@@ -881,13 +887,15 @@ public:
 
     solution_values_t sol;
     flux_values_t     flux;
-    
+
     // loop over cell DoF's
     if (dir == IX) {
 
       const Kokkos::Array<int,2> ivar_in_list  = {IGU,  IGV};
-      const Kokkos::Array<int,2> ivar_out_list = {IGUX, IGVX};
-
+      Kokkos::Array<int,2> ivar_out_list;
+      if (dir_grad == IX) ivar_out_list = {IGUX, IGVX};
+      if (dir_grad == IY) ivar_out_list = {IGUY, IGVY};
+      
       for (int idy=0; idy<N; ++idy) {
 
 	// for each velocity components
@@ -926,7 +934,9 @@ public:
     if (dir == IY) {
 
       const Kokkos::Array<int,2> ivar_in_list  = {IGU,  IGV};
-      const Kokkos::Array<int,2> ivar_out_list = {IGUY, IGVY};
+      Kokkos::Array<int,2> ivar_out_list;
+      if (dir_grad == IX) ivar_out_list = {IGUX, IGVX};
+      if (dir_grad == IY) ivar_out_list = {IGUY, IGVY};
 
       for (int idx=0; idx<N; ++idx) {
 
@@ -989,7 +999,10 @@ public:
     if (dir == IX) {
 
       const Kokkos::Array<int,3> ivar_in_list  = {IGU,  IGV,  IGW};
-      const Kokkos::Array<int,3> ivar_out_list = {IGUX, IGVX, IGWX};
+      Kokkos::Array<int,3> ivar_out_list;
+      if (dir_grad == IX) ivar_out_list = {IGUX, IGVX, IGWX};
+      if (dir_grad == IY) ivar_out_list = {IGUY, IGVY, IGWY};
+      if (dir_grad == IZ) ivar_out_list = {IGUZ, IGVZ, IGWZ};
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
@@ -1030,7 +1043,10 @@ public:
     if (dir == IY) {
 
       const Kokkos::Array<int,3> ivar_in_list  = {IGU,  IGV,  IGW};
-      const Kokkos::Array<int,3> ivar_out_list = {IGUY, IGVY, IGWY};
+      Kokkos::Array<int,3> ivar_out_list;
+      if (dir_grad == IX) ivar_out_list = {IGUX, IGVX, IGWX};
+      if (dir_grad == IY) ivar_out_list = {IGUY, IGVY, IGWY};
+      if (dir_grad == IZ) ivar_out_list = {IGUZ, IGVZ, IGWZ};
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idx=0; idx<N; ++idx) {
@@ -1071,7 +1087,10 @@ public:
     if (dir == IZ) {
 
       const Kokkos::Array<int,3> ivar_in_list  = {IGU,  IGV,  IGW};
-      const Kokkos::Array<int,3> ivar_out_list = {IGUZ, IGVZ, IGWZ};
+      Kokkos::Array<int,3> ivar_out_list;
+      if (dir_grad == IX) ivar_out_list = {IGUX, IGVX, IGWX};
+      if (dir_grad == IY) ivar_out_list = {IGUY, IGVY, IGWY};
+      if (dir_grad == IZ) ivar_out_list = {IGUZ, IGVZ, IGWZ};
 
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
@@ -1111,7 +1130,7 @@ public:
   } // end operator () - 3d
   
   DataArray UdataSol, UdataFlux;
-
+  
 }; // class Interpolate_velocity_gradients_Sol2Flux_Functor
 
 } // namespace sdm
