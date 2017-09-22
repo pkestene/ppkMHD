@@ -1146,9 +1146,15 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
       Kokkos::parallel_for(nbCells, functor);
     }
     
-    // 5. Now at last, one can compute viscous fluxes
+    // 5.1 Now one can compute viscous fluxes at flux points
     {
-      //viscous_flux<dim,N,dir> functor(params, sdm_geom, FUgrad, Udata_fdiv);
+      //ComputeViscousFluxAtFluxPoints_Functor<dim,N,dir> functor(params, sdm_geom, euler, FUgrad, Fluxes);
+      //Kokkos::parallel_for(nbCells, functor);
+    }
+
+    // 5.2 Finally compute derivative and accumulate in Udata_fdiv
+    {
+      //Interpolate_At_SolutionsPoints_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad, Udata_fdiv);
       //Kokkos::parallel_for(nbCells, functor);
     }
     
