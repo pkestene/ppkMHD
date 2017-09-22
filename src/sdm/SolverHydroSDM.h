@@ -1080,7 +1080,19 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
 
     // 2. average velocity at cell borders
     {
-      Average_velocity_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad);
+      int nvar_to_average = dim;
+      var_index_t var_index;
+      if (dim==2) {
+	var_index[0] = (int) VarIndexGrad2d::IGU;
+	var_index[1] = (int) VarIndexGrad2d::IGV;
+      } else {
+	var_index[0] = (int) VarIndexGrad3d::IGU;
+	var_index[1] = (int) VarIndexGrad3d::IGV;
+	var_index[2] = (int) VarIndexGrad3d::IGW;
+      }
+      
+      Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad,
+								   nvar_to_average, var_index);
       Kokkos::parallel_for(nbCells, functor);
     }
 
@@ -1107,8 +1119,31 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
 
     // 4. average velocity gradients at cell border
     {
-      //Average_velocity_gradients_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad);
-      //Kokkos::parallel_for(nbCells, functor);
+      int nvar_to_average = dim*dim;
+      var_index_t var_index;
+      if (dim==2) {
+	var_index[0] = (int) VarIndexGrad2d::IGUX;
+	var_index[1] = (int) VarIndexGrad2d::IGVX;
+
+	var_index[2] = (int) VarIndexGrad2d::IGUY;
+	var_index[3] = (int) VarIndexGrad2d::IGVY;
+      } else {
+	var_index[0] = (int) VarIndexGrad3d::IGUX;
+	var_index[1] = (int) VarIndexGrad3d::IGVX;
+	var_index[2] = (int) VarIndexGrad3d::IGWX;
+
+	var_index[3] = (int) VarIndexGrad3d::IGUY;
+	var_index[4] = (int) VarIndexGrad3d::IGVY;
+	var_index[5] = (int) VarIndexGrad3d::IGWY;
+
+	var_index[6] = (int) VarIndexGrad3d::IGUZ;
+	var_index[7] = (int) VarIndexGrad3d::IGVZ;
+	var_index[8] = (int) VarIndexGrad3d::IGWZ;
+      }
+      
+      Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad,
+								   nvar_to_average, var_index);
+      Kokkos::parallel_for(nbCells, functor);
     }
     
     // 5. Now at last, one can compute viscous fluxes
@@ -1146,7 +1181,19 @@ void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArra
 
   // 2. average velocity at cell borders
   {
-    Average_velocity_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, Fluxes);
+    int nvar_to_average = dim;
+    var_index_t var_index;
+    if (dim==2) {
+      var_index[0] = (int) VarIndexGrad2d::IGU;
+      var_index[1] = (int) VarIndexGrad2d::IGV;
+    } else {
+      var_index[0] = (int) VarIndexGrad3d::IGU;
+      var_index[1] = (int) VarIndexGrad3d::IGV;
+      var_index[2] = (int) VarIndexGrad3d::IGW;
+    }
+    
+    Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, Fluxes,
+								 nvar_to_average, var_index);
     Kokkos::parallel_for(nbCells, functor);
   }
   

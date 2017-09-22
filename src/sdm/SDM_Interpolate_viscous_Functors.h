@@ -23,7 +23,7 @@ namespace sdm {
  * This functor takes as an input conservative variables
  * at solution points and perform interpolation of velocities
  * at flux points. What happends at cell borders is the subject
- * of an another functor : Average_velocity_at_cell_borders_functor
+ * of an another functor : Average_component_at_cell_borders_functor
  *
  * It is essentially a wrapper arround interpolation method sol2flux_vector.
  *
@@ -311,20 +311,25 @@ public:
 
 }; // class Interpolate_velocities_Sol2Flux_Functor
 
+//! typedef used in functors performing average at cell borders
+using var_index_t = Kokkos::Array<int,16>;
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 /**
  * This functor takes as an input a flux array, and perform
- * a simple average (half sum) of the velocity components at cell borders.
+ * a simple average (half sum) of some components of the input data array
+ * at cell borders.
+ *
+ * The primary use of this functor is to average velocity components, but can be other fields.
  *
  * Please note that velocity components in the flux in,out array must be addressed through 
  * IGU, IGV, IGW defined in enum class VarIndexGrad2d and VarIndexGrad3d.
  *
  */
 template<int dim, int N, int dir>
-class Average_velocity_at_cell_borders_Functor : public SDMBaseFunctor<dim,N> {
+class Average_component_at_cell_borders_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
@@ -342,11 +347,15 @@ public:
    * \param[in] sdm_geom
    * \param[in,out] UdataFlux a flux array
    */
-  Average_velocity_at_cell_borders_Functor(HydroParams         params,
-					   SDM_Geometry<dim,N> sdm_geom,
-					   DataArray           UdataFlux) :
+  Average_component_at_cell_borders_Functor(HydroParams         params,
+					    SDM_Geometry<dim,N> sdm_geom,
+					    DataArray           UdataFlux,
+					    int                 nbvar,
+					    var_index_t         var_index) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
-    UdataFlux(UdataFlux)
+    UdataFlux(UdataFlux),
+    nbvar(nbvar),
+    var_index()
   {};
 
   
@@ -381,7 +390,9 @@ public:
 	// just deals with the left cell border
 	for (int idy=0; idy<N; ++idy) {
 
-	  for (int ivar : { IGU,IGV } ) {
+	  for (int iv = 0; iv<nbvar; iv++) {
+	    int ivar = var_index[iv];
+	    
 	    dataL = UdataFlux(i-1,j, dofMapF(N,idy,0,ivar));
 	    dataR = UdataFlux(i  ,j, dofMapF(0,idy,0,ivar));
 	    data_average = 0.5*(dataL + dataR);
@@ -406,7 +417,9 @@ public:
 	// just deals with the left cell border
 	for (int idx=0; idx<N; ++idx) {
 
-	  for (int ivar : { IGU,IGV } ) {
+	  for (int iv = 0; iv<nbvar; iv++) {
+	    int ivar = var_index[iv];
+	    
 	    dataL = UdataFlux(i,j-1, dofMapF(idx,N,0,ivar));
 	    dataR = UdataFlux(i,j  , dofMapF(idx,0,0,ivar));
 	    data_average = 0.5*(dataL + dataR);
@@ -455,7 +468,9 @@ public:
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idy=0; idy<N; ++idy) {
 
-	    for (int ivar : { IGU,IGV,IGW } ) {
+	    for (int iv = 0; iv<nbvar; iv++) {
+	      int ivar = var_index[iv];
+
 	      dataL = UdataFlux(i-1,j, k, dofMapF(N,idy,idz,ivar));
 	      dataR = UdataFlux(i  ,j, k, dofMapF(0,idy,idz,ivar));
 	      data_average = 0.5*(dataL + dataR);
@@ -482,7 +497,9 @@ public:
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    for (int ivar : { IGU,IGV,IGW } ) {
+	    for (int iv = 0; iv<nbvar; iv++) {
+	      int ivar = var_index[iv];
+
 	      dataL = UdataFlux(i,j-1, k, dofMapF(idx,N,idz,ivar));
 	      dataR = UdataFlux(i,j  , k, dofMapF(idx,0,idz,ivar));
 	      data_average = 0.5*(dataL + dataR);
@@ -509,7 +526,9 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
 
-	    for (int ivar : { IGU,IGV,IGW } ) {
+	    for (int iv = 0; iv<nbvar; iv++) {
+	      int ivar = var_index[iv];
+
 	      dataL = UdataFlux(i,j, k-1, dofMapF(idx,idy,N,ivar));
 	      dataR = UdataFlux(i,j, k  , dofMapF(idx,idy,0,ivar));
 	      data_average = 0.5*(dataL + dataR);
@@ -528,7 +547,13 @@ public:
     
   DataArray UdataFlux;
 
-}; // class Average_velocity_at_cell_borders_Functor
+  /** number of variables to average */
+  int nbvar;
+
+  /** array of integer, to index component of UdataFlux to be averaged */
+  var_index_t var_index;
+  
+}; // class Average_component_at_cell_borders_Functor
 
 /*************************************************/
 /*************************************************/
@@ -536,7 +561,7 @@ public:
 /**
  * This functor takes as an input a fluxes data array (only IU,IV, IW are used)
  * containing velocity at flux points, supposed to be continuous at flux points (i.e.
- * an array ouput by function Average_velocity_at_cell_borders_Functor)
+ * an array ouput by function Average_component_at_cell_borders_Functor)
  * and perform interpolation of velocity gradients at solution points.
  *
  * Only one direction of gradient is considered (specified as template parameter dir).
@@ -808,7 +833,7 @@ public:
  * This functor takes as an input velocity gradients
  * at solution points and perform interpolation at flux points. 
  * What happends at cell borders is the subject
- * of an another functor : Average_velocity_gradient_at_cell_borders_functor
+ * of an another functor : Average_component_gradient_at_cell_borders_functor
  *
  * Please note that velocity components in the flux out array must be addressed through 
  * indexes defined in enum class VarIndexGrad2d and VarIndexGrad3d.
