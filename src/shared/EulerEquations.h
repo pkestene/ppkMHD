@@ -49,13 +49,11 @@ struct EulerEquations<2>
   //! velocity gradient tensor number of components
   static const int nbvar_grad = 2*2;
   
-  //! velocity gradient components
-  enum gradientV_IDS {
-    U_X = 0,
-    U_Y = 1,
-    V_X = 2,
-    V_Y = 3
-  };
+  static constexpr int U_X = (int) gradientV_IDS_2d::U_X;
+  static constexpr int U_Y = (int) gradientV_IDS_2d::U_Y;
+
+  static constexpr int V_X = (int) gradientV_IDS_2d::V_X;
+  static constexpr int V_Y = (int) gradientV_IDS_2d::V_Y;
 
   //! alias typename to an array holding gradient velocity tensor components
   using GradTensor = Kokkos::Array<real_t,nbvar_grad>;
@@ -200,7 +198,8 @@ struct EulerEquations<2>
   static
   KOKKOS_INLINE_FUNCTION
   void flux_visc_x(const GradTensor& g,
-		   const Vector& v, const Vector& f,
+		   const Vector& v,
+		   const Vector& f,
 		   real_t mu,
 		   HydroState& flux)
   {
@@ -228,7 +227,8 @@ struct EulerEquations<2>
   static
   KOKKOS_INLINE_FUNCTION
   void flux_visc_y(const GradTensor& g,
-		   const Vector& v, const Vector& f,
+		   const Vector& v,
+		   const Vector& f,
 		   real_t mu,
 		   HydroState& flux)
   {
@@ -443,18 +443,17 @@ struct EulerEquations<3>
   //! velocity gradient tensor number of components
   static const int nbvar_grad = 3*3;
 
-  //! velocity gradient components
-  enum gradientV_IDS {
-    U_X = 0,
-    U_Y = 1,
-    U_Z = 2,
-    V_X = 3,
-    V_Y = 4,
-    V_Z = 5,
-    W_X = 6,
-    W_Y = 7,
-    W_Z = 8
-  };
+  static constexpr int U_X = (int) gradientV_IDS_3d::U_X;
+  static constexpr int U_Y = (int) gradientV_IDS_3d::U_Y;
+  static constexpr int U_Z = (int) gradientV_IDS_3d::U_Z;
+
+  static constexpr int V_X = (int) gradientV_IDS_3d::V_X;
+  static constexpr int V_Y = (int) gradientV_IDS_3d::V_Y;
+  static constexpr int V_Z = (int) gradientV_IDS_3d::V_Z;
+
+  static constexpr int W_X = (int) gradientV_IDS_3d::W_X;
+  static constexpr int W_Y = (int) gradientV_IDS_3d::W_Y;
+  static constexpr int W_Z = (int) gradientV_IDS_3d::W_Z;
 
   //! alias typename to an array holding gradient velocity tensor components
   using GradTensor = Kokkos::Array<real_t,nbvar_grad>;

@@ -46,8 +46,8 @@ enum VarIndex {
 
 //! enum class to enumerate field location in a velocity / velocity tensor gradient array in 2d at flux points
 enum class VarIndexGrad2d {
-  IGU  = 0, /* x-component of velocity gradient */
-  IGV  = 1, /* y-component of velocity gradient */
+  IGU  = 0, /* x-component of velocity */
+  IGV  = 1, /* y-component of velocity */
   IGW  =-1, /* UNUSED */
   IGUX = 2, /* partial U over partial x */
   IGUY = 3, /* partial U over partial y */
@@ -63,9 +63,9 @@ enum class VarIndexGrad2d {
 
 //! enum class to enumerate field location in a velocity / velocity tensor gradient array in 3d at flux points
 enum class VarIndexGrad3d {
-  IGU  = 0, /* x-component of velocity gradient */
-  IGV  = 1, /* y-component of velocity gradient */
-  IGW  = 2, /* z-component of velocity gradient */
+  IGU  = 0, /* x-component of velocity */
+  IGV  = 1, /* y-component of velocity */
+  IGW  = 2, /* z-component of velocity */
   IGUX = 3, /* partial U over partial x */
   IGUY = 4, /* partial U over partial y */
   IGUZ = 5, /* partial U over partial z */
@@ -78,6 +78,35 @@ enum class VarIndexGrad3d {
   IGT  =12  /* temperature gradient component */
 };
 
+//! velocity gradient tensor components in 2d
+enum class gradientV_IDS_2d {
+  U_X =  0,
+  U_Y =  1,
+  U_Z = -1,
+
+  V_X =  2,
+  V_Y =  3,
+  V_Z = -1,
+
+  W_X = -1,
+  W_Y = -1,
+  W_Z = -1,
+}; // enum class gradientV_IDS_2d
+
+//! velocity gradient tensor components in 3d
+enum class gradientV_IDS_3d {
+  U_X = 0,
+  U_Y = 1,
+  U_Z = 2,
+    
+  V_X = 3,
+  V_Y = 4,
+  V_Z = 5,
+    
+  W_X = 6,
+  W_Y = 7,
+  W_Z = 8
+}; // enum class gradientV_IDS_3d
 
 //! face index
 enum FaceIdType {
