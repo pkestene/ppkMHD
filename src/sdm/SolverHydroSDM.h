@@ -27,10 +27,14 @@
 // sdm functors (where the action takes place)
 #include "sdm/HydroInitFunctors.h"
 #include "sdm/SDM_Dt_Functor.h"
+
 #include "sdm/SDM_Interpolate_Functors.h"
 #include "sdm/SDM_Interpolate_viscous_Functors.h"
+
 #include "sdm/SDM_Flux_Functors.h"
+#include "sdm/SDM_Viscous_Flux_Functors.h"
 #include "sdm/SDM_Flux_with_Limiter_Functors.h"
+
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
 #include "sdm/SDM_Boundaries_Functors_Wedge.h"
@@ -1065,102 +1069,95 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
   // i.e. calls to compute_velocity_gradients have been made, that is Ugradx_v, Ugrady_v, Ugradz_v
   // are populated
   
-  //
-  // Dir X
-  //
-  if (dir == IX) {
-
-    // 1. interpolate all velocity components from solution to flux points in the given direction
-    //    this will fill component IGU, IGV, IGW of FUgrad
-    {
-      Interpolate_velocities_Sol2Flux_Functor<dim,N,dir> functor(params, sdm_geom,
-								 Udata,  FUgrad);
-      Kokkos::parallel_for(nbCells, functor);
+  // 1. interpolate all velocity components from solution to flux points in the given direction
+  //    this will fill component IGU, IGV, IGW of FUgrad
+  {
+    Interpolate_velocities_Sol2Flux_Functor<dim,N,dir> functor(params, sdm_geom,
+							       Udata,  FUgrad);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 2. average velocity at cell borders
+  {
+    int nvar_to_average = dim;
+    var_index_t var_index;
+    if (dim==2) {
+      var_index[0] = (int) VarIndexGrad2d::IGU;
+      var_index[1] = (int) VarIndexGrad2d::IGV;
+    } else {
+      var_index[0] = (int) VarIndexGrad3d::IGU;
+      var_index[1] = (int) VarIndexGrad3d::IGV;
+      var_index[2] = (int) VarIndexGrad3d::IGW;
     }
-
-    // 2. average velocity at cell borders
-    {
-      int nvar_to_average = dim;
-      var_index_t var_index;
-      if (dim==2) {
-	var_index[0] = (int) VarIndexGrad2d::IGU;
-	var_index[1] = (int) VarIndexGrad2d::IGV;
-      } else {
-	var_index[0] = (int) VarIndexGrad3d::IGU;
-	var_index[1] = (int) VarIndexGrad3d::IGV;
-	var_index[2] = (int) VarIndexGrad3d::IGW;
-      }
+    
+    Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad,
+								 nvar_to_average, var_index);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 3.1. interpolate velocity gradients-x from solution points to flux points
+  {
+    Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IX> functor(params, sdm_geom,
+									  Ugradx_v, FUgrad);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 3.2. interpolate velocity gradients-y from solution points to flux points
+  {
+    Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IY> functor(params, sdm_geom,
+									  Ugrady_v, FUgrad);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 3.3. interpolate velocity gradients-z from solution points to flux points
+  if (dim==3) {
+    Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IZ> functor(params, sdm_geom,
+									  Ugradz_v, FUgrad);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 4. average velocity gradients at cell border
+  {
+    int nvar_to_average = dim*dim;
+    var_index_t var_index;
+    if (dim==2) {
+      var_index[0] = (int) VarIndexGrad2d::IGUX;
+      var_index[1] = (int) VarIndexGrad2d::IGVX;
       
-      Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad,
-								   nvar_to_average, var_index);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-
-    // 3.1. interpolate velocity gradients-x from solution points to flux points
-    {
-      Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IX> functor(params, sdm_geom,
-									    Ugradx_v, FUgrad);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-    
-    // 3.2. interpolate velocity gradients-y from solution points to flux points
-    {
-      Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IY> functor(params, sdm_geom,
-									    Ugrady_v, FUgrad);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-
-    // 3.3. interpolate velocity gradients-z from solution points to flux points
-    if (dim==3) {
-      Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IZ> functor(params, sdm_geom,
-									    Ugradz_v, FUgrad);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-
-    // 4. average velocity gradients at cell border
-    {
-      int nvar_to_average = dim*dim;
-      var_index_t var_index;
-      if (dim==2) {
-	var_index[0] = (int) VarIndexGrad2d::IGUX;
-	var_index[1] = (int) VarIndexGrad2d::IGVX;
-
-	var_index[2] = (int) VarIndexGrad2d::IGUY;
-	var_index[3] = (int) VarIndexGrad2d::IGVY;
-      } else {
-	var_index[0] = (int) VarIndexGrad3d::IGUX;
-	var_index[1] = (int) VarIndexGrad3d::IGVX;
-	var_index[2] = (int) VarIndexGrad3d::IGWX;
-
-	var_index[3] = (int) VarIndexGrad3d::IGUY;
-	var_index[4] = (int) VarIndexGrad3d::IGVY;
-	var_index[5] = (int) VarIndexGrad3d::IGWY;
-
-	var_index[6] = (int) VarIndexGrad3d::IGUZ;
-	var_index[7] = (int) VarIndexGrad3d::IGVZ;
-	var_index[8] = (int) VarIndexGrad3d::IGWZ;
-      }
+      var_index[2] = (int) VarIndexGrad2d::IGUY;
+      var_index[3] = (int) VarIndexGrad2d::IGVY;
+    } else {
+      var_index[0] = (int) VarIndexGrad3d::IGUX;
+      var_index[1] = (int) VarIndexGrad3d::IGVX;
+      var_index[2] = (int) VarIndexGrad3d::IGWX;
       
-      Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad,
-								   nvar_to_average, var_index);
-      Kokkos::parallel_for(nbCells, functor);
+      var_index[3] = (int) VarIndexGrad3d::IGUY;
+      var_index[4] = (int) VarIndexGrad3d::IGVY;
+      var_index[5] = (int) VarIndexGrad3d::IGWY;
+      
+      var_index[6] = (int) VarIndexGrad3d::IGUZ;
+      var_index[7] = (int) VarIndexGrad3d::IGVZ;
+      var_index[8] = (int) VarIndexGrad3d::IGWZ;
     }
     
-    // 5.1 Now one can compute viscous fluxes at flux points
-    {
-      //ComputeViscousFluxAtFluxPoints_Functor<dim,N,dir> functor(params, sdm_geom, euler, FUgrad, Fluxes);
-      //Kokkos::parallel_for(nbCells, functor);
-    }
-
-    // 5.2 Finally compute derivative and accumulate in Udata_fdiv
-    {
-      //Interpolate_At_SolutionsPoints_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad, Udata_fdiv);
-      //Kokkos::parallel_for(nbCells, functor);
-    }
-    
-  } // end dir IX
-
-} // 
+    Average_component_at_cell_borders_Functor<dim,N,dir> functor(params, sdm_geom, FUgrad,
+								 nvar_to_average, var_index);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 5.1 Now one can compute viscous fluxes at flux points
+  {
+    ComputeViscousFluxAtFluxPoints_Functor<dim,N,dir> functor(params, sdm_geom, euler, FUgrad, Fluxes);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  // 5.2 Finally compute derivative and accumulate (with negative sign) in Udata_fdiv
+  {
+    Interpolate_At_SolutionPoints_Functor<dim,N,dir,INTERPOLATE_DERIVATIVE_NEGATIVE> functor(params, sdm_geom, FUgrad, Udata_fdiv);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+} // SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir
 
 // =======================================================
 // =======================================================
