@@ -1,5 +1,5 @@
-#ifndef PPKMHDH_UTILS_H
-#define PPKMHDH_UTILS_H
+#ifndef PPKMHD_UTILS_H
+#define PPKMHD_UTILS_H
 
 #include <math.h>
 #include <iosfwd>
