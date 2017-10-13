@@ -47,7 +47,7 @@ target_include_directories(io
   ${CMAKE_SOURCE_DIR}/src
   )
 target_link_libraries(io
-  kokkos
+  kokkos shared
   )
 if (USE_HDF5)
   target_link_libraries(io
