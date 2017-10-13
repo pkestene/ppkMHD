@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 project(ppkMHD CXX C)
 
 # options
-option (USE_MPI "Activate / want MPI build" ON)
+option (USE_MPI "Activate / want MPI build" OFF)
 option (USE_VTK "Activate / want VTK build" OFF)
 option (USE_DOUBLE "build with double precision" ON)
 option (USE_MOOD "build MOOD numerical schemes" OFF)
@@ -125,7 +125,7 @@ endif(USE_MPI)
 if (USE_HDF5)
   find_package(HDF5)
   if(HDF5_FOUND)
-    include_directories(${HDF5_INCLUDE_DIR})
+    include_directories(${HDF5_INCLUDE_DIRS})
     set(my_hdf5_libs hdf5 hdf5_cpp)
     set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_HDF5")
     if (HDF5_IS_PARALLEL)
@@ -217,6 +217,10 @@ add_definitions( -Wall )
 # sources
 #
 add_subdirectory(kokkos)
+
+# pass Kokkos include directories to our target application
+include_directories(${Kokkos_INCLUDE_DIRS_RET})
+
 add_subdirectory(test)
 add_subdirectory(src)
 
@@ -232,6 +236,7 @@ message(STATUS "PNETCDF  enabled : ${USE_PNETCDF}")
 message(STATUS "SDM      enabled : ${USE_SDM}")
 message(STATUS "MOOD     enabled : ${USE_MOOD}")
 message(STATUS "DOUBLE precision : ${USE_DOUBLE}")
+message(STATUS "HWLOC    enabled : ${KOKKOS_ENABLE_HWLOC}")
 
 message(STATUS "****************** *************** ******************")
 
