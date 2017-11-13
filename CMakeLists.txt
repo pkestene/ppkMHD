@@ -78,6 +78,9 @@ if (USE_MPI)
     find_program(OMPI_INFO
       NAMES ompi_info
       HINTS ${MPI_CXX_LIBRARIES}/../bin)
+
+    # Full command line to probe if cuda support in MPI implementation is enabled
+    # ompi_info --parsable --all | grep mpi_built_with_cuda_support:value
     if (OMPI_INFO)
       execute_process(COMMAND ${OMPI_INFO}
         OUTPUT_VARIABLE _output)
@@ -100,8 +103,10 @@ endif()
 # /usr/lib/cmake/vtk-6.2/VTKConfig.cmake
 # /usr/lib/cmake/vtk-6.2/UseVTK.cmake
 #####################################################################
-find_package(VTK)
 if (USE_VTK)
+  # look for VTK only if requested; VTK macro might even be not present
+  # on the target platform
+  find_package(VTK)
 
   # the following add VTK to all targets
   # if(VTK_FOUND)
