@@ -70,8 +70,8 @@ void test_lagrange_derivative()
   std::cout << "1D lagrange derivative interpolation (flux to solution points):\n";
   
   // create values at solution points:
-  using DataVal     = Kokkos::View<real_t*,DEVICE>;
-  using DataValHost = Kokkos::View<real_t*,DEVICE>::HostMirror;
+  using DataVal     = Kokkos::View<real_t*,Device>;
+  using DataValHost = Kokkos::View<real_t*,Device>::HostMirror;
 
   DataVal     solution_values   = DataVal("solution_values",N);
   DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
@@ -82,7 +82,7 @@ void test_lagrange_derivative()
   for (int i=0; i<N+1; ++i)
     flux_values_h(i) = f(sdm_geom.flux_pts_1d_host(i));
 
-  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrix     = Kokkos::View<real_t **, Device>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
   
   LagrangeMatrixHost flux2sol_derivative_h = Kokkos::create_mirror(sdm_geom.flux2sol_derivative);

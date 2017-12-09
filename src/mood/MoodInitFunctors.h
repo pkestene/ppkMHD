@@ -681,8 +681,8 @@ public:
   KHParams         khParams;
 
   // random number generator
-  Kokkos::Random_XorShift64_Pool<DEVICE> rand_pool;
-  typedef typename Kokkos::Random_XorShift64_Pool<DEVICE>::generator_type rand_type;
+  Kokkos::Random_XorShift64_Pool<Device> rand_pool;
+  typedef typename Kokkos::Random_XorShift64_Pool<Device>::generator_type rand_type;
   
 }; // class InitKelvinHelmholtzFunctor
 

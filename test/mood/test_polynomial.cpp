@@ -23,7 +23,7 @@ using scalar_t = Kokkos::View<double[1]>;
 using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
 
 real_t polynomial_eval(real_t x, real_t y,
-		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::View<int**,Device>::HostMirror monomMap,
 		       Kokkos::View<double*,Kokkos::OpenMP> coefs)  {
   
   real_t result = 0;
@@ -40,7 +40,7 @@ real_t polynomial_eval(real_t x, real_t y,
 }; // eval 2D
 
 real_t polynomial_eval(real_t x, real_t y, real_t z,
-		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::View<int**,Device>::HostMirror monomMap,
 		       Kokkos::View<double*,Kokkos::OpenMP> coefs)  {
   
   real_t result = 0;

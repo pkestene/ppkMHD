@@ -71,8 +71,8 @@ void test_lagrange_derivative()
   std::cout << "1D lagrange derivative evaluation (at solution points):\n";
 
   // some useful types to hold values at solution points
-  using DataVal     = Kokkos::View<real_t*,DEVICE>;
-  using DataValHost = Kokkos::View<real_t*,DEVICE>::HostMirror;
+  using DataVal     = Kokkos::View<real_t*,Device>;
+  using DataValHost = Kokkos::View<real_t*,Device>::HostMirror;
 
   DataVal     solution_values   = DataVal("solution_values",N);
   DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
@@ -82,7 +82,7 @@ void test_lagrange_derivative()
     solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
 
   // some useful types (the same as in SDM_Geometry class)
-  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrix     = Kokkos::View<real_t **, Device>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
 
   // retrieve on host the Lagrange polynomial derivative matrix

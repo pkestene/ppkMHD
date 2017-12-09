@@ -28,7 +28,7 @@ public:
   static constexpr int ncoefs = mood::binomial<degree+dim,degree>();
 
   //! typedef for data map
-  using MonomMap = Kokkos::View<int[ncoefs][dim], DEVICE>;
+  using MonomMap = Kokkos::View<int[ncoefs][dim], Device>;
   using MonomMapHost = typename MonomMap::HostMirror; 
   
   //! store the exponent of each variable in a monomials, for all monomials.

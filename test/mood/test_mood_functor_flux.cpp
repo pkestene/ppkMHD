@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
     mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
     //geomMatrixPI.print("geomMatrix pseudo inverse");
 
-    using geom_t = Kokkos::View<real_t**,DEVICE>;
+    using geom_t = Kokkos::View<real_t**,Device>;
     using geom_host_t = geom_t::HostMirror;
 
     geom_t geomMatrixPI_view = geom_t("geomMatrixPI_view",geomMatrixPI.m,geomMatrixPI.n);
@@ -467,7 +467,7 @@ int main(int argc, char* argv[])
     mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
     geomMatrixPI.print("geomMatrix pseudo inverse");
 
-    using geom_t = Kokkos::View<real_t**,DEVICE>;
+    using geom_t = Kokkos::View<real_t**,Device>;
     using geom_host_t = geom_t::HostMirror;
 
     geom_t geomMatrixPI_view = geom_t("geomMatrixPI_view",geomMatrixPI.m,geomMatrixPI.n);

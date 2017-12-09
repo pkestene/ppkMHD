@@ -33,15 +33,15 @@ constexpr int ncoefs = mood::binomial<degree+dim,degree>();
 constexpr mood::STENCIL_ID stencilId_ = mood::STENCIL_3D_DEGREE5;
 
 // to be removed ...
-using result_t = Kokkos::View<real_t*,DEVICE>;
+using result_t = Kokkos::View<real_t*,Device>;
 using result_host_t = result_t::HostMirror;
 
-using geom_t = Kokkos::View<real_t**,DEVICE>;
+using geom_t = Kokkos::View<real_t**,Device>;
 using geom_host_t = geom_t::HostMirror;
 
 using coefs_t = Kokkos::Array<real_t,ncoefs>;
 
-using array1d_t = Kokkos::View<real_t*,DEVICE>;
+using array1d_t = Kokkos::View<real_t*,Device>;
 
 // ====================================================
 // ====================================================
@@ -58,7 +58,7 @@ real_t test_function_3d(real_t x, real_t y, real_t z)
 
 template<int N>
 real_t polynomial_eval(real_t x, real_t y,
-		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::View<int**,Device>::HostMirror monomMap,
 		       Kokkos::Array<real_t,N> coefs)  {
   
   real_t result = 0;
@@ -76,7 +76,7 @@ real_t polynomial_eval(real_t x, real_t y,
 
 template<int N>
 real_t polynomial_eval(real_t x, real_t y, real_t z,
-		       Kokkos::View<int**,DEVICE>::HostMirror monomMap,
+		       Kokkos::View<int**,Device>::HostMirror monomMap,
 		       Kokkos::Array<real_t,N> coefs)  {
   
   real_t result = 0;

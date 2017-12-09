@@ -70,13 +70,13 @@ public:
   static const int N = order;
   
   //! for 1D quadrature location
-  using PointsArray1D = Kokkos::View<real_t*, DEVICE>;
+  using PointsArray1D = Kokkos::View<real_t*, Device>;
 
   //! for 2D solution/flux location
-  using PointsArray2D = Kokkos::View<real_t**[2], DEVICE>;
+  using PointsArray2D = Kokkos::View<real_t**[2], Device>;
 
   //! for 3D solution/flux location
-  using PointsArray3D = Kokkos::View<real_t***[3], DEVICE>;
+  using PointsArray3D = Kokkos::View<real_t***[3], Device>;
 
   //! generic alias
   using PointsArray   = typename std::conditional<dim==2,PointsArray2D,PointsArray3D>::type;
@@ -88,7 +88,7 @@ public:
   using PointsArrayHost   = typename PointsArray::HostMirror;
 
   //! Lagrange interpolation matrix type
-  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrix     = Kokkos::View<real_t **, Device>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
   
   SDM_Geometry() {};

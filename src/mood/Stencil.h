@@ -301,7 +301,7 @@ struct Stencil {
    * first dimension is the neighbor index
    * second dimension is the coordinate index
    */
-  using StencilArray     = Kokkos::View<int*[3], DEVICE>;
+  using StencilArray     = Kokkos::View<int*[3], Device>;
   using StencilArrayHost = StencilArray::HostMirror;
   
   //! number identify stencil (values from enum STENCIL_ID)

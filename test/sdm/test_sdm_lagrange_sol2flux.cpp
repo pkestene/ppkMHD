@@ -144,15 +144,15 @@ void test_lagrange()
   std::cout << "1D lagrange interpolation solution to flux:\n";
   
   // create values at solution points:
-  using DataVal     = Kokkos::View<real_t*,DEVICE>;
-  using DataValHost = Kokkos::View<real_t*,DEVICE>::HostMirror;
+  using DataVal     = Kokkos::View<real_t*,Device>;
+  using DataValHost = Kokkos::View<real_t*,Device>::HostMirror;
   DataVal     solution_values   = DataVal("solution_values",N);
   DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
 
   for (int i=0; i<N; ++i)
     solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
   
-  using LagrangeMatrix     = Kokkos::View<real_t **, DEVICE>;
+  using LagrangeMatrix     = Kokkos::View<real_t **, Device>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
 
   LagrangeMatrixHost sol2flux_h = Kokkos::create_mirror(sdm_geom.sol2flux);
