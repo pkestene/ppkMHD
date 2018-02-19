@@ -293,8 +293,7 @@ void SolverHydroMuscl<dim>::init_implode(DataArray Udata)
 			      InitImplodeFunctor3D>::type;
 
   // perform init
-  InitImplodeFunctor functor(params, Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitImplodeFunctor::apply(params, Udata, nbCells);
 
 } // SolverHydroMuscl::init_implode
 
@@ -317,8 +316,7 @@ void SolverHydroMuscl<dim>::init_blast(DataArray Udata)
 			      InitBlastFunctor3D>::type;
 
   // perform init
-  InitBlastFunctor functor(params, blastParams, Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitBlastFunctor::apply(params, blastParams, Udata, nbCells);
 
 } // SolverHydroMuscl::init_blast
 
@@ -350,8 +348,7 @@ double SolverHydroMuscl<dim>::compute_dt_local()
 			      ComputeDtFunctor3D>::type;
 
   // call device functor
-  ComputeDtFunctor computeDtFunctor(params, Udata);
-  Kokkos::parallel_reduce(nbCells, computeDtFunctor, invDt);
+  ComputeDtFunctor::apply(params, Udata, nbCells, invDt);
     
   dt = params.settings.cfl/invDt;
 
@@ -435,8 +432,7 @@ void SolverHydroMuscl<dim>::convertToPrimitives(DataArray Udata)
 			      ConvertToPrimitivesFunctor3D>::type;
 
   // call device functor
-  ConvertToPrimitivesFunctor convertToPrimitivesFunctor(params, Udata, Q);
-  Kokkos::parallel_for(nbCells, convertToPrimitivesFunctor);
+  ConvertToPrimitivesFunctor::apply(params, Udata, Q, nbCells);
   
 } // SolverHydroMuscl::convertToPrimitives
 
