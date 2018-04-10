@@ -105,7 +105,7 @@ void riemann_llf(MHDState &qleft,
   
   // compute mean flux
   for (int iVar=0; iVar<MHD_NBVAR; iVar++)
-    flux[iVar] = (qleft[iVar]+qright[iVar])/2;
+    flux[iVar] = (fleft[iVar]+fright[iVar])/2;
 
   // find the largest eigenvalue in the normal direction to the interface
   real_t cleft  = find_speed_info(qleft ,params);
