@@ -1,4 +1,4 @@
-#include "IO_Writer_SDM.h"
+#include "IO_ReadWrite_SDM.h"
 
 #include <shared/HydroParams.h>
 #include <utils/config/ConfigMap.h>

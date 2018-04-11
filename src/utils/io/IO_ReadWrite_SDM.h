@@ -1,5 +1,5 @@
-#ifndef IO_WRITER_SDM_H_
-#define IO_WRITER_SDM_H_
+#ifndef IO_READ_WRITE_SDM_H_
+#define IO_READ_WRITE_SDM_H_
 
 #include <map>
 #include <string>
@@ -13,7 +13,7 @@
 
 #include "sdm/SDM_Geometry.h"
 
-#include "IO_Writer.h"
+#include "IO_ReadWrite.h"
 
 #include "IO_VTK_SDM.h"
 #include "IO_VTK_SDM_Flux.h"
@@ -22,31 +22,31 @@
 namespace ppkMHD { namespace io {
 
 /**
- * Derived IO_Writer specific to Spectral Difference Method needs.
+ * Derived IO_ReadWrite specific to Spectral Difference Method needs.
  */
 template<int dim, int N>
-class IO_Writer_SDM : public IO_Writer {
+class IO_ReadWrite_SDM : public IO_ReadWrite {
 
 public:
   // alias to DataArray2d or DataArray3d
   using DataArray     = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
   using DataArrayHost = typename DataArray::HostMirror;
   
-  IO_Writer_SDM(HydroParams& params,
+  IO_ReadWrite_SDM(HydroParams& params,
 		ConfigMap& configMap,
 		std::map<int, std::string>& variables_names,
 		sdm::SDM_Geometry<dim,N> sdm_geom) :
-    IO_Writer(params, configMap, variables_names),
+    IO_ReadWrite(params, configMap, variables_names),
     sdm_geom(sdm_geom) { };
 
   //! destructor
-  virtual ~IO_Writer_SDM() {};
+  virtual ~IO_ReadWrite_SDM() {};
 
   //! Spectral Difference Method Geometry information
   sdm::SDM_Geometry<dim,N> sdm_geom;
 
   //! this using allow to override base class method without any warning
-  using IO_Writer::save_data_impl;
+  using IO_ReadWrite::save_data_impl;
 
   //! public interface to save data (override base class).
   void save_data_impl(DataArray     Udata,
@@ -83,7 +83,7 @@ public:
     //   }
     // #endif // USE_PNETCDF
     
-  } // IO_Writer_SDM::save_data_impl
+  } // IO_ReadWrite_SDM::save_data_impl
 
   //! public interface to save flux data.
   template<int dir>
@@ -101,12 +101,12 @@ public:
       
     }
     
-  } // IO_Writer_SDM::save_flux
+  } // IO_ReadWrite_SDM::save_flux
     
-}; // class IO_Writer_SDM
+}; // class IO_ReadWrite_SDM
 
 } // namespace io
 
 } // namespace ppkMHD
 
-#endif // IO_WRITER_SDM_H_
+#endif // IO_READ_WRITE_SDM_H_
