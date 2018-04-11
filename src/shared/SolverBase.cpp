@@ -308,6 +308,28 @@ SolverBase::save_data_debug(DataArray2d             U,
 // =======================================================
 // =======================================================
 void
+SolverBase::load_data(DataArray2d             U,
+		      DataArray2d::HostMirror Uh,
+		      int& iStep,
+		      real_t& time)
+{
+  //m_io_reader->load_data(U, Uh, iStep, time, "");
+}
+
+// =======================================================
+// =======================================================
+void
+SolverBase::load_data(DataArray3d             U,
+		      DataArray3d::HostMirror Uh,
+		      int& iStep,
+		      real_t& time)
+{
+  //m_io_reader->load_data(U, Uh, iStep, time, "");
+}
+
+// =======================================================
+// =======================================================
+void
 SolverBase::make_boundary(DataArray2d Udata, FaceIdType faceId, bool mhd_enabled)
 {
 

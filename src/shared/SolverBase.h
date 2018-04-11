@@ -155,6 +155,21 @@ public:
 		       int iStep,
 		       real_t time,
 		       std::string debug_name);
+
+  /** 
+   * Routine to load data from file (for a restart run). 
+   * This routine change iStep and time (loaded from file).
+   */
+  void load_data(DataArray2d             U,
+		 DataArray2d::HostMirror Uh,
+		 int& iStep,
+		 real_t& time);
+  
+  void load_data(DataArray3d             U,
+		 DataArray3d::HostMirror Uh,
+		 int& iStep,
+		 real_t& time);
+  
   
   virtual void make_boundary(DataArray2d Udata, FaceIdType faceId, bool mhd_enabled);
   virtual void make_boundary(DataArray3d Udata, FaceIdType faceId, bool mhd_enabled);
