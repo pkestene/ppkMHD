@@ -24,7 +24,7 @@ enum solver_type_t {
 };
 
 namespace ppkMHD { namespace io {
-class IO_WriterBase;
+class IO_ReadWriteBase;
 } }
 
 enum TimerIds {
@@ -193,12 +193,12 @@ public:
 #endif // USE_MPI
 
   //! initialize m_io_writer (can be override in a derived class)
-  virtual void init_io_writer();
+  virtual void init_io();
   
 protected:
 
   //! io writer
-  std::shared_ptr<io::IO_WriterBase>  m_io_writer;
+  std::shared_ptr<io::IO_ReadWriteBase>  m_io_reader_writer;
 
 #ifdef USE_MPI
   //! \defgroup BorderBuffer data arrays for border exchange handling

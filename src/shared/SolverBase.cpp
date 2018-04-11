@@ -8,7 +8,7 @@
 #include "utils/mpiUtils/MpiCommCart.h"
 #endif // USE_MPI
 
-#include "utils/io/IO_Writer.h"
+#include "utils/io/IO_ReadWrite.h"
 
 namespace ppkMHD {
 
@@ -53,9 +53,9 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
   m_variables_names[IB] = "by"; // mag field Y
   m_variables_names[IC] = "bz"; // mag field Z
 
-  // init io writer is/should/must be called outside of constructor
+  // init io reader/writer is/should/must be called outside of constructor
   // right now we moved that in SolverFactory's method create
-  //init_io_writer();
+  //init_io();
   
 #ifdef USE_MPI
   const int gw = params.ghostWidth;
@@ -101,8 +101,8 @@ SolverBase::SolverBase (HydroParams& params, ConfigMap& configMap) :
 SolverBase::~SolverBase()
 {
 
-  // m_io_writer is now a shared (managed) pointer
-  //delete m_io_writer;
+  // m_io_reader_writer is now a shared (managed) pointer
+  //delete m_io_reader_writer;
   
 } // SolverBase::~SolverBase
 
@@ -279,7 +279,7 @@ SolverBase::save_data(DataArray2d             U,
 		      int iStep,
 		      real_t time)
 {
-  m_io_writer->save_data(U, Uh, iStep, time, "");
+  m_io_reader_writer->save_data(U, Uh, iStep, time, "");
 }
 
 // =======================================================
@@ -290,7 +290,7 @@ SolverBase::save_data(DataArray3d             U,
 		      int iStep,
 		      real_t time)
 {
-  m_io_writer->save_data(U, Uh, iStep, time, "");
+  m_io_reader_writer->save_data(U, Uh, iStep, time, "");
 }
 
 // =======================================================
@@ -302,7 +302,7 @@ SolverBase::save_data_debug(DataArray2d             U,
 			    real_t time,
 			    std::string debug_name)
 {
-  m_io_writer->save_data(U, Uh, iStep, time, debug_name);
+  m_io_reader_writer->save_data(U, Uh, iStep, time, debug_name);
 }
 
 // =======================================================
@@ -953,12 +953,12 @@ SolverBase::copy_boundaries_back(DataArray3d Udata, BoundaryLocation loc)
 
 // =======================================================
 // =======================================================
-void SolverBase::init_io_writer()
+void SolverBase::init_io()
 {
   
-  m_io_writer = std::make_shared<io::IO_Writer>(params, configMap, m_variables_names);
+  m_io_reader_writer = std::make_shared<io::IO_ReadWrite>(params, configMap, m_variables_names);
 
-} // SolverBase::init_io_writer
+} // SolverBase::init_io
 
 // =======================================================
 // =======================================================
@@ -969,7 +969,7 @@ SolverBase::save_data_debug(DataArray3d             U,
 			    real_t time,
 			    std::string debug_name)
 {
-  m_io_writer->save_data(U, Uh, iStep, time, debug_name);
+  m_io_reader_writer->save_data(U, Uh, iStep, time, debug_name);
 }
 
 } // namespace ppkMHD
