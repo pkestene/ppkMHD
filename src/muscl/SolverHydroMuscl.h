@@ -99,6 +99,9 @@ public:
   void init_four_quadrant(DataArray Udata); // 2d only
   void init_isentropic_vortex(DataArray Udata); // 2d only
 
+  //! init restart (load data from file)
+  void init_restart(DataArray Udata);
+  
   //! init wrapper (actual initialization)
   void init(DataArray Udata);
 
