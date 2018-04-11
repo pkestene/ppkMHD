@@ -156,7 +156,7 @@ void test_sdm_flux(int argc, char* argv[])
 
   // initialize the IO_Writer object (normally done in
   // SolverFactory's create method)
-  solver.init_io_writer();
+  solver.init_io();
   
   // init SDM geometry
   sdm::SDM_Geometry<dim,N> sdm_geom;

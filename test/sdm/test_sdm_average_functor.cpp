@@ -24,8 +24,8 @@
 #include "sdm/SDM_Limiter_Functors.h"
 
 // for IO
-#include "utils/io/IO_Writer_SDM.h"
-#include "utils/io/IO_Writer.h"
+#include "utils/io/IO_ReadWrite_SDM.h"
+#include "utils/io/IO_ReadWrite.h"
 
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
@@ -132,9 +132,9 @@ void test_compute_average_functor()
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
-  // initialize the IO_Writer object (normally done in
+  // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
-  solver.init_io_writer();
+  solver.init_io();
   
   // save data just for cross-checking
   solver.save_solution();
@@ -144,8 +144,8 @@ void test_compute_average_functor()
     compute_Uaverage<dim,N>(solver);
 
   // save average data
-  std::shared_ptr<ppkMHD::io::IO_Writer> io_writer_average =
-    std::make_shared<ppkMHD::io::IO_Writer>(params, configMap, solver.m_variables_names);
+  std::shared_ptr<ppkMHD::io::IO_ReadWrite> io_writer_average =
+    std::make_shared<ppkMHD::io::IO_ReadWrite>(params, configMap, solver.m_variables_names);
 
   using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
 

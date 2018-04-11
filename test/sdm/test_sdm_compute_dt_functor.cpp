@@ -16,7 +16,7 @@
 #include "sdm/SDM_Dt_Functor.h"
 
 // for IO
-#include "utils/io/IO_Writer_SDM.h"
+#include "utils/io/IO_ReadWrite_SDM.h"
 
 #ifdef USE_MPI
 #include "utils/mpiUtils/GlobalMpiSession.h"
@@ -96,9 +96,9 @@ void test_compute_dt_functors()
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
-  // initialize the IO_Writer object (normally done in
+  // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
-  solver.init_io_writer();
+  solver.init_io();
   
   // save data just for cross-checking
   solver.save_solution();

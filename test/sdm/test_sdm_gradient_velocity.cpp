@@ -17,7 +17,7 @@
 #include "sdm/SDM_Flux_Functors.h"
 
 // for IO
-#include "utils/io/IO_Writer_SDM.h"
+#include "utils/io/IO_ReadWrite_SDM.h"
 
 #include "test_sdm_gradient_velocity_init.h"
 
@@ -72,9 +72,9 @@ void test_gradient_velocity_functors()
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
-  // initialize the IO_Writer object (normally done in
+  // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
-  solver.init_io_writer();
+  solver.init_io();
 
   int nbCells = dim==2 ?
     params.isize*params.jsize :
@@ -113,10 +113,10 @@ void test_gradient_velocity_functors()
     
     // create an io_writer
     auto io_writer =
-      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
-							 solver.configMap,
-							 var_names_gradx,
-							 solver.sdm_geom);
+      std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
+							    solver.configMap,
+							    var_names_gradx,
+							    solver.sdm_geom);
 
     // actual computation
     solver.template compute_velocity_gradients<IX>(solver.U, solver.Ugradx_v);
@@ -146,10 +146,10 @@ void test_gradient_velocity_functors()
     
     // create an io_writer
     auto io_writer =
-      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
-							 solver.configMap,
-							 var_names_grady,
-							 solver.sdm_geom);
+      std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
+							    solver.configMap,
+							    var_names_grady,
+							    solver.sdm_geom);
 
     // actual computation
     solver.template compute_velocity_gradients<IY>(solver.U, solver.Ugrady_v);
@@ -179,10 +179,10 @@ void test_gradient_velocity_functors()
     
     // create an io_writer
     auto io_writer =
-      std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
-							 solver.configMap,
-							 var_names_gradz,
-							 solver.sdm_geom);
+      std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
+							    solver.configMap,
+							    var_names_gradz,
+							    solver.sdm_geom);
 
     // actual computation
     solver.template compute_velocity_gradients<IZ>(solver.U, solver.Ugradz_v);

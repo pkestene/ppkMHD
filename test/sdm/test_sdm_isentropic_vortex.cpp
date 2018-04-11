@@ -218,7 +218,7 @@ errors_t test_isentropic_vortex(int size, int runge_kutta)
 
   // initialize workspace memory (U, U2, ...)
   sdm::SolverHydroSDM<2,N>* solver = new sdm::SolverHydroSDM<2,N>(params, configMap);
-  solver->init_io_writer();
+  solver->init_io();
   
   if (params.nOutput != 0)
     solver->save_solution();

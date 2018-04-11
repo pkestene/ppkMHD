@@ -75,9 +75,9 @@ void test_sdm_io(int argc, char* argv[])
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
-  // initialize the IO_Writer object (normally done in
+  // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
-  solver.init_io_writer();
+  solver.init_io();
   
   solver.save_solution();
   

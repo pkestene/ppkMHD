@@ -17,7 +17,7 @@
 #include "sdm/SDM_Flux_Functors.h"
 
 // for IO
-#include "utils/io/IO_Writer_SDM.h"
+#include "utils/io/IO_ReadWrite_SDM.h"
 
 //#include "SDMTestFunctors.h"
 #include "test_sdm_flux_functor_init.h"
@@ -75,7 +75,7 @@ void test_flux_functors()
 
   // initialize the IO_Writer object (normally done in
   // SolverFactory's create method)
-  solver.init_io_writer();
+  solver.init_io();
 
   int nbCells = dim==2 ?
     params.isize*params.jsize :
@@ -97,10 +97,10 @@ void test_flux_functors()
   
   // create an io_writer
   auto io_writer =
-    std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(solver.params,
-						       solver.configMap,
-						       solver.m_variables_names,
-						       solver.sdm_geom);
+    std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
+							  solver.configMap,
+							  solver.m_variables_names,
+							  solver.sdm_geom);
   
   DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
 
