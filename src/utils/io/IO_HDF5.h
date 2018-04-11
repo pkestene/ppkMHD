@@ -1308,6 +1308,512 @@ public:
 
 #endif // USE_MPI
 
+// =======================================================
+// =======================================================
+/**
+ * Serial version of load data from a HDF5 file (previously dumped
+ *  with class Save_Hdf5).
+ * Data are computation results (conservative variables)
+ * in HDF5 format.
+ *
+ * \sa Save_HDF5 this class performs HDF5 output
+ *
+ * \note This input routine is designed for re-starting a simulation run.
+ *
+ *
+ * If library HDF5 is not available, do nothing, just print a warning message.
+ *
+ */
+template<DimensionType d>
+class Load_HDF5
+{
+public:
+  //! Decide at compile-time which data array type to use
+  using DataArray  = typename std::conditional<d==TWO_D,DataArray2d,DataArray3d>::type;
+  using DataArrayHost  = typename std::conditional<d==TWO_D,DataArray2dHost,DataArray3dHost>::type;
+  
+  /**
+   *
+   * \param[out]    Udata A Kokkos::View to hydro simulation
+   * \param[in,out] Uhost A host mirror to a Kokkos::View to hydro simulation
+   * \param[in]  params
+   * \param[in]  configMap
+   * \param[in]  nbvar number of scalar fields to read
+   * \param[in]  variable_names map scalar field name to a string
+   * \param[]
+   * \param[in]  filename Name of the input HDF5 file
+   * \param[in]  halfResolution boolean, triggers reading half resolution data
+   *
+   */
+  Load_HDF5(DataArray     Udata,
+	    HydroParams& params,
+	    ConfigMap& configMap,
+	    int nbvar,
+	    const std::map<int, std::string>& variables_names) :
+    Udata(Udata), params(params), configMap(configMap),
+    nbvar(nbvar), variables_names(variables_names),
+    iStep(0), totalTime(0.0)
+  {
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+    const int ghostWidth = params.ghostWidth;
+
+    // make sure Uhost is allocated
+    bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
+
+    // upscale init data from a file twice smaller
+    // in this case we expected that ghost cells are present in input file
+    // we will also have to call upscale
+    bool halfResolution = configMap.getBool("run","restart_upscale",false);
+
+    if (halfResolution) {
+      // allocate Uhost
+      if (d==2) Uhost = DataArrayHost("host_data",
+				      nx/2+2*ghostWidth, 
+				      ny/2+2*ghostWidth,
+                                      nbvar);
+      
+      if (d==3) Uhost = DataArrayHost("host_data",
+				      nx/2+2*ghostWidth, 
+				      ny/2+2*ghostWidth,
+				      nz/2+2*ghostWidth,
+				      nbvar);
+    } else {
+
+      // allocate Uhost
+      if (d==2) Uhost = DataArrayHost("host_data",
+				      nx+2*ghostWidth, 
+				      ny+2*ghostWidth,
+                                      nbvar);
+      
+      if (d==3) Uhost = DataArrayHost("host_data",
+				      nx+2*ghostWidth, 
+				      ny+2*ghostWidth,
+				      nz+2*ghostWidth,
+				      nbvar);
+      
+    }
+
+  }; // end constructor
+  ~Load_HDF5() {};
+
+  int get_istep() {return iStep;}
+  real_t get_totalTime() {return totalTime;}
+
+  /**
+   * \param[in] filename of the restart file
+   *
+   * \note the restart filename could directly read from the input parameter
+   * file, but we chose to pass it to this routine, so that the load function
+   * could be used for other purposes.
+   */
+  void load(std::string filename)
+  {
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+
+    const int ghostWidth = params.ghostWidth;
+
+    const int dimType = params.dimType;
+
+    const bool mhdEnabled = params.mhdEnabled;
+
+    const int nbvar = params.nbvar;
+    
+    bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
+
+    // upscale init data from a file twice smaller
+    // in this case we expected that ghost cells are present in input file
+    bool halfResolution = configMap.getBool("run","restart_upscale",false);
+
+    
+    herr_t status;
+    hid_t  dataset_id;
+
+    // sizes to read
+    int nx_r,  ny_r,  nz_r;  // logical sizes
+    int nx_rg, ny_rg, nz_rg; // sizes with ghost zones included
+
+    if (halfResolution) {
+      nx_r  = nx/2;
+      ny_r  = ny/2;
+      nz_r  = nz/2;
+      
+      nx_rg = nx/2+2*ghostWidth;
+      ny_rg = ny/2+2*ghostWidth;
+      nz_rg = nz/2+2*ghostWidth;
+
+    } else { // use current resolution
+      nx_r  = nx;
+      ny_r  = ny;
+      nz_r  = nz;
+      
+      nx_rg = nx+2*ghostWidth;
+      ny_rg = ny+2*ghostWidth;
+      nz_rg = nz+2*ghostWidth;
+    }
+   
+    /*
+     * Try to read HDF5 file.
+     */
+    
+    /* Open the file */
+    hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    //HDF5_CHECK((file_id >= 0), "H5Fopen "+filename);
+
+    /* build hyperslab handles */
+    /* for data in file */
+    /* for layout in memory */
+    hsize_t  dims_memory[3];
+    hsize_t  dims_file[3];
+    hid_t dataspace_memory, dataspace_file;
+
+    if (ghostIncluded) {
+      
+      if (dimType == TWO_D) {
+	dims_memory[0] = ny_rg;
+	dims_memory[1] = nx_rg;
+
+	dims_file[0]   = ny_rg;
+	dims_file[1]   = nx_rg;
+
+	dataspace_memory = H5Screate_simple(2, dims_memory, NULL);
+	dataspace_file   = H5Screate_simple(2, dims_file  , NULL);
+      } else {
+	dims_memory[0] = nz_rg;
+	dims_memory[1] = ny_rg;
+	dims_memory[2] = nx_rg;
+
+	dims_file[0]   = nz_rg;
+	dims_file[1]   = ny_rg;
+	dims_file[2]   = nx_rg;
+
+	dataspace_memory = H5Screate_simple(3, dims_memory, NULL);
+	dataspace_file   = H5Screate_simple(3, dims_file  , NULL);
+      }
+
+    } else { // no ghost zones
+      
+      if (dimType == TWO_D) {
+	dims_memory[0] = ny_rg; 
+	dims_memory[1] = nx_rg;
+
+	dims_file[0]   = ny_r;
+	dims_file[1]   = nx_r;
+
+	dataspace_memory = H5Screate_simple(2, dims_memory, NULL);
+	dataspace_file   = H5Screate_simple(2, dims_file  , NULL);
+      } else {
+	dims_memory[0] = nz_rg;
+	dims_memory[1] = ny_rg;
+	dims_memory[2] = nx_rg;
+
+	dims_file[0]   = nz_r;
+	dims_file[1]   = ny_r;
+	dims_file[2]   = nx_r;
+
+	dataspace_memory = H5Screate_simple(3, dims_memory, NULL);
+	dataspace_file   = H5Screate_simple(3, dims_file  , NULL);
+      }
+
+    }
+
+
+    /* hyperslab parameters */
+    if (ghostIncluded) {
+      
+      if (dimType == TWO_D) {
+	hsize_t  start[2] = {0, 0}; // ghost zone included
+	hsize_t stride[2] = {1, 1};
+	hsize_t  count[2] = {(hsize_t) ny_rg, (hsize_t) nx_rg};
+	hsize_t  block[2] = {1, 1}; // row-major instead of column-major here
+	status = H5Sselect_hyperslab(dataspace_memory, H5S_SELECT_SET, start, stride, count, block);
+      } else {
+	hsize_t  start[3] = {0, 0, 0}; // ghost zone included
+	hsize_t stride[3] = {1, 1, 1};
+	hsize_t  count[3] = {(hsize_t) nz_rg, (hsize_t) ny_rg, (hsize_t) nx_rg};
+	hsize_t  block[3] = {1, 1, 1}; // row-major instead of column-major here
+	status = H5Sselect_hyperslab(dataspace_memory, H5S_SELECT_SET, start, stride, count, block);
+      }
+      
+    } else {
+
+      if (dimType == TWO_D) {
+	hsize_t  start[2] = {(hsize_t) ghostWidth, (hsize_t) ghostWidth}; // ghost zone width
+	hsize_t stride[2] = {1, 1};
+	hsize_t  count[2] = {(hsize_t) ny_r, (hsize_t) nx_r};
+	hsize_t  block[2] = {1, 1}; // row-major instead of column-major here
+	status = H5Sselect_hyperslab(dataspace_memory, H5S_SELECT_SET, start, stride, count, block);
+      } else {
+	hsize_t  start[3] = {(hsize_t) ghostWidth, (hsize_t) ghostWidth, (hsize_t) ghostWidth}; // ghost zone width
+	hsize_t stride[3] = {1, 1, 1};
+	hsize_t  count[3] = {(hsize_t) nz_r, (hsize_t) ny_r, (hsize_t) nx_r};
+	hsize_t  block[3] = {1, 1, 1}; // row-major instead of column-major here
+	status = H5Sselect_hyperslab(dataspace_memory, H5S_SELECT_SET, start, stride, count, block);      
+      }
+    
+    }
+
+    /* defines data type */
+    hid_t dataType, expectedDataType;
+    if (sizeof(real_t) == sizeof(float))
+      expectedDataType = H5T_NATIVE_FLOAT;
+    else
+      expectedDataType = H5T_NATIVE_DOUBLE;
+    H5T_class_t t_class_expected = H5Tget_class(expectedDataType);
+
+    // pointer to data in memory buffer
+    // must be allocated (TODO)
+    real_t* data;
+
+    /*
+     * open data set and perform read
+     */
+
+    // read density
+    dataset_id = H5Dopen2(file_id, "/density", H5P_DEFAULT);
+    dataType  = H5Dget_type(dataset_id);
+    H5T_class_t t_class = H5Tget_class(dataType);
+    if (t_class != t_class_expected) {
+      std::cerr << "Wrong HDF5 datatype !!\n";
+      std::cerr << "expected     : " << t_class_expected << std::endl;
+      std::cerr << "but received : " << t_class          << std::endl;
+    }
+
+    if (dimType == TWO_D)
+      data = &(Udata(0,0,ID));
+    else
+      data = &(Udata(0,0,0,ID));
+
+    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		     H5P_DEFAULT, data);
+    H5Dclose(dataset_id);
+
+    // read energy
+    dataset_id = H5Dopen2(file_id, "/energy", H5P_DEFAULT);
+
+    if (dimType == TWO_D)
+      data = &(Udata(0,0,IP));
+    else
+      data = &(Udata(0,0,0,IP));
+
+    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		     H5P_DEFAULT, data);
+    H5Dclose(dataset_id);
+
+    // read momentum X
+    dataset_id = H5Dopen2(file_id, "/momentum_x", H5P_DEFAULT);
+
+    if (dimType == TWO_D)
+      data = &(Udata(0,0,IU));
+    else
+      data = &(Udata(0,0,0,IU));
+
+    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		     H5P_DEFAULT, data);
+    H5Dclose(dataset_id);
+
+    // read momentum Y
+    dataset_id = H5Dopen2(file_id, "/momentum_y", H5P_DEFAULT);
+
+    if (dimType == TWO_D)
+      data = &(Udata(0,0,IV));
+    else
+      data = &(Udata(0,0,0,IV));
+
+    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		     H5P_DEFAULT, data);
+    H5Dclose(dataset_id);
+
+    // read momentum Z (only if hydro 3D)
+    if (dimType == THREE_D and !mhdEnabled) {
+      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);
+
+      data = &(Udata(0,0,0,IW));
+      
+      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		       H5P_DEFAULT, data);
+      H5Dclose(dataset_id);
+    }
+
+    if (mhdEnabled) {
+      // read momentum Z
+      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);
+      
+      if (dimType == TWO_D)
+	data = &(Udata(0,0,IW));
+      else
+	data = &(Udata(0,0,0,IW));
+      
+      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		       H5P_DEFAULT, data);
+      H5Dclose(dataset_id);
+
+      // read magnetic field components X
+      dataset_id = H5Dopen2(file_id, "/magnetic_field_x", H5P_DEFAULT);
+      
+      if (dimType == TWO_D)
+	data = &(Udata(0,0,IA));
+      else
+	data = &(Udata(0,0,0,IA));
+      
+      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		       H5P_DEFAULT, data);
+      H5Dclose(dataset_id);
+
+      // read magnetic field components Y
+      dataset_id = H5Dopen2(file_id, "/magnetic_field_y", H5P_DEFAULT);
+      
+      if (dimType == TWO_D)
+	data = &(Udata(0,0,IB));
+      else
+	data = &(Udata(0,0,0,IB));
+      
+      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		       H5P_DEFAULT, data);
+      H5Dclose(dataset_id);
+
+      // read magnetic field components Z
+      dataset_id = H5Dopen2(file_id, "/magnetic_field_z", H5P_DEFAULT);
+      
+      if (dimType == TWO_D)
+	data = &(Udata(0,0,IC));
+      else
+	data = &(Udata(0,0,0,IC));
+      
+      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+		       H5P_DEFAULT, data);
+      H5Dclose(dataset_id);
+
+    } // end mhdEnabled
+
+
+    // read time step attribute
+    int timeStep;
+    hid_t group_id;
+    hid_t attr_id;
+
+    {
+      group_id  = H5Gopen2(file_id, "/", H5P_DEFAULT);
+      attr_id   = H5Aopen(group_id, "time step", H5P_DEFAULT);
+      status    = H5Aread(attr_id, H5T_NATIVE_INT, &timeStep);
+      status    = H5Aclose(attr_id);
+      status    = H5Gclose(group_id);
+    }
+
+    // read totalTime
+    {
+      double readVal;
+      group_id  = H5Gopen2(file_id, "/", H5P_DEFAULT);
+      attr_id   = H5Aopen(group_id, "total time", H5P_DEFAULT);
+      status    = H5Aread(attr_id, H5T_NATIVE_DOUBLE, &readVal);
+      status    = H5Aclose(attr_id);
+      status    = H5Gclose(group_id);
+
+      totalTime = (real_t) readVal;
+    }
+    
+    // close/release resources.
+    //H5Pclose(propList_create_id);
+    H5Sclose(dataspace_memory);
+    H5Sclose(dataspace_file);
+    //H5Dclose(dataset_id);
+    H5Fclose(file_id);
+
+    (void) status;
+
+    // copy host data to device
+    // warning if halfResolution is activated, be careful
+    //Kokkos::deep_copy(Udata, Uhost);
+
+  } // load
+  
+  DataArray     Udata;
+  DataArrayHost Uhost;
+  HydroParams& params;
+  ConfigMap& configMap;
+  int nbvar;
+  const std::map<int, std::string>& variables_names;
+  int iStep;
+  real_t totalTime;
+
+}; // class Load_HDF5
+
+#ifdef USE_MPI
+
+// =======================================================
+// =======================================================
+/**
+ * Parallel version of load data from a HDF5 file (previously dumped
+ *  with class Save_Hdf5).
+ * Data are computation results (conservative variables)
+ * in HDF5 format.
+ *
+ * When MPI is activated, all MPI tasks read the same file and 
+ * extract the corresponding sub-domain.
+ *
+ * \sa Save_HDF5_mpi this class performs HDF5 output
+ *
+ * \note This input routine is designed for re-starting a simulation run.
+ *
+ * If library HDF5 is not available, do nothing, just print a warning message.
+ *
+ */
+template<DimensionType d>
+class Load_HDF5_mpi
+{
+public:
+  //! Decide at compile-time which data array type to use
+  using DataArray  = typename std::conditional<d==TWO_D,DataArray2d,DataArray3d>::type;
+  using DataArrayHost  = typename std::conditional<d==TWO_D,DataArray2dHost,DataArray3dHost>::type;
+  
+  /**
+   *
+   * \param[out]    Udata A Kokkos::View to hydro simulation
+   * \param[in,out] Uhost A host mirror to a Kokkos::View to hydro simulation
+   * \param[in]  params
+   * \param[in]  configMap
+   * \param[in]  nbvar number of scalar fields to read
+   * \param[in]  variable_names map scalar field name to a string
+   * \param[]
+   * \param[in]  filename Name of the input HDF5 file
+   * \param[in]  halfResolution boolean, triggers reading half resolution data
+   *
+   */
+  Load_HDF5_mpi(DataArray     Udata,
+		DataArrayHost Uhost,
+		HydroParams& params,
+		ConfigMap& configMap,
+		int nbvar,
+		const std::map<int, std::string>& variables_names) :
+    Udata(Udata), Uhost(Uhost), params(params), configMap(configMap),
+    nbvar(nbvar), variables_names(variables_names),
+    iStep(0), totalTime(0.0)
+  {};
+  ~Load_HDF5_mpi() {};
+  
+  int get_istep() {return iStep;}
+  real_t get_totalTime() {return totalTime;}
+  
+  DataArray     Udata;
+  DataArrayHost Uhost;
+  HydroParams& params;
+  ConfigMap& configMap;
+  int nbvar;
+  const std::map<int, std::string>& variables_names;
+  int iStep;
+  real_t totalTime;
+
+}; // class Load_HDF5_mpi
+
+#endif // USE_MPI
+
 } // namespace io
 
 } // namespace ppkMHD
