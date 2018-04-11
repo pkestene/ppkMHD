@@ -43,7 +43,7 @@
 #include "sdm/SDM_Positivity_preserving.h"
 
 // for IO
-#include "utils/io/IO_Writer_SDM.h"
+#include "utils/io/IO_ReadWrite_SDM.h"
 
 // for specific init / border conditions
 #include "shared/BlastParams.h"
@@ -192,7 +192,7 @@ public:
   /*
    * Override base class method to initialize IO writer object
    */
-  void init_io_writer();
+  void init_io();
 
   //! SDM config
   SDM_Geometry<dim,N> sdm_geom;
@@ -739,16 +739,17 @@ std::string SolverHydroSDM<dim,N>::get_name() const
 // =======================================================
 // =======================================================
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::init_io_writer()
+void SolverHydroSDM<dim,N>::init_io()
 {
   
-  // install a new IO_Writer sdm-specific
-  m_io_writer = std::make_shared<ppkMHD::io::IO_Writer_SDM<dim,N>>(params,
-								   configMap,
-								   m_variables_names,
-								   sdm_geom);
-
-} // SolverHydroSDM<dim,N>::init_io_writer
+  // install a new IO_ReadWrite sdm-specific
+  m_io_reader_writer =
+    std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(params,
+							  configMap,
+							  m_variables_names,
+							  sdm_geom);
+  
+} // SolverHydroSDM<dim,N>::init_io
 
 // =======================================================
 // =======================================================
