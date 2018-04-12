@@ -160,11 +160,11 @@ public:
 
     // here we need to check Uhost memory layout
     KokkosLayout layout;
-    if (Uhost.stride_0()==1 and Uhost.stride_0()!=1)
+    if (std::is_same<typename DataArray::array_layout, Kokkos::LayoutLeft>::value)
       layout = KOKKOS_LAYOUT_LEFT;
-    if (Uhost.stride_0()>1)
+    else
       layout = KOKKOS_LAYOUT_RIGHT;
-  
+
     herr_t status = 0;
     UNUSED(status);
     
@@ -592,9 +592,9 @@ public:
 
     // here we need to check Uhost memory layout
     KokkosLayout layout;
-    if (Uhost.stride_0()==1 and Uhost.stride_0()!=1)
+    if (std::is_same<typename DataArray::array_layout, Kokkos::LayoutLeft>::value)
       layout = KOKKOS_LAYOUT_LEFT;
-    if (Uhost.stride_0()>1)
+    else
       layout = KOKKOS_LAYOUT_RIGHT;
   
     /*
@@ -1320,6 +1320,8 @@ public:
  *
  * \note This input routine is designed for re-starting a simulation run.
  *
+ * Uhost is allocated here; if halfResolution is activated, an addition 
+ * upscale is done on host before uploading to device memory.
  *
  * If library HDF5 is not available, do nothing, just print a warning message.
  *
@@ -1367,39 +1369,200 @@ public:
     // we will also have to call upscale
     bool halfResolution = configMap.getBool("run","restart_upscale",false);
 
-    if (halfResolution) {
-      // allocate Uhost
-      if (d==2) Uhost = DataArrayHost("host_data",
-				      nx/2+2*ghostWidth, 
-				      ny/2+2*ghostWidth,
-                                      nbvar);
+    // if (halfResolution) {
+    //   // allocate Uhost
+    //   if (d==2) Uhost = DataArrayHost("host_data",
+    // 				      nx/2+2*ghostWidth, 
+    // 				      ny/2+2*ghostWidth,
+    //                                   nbvar);
       
-      if (d==3) Uhost = DataArrayHost("host_data",
-				      nx/2+2*ghostWidth, 
-				      ny/2+2*ghostWidth,
-				      nz/2+2*ghostWidth,
-				      nbvar);
-    } else {
+    //   if (d==3) Uhost = DataArrayHost("host_data",
+    // 				      nx/2+2*ghostWidth, 
+    // 				      ny/2+2*ghostWidth,
+    // 				      nz/2+2*ghostWidth,
+    // 				      nbvar);
+    // } else {
 
-      // allocate Uhost
-      if (d==2) Uhost = DataArrayHost("host_data",
-				      nx+2*ghostWidth, 
-				      ny+2*ghostWidth,
-                                      nbvar);
-      
-      if (d==3) Uhost = DataArrayHost("host_data",
-				      nx+2*ghostWidth, 
-				      ny+2*ghostWidth,
-				      nz+2*ghostWidth,
-				      nbvar);
-      
-    }
+    // allocate Uhost
+    if (d==2) Uhost = DataArrayHost("host_data",
+				    nx+2*ghostWidth, 
+				    ny+2*ghostWidth,
+				    nbvar);
+    
+    if (d==3) Uhost = DataArrayHost("host_data",
+				    nx+2*ghostWidth, 
+				    ny+2*ghostWidth,
+				    nz+2*ghostWidth,
+				    nbvar);
+    
+    //}
 
   }; // end constructor
   ~Load_HDF5() {};
 
   int get_istep() {return iStep;}
   real_t get_totalTime() {return totalTime;}
+
+  /**
+   * copy buffered data (red from file) to host buffer.
+   */
+  template<DimensionType d_ = d>
+  void copy_buffer(typename std::enable_if<d_==TWO_D, real_t>::type *& data,
+		   int isize, int jsize, int ksize, int nvar, KokkosLayout layout)
+  {
+    bool halfResolution = configMap.getBool("run","restart_upscale",false);
+
+    if (halfResolution) {
+
+      const int nx = params.nx;
+      const int ny = params.ny;
+      const int ghostWidth = params.ghostWidth;
+
+      const int iL = nx/2+2*ghostWidth;
+      const int jL = ny/2+2*ghostWidth;
+      
+      // loop at high resolution
+      for (int j=0; j<jsize; j++) {
+	int jLow = (j+ghostWidth)/2;
+	
+	for (int i=0; i<isize; i++) {
+	  int iLow = (i+ghostWidth)/2;
+	  
+	  Uhost(i,j,nvar) = data[iLow+iL*jLow];
+	  
+	  // if mhd is enabled, we interpolate values so that div B = 0
+	  // is still true !
+	  if (nvar == IA) {
+	    
+	    if (i+ghostWidth-2*iLow == 0) {
+	      Uhost(i,j,IA) = data[iLow + iL * jLow];
+	    } else {
+	      Uhost(i,j,IA) = (data[iLow  + iL*jLow] +
+			       data[iLow+1+ iL*jLow] )/2;
+	    }
+	    
+	  } else if (nvar == IB) {
+	    if (j+ghostWidth-2*jLow == 0) {
+	      Uhost(i,j,IB) = data[iLow + iL* jLow];
+	    } else {
+	      Uhost(i,j,IB) = (data[iLow+ iL* jLow   ] +
+			       data[iLow+ iL*(jLow+1)] )/2;
+	    }
+	    
+	  }
+	  
+	} // end for i
+      } // end for j
+      
+    } else {
+      
+      // regular copy - same size
+      if (layout == KOKKOS_LAYOUT_RIGHT) {
+	// transpose array to make data contiguous in memory
+	for (int j=0; j<jsize; ++j) {
+	  for (int i=0; i<isize; ++i) {
+	    int index = i+isize*j;
+	    Uhost(i,j,nvar) = data[index];
+	  }
+	}
+      } else {
+	// simple copy
+	real_t* tmp = Uhost.ptr_on_device() + isize*jsize*nvar;
+	memcpy(tmp,data,isize*jsize);
+      }
+    }
+
+  } // copy_buffer
+
+  /**
+   * copy buffered data (red from file) to host buffer.
+   */
+  template<DimensionType d_=d>
+  void copy_buffer(typename std::enable_if<d_==THREE_D, real_t>::type *& data,
+		   int isize, int jsize, int ksize, int nvar, KokkosLayout layout)
+  {
+    bool halfResolution = configMap.getBool("run","restart_upscale",false);
+    
+    if (halfResolution) {
+
+      const int nx = params.nx;
+      const int ny = params.ny;
+      const int nz = params.nz;
+      const int ghostWidth = params.ghostWidth;
+      
+      const int iL = nx/2+2*ghostWidth;
+      const int jL = ny/2+2*ghostWidth;
+      const int kL = nz/2+2*ghostWidth;
+      
+      // loop at high resolution
+      for (int k=0; k<ksize; k++) {
+	int kLow = (k+ghostWidth)/2;
+	
+	for (int j=0; j<jsize; j++) {
+	  int jLow = (j+ghostWidth)/2;
+	  
+	  for (int i=0; i<isize; i++) {
+	    int iLow = (i+ghostWidth)/2;
+	    
+	    Uhost(i,j,k,nvar) = data[iLow+iL*jLow+iL*jL*kLow];
+	    
+	    // if mhd is enabled, we interpolate values so that div B = 0
+	    // is still true !
+	    if (nvar == IA) {
+	      
+	      if (i+ghostWidth-2*iLow == 0) {
+		Uhost(i,j,k,IA) = data[iLow + iL * jLow+iL*jL*kLow];
+	      } else {
+		Uhost(i,j,k,IA) = (data[iLow  + iL*jLow+iL*jL*kLow] +
+				   data[iLow+1+ iL*jLow+iL*jL*kLow] )/2;
+	      }
+	      
+	    } else if (nvar == IB) {
+	      
+	      if (j+ghostWidth-2*jLow == 0) {
+		Uhost(i,j,k,IB) = data[iLow + iL* jLow   +iL*jL*kLow];
+	      } else {
+		Uhost(i,j,k,IB) = (data[iLow+ iL* jLow   +iL*jL*kLow] +
+				   data[iLow+ iL*(jLow+1)+iL*jL*kLow] )/2;
+	      }
+	      
+	    } else if (nvar == IC) {
+	      
+	      if (k+ghostWidth-2*kLow == 0) {
+		Uhost(i,j,k,IC) = data[iLow +iL*jLow+iL*jL* kLow];
+	      } else {
+		Uhost(i,j,k,IC) = (data[iLow+iL*jLow+iL*jL* kLow   ] +
+				   data[iLow+iL*jLow+iL*jL*(kLow+1)] )/2;
+	      }
+
+	    }
+	  
+	  } // end for i
+	} // end for j
+      } // end for k
+      
+    } else {
+
+      if (layout == KOKKOS_LAYOUT_RIGHT) {
+	// transpose array to make data contiguous in memory
+	for (int k=0; k<ksize; ++k) {
+	  for (int j=0; j<jsize; ++j) {
+	    for (int i=0; i<isize; ++i) {
+	      int index = i+isize*j+isize*jsize*k;
+	      Uhost(i,j,k,nvar) = data[index];
+	    }
+	  }
+	}
+	
+      } else {
+	// simple copy
+	real_t* tmp = Uhost.ptr_on_device() + isize*jsize*ksize*nvar;
+	memcpy(tmp,data,isize*jsize*ksize);
+      }
+
+    } // end halfResolution
+
+  } // copy_buffer / 3D
 
   /**
    * \param[in] filename of the restart file
@@ -1568,10 +1731,30 @@ public:
       expectedDataType = H5T_NATIVE_DOUBLE;
     H5T_class_t t_class_expected = H5Tget_class(expectedDataType);
 
+
+    // here we need to check Udata / Uhost memory layout 
+    // see https://github.com/kokkos/kokkos/wiki/View - section 6.3.4
+    KokkosLayout layout;
+    if (std::is_same<typename DataArray::array_layout, Kokkos::LayoutLeft>::value)
+      layout = KOKKOS_LAYOUT_LEFT;
+    else
+      layout = KOKKOS_LAYOUT_RIGHT;
+
+    // Some adjustement needed to take into account that strides / layout need
+    // to be checked at runtime
+    // if memory layout is KOKKOS_LAYOUT_RIGHT, we need an allocation.
+    // if memory layout is KOKKOS_LAYOUT_LEFT, allocation not required
+    // (we could just use Uhost), but since we may need to upscale,
+    
     // pointer to data in memory buffer
     // must be allocated (TODO)
     real_t* data;
-
+    
+    if (dimType == TWO_D)
+      data = new real_t[isize*jsize];
+    else
+      data = new real_t[isize*jsize*ksize];
+    
     /*
      * open data set and perform read
      */
@@ -1586,57 +1769,32 @@ public:
       std::cerr << "but received : " << t_class          << std::endl;
     }
 
-    if (dimType == TWO_D)
-      data = &(Udata(0,0,ID));
-    else
-      data = &(Udata(0,0,0,ID));
-
     status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		     H5P_DEFAULT, data);
     H5Dclose(dataset_id);
+    copy_buffer(data, isize, jsize, ksize, ID, layout);
 
     // read energy
     dataset_id = H5Dopen2(file_id, "/energy", H5P_DEFAULT);
-
-    if (dimType == TWO_D)
-      data = &(Udata(0,0,IP));
-    else
-      data = &(Udata(0,0,0,IP));
-
     status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		     H5P_DEFAULT, data);
     H5Dclose(dataset_id);
 
     // read momentum X
     dataset_id = H5Dopen2(file_id, "/momentum_x", H5P_DEFAULT);
-
-    if (dimType == TWO_D)
-      data = &(Udata(0,0,IU));
-    else
-      data = &(Udata(0,0,0,IU));
-
     status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		     H5P_DEFAULT, data);
     H5Dclose(dataset_id);
 
     // read momentum Y
     dataset_id = H5Dopen2(file_id, "/momentum_y", H5P_DEFAULT);
-
-    if (dimType == TWO_D)
-      data = &(Udata(0,0,IV));
-    else
-      data = &(Udata(0,0,0,IV));
-
     status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		     H5P_DEFAULT, data);
     H5Dclose(dataset_id);
 
     // read momentum Z (only if hydro 3D)
     if (dimType == THREE_D and !mhdEnabled) {
-      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);
-
-      data = &(Udata(0,0,0,IW));
-      
+      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);      
       status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		       H5P_DEFAULT, data);
       H5Dclose(dataset_id);
@@ -1644,55 +1802,36 @@ public:
 
     if (mhdEnabled) {
       // read momentum Z
-      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);
-      
-      if (dimType == TWO_D)
-	data = &(Udata(0,0,IW));
-      else
-	data = &(Udata(0,0,0,IW));
-      
+      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);      
       status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		       H5P_DEFAULT, data);
       H5Dclose(dataset_id);
 
       // read magnetic field components X
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_x", H5P_DEFAULT);
-      
-      if (dimType == TWO_D)
-	data = &(Udata(0,0,IA));
-      else
-	data = &(Udata(0,0,0,IA));
-      
+      dataset_id = H5Dopen2(file_id, "/magnetic_field_x", H5P_DEFAULT);      
       status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		       H5P_DEFAULT, data);
       H5Dclose(dataset_id);
 
       // read magnetic field components Y
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_y", H5P_DEFAULT);
-      
-      if (dimType == TWO_D)
-	data = &(Udata(0,0,IB));
-      else
-	data = &(Udata(0,0,0,IB));
-      
+      dataset_id = H5Dopen2(file_id, "/magnetic_field_y", H5P_DEFAULT);      
       status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		       H5P_DEFAULT, data);
       H5Dclose(dataset_id);
 
       // read magnetic field components Z
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_z", H5P_DEFAULT);
-      
-      if (dimType == TWO_D)
-	data = &(Udata(0,0,IC));
-      else
-	data = &(Udata(0,0,0,IC));
-      
+      dataset_id = H5Dopen2(file_id, "/magnetic_field_z", H5P_DEFAULT);      
       status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 		       H5P_DEFAULT, data);
       H5Dclose(dataset_id);
 
     } // end mhdEnabled
 
+
+    // free memory if necessary
+    if (layout == KOKKOS_LAYOUT_RIGHT) {
+      delete[] data;
+    }
 
     // read time step attribute
     int timeStep;

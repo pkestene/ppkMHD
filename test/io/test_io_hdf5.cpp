@@ -131,6 +131,11 @@ int main(int argc, char* argv[])
   hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
 #endif // USE_MPI
 
+  int rank = 0;
+#ifdef USE_MPI
+  rank = params.myRank;
+#endif
+  
   Kokkos::initialize(argc, argv);
   
   {
@@ -190,6 +195,9 @@ int main(int argc, char* argv[])
     Kokkos::parallel_for(params.isize*params.jsize, functor);
 
     // save to file
+    if (rank==0)
+      std::cout << "2D test -- save data\n";
+    
 #ifdef USE_MPI
     ppkMHD::io::Save_HDF5_mpi<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
@@ -199,6 +207,24 @@ int main(int argc, char* argv[])
     writer.save();
     ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
 #endif
+
+    // try to reload file
+    if (rank==0)
+      std::cout << "2D test -- reload data\n";
+
+#ifdef USE_MPI
+#else
+    ppkMHD::io::Load_HDF5<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+    reader.load("output2d_0000000.h5");
+    
+    configMap.setString("output","outputPrefix","output2d_save");
+    {
+      ppkMHD::io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+      writer.save();
+      ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+    }
+    // the two files should contain the same data
+#endif    
     
   }
 
