@@ -56,7 +56,7 @@ public:
 #else
     const int i_mpi = 0;
     const int j_mpi = 0;
-#endif    
+#endif // USE_MPI
     
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
@@ -95,7 +95,7 @@ public:
     const int i_mpi = 0;
     const int j_mpi = 0;
     const int k_mpi = 0;
-#endif    
+#endif // USE_MPI
     
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 #endif
     
   }
- 
+
   Kokkos::finalize();
 
   return EXIT_SUCCESS;

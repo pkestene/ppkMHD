@@ -179,6 +179,8 @@ int main(int argc, char* argv[])
   // ==== 2D test ====
   // =================
   if (params.nz == 1) {
+
+    std::cout << "2D test\n";
     
     DataArray2d     data("data",params.isize,params.jsize,HYDRO_2D_NBVAR);
     DataArray2dHost data_host = Kokkos::create_mirror(data);
@@ -201,6 +203,8 @@ int main(int argc, char* argv[])
   // =================
   if (params.nz > 1) {
     
+    std::cout << "3D test\n";
+
     DataArray3d     data("data",params.isize,params.jsize,params.ksize,HYDRO_3D_NBVAR);
     DataArray3dHost data_host = Kokkos::create_mirror(data);
 
