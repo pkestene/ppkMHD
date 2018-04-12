@@ -130,11 +130,6 @@ int main(int argc, char* argv[])
 #ifdef USE_MPI
   hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
 #endif // USE_MPI
-
-  int rank = 0;
-#ifdef USE_MPI
-  rank = params.myRank;
-#endif
   
   Kokkos::initialize(argc, argv);
   
@@ -172,6 +167,11 @@ int main(int argc, char* argv[])
   // test: create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
+
+  int rank = 0;
+#ifdef USE_MPI
+  rank = params.myRank;
+#endif
 
   std::map<int, std::string> var_names;
   var_names[ID] = "rho";
@@ -213,6 +213,7 @@ int main(int argc, char* argv[])
       std::cout << "2D test -- reload data\n";
 
 #ifdef USE_MPI
+    ppkMHD::io::Load_HDF5_mpi<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
 #else
     ppkMHD::io::Load_HDF5<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
     reader.load("output2d_0000000.h5");
@@ -228,6 +229,10 @@ int main(int argc, char* argv[])
     
   }
 
+  // TODO : add more testing for other options :
+  // allghostincluded , halfResolution, ...
+  // add a functor to compared data re-read with expected data, for all field
+  
   // =================
   // ==== 3D test ====
   // =================
