@@ -126,6 +126,9 @@ public:
 int main(int argc, char* argv[])
 {
 
+  // namespace alias
+  namespace io = ::ppkMHD::io;
+
   // Create MPI session if MPI enabled
 #ifdef USE_MPI
   hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
@@ -191,9 +194,9 @@ int main(int argc, char* argv[])
 
     // save to file
 #ifdef USE_MPI
-    ppkMHD::io::save_VTK_2D_mpi(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
+    io::save_VTK_2D_mpi(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
 #else
-    ppkMHD::io::save_VTK_2D(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
+    io::save_VTK_2D(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
 #endif
     
   }
@@ -214,9 +217,9 @@ int main(int argc, char* argv[])
 
     // save to file
 #ifdef USE_MPI
-    ppkMHD::io::save_VTK_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
+    io::save_VTK_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
 #else
-    ppkMHD::io::save_VTK_3D(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
+    io::save_VTK_3D(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
 #endif
     
   }

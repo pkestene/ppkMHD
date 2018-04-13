@@ -113,6 +113,9 @@ public:
 int main(int argc, char* argv[])
 {
 
+  // namespace alias
+  namespace io = ::ppkMHD::io;
+
   // Create MPI session if MPI enabled
   hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
 
@@ -175,7 +178,7 @@ int main(int argc, char* argv[])
     Kokkos::parallel_for(params.isize*params.jsize, functor);
 
     // save to file
-    ppkMHD::io::Save_PNETCDF<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    io::Save_PNETCDF<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     
   }
@@ -195,7 +198,7 @@ int main(int argc, char* argv[])
     Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
 
     // save to file
-    ppkMHD::io::Save_PNETCDF<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+    io::Save_PNETCDF<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     
   }
