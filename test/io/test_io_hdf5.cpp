@@ -235,6 +235,15 @@ int main(int argc, char* argv[])
 
 #ifdef USE_MPI
     io::Load_HDF5_mpi<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+    reader.load("output2d_0000000.h5");
+    
+    configMap.setString("output","outputPrefix","output2d_save");
+    {
+      io::Save_HDF5_mpi<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+      writer.save();
+      io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+    }
+    // the two files should contain the same data
 #else
     io::Load_HDF5<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
     reader.load("output2d_0000000.h5");
@@ -296,9 +305,18 @@ int main(int argc, char* argv[])
       std::cout << "3D test -- reload data\n";
     
 #ifdef USE_MPI
-    //io::Load_HDF5_mpi<THREE_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+    io::Load_HDF5_mpi<THREE_D> reader(data2, params, configMap, HYDRO_3D_NBVAR, var_names);
+    reader.load("output3d_0000000.h5");
+
+    configMap.setString("output","outputPrefix","output3d_save");
+    {
+      io::Save_HDF5_mpi<THREE_D> writer(data2, data2_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+      writer.save();
+      io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+    }
+    // the two files should contain the same data
 #else
-    io::Load_HDF5<THREE_D> reader(data2, params, configMap, HYDRO_2D_NBVAR, var_names);
+    io::Load_HDF5<THREE_D> reader(data2, params, configMap, HYDRO_3D_NBVAR, var_names);
     reader.load("output3d_0000000.h5");
     
     configMap.setString("output","outputPrefix","output3d_save");
