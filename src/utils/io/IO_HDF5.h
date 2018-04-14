@@ -1377,16 +1377,7 @@ public:
     bool halfResolution = configMap.getBool("run","restart_upscale",false);
     
     // allocate Uhost
-    if (d==2) Uhost = DataArrayHost("host_data",
-				    nx+2*ghostWidth, 
-				    ny+2*ghostWidth,
-				    nbvar);
-    
-    if (d==3) Uhost = DataArrayHost("host_data",
-				    nx+2*ghostWidth, 
-				    ny+2*ghostWidth,
-				    nz+2*ghostWidth,
-				    nbvar);
+    Uhost = Kokkos::create_mirror(Udata);
 
   }; // end constructor
 
@@ -1585,6 +1576,8 @@ public:
     }
     herr_t status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
 			    H5P_DEFAULT, data);
+    HDF5_CHECK(status, "Problem reading field");
+
     H5Dclose(dataset_id);
     copy_buffer(data, isize, jsize, ksize, varId, layout);
     
@@ -1632,6 +1625,7 @@ public:
     int nx_rg, ny_rg, nz_rg; // sizes with ghost zones included
 
     if (halfResolution) {
+
       nx_r  = nx/2;
       ny_r  = ny/2;
       nz_r  = nz/2;
@@ -1641,6 +1635,7 @@ public:
       nz_rg = nz/2+2*ghostWidth;
 
     } else { // use current resolution
+
       nx_r  = nx;
       ny_r  = ny;
       nz_r  = nz;
@@ -1648,6 +1643,7 @@ public:
       nx_rg = nx+2*ghostWidth;
       ny_rg = ny+2*ghostWidth;
       nz_rg = nz+2*ghostWidth;
+      
     }
    
     /*
@@ -1800,7 +1796,7 @@ public:
     // read momentum Z (only if hydro 3D)
     if (dimType == THREE_D and !mhdEnabled) {
       read_field(IW, data, file_id, dataspace_memory,
-      	       dataspace_file, layout);
+		 dataspace_file, layout);
     }
 
     if (mhdEnabled) {
