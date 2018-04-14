@@ -545,6 +545,38 @@ public:
   
   // =======================================================
   // =======================================================
+  herr_t write_field(int varId, real_t* &data, hid_t& file_id,
+		     hid_t& dataspace_memory,
+		     hid_t& dataspace_file,
+		     hid_t& propList_create_id,
+		     hid_t& propList_xfer_id,
+		     KokkosLayout& layout)
+  {
+    
+    hid_t dataType = (sizeof(real_t) == sizeof(float)) ?
+      H5T_NATIVE_FLOAT :
+      H5T_NATIVE_DOUBLE;
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+   
+    const std::string varName = "/" + variables_names.at(varId);
+
+    hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
+				  dataType, dataspace_file, 
+				  H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
+    copy_buffer(data, isize, jsize, ksize, varId, layout);
+    herr_t status = H5Dwrite(dataset_id, dataType,
+			     dataspace_memory, dataspace_file,
+			     propList_xfer_id, data);
+    H5Dclose(dataset_id);
+    
+    return status;
+    
+  } // write_field
+
+  // =======================================================
+  // =======================================================
   /**
    * Dump computation results (conservative variables) into a file
    * (HDF5 file format) file extension is h5. File can be viewed by
@@ -1023,81 +1055,50 @@ public:
     hid_t propList_xfer_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(propList_xfer_id, H5FD_MPIO_COLLECTIVE);
 
-    hid_t dataset_id;
-
     /*
      * write density    
      */
-    dataset_id = H5Dcreate2(file_id, "/density", dataType, dataspace_file, 
-			    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-    copy_buffer(data, isize, jsize, ksize, ID, layout);
-    status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-    H5Dclose(dataset_id);
+    write_field(ID, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, propList_xfer_id, layout);
+
     
     /*
      * write energy
      */
-    dataset_id = H5Dcreate2(file_id, "/energy", dataType, dataspace_file, 
-			    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-    copy_buffer(data, isize, jsize, ksize, IP, layout);
-    status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-    H5Dclose(dataset_id);
+    write_field(IE, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, propList_xfer_id, layout);
     
     /*
      * write momentum X
      */
-    dataset_id = H5Dcreate2(file_id, "/momentum_x", dataType, dataspace_file, 
-			    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-    copy_buffer(data, isize, jsize, ksize, IU, layout);
-    status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-    H5Dclose(dataset_id);
-    
+    write_field(IU, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, propList_xfer_id, layout);    
     /*
      * write momentum Y
      */
-    dataset_id = H5Dcreate2(file_id, "/momentum_y", dataType, dataspace_file, 
-			    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-    copy_buffer(data, isize, jsize, ksize, IV, layout);
-    status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-    H5Dclose(dataset_id);
+    write_field(IV, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, propList_xfer_id, layout);
     
     /*
      * write momentum Z (only if 3D or MHD enabled)
      */
     if (dimType == THREE_D and !mhdEnabled) {
-      dataset_id = H5Dcreate2(file_id, "/momentum_z", dataType, dataspace_file, 
-			      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IW, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-      H5Dclose(dataset_id);
+      write_field(IW, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, propList_xfer_id, layout);
     }
     
     if (mhdEnabled) {
       // write momentum z
-      dataset_id = H5Dcreate2(file_id, "/momentum_z", dataType, dataspace_file, 
-			      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IW, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-      H5Dclose(dataset_id);
-
+      write_field(IW, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+      
       // write magnetic field components
-      dataset_id = H5Dcreate2(file_id, "/magnetic_field_x", dataType, dataspace_file, 
-			      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IA, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      
-      dataset_id = H5Dcreate2(file_id, "/magnetic_field_y", dataType, dataspace_file, 
-			      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IB, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      
-      dataset_id = H5Dcreate2(file_id, "/magnetic_field_z", dataType, dataspace_file, 
-			      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IC, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, propList_xfer_id, data);
-      H5Dclose(dataset_id);
+      write_field(IA, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+      write_field(IB, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+      write_field(IC, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, propList_xfer_id, layout);
 
     }
 

@@ -115,11 +115,17 @@ public:
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
     real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
 
-    data(i,j,k,ID) = index + 0*isize*jsize*ksize;//  x+y+z;
-    data(i,j,k,IE) = index + 1*isize*jsize*ksize;//2*x+y+z;
-    data(i,j,k,IU) = index + 2*isize*jsize*ksize;//3*x+y+z;
-    data(i,j,k,IV) = index + 3*isize*jsize*ksize;//4*x+y+z;
-    data(i,j,k,IW) = index + 4*isize*jsize*ksize;//5*x+y+z;
+    data(i,j,k,ID) =   x+y+z;
+    data(i,j,k,IE) = 2*x+y+z;
+    data(i,j,k,IU) = 3*x+y+z;
+    data(i,j,k,IV) = 4*x+y+z;
+    data(i,j,k,IW) = 5*x+y+z;
+
+    // data(i,j,k,ID) = index + 0*isize*jsize*ksize;//  x+y+z;
+    // data(i,j,k,IE) = index + 1*isize*jsize*ksize;//2*x+y+z;
+    // data(i,j,k,IU) = index + 2*isize*jsize*ksize;//3*x+y+z;
+    // data(i,j,k,IV) = index + 3*isize*jsize*ksize;//4*x+y+z;
+    // data(i,j,k,IW) = index + 4*isize*jsize*ksize;//5*x+y+z;
   }
 
   HydroParams params;
