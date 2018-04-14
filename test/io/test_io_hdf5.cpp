@@ -70,6 +70,9 @@ public:
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
     data(i,j,ID) = x+y;
+    data(i,j,IE) = 2*x+y;
+    data(i,j,IU) = 3*x+y;
+    data(i,j,IV) = 4*x+y;
     
   }
 
@@ -112,7 +115,11 @@ public:
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
     real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
 
-    data(i,j,k,ID) = x+y+z;
+    data(i,j,k,ID) =   x+y+z;
+    data(i,j,k,IE) = 2*x+y+z;
+    data(i,j,k,IU) = 3*x+y+z;
+    data(i,j,k,IV) = 4*x+y+z;
+    data(i,j,k,IW) = 5*x+y+z;
   }
 
   HydroParams params;
@@ -271,16 +278,24 @@ int main(int argc, char* argv[])
     io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #endif // USE_MPI
 
-//     // try to reload file
-//     if (rank==0)
-//       std::cout << "3D test -- reload data\n";
+    // try to reload file
+    if (rank==0)
+      std::cout << "3D test -- reload data\n";
     
-// #ifdef USE_MPI
-//     io::Load_HDF5_mpi<THREE_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
-// #else
-//     io::Load_HDF5<THREE_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
-//     reader.load("output3d_0000000.h5");
-// #endif // USE_MPI
+#ifdef USE_MPI
+    //io::Load_HDF5_mpi<THREE_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+#else
+    io::Load_HDF5<THREE_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+    reader.load("output3d_0000000.h5");
+    
+    configMap.setString("output","outputPrefix","output3d_save");
+    {
+      io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+      writer.save();
+      io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+    }
+    // the two files should contain the same data
+#endif // USE_MPI
     
     
   } // end 3D

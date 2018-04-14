@@ -1460,7 +1460,7 @@ public:
       } else {
 	// simple copy
 	real_t* tmp = Uhost.ptr_on_device() + isize*jsize*nvar;
-	memcpy(tmp,data,isize*jsize);
+	memcpy(tmp,data,isize*jsize*sizeof(real_t));
       }
     }
 
@@ -1535,6 +1535,7 @@ public:
       
     } else {
 
+      // regular copy - same size
       if (layout == KOKKOS_LAYOUT_RIGHT) {
 	// transpose array to make data contiguous in memory
 	for (int k=0; k<ksize; ++k) {
@@ -1549,12 +1550,47 @@ public:
       } else {
 	// simple copy
 	real_t* tmp = Uhost.ptr_on_device() + isize*jsize*ksize*nvar;
-	memcpy(tmp,data,isize*jsize*ksize);
+	memcpy(tmp,data,isize*jsize*ksize*sizeof(real_t));
       }
 
     } // end halfResolution
 
   } // copy_buffer / 3D
+
+  // =======================================================
+  // =======================================================
+  herr_t read_field(int varId, real_t* &data, hid_t& file_id,
+		    hid_t& dataspace_memory,
+		    hid_t& dataspace_file, 
+		    KokkosLayout& layout)
+  {
+    
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+   
+    const std::string varName = "/" + variables_names.at(varId);
+    hid_t dataset_id = H5Dopen2(file_id, varName.c_str(), H5P_DEFAULT);
+
+    // cross check dataType
+    hid_t        dataType   = H5Dget_type(dataset_id);
+    H5T_class_t t_class = H5Tget_class(dataType);
+    hid_t        expectedDataType = (sizeof(real_t) == sizeof(float)) ?
+      H5T_NATIVE_FLOAT : H5T_NATIVE_DOUBLE;
+    H5T_class_t t_class_expected = H5Tget_class(expectedDataType);
+    if (t_class != t_class_expected) {
+      std::cerr << "Wrong HDF5 datatype !!\n";
+      std::cerr << "expected     : " << t_class_expected << std::endl;
+      std::cerr << "but received : " << t_class          << std::endl;
+    }
+    herr_t status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
+			    H5P_DEFAULT, data);
+    H5Dclose(dataset_id);
+    copy_buffer(data, isize, jsize, ksize, varId, layout);
+    
+    return status;
+    
+  } // read_field
 
   /**
    * \param[in] filename of the restart file
@@ -1752,79 +1788,34 @@ public:
      */
 
     // read density
-    dataset_id = H5Dopen2(file_id, "/density", H5P_DEFAULT);
-    dataType  = H5Dget_type(dataset_id);
-    H5T_class_t t_class = H5Tget_class(dataType);
-    if (t_class != t_class_expected) {
-      std::cerr << "Wrong HDF5 datatype !!\n";
-      std::cerr << "expected     : " << t_class_expected << std::endl;
-      std::cerr << "but received : " << t_class          << std::endl;
-    }
-
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     H5P_DEFAULT, data);
-    H5Dclose(dataset_id);
-    copy_buffer(data, isize, jsize, ksize, ID, layout);
-
-    // read energy
-    dataset_id = H5Dopen2(file_id, "/energy", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     H5P_DEFAULT, data);
-    H5Dclose(dataset_id);
-    copy_buffer(data, isize, jsize, ksize, IE, layout);
-
-    // read momentum X
-    dataset_id = H5Dopen2(file_id, "/momentum_x", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     H5P_DEFAULT, data);
-    H5Dclose(dataset_id);
-    copy_buffer(data, isize, jsize, ksize, IU, layout);
-
-    // read momentum Y
-    dataset_id = H5Dopen2(file_id, "/momentum_y", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     H5P_DEFAULT, data);
-    H5Dclose(dataset_id);
-    copy_buffer(data, isize, jsize, ksize, IV, layout);
-
+    read_field(ID, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+    read_field(IE, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+    read_field(IU, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+    read_field(IV, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+    
     // read momentum Z (only if hydro 3D)
     if (dimType == THREE_D and !mhdEnabled) {
-      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);      
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-      copy_buffer(data, isize, jsize, ksize, IW, layout);
+      read_field(IW, data, file_id, dataspace_memory,
+      	       dataspace_file, layout);
     }
 
     if (mhdEnabled) {
       // read momentum Z
-      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);      
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-      copy_buffer(data, isize, jsize, ksize, IW, layout);
+      read_field(IW, data, file_id, dataspace_memory,
+		 dataspace_file, layout);
 
-      // read magnetic field components X
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_x", H5P_DEFAULT);      
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-      copy_buffer(data, isize, jsize, ksize, IA, layout);
-
-      // read magnetic field components Y
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_y", H5P_DEFAULT);      
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-      copy_buffer(data, isize, jsize, ksize, IB, layout);
-
-      // read magnetic field components Z
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_z", H5P_DEFAULT);      
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-      copy_buffer(data, isize, jsize, ksize, IC, layout);
-
+      // read magnetif field component
+      read_field(IA, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+      read_field(IB, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+      read_field(IC, data, file_id, dataspace_memory,
+	       dataspace_file, layout);
+      
     } // end mhdEnabled
 
 
@@ -1862,11 +1853,10 @@ public:
     //H5Pclose(propList_create_id);
     H5Sclose(dataspace_memory);
     H5Sclose(dataspace_file);
-    //H5Dclose(dataset_id);
     H5Fclose(file_id);
 
     (void) status;
-
+    
     // copy host data to device
     Kokkos::deep_copy(Udata, Uhost);
 
