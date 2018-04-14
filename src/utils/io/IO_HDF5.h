@@ -1921,6 +1921,34 @@ public:
   
   ~Load_HDF5_mpi() {};
   
+  // =======================================================
+  // =======================================================
+  herr_t read_field(int varId, real_t* &data, hid_t& file_id,
+		    hid_t& dataspace_memory,
+		    hid_t& dataspace_file,
+		    hid_t& propList_xfer_id,
+		    KokkosLayout& layout)
+  {
+    
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+    hid_t dataType = (sizeof(real_t) == sizeof(float)) ?
+      H5T_NATIVE_FLOAT : H5T_NATIVE_DOUBLE;
+    
+    const std::string varName = "/" + this->variables_names.at(varId);
+    hid_t dataset_id = H5Dopen2(file_id, varName.c_str(), H5P_DEFAULT);
+    herr_t status = H5Dread(dataset_id, dataType, dataspace_memory,
+			    dataspace_file, propList_xfer_id, data);
+    HDF5_CHECK(status, "Problem reading field");
+
+    H5Dclose(dataset_id);
+    this->copy_buffer(data, isize, jsize, ksize, varId, layout);
+
+    return status;
+    
+  } // read_field
+
   /**
    * \param[in] filename of the restart file
    *
@@ -2296,72 +2324,41 @@ public:
     hid_t propList_xfer_id = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(propList_xfer_id, H5FD_MPIO_COLLECTIVE);
 
-    /* read density */
-    dataset_id = H5Dopen2(file_id, "/density", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     propList_xfer_id, data);
-    H5Dclose(dataset_id);
-    this->copy_buffer(data, isize, jsize, ksize, ID, layout);
+    // read density
+    read_field(ID, data, file_id, dataspace_memory,
+	       dataspace_file, propList_xfer_id, layout);
 
     // read energy
-    dataset_id = H5Dopen2(file_id, "/energy", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     propList_xfer_id, data);
-    H5Dclose(dataset_id);
-    this->copy_buffer(data, isize, jsize, ksize, IE, layout);
+    read_field(IE, data, file_id, dataspace_memory,
+	       dataspace_file, propList_xfer_id, layout);
 
     // read momentum X
-    dataset_id = H5Dopen2(file_id, "/momentum_x", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     propList_xfer_id, data);
-    H5Dclose(dataset_id);
-    this->copy_buffer(data, isize, jsize, ksize, IU, layout);
-
+    read_field(IU, data, file_id, dataspace_memory,
+	       dataspace_file, propList_xfer_id, layout);
+    
     // read momentum Y
-    dataset_id = H5Dopen2(file_id, "/momentum_y", H5P_DEFAULT);
-    status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		     propList_xfer_id, data);
-    H5Dclose(dataset_id);
-    this->copy_buffer(data, isize, jsize, ksize, IV, layout);
-
+    read_field(IV, data, file_id, dataspace_memory,
+	       dataspace_file, propList_xfer_id, layout);
+    
     // read momentum Z (only if hydro 3D)
     if (dimType == THREE_D and !mhdEnabled) {
-      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      this->copy_buffer(data, isize, jsize, ksize, IW, layout);
+      read_field(IW, data, file_id, dataspace_memory,
+		 dataspace_file, propList_xfer_id, layout);
     }
-
+    
     if (mhdEnabled) {
       // read momentum Z
-      dataset_id = H5Dopen2(file_id, "/momentum_z", H5P_DEFAULT);
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      this->copy_buffer(data, isize, jsize, ksize, IW, layout);
-
-      // read magnetic field components X
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_x", H5P_DEFAULT);
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      this->copy_buffer(data, isize, jsize, ksize, IA, layout);
-
-      // read magnetic field components Y
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_y", H5P_DEFAULT);
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      this->copy_buffer(data, isize, jsize, ksize, IB, layout);
-
-      // read magnetic field components Z
-      dataset_id = H5Dopen2(file_id, "/magnetic_field_z", H5P_DEFAULT);
-      status = H5Dread(dataset_id, dataType, dataspace_memory, dataspace_file,
-		       propList_xfer_id, data);
-      H5Dclose(dataset_id);
-      this->copy_buffer(data, isize, jsize, ksize, IC, layout);
-
+      read_field(IW, data, file_id, dataspace_memory,
+		 dataspace_file, propList_xfer_id, layout);
+      
+      // read magnetic field components X, Y, Z
+      read_field(IA, data, file_id, dataspace_memory,
+		 dataspace_file, propList_xfer_id, layout);
+      read_field(IB, data, file_id, dataspace_memory,
+		 dataspace_file, propList_xfer_id, layout);
+      read_field(IC, data, file_id, dataspace_memory,
+		 dataspace_file, propList_xfer_id, layout);
+      
     } // end mhdEnabled
 
     // free temporary memory
