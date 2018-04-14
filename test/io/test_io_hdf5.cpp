@@ -183,9 +183,9 @@ int main(int argc, char* argv[])
   std::map<int, std::string> var_names;
   var_names[ID] = "rho";
   var_names[IP] = "energy";
-  var_names[IU] = "mx";
-  var_names[IV] = "my";
-  var_names[IW] = "mz";
+  var_names[IU] = "rho_vx";
+  var_names[IV] = "rho_vy";
+  var_names[IW] = "rho_vz";
   
   // =================
   // ==== 2D test ====
@@ -209,11 +209,11 @@ int main(int argc, char* argv[])
 #ifdef USE_MPI
     io::Save_HDF5_mpi<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
-    io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+    io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #else
     io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
-    io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+    io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #endif
 
     // try to reload file
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
     {
       io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
       writer.save();
-      io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+      io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
     }
     // the two files should contain the same data
 #endif    
@@ -264,11 +264,11 @@ int main(int argc, char* argv[])
 #ifdef USE_MPI
     io::Save_HDF5_mpi<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
-    io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+    io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #else
     io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
-    io::writeXdmfForHdf5Wrapper(params, configMap, 1, false);
+    io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #endif // USE_MPI
 
 //     // try to reload file
