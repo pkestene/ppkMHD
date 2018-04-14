@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 #ifdef USE_HDF5
   bool outputHdf5Enabled = configMap.getBool("output","hdf5_enabled",false);
   if (outputHdf5Enabled) {
-    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, solver->m_times_saved-1, false);
+    ppkMHD::io::writeXdmfForHdf5Wrapper(params, configMap, solver->m_variables_names, solver->m_times_saved-1, false);
   }
 #endif // USE_HDF5
   
