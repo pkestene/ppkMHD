@@ -330,103 +330,37 @@ public:
     // write density
     write_field(ID, data, file_id, dataspace_memory,
 		dataspace_file, propList_create_id, layout);
-    // {
-    //   const std::string varName = "/" + variables_names.at(ID);
-    //   hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-    // 				    dataType, dataspace_file, 
-    // 				    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-    //   copy_buffer(data, isize, jsize, ksize, ID, layout);
-    //   status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-    //   H5Dclose(dataset_id);
-    // }
 
     // write total energy
-    {
-      const std::string varName = "/" + variables_names.at(IE);
-      hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				    dataType, dataspace_file, 
-				    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IE, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-    }
+    write_field(IE, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, layout);
     
-      // write momentum X
-    {
-      const std::string varName = "/" + variables_names.at(IU);
-      hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				    dataType, dataspace_file, 
-				    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IU, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-    }
+    // write momentum X
+    write_field(IU, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, layout);
     
     // write momentum Y
-    {
-      const std::string varName = "/" + variables_names.at(IV);
-      hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				    dataType, dataspace_file, 
-				    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IV, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
-    }
+    write_field(IV, data, file_id, dataspace_memory,
+		dataspace_file, propList_create_id, layout);
     
     // write momentum Z (only if 3D hydro)
     if (dimType == THREE_D and !mhdEnabled) {
-      const std::string varName = "/" + variables_names.at(IW);
-      hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				    dataType, dataspace_file, 
-				    H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-      copy_buffer(data, isize, jsize, ksize, IW, layout);
-      status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-      H5Dclose(dataset_id);
+      write_field(IW, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, layout);      
     }
     
     if (mhdEnabled) {
       // write momentum mz
-      {
-	const std::string varName = "/" + variables_names.at(IW);
-	hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				      dataType, dataspace_file, 
-				      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-	copy_buffer(data, isize, jsize, ksize, IW, layout);
-	status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-	H5Dclose(dataset_id);
-
-      }
+      write_field(IW, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, layout);      
       
       // write magnetic field components
-      {
-	const std::string varName = "/" + variables_names.at(IA);
-	hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				      dataType, dataspace_file, 
-				      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-	copy_buffer(data, isize, jsize, ksize, IA, layout);
-	status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-	H5Dclose(dataset_id);
-      }
-      
-      {
-	const std::string varName = "/" + variables_names.at(IB);
-	hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				      dataType, dataspace_file, 
-				      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-	copy_buffer(data, isize, jsize, ksize, IB, layout);
-	status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-	H5Dclose(dataset_id);
-      }
-      
-      {
-	const std::string varName = "/" + variables_names.at(IC);
-	hid_t dataset_id = H5Dcreate2(file_id, varName.c_str(),
-				      dataType, dataspace_file, 
-				      H5P_DEFAULT, propList_create_id, H5P_DEFAULT);
-	copy_buffer(data, isize, jsize, ksize, IC, layout);
-	status = H5Dwrite(dataset_id, dataType, dataspace_memory, dataspace_file, H5P_DEFAULT, data);
-	H5Dclose(dataset_id);
-      }
+      write_field(IA, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, layout);      
+      write_field(IB, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, layout);      
+      write_field(IC, data, file_id, dataspace_memory,
+		  dataspace_file, propList_create_id, layout);      
       
     } // end mhdEnabled
 
