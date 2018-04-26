@@ -173,11 +173,11 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
   }
 
-  if (argc != 2) {
-    fprintf(stderr, "Error: wrong number of argument; input filename must be the only parameter on the command line\n");
-    Kokkos::finalize();
-    exit(EXIT_FAILURE);
-  }
+  // if (argc != 2) {
+  //   fprintf(stderr, "Error: wrong number of argument; input filename must be the only parameter on the command line\n");
+  //   Kokkos::finalize();
+  //   exit(EXIT_FAILURE);
+  // }
   
   // read parameter file and initialize parameter
   // parse parameters from input file
