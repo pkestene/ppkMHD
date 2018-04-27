@@ -210,7 +210,7 @@ void SolverHydroMuscl<dim>::init_restart(DataArray Udata)
     else if (isNcdf) {
       //inputPnetcdf(h_input, outputDir+"/"+inputFilename, halfResolution);
     }
-#endif USE_MPI
+#endif // USE_MPI
 
     else {
       if (myRank == 0) {
@@ -292,7 +292,6 @@ void SolverHydroMuscl<2>::init(DataArray Udata)
 
   // test if we are performing a re-start run (default : false)
   bool restartEnabled = configMap.getBool("run","restart",false);
-  int timeStep = 0;
 
   if (restartEnabled) { // load data from input data file
 
