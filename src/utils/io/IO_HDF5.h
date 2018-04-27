@@ -865,13 +865,6 @@ public:
       } // end ghostIncluded / allghostIncluded
 
     } // end reassembleInFile is true
-
-    // Create the chunked datasets.
-    hid_t dataType;
-    if (sizeof(real_t) == sizeof(float))
-      dataType = H5T_NATIVE_FLOAT;
-    else
-      dataType = H5T_NATIVE_DOUBLE;
     
     /*
      * Memory space hyperslab :
@@ -1364,18 +1357,7 @@ public:
     nbvar(nbvar), variables_names(variables_names),
     iStep(0), totalTime(0.0)
   {
-    const int nx = params.nx;
-    const int ny = params.ny;
-    const int nz = params.nz;
-    const int ghostWidth = params.ghostWidth;
 
-    // make sure Uhost is allocated
-    bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
-
-    // upscale init data from a file twice smaller
-    // in this case we expected that ghost cells are present in input file
-    // we will also have to call upscale
-    bool halfResolution = configMap.getBool("run","restart_upscale",false);
     
     // allocate Uhost
     Uhost = Kokkos::create_mirror(Udata);
@@ -1399,11 +1381,11 @@ public:
     if (halfResolution) {
 
       const int nx = params.nx;
-      const int ny = params.ny;
+      //const int ny = params.ny;
       const int ghostWidth = params.ghostWidth;
 
       const int iL = nx/2+2*ghostWidth;
-      const int jL = ny/2+2*ghostWidth;
+      //const int jL = ny/2+2*ghostWidth;
       
       // loop at high resolution
       for (int j=0; j<jsize; j++) {
@@ -1471,12 +1453,12 @@ public:
 
       const int nx = params.nx;
       const int ny = params.ny;
-      const int nz = params.nz;
+      //const int nz = params.nz;
       const int ghostWidth = params.ghostWidth;
       
       const int iL = nx/2+2*ghostWidth;
       const int jL = ny/2+2*ghostWidth;
-      const int kL = nz/2+2*ghostWidth;
+      //const int kL = nz/2+2*ghostWidth;
       
       // loop at high resolution
       for (int k=0; k<ksize; k++) {
@@ -1609,8 +1591,6 @@ public:
 
     const bool mhdEnabled = params.mhdEnabled;
 
-    const int nbvar = params.nbvar;
-    
     bool ghostIncluded = configMap.getBool("output","ghostIncluded",false);
 
     // upscale init data from a file twice smaller
@@ -1619,7 +1599,7 @@ public:
 
     
     herr_t status;
-    hid_t  dataset_id;
+    
 
     // sizes to read
     int nx_r,  ny_r,  nz_r;  // logical sizes
@@ -1749,12 +1729,12 @@ public:
     }
 
     /* defines data type */
-    hid_t dataType, expectedDataType;
-    if (sizeof(real_t) == sizeof(float))
-      expectedDataType = H5T_NATIVE_FLOAT;
-    else
-      expectedDataType = H5T_NATIVE_DOUBLE;
-    H5T_class_t t_class_expected = H5Tget_class(expectedDataType);
+    // hid_t expectedDataType;
+    // if (sizeof(real_t) == sizeof(float))
+    //   expectedDataType = H5T_NATIVE_FLOAT;
+    // else
+    //   expectedDataType = H5T_NATIVE_DOUBLE;
+    // H5T_class_t t_class_expected = H5Tget_class(expectedDataType);
 
 
     // here we need to check Udata / Uhost memory layout 
@@ -2031,7 +2011,6 @@ public:
 
     herr_t status;
     (void) status;
-    hid_t  dataset_id;
 
     // TODO
     // here put some cross-check code
@@ -2142,14 +2121,7 @@ public:
 
       }
 
-    } // end ghostIncluded / allghostIncluded 
-
-    // set datatype
-    hid_t dataType;
-    if (sizeof(real_t) == sizeof(float))
-      dataType = H5T_NATIVE_FLOAT;
-    else
-      dataType = H5T_NATIVE_DOUBLE;
+    } // end ghostIncluded / allghostIncluded
     
     /*
      * Memory space hyperslab :
