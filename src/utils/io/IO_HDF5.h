@@ -1,3 +1,4 @@
+
 #ifndef IO_HDF5_H_
 #define IO_HDF5_H_
 
@@ -667,7 +668,7 @@ public:
     (void) status;
 
      // make filename string
-    std::string outputDir    = configMap.getString("output", "outputDir", "./");
+    std::string outputDir    = configMap.getString("output", "outputDir", ".");
     std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
     std::ostringstream outNum;
@@ -691,9 +692,9 @@ public:
     // Create a new file using property list with parallel I/O access.
     MPI_Info mpi_info     = MPI_INFO_NULL;
     hid_t    propList_create_id = H5Pcreate(H5P_FILE_ACCESS);
-    status = H5Pset_fapl_mpio(propList_create_id, params.communicator->getComm(), mpi_info);
+    status = H5Pset_fapl_mpio(propList_create_id, /*MPI_COMM_WORLD*/ params.communicator->getComm(), mpi_info);
     HDF5_CHECK(status, "Can not access MPI IO parameters");
-    
+
     hid_t    file_id  = H5Fcreate(hdf5FilenameFull.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, propList_create_id);
     H5Pclose(propList_create_id);
 
@@ -1052,46 +1053,46 @@ public:
      * write density    
      */
     write_field(ID, data, file_id, dataspace_memory,
-		dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		dataspace_file, propList_create_id, propList_xfer_id, layout);
 
     
     /*
      * write energy
      */
     write_field(IE, data, file_id, dataspace_memory,
-		dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		dataspace_file, propList_create_id, propList_xfer_id, layout);
     
     /*
      * write momentum X
      */
     write_field(IU, data, file_id, dataspace_memory,
-		dataspace_file, propList_create_id, propList_xfer_id, layout);    
+    		dataspace_file, propList_create_id, propList_xfer_id, layout);    
     /*
      * write momentum Y
      */
     write_field(IV, data, file_id, dataspace_memory,
-		dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		dataspace_file, propList_create_id, propList_xfer_id, layout);
     
     /*
      * write momentum Z (only if 3D or MHD enabled)
      */
     if (dimType == THREE_D and !mhdEnabled) {
       write_field(IW, data, file_id, dataspace_memory,
-		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		  dataspace_file, propList_create_id, propList_xfer_id, layout);
     }
     
     if (mhdEnabled) {
       // write momentum z
       write_field(IW, data, file_id, dataspace_memory,
-		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		  dataspace_file, propList_create_id, propList_xfer_id, layout);
       
       // write magnetic field components
       write_field(IA, data, file_id, dataspace_memory,
-		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		  dataspace_file, propList_create_id, propList_xfer_id, layout);
       write_field(IB, data, file_id, dataspace_memory,
-		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		  dataspace_file, propList_create_id, propList_xfer_id, layout);
       write_field(IC, data, file_id, dataspace_memory,
-		  dataspace_file, propList_create_id, propList_xfer_id, layout);
+    		  dataspace_file, propList_create_id, propList_xfer_id, layout);
 
     }
 
@@ -2248,7 +2249,7 @@ public:
     /* Set up MPIO file access property lists */
     //MPI_Info mpi_info   = MPI_INFO_NULL;
     hid_t access_plist  = H5Pcreate(H5P_FILE_ACCESS);
-    status = H5Pset_fapl_mpio(access_plist, this->params.communicator->getComm(), MPI_INFO_NULL);
+    status = H5Pset_fapl_mpio(access_plist, /*MPI_COMM_WORLD*/ this->params.communicator->getComm(), MPI_INFO_NULL);
 
     /* Open the file */
     hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, access_plist);
