@@ -211,6 +211,9 @@ int main(int argc, char* argv[])
     DataArray2d     data("data",params.isize,params.jsize,HYDRO_2D_NBVAR);
     DataArray2dHost data_host = Kokkos::create_mirror(data);
 
+    DataArray2d     data2("data2",params.isize,params.jsize,HYDRO_2D_NBVAR);
+    DataArray2dHost data2_host = Kokkos::create_mirror(data2);
+
     // create fake data
     InitData<2> functor(params, data);
     Kokkos::parallel_for(params.isize*params.jsize, functor);
@@ -234,23 +237,23 @@ int main(int argc, char* argv[])
       std::cout << "2D test -- reload data\n";
 
 #ifdef USE_MPI
-    io::Load_HDF5_mpi<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+    io::Load_HDF5_mpi<TWO_D> reader(data2, params, configMap, HYDRO_2D_NBVAR, var_names);
     reader.load("output2d_0000000.h5");
     
     configMap.setString("output","outputPrefix","output2d_save");
     {
-      io::Save_HDF5_mpi<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+      io::Save_HDF5_mpi<TWO_D> writer(data2, data2_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
       writer.save();
       io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
     }
     // the two files should contain the same data
 #else
-    io::Load_HDF5<TWO_D> reader(data, params, configMap, HYDRO_2D_NBVAR, var_names);
+    io::Load_HDF5<TWO_D> reader(data2, params, configMap, HYDRO_2D_NBVAR, var_names);
     reader.load("output2d_0000000.h5");
     
     configMap.setString("output","outputPrefix","output2d_save");
     {
-      io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+      io::Save_HDF5<TWO_D> writer(data2, data2_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
       writer.save();
       io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
     }
@@ -268,7 +271,7 @@ int main(int argc, char* argv[])
   // =================
   if (params.nz > 1) {
     
-    //if (rank==0)
+    if (rank==0)
       std::cout << "3D test\n";
 
     DataArray3d     data("data",
@@ -290,6 +293,10 @@ int main(int argc, char* argv[])
     Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
 
     // ================ save to file =======================
+    // save to file
+    if (rank==0)
+      std::cout << "3D test -- save data\n";
+
 #ifdef USE_MPI
     io::Save_HDF5_mpi<THREE_D> writer(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
