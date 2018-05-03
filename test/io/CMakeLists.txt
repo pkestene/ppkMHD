@@ -62,6 +62,7 @@ if(USE_MPI)
 
     add_executable(test_io_pnetcdf
       test_io_pnetcdf.cpp
+      ${BACKWARD_ENABLE}
       )
     
     target_include_directories(test_io_pnetcdf
@@ -76,6 +77,8 @@ if(USE_MPI)
       )
     target_link_libraries(test_io_pnetcdf
       kokkos shared config monitoring io mpiUtils ${HDF5_PNETCDF})
+    
+    add_backward(test_io_pnetcdf)
     
   endif(USE_PNETCDF)
 endif(USE_MPI)
