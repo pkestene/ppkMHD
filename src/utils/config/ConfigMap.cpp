@@ -148,8 +148,8 @@ ConfigMap broadcast_parameters(std::string filename)
   return configMap;
 
 #else
-  ConfigMap configMap(input_file);
-  return configMap
+  ConfigMap configMap(filename);
+  return configMap;
 #endif
     
 } // broadcast_parameters
