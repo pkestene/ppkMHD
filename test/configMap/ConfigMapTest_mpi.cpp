@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   if (argc>1) {
     input_file = std::string(argv[1]);  
   } else {
-    input_file = "test_mpi_2d.ini";
+    input_file = "test_mpi.ini";
   }
 
   int status = test1(input_file);
