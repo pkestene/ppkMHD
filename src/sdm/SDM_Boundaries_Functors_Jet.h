@@ -3,7 +3,7 @@
 
 #include "shared/HydroParams.h"    // for HydroParams
 #include "shared/kokkos_shared.h"  // for Data arrays
-#include "shared/JetParams.h"    // for Jet border condition
+#include "shared/problems/JetParams.h"    // for Jet border condition
 
 namespace sdm {
 

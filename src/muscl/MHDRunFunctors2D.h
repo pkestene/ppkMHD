@@ -11,7 +11,7 @@
 #include "shared/RiemannSolvers_MHD.h"
 
 // init conditions
-#include "shared/BlastParams.h"
+#include "shared/problems/BlastParams.h"
 
 #ifndef SQR
 #define SQR(x) ((x)*(x))

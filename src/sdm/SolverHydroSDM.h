@@ -18,7 +18,7 @@
 #include "shared/mpiBorderUtils.h"
 //#include "shared/BoundariesFunctors.h"
 //#include "shared/BoundariesFunctorsWedge.h"
-#include "shared/initRiemannConfig2d.h"
+#include "shared/problems/initRiemannConfig2d.h"
 #include "shared/EulerEquations.h"
 
 // sdm
@@ -46,10 +46,10 @@
 #include "utils/io/IO_ReadWrite_SDM.h"
 
 // for specific init / border conditions
-#include "shared/BlastParams.h"
-#include "shared/KHParams.h"
-#include "shared/WedgeParams.h"
-#include "shared/JetParams.h"
+#include "shared/problems/BlastParams.h"
+#include "shared/problems/KHParams.h"
+#include "shared/problems/WedgeParams.h"
+#include "shared/problems/JetParams.h"
 
 namespace sdm {
 

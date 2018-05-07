@@ -17,7 +17,7 @@
 #include "shared/kokkos_shared.h"
 #include "shared/BoundariesFunctors.h"
 #include "shared/BoundariesFunctorsWedge.h"
-#include "shared/initRiemannConfig2d.h"
+#include "shared/problems/initRiemannConfig2d.h"
 
 // mood
 #include "mood/monomials_ordering.h"
@@ -41,12 +41,12 @@
 #include "mood/mood_utils.h"
 
 // for IO
-#include <utils/io/IO_Writer.h>
+#include <utils/io/IO_ReadWrite.h>
 
 // for specific init / border conditions
-#include "shared/BlastParams.h"
-#include "shared/KHParams.h"
-#include "shared/WedgeParams.h"
+#include "shared/problems/BlastParams.h"
+#include "shared/problems/KHParams.h"
+#include "shared/problems/WedgeParams.h"
 
 namespace mood {
 

@@ -13,11 +13,11 @@
 #include "sdm/sdm_shared.h" // for DofMap
 
 // init conditions
-#include "shared/BlastParams.h"
-#include "shared/IsentropicVortexParams.h"
-#include "shared/initRiemannConfig2d.h"
-#include "shared/WedgeParams.h"
-#include "shared/JetParams.h"
+#include "shared/problems/BlastParams.h"
+#include "shared/problems/IsentropicVortexParams.h"
+#include "shared/problems/initRiemannConfig2d.h"
+#include "shared/problems/WedgeParams.h"
+#include "shared/problems/JetParams.h"
 
 namespace sdm {
 

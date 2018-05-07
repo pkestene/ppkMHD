@@ -13,9 +13,9 @@
 #include "mood/MoodBaseFunctor.h"
 
 // init conditions
-#include "shared/BlastParams.h"
-#include "shared/KHParams.h"
-#include "shared/IsentropicVortexParams.h"
+#include "shared/problems/BlastParams.h"
+#include "shared/problems/KHParams.h"
+#include "shared/problems/IsentropicVortexParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>

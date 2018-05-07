@@ -11,7 +11,7 @@
 #include "shared/RiemannSolvers.h"
 
 // init conditions
-#include "shared/BlastParams.h"
+#include "shared/problems/BlastParams.h"
 
 namespace ppkMHD { namespace muscl {
 
