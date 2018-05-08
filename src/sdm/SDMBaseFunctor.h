@@ -37,36 +37,43 @@ public:
   virtual ~SDMBaseFunctor() {};
 
   //! field indexes for velocity gradients computations (needed in viscous terms)
-  static constexpr int IGU  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGU);
-  static constexpr int IGV  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGV);
-  static constexpr int IGW  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGW);
 
-  static constexpr int IGUX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUX);
-  static constexpr int IGUY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUY);
-  static constexpr int IGUZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUZ);
+  ////// static constexpr are not supported by nvcc /////
+  enum grad_index_t {
+    IGU  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGU),
+    IGV  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGV),
+    IGW  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGW),
+    
+    IGUX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUX),
+    IGUY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUY),
+    IGUZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGUZ),
+    
+    IGVX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVX),
+    IGVY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVY),
+    IGVZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVZ),
 
-  static constexpr int IGVX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVX);
-  static constexpr int IGVY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVY);
-  static constexpr int IGVZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGVZ);
-
-  static constexpr int IGWX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWX);
-  static constexpr int IGWY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWY);
-  static constexpr int IGWZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWZ);
-
-  static constexpr int IGT  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGT);
-
+    IGWX = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWX),
+    IGWY = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWY),
+    IGWZ = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGWZ),
+    
+    IGT  = static_cast<int>(std::conditional<dim==2,VarIndexGrad2d,VarIndexGrad3d>::type::IGT),
+  };
+  
   //! alias enum values used in EulerEquations flux computations
-  static constexpr int U_X  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::U_X);
-  static constexpr int U_Y  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::U_Y);
-  static constexpr int U_Z  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::U_Z);
-  
-  static constexpr int V_X  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::V_X);
-  static constexpr int V_Y  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::V_Y);
-  static constexpr int V_Z  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::V_Z);
-  
-  static constexpr int W_X  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::W_X);
-  static constexpr int W_Y  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::W_Y);
-  static constexpr int W_Z  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::W_Z);
+  ////// static constexpr are not supported by nvcc /////
+  enum flux_index_t {
+    U_X  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::U_X),
+    U_Y  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::U_Y),
+    U_Z  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::U_Z),
+    
+    V_X  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::V_X),
+    V_Y  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::V_Y),
+    V_Z  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::V_Z),
+    
+    W_X  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::W_X),
+    W_Y  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::W_Y),
+    W_Z  = static_cast<int>(std::conditional<dim==2,gradientV_IDS_2d,gradientV_IDS_3d>::type::W_Z)
+  };
   
   HydroParams params;
   SDM_Geometry<dim,N> sdm_geom;
