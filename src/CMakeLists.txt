@@ -28,6 +28,7 @@ endif()
 set(EXE_NAME "${PROJECT_NAME}")
 add_executable(${EXE_NAME}
   main.cpp
+  ${BACKWARD_ENABLE}
   )
 
 target_include_directories(${EXE_NAME}
@@ -37,6 +38,8 @@ target_include_directories(${EXE_NAME}
 
 #target_link_libraries(${EXE_NAME} solver_factory config kokkos hwloc dl muscl io shared monitoring)
 target_link_libraries(${EXE_NAME} solver_factory config kokkos dl muscl shared io monitoring)
+
+add_backward(${EXE_NAME})
 
 # if (USE_SDM)
 #   target_link_libraries(${EXE_NAME} sdm)
