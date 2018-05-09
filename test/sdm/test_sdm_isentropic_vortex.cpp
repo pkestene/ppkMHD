@@ -52,7 +52,7 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "[run]\n";
   outFile << "solver_name=Hydro_SDM_2D_degree" << N << "\n";
   outFile << "tEnd=10\n";
-  outFile << "nStepmax=1000000\n";
+  outFile << "nStepmax=10000000\n";
   outFile << "nOutput=2\n";
   outFile << "\n";
 
