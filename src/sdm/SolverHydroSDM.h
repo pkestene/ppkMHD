@@ -407,6 +407,15 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   int nb_dof_flux = dim==2 ? (N+1)*N*params.nbvar : (N+1)*N*N*params.nbvar;
   
   long long int total_mem_size = 0;
+
+  // clear variables_names map -- hydro only, for now (MHD later)
+  m_variables_names.clear();
+  m_variables_names[ID] = "rho";
+  m_variables_names[IP] = "energy";
+  m_variables_names[IU] = "rho_vx"; // momentum component X
+  m_variables_names[IV] = "rho_vy"; // momentum component Y
+  m_variables_names[IW] = "rho_vz"; // momentum component Z
+
   
   /*
    * Viscous terms computations.
