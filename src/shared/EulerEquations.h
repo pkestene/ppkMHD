@@ -74,8 +74,8 @@ struct EulerEquations<2>
     
     names[ID] = "rho";
     names[IP] = "energy";
-    names[IU] = "mx"; // momentum component X
-    names[IV] = "my"; // momentum component Y
+    names[IU] = "rho_vx"; // momentum component X
+    names[IV] = "rho_vy"; // momentum component Y
 
     return names;
     
@@ -478,9 +478,9 @@ struct EulerEquations<3>
     
     names[ID] = "rho";
     names[IE] = "energy";
-    names[IU] = "mx"; // momentum component X
-    names[IV] = "my"; // momentum component Y
-    names[IW] = "mz"; // momentum component Z
+    names[IU] = "rho_vx"; // momentum component X
+    names[IV] = "rho_vy"; // momentum component Y
+    names[IW] = "rho_vz"; // momentum component Z
 
     return names;
     
