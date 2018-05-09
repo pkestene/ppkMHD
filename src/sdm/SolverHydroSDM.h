@@ -414,7 +414,8 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   m_variables_names[IP] = "energy";
   m_variables_names[IU] = "rho_vx"; // momentum component X
   m_variables_names[IV] = "rho_vy"; // momentum component Y
-  m_variables_names[IW] = "rho_vz"; // momentum component Z
+  if (dim==3)
+    m_variables_names[IW] = "rho_vz"; // momentum component Z
 
   
   /*
