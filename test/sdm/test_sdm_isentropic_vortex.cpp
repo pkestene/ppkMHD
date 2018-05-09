@@ -307,6 +307,39 @@ void run_test()
   
 } // run_test
 
+template<int N>
+void run_test_single(int size)
+{
+  real_t results_L1;
+  real_t results_L2;
+
+  // setup
+  int RK_type;
+  if (N==2) {
+    RK_type = SSP_RK2;
+  } else if (N==3) {
+    RK_type = SSP_RK3;
+  } else if (N==4) {
+    RK_type = SSP_RK3;
+  } else if (N==5) {
+    RK_type = SSP_RK3;
+  } else if (N==6) {
+    RK_type = SSP_RK3;
+  }
+
+  // action
+  errors_t error = test_isentropic_vortex<N>(size,RK_type);
+  results_L1 = error[sdm::NORM_L1];
+  results_L2 = error[sdm::NORM_L2];
+  
+  // report results with norm L1
+  printf("order %d, size=%4d, error L1 = %6.4e, order = --   \n",N,size,results_L1);
+  
+  // report results with norm L2
+  printf("order %d, size=%4d, error L2 = %6.4e, order = --   \n",N,size,results_L2);
+  
+} // run_test_single
+
   
 // ===============================================================
 // ===============================================================
@@ -355,37 +388,64 @@ int main(int argc, char *argv[])
   int order = 2;
 
   // check command line for another order to test
-  if (argc > 1) {
+  if (argc == 2 ) {
     int tmp = std::atoi(argv[1]);
     if (tmp >= 1 and tmp < 7)
       order = tmp;
-  }
 
-  if (order==2) {
+    if (order==2) {
+      
+      run_test<2>();
+      
+    } else if (order==3) {
+      
+      run_test<3>();
+      
+    } else if (order==4) {
+      
+      run_test<4>();
+      
+    } else if (order==5) {
+      
+      run_test<5>();
+      
+    } else if (order==6) {
+      
+      run_test<6>();
 
-    run_test<2>();
-
-  } else if (order==3) {
-
-    run_test<3>();
+    }
     
-  } else if (order==4) {
-
-    run_test<4>();
-
-  } else if (order==5) {
-
-    run_test<5>();
-
-  } else if (order==6) {
-
-    run_test<6>();
-
-  }
-    
-
   // save result in a numpy compatible file (for plotting with python / matplotlib)
   // TODO
+
+  } else if (argc == 3) {
+
+    order = std::atoi(argv[1]);
+    int size = std::atoi(argv[2]);
+
+    switch(order) {
+    case 2:
+      run_test_single<2>(size);
+      break;
+    case 3:
+      run_test_single<3>(size);
+      break;
+    case 4:
+      run_test_single<4>(size);
+      break;
+    case 5:
+      run_test_single<5>(size);
+      break;
+    case 6:
+      run_test_single<6>(size);
+      break;
+    default:
+      std::cout << "invalid parameter (order) !\n";
+      break;
+    }
+    
+  }
+
   
 #ifdef CUDA
   Kokkos::Cuda::finalize();
