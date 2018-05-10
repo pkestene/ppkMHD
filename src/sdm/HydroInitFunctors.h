@@ -860,6 +860,19 @@ public:
     iparams(iparams),
     Udata(Udata) {};
   
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams            params,
+		    SDM_Geometry<dim,N>    sdm_geom,
+		    IsentropicVortexParams iparams,
+                    DataArray              Udata)
+  {
+    std::size_t nbCells = dim == 2 ?
+      params.isize*params.jsize : params.isize*params.jsize*params.ksize;
+    
+    InitIsentropicVortexFunctor<dim,N> functor(params, sdm_geom, iparams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   /*
    * 2D version.
    */
@@ -900,10 +913,22 @@ public:
     //const real_t w_a   = this->iparams.w_a;
     
     // vortex center
-    const real_t vortex_x = this->iparams.vortex_x;
-    const real_t vortex_y = this->iparams.vortex_y;
+    real_t vortex_x = this->iparams.vortex_x;
+    real_t vortex_y = this->iparams.vortex_y;
     const real_t beta =     this->iparams.beta;
 
+    const bool use_tEnd = this->iparams.use_tEnd;
+    if (use_tEnd) {
+      const real_t xmax = this->params.xmax;
+      const real_t ymax = this->params.ymax;
+      vortex_x += this->iparams.tEnd * u_a;
+      vortex_y += this->iparams.tEnd * v_a;
+
+      // make sure vortex center is inside the box (periodic boundaries for this test)
+      vortex_x = fmod(vortex_x, xmax-xmin);
+      vortex_y = fmod(vortex_y, ymax-ymin);
+    }
+    
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
@@ -990,9 +1015,22 @@ public:
     //const real_t w_a   = this->iparams.w_a;
     
     // vortex center
-    const real_t vortex_x = this->iparams.vortex_x;
-    const real_t vortex_y = this->iparams.vortex_y;
+    real_t vortex_x = this->iparams.vortex_x;
+    real_t vortex_y = this->iparams.vortex_y;
     const real_t beta =     this->iparams.beta;
+
+    const bool use_tEnd = this->iparams.use_tEnd;
+    if (use_tEnd) {
+      const real_t xmax = this->params.xmax;
+      const real_t ymax = this->params.ymax;
+      
+      vortex_x += this->iparams.tEnd * u_a;
+      vortex_y += this->iparams.tEnd * v_a;
+
+      // make sure vortex center is inside the box (periodic boundaries for this test)
+      vortex_x = fmod(vortex_x, xmax-xmin);
+      vortex_y = fmod(vortex_y, ymax-ymin);
+    }
 
     // local cell index
     int i,j,k;

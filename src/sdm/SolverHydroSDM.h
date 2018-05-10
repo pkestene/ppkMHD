@@ -1989,9 +1989,7 @@ void SolverHydroSDM<dim,N>::init_isentropic_vortex(DataArray Udata)
 
   IsentropicVortexParams iparams(configMap);
 
-  InitIsentropicVortexFunctor<dim,N> functor(params, sdm_geom, iparams, Udata);
-  Kokkos::parallel_for(nbCells, functor);
-  
+  InitIsentropicVortexFunctor<dim,N>::apply(params, sdm_geom, iparams, Udata);  
 } // init_isentropic_vortex
 
 // =======================================================
