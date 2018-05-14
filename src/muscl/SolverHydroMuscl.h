@@ -56,7 +56,7 @@ public:
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
   //! Decide at compile-time which data array to use for 2d or 3d
-  using VectorField  = typename std::conditional<dim==2,DataArrayVector2,DataArrayVector3>::type;
+  using VectorField  = typename std::conditional<dim==2,VectorField2d,VectorField3d>::type;
 
   SolverHydroMuscl(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMuscl();
