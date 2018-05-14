@@ -20,6 +20,8 @@ class ComputeDtFunctor2D : public HydroBaseFunctor2D {
 public:
 
   /**
+   * Compute time step satisfying CFL constraint.
+   *
    * \param[in] params
    * \param[in] Udata
    */
@@ -119,6 +121,8 @@ class ConvertToPrimitivesFunctor2D : public HydroBaseFunctor2D {
 public:
 
   /**
+   * Convert conservative variables to primitive ones using equation of state.
+   *
    * \param[in] params
    * \param[in] Udata conservative variables
    * \param[out] Qdata primitive variables
@@ -187,6 +191,8 @@ class ComputeFluxesAndUpdateFunctor2D : public HydroBaseFunctor2D {
 public:
 
   /**
+   * Perform time update by computing Riemann fluxes at cell interfaces.
+   *
    * \param[in] params
    * \param[in,out] Udata conservative variables
    * \param[in] Qm_x primitive variables reconstructed on face -X
@@ -299,8 +305,14 @@ class ComputeTraceFunctor2D : public HydroBaseFunctor2D {
 public:
 
   /**
+   * Compute (slope extrapolated) reconstructed states at face centers for all faces.
+   *
    * \param[in] params
    * \param[in] Qdata primitive variables
+   * \param[out] Qm_x primitive variables reconstructed at center face -X
+   * \param[out] Qm_y primitive variables reconstructed at center face -Y
+   * \param[out] Qp_x primitive variables reconstructed at center face +X
+   * \param[out] Qp_y primitive variables reconstructed at center face +Y
    */
   ComputeTraceFunctor2D(HydroParams params,
 			DataArray2d Qdata,
@@ -421,6 +433,16 @@ class ComputeAndStoreFluxesFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
+  /**
+   * Compute (all-in-one) reconstructed states on faces, then compute Riemann fluxes and store them.
+   *
+   * \note All-in-onehere means the stencil of this operator is larger (need to fetch data in
+   *  neighbor of neighbor).
+   *
+   * \param[in] Qdata primitive variables (at cell center)
+   * \param[out] FluxData_x flux coming from the left neighbor along X
+   * \param[out] FluxData_y flux coming from the left neighbor along Y
+   */
   ComputeAndStoreFluxesFunctor2D(HydroParams params,
 				 DataArray2d Qdata,
 				 DataArray2d FluxData_x,
@@ -657,6 +679,15 @@ class UpdateFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
+  /**
+   * Perform time update using the stored fluxes.
+   *
+   * \note this functor must be called after ComputeAndStoreFluxesFunctor2D
+   *
+   * \param[in,out] Udata
+   * \param[in] FluxData_x flux coming from the left neighbor along X
+   * \param[in] FluxData_y flux coming from the left neighbor along Y
+   */
   UpdateFunctor2D(HydroParams params,
 		  DataArray2d Udata,
 		  DataArray2d FluxData_x,
@@ -729,6 +760,13 @@ class UpdateDirFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
+  /**
+   * Perform time update using the stored fluxes along direction dir.
+   *
+   * \param[in,out] Udata
+   * \param[in] FluxData flux coming from the left neighbor along direction dir
+   *
+   */
   UpdateDirFunctor2D(HydroParams params,
 		     DataArray2d Udata,
 		     DataArray2d FluxData) :
@@ -802,6 +840,13 @@ class ComputeSlopesFunctor2D : public HydroBaseFunctor2D {
   
 public:
   
+  /**
+   * Compute limited slopes.
+   *
+   * \param[in] Qdata primitive variables
+   * \param[out] Slopes_x limited slopes along direction X
+   * \param[out] Slopes_y limited slopes along direction Y
+   */
   ComputeSlopesFunctor2D(HydroParams params,
 			 DataArray2d Qdata,
 			 DataArray2d Slopes_x,
@@ -906,6 +951,16 @@ class ComputeTraceAndFluxes_Functor2D : public HydroBaseFunctor2D {
   
 public:
   
+  /**
+   * Compute reconstructed states on faces (not stored), and fluxes (stored).
+   *
+   * \param[in] Qdata primitive variables
+   * \param[in] limited slopes along direction X
+   * \param[in] limited slopes along direction Y
+   * \param[out] Fluxes along direction dir
+   *
+   * \tparam dir direction along which fluxes are computed.
+   */
   ComputeTraceAndFluxes_Functor2D(HydroParams params,
 				  DataArray2d Qdata,
 				  DataArray2d Slopes_x,

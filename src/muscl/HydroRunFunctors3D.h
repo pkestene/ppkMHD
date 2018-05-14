@@ -20,6 +20,8 @@ class ComputeDtFunctor3D : public HydroBaseFunctor3D {
 public:
   
   /**
+   * Compute time step satisfying CFL constraint.
+   *
    * \param[in] params
    * \param[in] Udata
    */
@@ -123,6 +125,8 @@ class ConvertToPrimitivesFunctor3D : public HydroBaseFunctor3D {
 public:
 
   /**
+   * Convert conservative variables to primitive ones using equation of state.
+   *
    * \param[in] params
    * \param[in] Udata conservative variables
    * \param[out] Qdata primitive variables
@@ -195,6 +199,17 @@ class ComputeAndStoreFluxesFunctor3D : public HydroBaseFunctor3D {
 
 public:
 
+  /**
+   * Compute (all-in-one) reconstructed states on faces, then compute Riemann fluxes and store them.
+   *
+   * \note All-in-onehere means the stencil of this operator is larger (need to fetch data in
+   *  neighbor of neighbor).
+   *
+   * \param[in] Qdata primitive variables (at cell center)
+   * \param[out] FluxData_x flux coming from the left neighbor along X
+   * \param[out] FluxData_y flux coming from the left neighbor along Y
+   * \param[out] FluxData_z flux coming from the left neighbor along Z
+   */
   ComputeAndStoreFluxesFunctor3D(HydroParams params,
 				 DataArray3d Qdata,
 				 DataArray3d FluxData_x,
@@ -581,6 +596,16 @@ class UpdateFunctor3D : public HydroBaseFunctor3D {
 
 public:
 
+  /**
+   * Perform time update using the stored fluxes.
+   *
+   * \note this functor must be called after ComputeAndStoreFluxesFunctor2D
+   *
+   * \param[in,out] Udata
+   * \param[in] FluxData_x flux coming from the left neighbor along X
+   * \param[in] FluxData_y flux coming from the left neighbor along Y
+   * \param[in] FluxData_z flux coming from the left neighbor along Z
+   */
   UpdateFunctor3D(HydroParams params,
 		  DataArray3d Udata,
 		  DataArray3d FluxData_x,
@@ -675,6 +700,13 @@ class UpdateDirFunctor3D : public HydroBaseFunctor3D {
 
 public:
 
+  /**
+   * Perform time update using the stored fluxes along direction dir.
+   *
+   * \param[in,out] Udata
+   * \param[in] FluxData flux coming from the left neighbor along direction dir
+   *
+   */
   UpdateDirFunctor3D(HydroParams params,
 		     DataArray3d Udata,
 		     DataArray3d FluxData) :
@@ -768,6 +800,14 @@ class ComputeSlopesFunctor3D : public HydroBaseFunctor3D {
   
 public:
   
+  /**
+   * Compute limited slopes.
+   *
+   * \param[in] Qdata primitive variables
+   * \param[out] Slopes_x limited slopes along direction X
+   * \param[out] Slopes_y limited slopes along direction Y
+   * \param[out] Slopes_z limited slopes along direction Z
+   */
   ComputeSlopesFunctor3D(HydroParams params,
 			 DataArray3d Qdata,
 			 DataArray3d Slopes_x,
