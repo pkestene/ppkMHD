@@ -439,35 +439,47 @@ public:
    * \note All-in-onehere means the stencil of this operator is larger (need to fetch data in
    *  neighbor of neighbor).
    *
+   * no gravity.
+   *
    * \param[in] Qdata primitive variables (at cell center)
    * \param[out] FluxData_x flux coming from the left neighbor along X
    * \param[out] FluxData_y flux coming from the left neighbor along Y
+   * \param[in] gravity_enabled boolean value to activate static gravity
+   * \param[in] gravity is a vector field 
    */
   ComputeAndStoreFluxesFunctor2D(HydroParams params,
 				 DataArray2d Qdata,
 				 DataArray2d FluxData_x,
 				 DataArray2d FluxData_y,		       
-				 real_t dtdx,
-				 real_t dtdy) :
+				 real_t dt,
+				 bool gravity_enabled,
+				 VectorField2d gravity) :
     HydroBaseFunctor2D(params),
     Qdata(Qdata),
     FluxData_x(FluxData_x),
     FluxData_y(FluxData_y), 
-    dtdx(dtdx),
-    dtdy(dtdy) {};
+    dt(dt),
+    dtdx(dt/params.dx),
+    dtdy(dt/params.dy),
+    gravity_enabled(gravity_enabled),
+    gravity(gravity)
+  {};
   
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
                     DataArray2d Qdata,
 		    DataArray2d FluxData_x,
 		    DataArray2d FluxData_y,		       
-		    real_t dtdx,
-		    real_t dtdy,
-		    int    nbCells)
+		    real_t dt,
+		    bool gravity_enabled,
+		    VectorField2d gravity)
   {
+    int nbCells = params.isize * params.jsize;
     ComputeAndStoreFluxesFunctor2D functor(params, Qdata,
 					   FluxData_x, FluxData_y,
-					   dtdx, dtdy);
+					   dt,
+					   gravity_enabled,
+					   gravity);
     Kokkos::parallel_for(nbCells, functor);
   }
 
@@ -586,6 +598,18 @@ public:
       trace_unsplit_2d_along_dir(qLocNeighbor,
 				 dqX_neighbor,dqY_neighbor,
 				 dtdx, dtdy, FACE_XMAX, qleft);
+
+      if (gravity_enabled) {
+	// we need to modify input to flux computation with
+	// gravity predictor (half time step)
+	
+	qleft[IU]  += 0.5 * dt * gravity(i,j,IX);
+	qleft[IV]  += 0.5 * dt * gravity(i,j,IY);
+
+	qright[IU] += 0.5 * dt * gravity(i,j,IX);
+	qright[IV] += 0.5 * dt * gravity(i,j,IY);
+
+      }
       
       // Solve Riemann problem at X-interfaces and compute X-fluxes
       //riemann_2d(qleft,qright,qgdnv,flux_x);
@@ -668,7 +692,10 @@ public:
   DataArray2d Qdata;
   DataArray2d FluxData_x;
   DataArray2d FluxData_y;
-  real_t dtdx, dtdy;
+  real_t dt, dtdx, dtdy;
+  bool gravity_enabled;
+  VectorField2d gravity;
+
   
 }; // ComputeAndStoreFluxesFunctor2D
   
@@ -1132,6 +1159,79 @@ public:
   real_t dtdx, dtdy;
   
 }; // ComputeTraceAndFluxes_Functor2D
+
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+class GravitySourceTermFunctor2D : public HydroBaseFunctor2D {
+  
+public:
+  
+  /**
+   * Update with gravity source term.
+   *
+   * \param[in] Udata_in conservative variables at t(n)
+   * \param[in,out] Udata_out conservative variables at t(n+1)
+   * \param[in] gravity is a vector field
+   */
+  GravitySourceTermFunctor2D(HydroParams params,
+			     DataArray2d Udata_in,
+			     DataArray2d Udata_out,
+			     VectorField2d gravity,
+			     real_t dt) :
+    HydroBaseFunctor2D(params),
+    Udata_in(Udata_in),
+    Udata_out(Udata_out),
+    gravity(gravity),
+    dt(dt)
+  {};
+  
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams params,
+                    DataArray2d Udata_in,
+                    DataArray2d Udata_out,
+		    VectorField2d gravity,
+		    real_t dt)
+  {
+    int nbCells = params.isize * params.jsize;
+    GravitySourceTermFunctor2D functor(params, Udata_in, Udata_out,gravity, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+  
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    if(j >= ghostWidth-1 && j <= jsize-ghostWidth  &&
+       i >= ghostWidth-1 && i <= isize-ghostWidth ) {
+
+      real_t rhoOld = Udata_in(i,j,ID);
+      real_t rhoNew = Udata_out(i,j,ID);
+      
+      // update momentum
+      Udata_out(i,j,IU) += 0.5 * dt * gravity(i,j,IX) * (rhoOld + rhoNew); 
+      Udata_out(i,j,IV) += 0.5 * dt * gravity(i,j,IY) * (rhoOld + rhoNew);
+
+      Udata_out(i,j,IE) +=
+	0.5 * dt * gravity(i,j,IX) * (rhoOld + rhoNew) * Udata_in(i,j,IU) +
+	0.5 * dt * gravity(i,j,IY) * (rhoOld + rhoNew) * Udata_in(i,j,IV) ;
+      
+    }
+    
+  } // end operator ()
+  
+  DataArray2d Udata_in, Udata_out;
+  VectorField2d gravity;
+  real_t dt;
+  
+}; // GravitySourceTermFunctor2D
 
 } // namespace muscl
 

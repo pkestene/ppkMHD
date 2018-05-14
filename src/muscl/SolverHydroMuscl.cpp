@@ -395,16 +395,23 @@ void SolverHydroMuscl<2>::godunov_unsplit_impl(DataArray data_in,
 
   if (params.implementationVersion == 0) {
     
-    // compute fluxes
+    // compute fluxes (if gravity_enabled is false, the last parameter is not used)
     ComputeAndStoreFluxesFunctor2D::apply(params, Q,
 					  Fluxes_x, Fluxes_y,
-					  dtdx, dtdy,
-					  nbCells);
+					  dt,
+					  m_gravity_enabled,
+					  gravity);
     
     // actual update
     UpdateFunctor2D::apply(params, data_out,
 			   Fluxes_x, Fluxes_y,
 			   nbCells);
+
+    // gravity source term
+    if (m_gravity_enabled) {
+      GravitySourceTermFunctor2D::apply(params, data_in, data_out, gravity, dt);
+    }
+
     
   } else if (params.implementationVersion == 1) {
 
