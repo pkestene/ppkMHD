@@ -32,6 +32,8 @@ typedef DataArray3d::HostMirror           DataArray3dHost;
 // for 2D
 typedef Kokkos::View<real_t**,        Device> DataArrayScalar;
 typedef DataArrayScalar::HostMirror           DataArrayScalarHost;
+typedef Kokkos::View<real_t**[2],      Device> DataArrayVector2;
+typedef DataArrayVector2::HostMirror           DataArrayVector2Host;
 
 // for 3D
 typedef Kokkos::View<real_t***[3],     Device> DataArrayVector3;

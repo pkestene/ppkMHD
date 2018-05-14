@@ -127,6 +127,14 @@ SolverBase::read_config()
   m_restart_run_enabled = configMap.getInteger("run", "restart_enabled", 0);
   m_restart_run_filename = configMap.getString ("run", "restart_filename", "");
 
+  /*
+   * Gravity enabled (either static or self).
+   * self-gravity requires a poisson solver (FFT-based): TODO
+   */
+    m_static_gravity_enabled = configMap.getBool("gravity", "static", false);
+    //selfGravityEnabled = configMap.getBool("gravity", "self", false);
+    m_gravity_enabled = m_static_gravity_enabled;// || m_self_gravity_enabled;
+
 } // SolverBase::read_config
 
 // =======================================================

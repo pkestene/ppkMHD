@@ -55,6 +55,9 @@ public:
   //! Data array typedef for host memory space
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
+  //! Decide at compile-time which data array to use for 2d or 3d
+  using VectorField  = typename std::conditional<dim==2,DataArrayVector2,DataArrayVector3>::type;
+
   SolverHydroMuscl(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroMuscl();
   
@@ -84,6 +87,9 @@ public:
   DataArray Slopes_z; /*!< implementation 1 only */
 
 
+  /* Gravity field */
+  VectorField gravity;
+  
   //riemann_solver_t riemann_solver_fn; /*!< riemann solver function pointer */
 
   /*
@@ -203,6 +209,11 @@ SolverHydroMuscl<dim>::SolverHydroMuscl(HydroParams& params,
 
     } 
 
+    if (m_gravity_enabled) {
+      gravity = VectorField("gravity field",isize,jsize);
+      total_mem_size += isize*jsize*2;
+    }
+
   } else {
 
     U     = DataArray("U", isize,jsize,ksize, nbvar);
@@ -234,6 +245,11 @@ SolverHydroMuscl<dim>::SolverHydroMuscl(HydroParams& params,
       total_mem_size += isize*jsize*ksize*nbvar*sizeof(real_t)*4;// 1+1+1+1=4 Slopes
     }
     
+    if (m_gravity_enabled) {
+      gravity = VectorField("gravity field",isize,jsize,ksize);
+      total_mem_size += isize*jsize*ksize*3;
+    }
+
   } // dim == 2 / 3
   
   // perform init condition
