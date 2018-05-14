@@ -18,7 +18,11 @@ namespace ppkMHD { namespace muscl {
 class ComputeDtFunctor2D : public HydroBaseFunctor2D {
 
 public:
-  
+
+  /**
+   * \param[in] params
+   * \param[in] Udata
+   */
   ComputeDtFunctor2D(HydroParams params,
 		     DataArray2d Udata) :
     HydroBaseFunctor2D(params),
@@ -114,6 +118,11 @@ class ConvertToPrimitivesFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
+  /**
+   * \param[in] params
+   * \param[in] Udata conservative variables
+   * \param[out] Qdata primitive variables
+   */
   ConvertToPrimitivesFunctor2D(HydroParams params,
 			       DataArray2d Udata,
 			       DataArray2d Qdata) :
@@ -177,6 +186,14 @@ class ComputeFluxesAndUpdateFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
+  /**
+   * \param[in] params
+   * \param[in,out] Udata conservative variables
+   * \param[in] Qm_x primitive variables reconstructed on face -X
+   * \param[in] Qm_y primitive variables reconstructed on face -Y
+   * \param[in] Qp_x primitive variables reconstructed on face +X
+   * \param[in] Qp_y primitive variables reconstructed on face +Y
+   */
   ComputeFluxesAndUpdateFunctor2D(HydroParams params,
 				  DataArray2d Udata,
 				  DataArray2d Qm_x,
@@ -281,8 +298,11 @@ class ComputeTraceFunctor2D : public HydroBaseFunctor2D {
 
 public:
 
+  /**
+   * \param[in] params
+   * \param[in] Qdata primitive variables
+   */
   ComputeTraceFunctor2D(HydroParams params,
-			DataArray2d Udata,
 			DataArray2d Qdata,
 			DataArray2d Qm_x,
 			DataArray2d Qm_y,
@@ -291,7 +311,7 @@ public:
 			real_t dtdx,
 			real_t dtdy) :
     HydroBaseFunctor2D(params),
-    Udata(Udata), Qdata(Qdata),
+    Qdata(Qdata),
     Qm_x(Qm_x), Qm_y(Qm_y), Qp_x(Qp_x), Qp_y(Qp_y),
     dtdx(dtdx), dtdy(dtdy) {};
   
@@ -387,7 +407,7 @@ public:
     }
   }
 
-  DataArray2d Udata, Qdata;
+  DataArray2d Qdata;
   DataArray2d Qm_x, Qm_y, Qp_x, Qp_y;
   real_t dtdx, dtdy;
   

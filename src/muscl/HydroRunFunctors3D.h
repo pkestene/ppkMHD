@@ -19,6 +19,10 @@ class ComputeDtFunctor3D : public HydroBaseFunctor3D {
 
 public:
   
+  /**
+   * \param[in] params
+   * \param[in] Udata
+   */
   ComputeDtFunctor3D(HydroParams params,
 		     DataArray3d Udata) :
     HydroBaseFunctor3D(params),
@@ -118,6 +122,11 @@ class ConvertToPrimitivesFunctor3D : public HydroBaseFunctor3D {
 
 public:
 
+  /**
+   * \param[in] params
+   * \param[in] Udata conservative variables
+   * \param[out] Qdata primitive variables
+   */
   ConvertToPrimitivesFunctor3D(HydroParams params,
 			       DataArray3d Udata,
 			       DataArray3d Qdata) :
