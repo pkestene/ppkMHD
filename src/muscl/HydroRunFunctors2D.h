@@ -955,8 +955,8 @@ public:
    * Compute reconstructed states on faces (not stored), and fluxes (stored).
    *
    * \param[in] Qdata primitive variables
-   * \param[in] limited slopes along direction X
-   * \param[in] limited slopes along direction Y
+   * \param[in] Slopes_x limited slopes along direction X
+   * \param[in] Slopes_y limited slopes along direction Y
    * \param[out] Fluxes along direction dir
    *
    * \tparam dir direction along which fluxes are computed.

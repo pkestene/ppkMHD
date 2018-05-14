@@ -944,6 +944,17 @@ class ComputeTraceAndFluxes_Functor3D : public HydroBaseFunctor3D {
   
 public:
   
+  /**
+   * Compute reconstructed states on faces (not stored), and fluxes (stored).
+   *
+   * \param[in] Qdata primitive variables
+   * \param[in] Slopes_x limited slopes along direction X
+   * \param[in] Slopes_y limited slopes along direction Y
+   * \param[in] Slopes_z limited slopes along direction Z
+   * \param[out] Fluxes along direction dir
+   *
+   * \tparam dir direction along which fluxes are computed.
+   */
   ComputeTraceAndFluxes_Functor3D(HydroParams params,
 				  DataArray3d Qdata,
 				  DataArray3d Slopes_x,
