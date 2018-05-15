@@ -318,6 +318,10 @@ void SolverHydroMuscl<2>::init(DataArray Udata)
       
       init_isentropic_vortex(Udata);
       
+    } else if ( !m_problem_name.compare("rayleigh_taylor") ) {
+      
+      init_rayleigh_taylor(Udata,gravity);
+      
     } else {
       
       std::cout << "Problem : " << m_problem_name
@@ -349,8 +353,12 @@ void SolverHydroMuscl<3>::init(DataArray Udata)
 
     init_blast(Udata);
 
+  } else if ( !m_problem_name.compare("rayleigh_taylor") ) {
+    
+    init_rayleigh_taylor(Udata,gravity);
+    
   } else {
-
+    
     std::cout << "Problem : " << m_problem_name
 	      << " is not recognized / implemented."
 	      << std::endl;

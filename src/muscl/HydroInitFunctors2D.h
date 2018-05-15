@@ -392,6 +392,17 @@ public:
     gravity(gravity)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams params,
+		    RayleighTaylorInstabilityParams rtiparams,
+                    DataArray2d Udata,
+		    VectorField2d gravity)
+  {
+    uint64_t nbCells = params.isize * params.jsize;
+    RayleighTaylorInstabilityFunctor2D functor(params, rtiparams, Udata, gravity);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
   {
@@ -465,7 +476,7 @@ public:
     } else {
       Udata(i,j,ID) = d0;
     }
-    Udata(i,j,IU) = 0.0f;
+    Udata(i,j,IU) = 0.0;
     // if (randomEnabled)
     //   Udata(i,j,IV) = amplitude * ( rand() * 1.0 / RAND_MAX - 0.5);
     // else

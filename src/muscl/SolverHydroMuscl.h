@@ -104,6 +104,7 @@ public:
   void init_blast(DataArray Udata); // 2d and 3d
   void init_four_quadrant(DataArray Udata); // 2d only
   void init_isentropic_vortex(DataArray Udata); // 2d only
+  void init_rayleigh_taylor(DataArray Udata, VectorField gravity); // 2d and 3d
 
   //! init restart (load data from file)
   void init_restart(DataArray Udata);
@@ -338,6 +339,32 @@ void SolverHydroMuscl<dim>::init_blast(DataArray Udata)
   InitBlastFunctor::apply(params, blastParams, Udata, nbCells);
 
 } // SolverHydroMuscl::init_blast
+
+// =======================================================
+// =======================================================
+/**
+ * Hydrodynamical Rayleigh Taylor instability Test.
+ * http://www.astro.princeton.edu/~jstone/Athena/tests/rt/rt.html
+ *
+ */
+template<int dim>
+void SolverHydroMuscl<dim>::init_rayleigh_taylor(DataArray Udata,
+						 VectorField gravity)
+{
+  
+  RayleighTaylorInstabilityParams rtiParams =
+    RayleighTaylorInstabilityParams(configMap);
+  
+  // alias to actual device functor
+  using RTIFunctor =
+    typename std::conditional<dim==2,
+  			      RayleighTaylorInstabilityFunctor2D,
+  			      RayleighTaylorInstabilityFunctor3D>::type;
+  
+  // perform init
+  RTIFunctor::apply(params, rtiParams, Udata, gravity);
+  
+} // SolverHydroMuscl::init_rayleigh_taylor
 
 // =======================================================
 // =======================================================
