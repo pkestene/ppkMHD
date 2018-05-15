@@ -560,25 +560,25 @@ public:
       qNeighbors_0[ID] = Qdata(i  ,j  , ID);
       qNeighbors_1[ID] = Qdata(i-2,j  , ID);
       qNeighbors_2[ID] = Qdata(i-1,j+1, ID);
-      qNeighbors_3[ID] = Qdata(i-2,j-1, ID);
+      qNeighbors_3[ID] = Qdata(i-1,j-1, ID);
       
       qLocNeighbor[IP] = Qdata(i-1,j  , IP);
       qNeighbors_0[IP] = Qdata(i  ,j  , IP);
       qNeighbors_1[IP] = Qdata(i-2,j  , IP);
       qNeighbors_2[IP] = Qdata(i-1,j+1, IP);
-      qNeighbors_3[IP] = Qdata(i-2,j-1, IP);
+      qNeighbors_3[IP] = Qdata(i-1,j-1, IP);
       
       qLocNeighbor[IU] = Qdata(i-1,j  , IU);
       qNeighbors_0[IU] = Qdata(i  ,j  , IU);
       qNeighbors_1[IU] = Qdata(i-2,j  , IU);
       qNeighbors_2[IU] = Qdata(i-1,j+1, IU);
-      qNeighbors_3[IU] = Qdata(i-2,j-1, IU);
+      qNeighbors_3[IU] = Qdata(i-1,j-1, IU);
       
       qLocNeighbor[IV] = Qdata(i-1,j  , IV);
       qNeighbors_0[IV] = Qdata(i  ,j  , IV);
       qNeighbors_1[IV] = Qdata(i-2,j  , IV);
       qNeighbors_2[IV] = Qdata(i-1,j+1, IV);
-      qNeighbors_3[IV] = Qdata(i-2,j-1, IV);
+      qNeighbors_3[IV] = Qdata(i-1,j-1, IV);
       
       slope_unsplit_hydro_2d(qLocNeighbor, 
 			     qNeighbors_0, qNeighbors_1, 
@@ -603,8 +603,8 @@ public:
 	// we need to modify input to flux computation with
 	// gravity predictor (half time step)
 	
-	qleft[IU]  += 0.5 * dt * gravity(i,j,IX);
-	qleft[IV]  += 0.5 * dt * gravity(i,j,IY);
+	qleft[IU]  += 0.5 * dt * gravity(i-1,j,IX);
+	qleft[IV]  += 0.5 * dt * gravity(i-1,j,IY);
 
 	qright[IU] += 0.5 * dt * gravity(i,j,IX);
 	qright[IV] += 0.5 * dt * gravity(i,j,IY);
@@ -671,6 +671,18 @@ public:
 				 dqX_neighbor,dqY_neighbor,
 				 dtdx, dtdy, FACE_YMAX, qleft);
 
+      if (gravity_enabled) {
+	// we need to modify input to flux computation with
+	// gravity predictor (half time step)
+	
+	qleft[IU]  += 0.5 * dt * gravity(i,j-1,IX);
+	qleft[IV]  += 0.5 * dt * gravity(i,j-1,IY);
+
+	qright[IU] += 0.5 * dt * gravity(i,j,IX);
+	qright[IV] += 0.5 * dt * gravity(i,j,IY);
+
+      }
+
       // Solve Riemann problem at Y-interfaces and compute Y-fluxes
       swapValues(&(qleft[IU]) ,&(qleft[IV]) );
       swapValues(&(qright[IU]),&(qright[IV]));
@@ -682,8 +694,8 @@ public:
       //
       FluxData_y(i  ,j  , ID) = flux_y[ID] * dtdy;
       FluxData_y(i  ,j  , IP) = flux_y[IP] * dtdy;
-      FluxData_y(i  ,j  , IU) = flux_y[IU] * dtdy;
-      FluxData_y(i  ,j  , IV) = flux_y[IV] * dtdy;
+      FluxData_y(i  ,j  , IU) = flux_y[IV] * dtdy; //
+      FluxData_y(i  ,j  , IV) = flux_y[IU] * dtdy; //
           
     } // end if
     
@@ -760,13 +772,13 @@ public:
       
       Udata(i  ,j  , ID) +=  FluxData_y(i  ,j  , ID);
       Udata(i  ,j  , IP) +=  FluxData_y(i  ,j  , IP);
-      Udata(i  ,j  , IU) +=  FluxData_y(i  ,j  , IV); //
-      Udata(i  ,j  , IV) +=  FluxData_y(i  ,j  , IU); //
+      Udata(i  ,j  , IU) +=  FluxData_y(i  ,j  , IU);
+      Udata(i  ,j  , IV) +=  FluxData_y(i  ,j  , IV);
       
       Udata(i  ,j  , ID) -=  FluxData_y(i  ,j+1, ID);
       Udata(i  ,j  , IP) -=  FluxData_y(i  ,j+1, IP);
-      Udata(i  ,j  , IU) -=  FluxData_y(i  ,j+1, IV); //
-      Udata(i  ,j  , IV) -=  FluxData_y(i  ,j+1, IU); //
+      Udata(i  ,j  , IU) -=  FluxData_y(i  ,j+1, IU);
+      Udata(i  ,j  , IV) -=  FluxData_y(i  ,j+1, IV);
 
     } // end if
     
@@ -993,12 +1005,17 @@ public:
 				  DataArray2d Slopes_x,
 				  DataArray2d Slopes_y,
 				  DataArray2d Fluxes,
-				  real_t    dtdx,
-				  real_t    dtdy) :
+				  real_t    dt,
+				  bool gravity_enabled,
+				  VectorField2d gravity) :
     HydroBaseFunctor2D(params), Qdata(Qdata),
     Slopes_x(Slopes_x), Slopes_y(Slopes_y),
     Fluxes(Fluxes),
-    dtdx(dtdx), dtdy(dtdy) {};
+    dt(dt),
+    dtdx(dt/params.dx), dtdy(dt/params.dy),
+    gravity_enabled(gravity_enabled),
+    gravity(gravity)
+  {};
   
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
@@ -1006,14 +1023,17 @@ public:
 		    DataArray2d Slopes_x,
 		    DataArray2d Slopes_y,  
 		    DataArray2d Fluxes,
-		    real_t      dtdx,
-		    real_t      dtdy,
-		    int nbCells)
+		    real_t        dt,
+		    bool          gravity_enabled,
+		    VectorField2d gravity)
   {
+    int nbCells = params.isize * params.jsize;
     ComputeTraceAndFluxes_Functor2D<dir> functor(params, Qdata,
 						 Slopes_x, Slopes_y,
 						 Fluxes,
-						 dtdx, dtdy);
+						 dt,
+						 gravity_enabled,
+						 gravity);
     Kokkos::parallel_for(nbCells, functor);
   }
 
@@ -1073,7 +1093,16 @@ public:
 	  trace_unsplit_2d_along_dir(qLoc,
 				     dqX, dqY,
 				     dtdx, dtdy, FACE_XMIN, qright);
-	  
+
+	  if (gravity_enabled) {
+	    // we need to modify input to flux computation with
+	    // gravity predictor (half time step)
+	    
+	    qright[IU] += 0.5 * dt * gravity(i,j,IX);
+	    qright[IV] += 0.5 * dt * gravity(i,j,IY);
+	    
+	  }
+
 	  qLocNeighbor[ID] = Qdata   (i-1,j  , ID);
 	  dqX_neighbor[ID] = Slopes_x(i-1,j  , ID);
 	  dqY_neighbor[ID] = Slopes_y(i-1,j  , ID);
@@ -1095,6 +1124,15 @@ public:
 				     dqX_neighbor,dqY_neighbor,
 				     dtdx, dtdy, FACE_XMAX, qleft);
 	  
+	  if (gravity_enabled) {
+	    // we need to modify input to flux computation with
+	    // gravity predictor (half time step)
+	    
+	    qleft[IU]  += 0.5 * dt * gravity(i-1,j,IX);
+	    qleft[IV]  += 0.5 * dt * gravity(i-1,j,IY);
+	    
+	  }
+	  
 	  // Solve Riemann problem at X-interfaces and compute X-fluxes
 	  riemann_hydro(qleft,qright,qgdnv,flux,params);
 
@@ -1112,6 +1150,15 @@ public:
 	  trace_unsplit_2d_along_dir(qLoc,
 				     dqX, dqY,
 				     dtdx, dtdy, FACE_YMIN, qright);
+
+	  if (gravity_enabled) {
+	    // we need to modify input to flux computation with
+	    // gravity predictor (half time step)
+	    
+	    qright[IU] += 0.5 * dt * gravity(i,j,IX);
+	    qright[IV] += 0.5 * dt * gravity(i,j,IY);
+	    
+	  }
 	  
 	  qLocNeighbor[ID] = Qdata   (i  ,j-1, ID);
 	  dqX_neighbor[ID] = Slopes_x(i  ,j-1, ID);
@@ -1133,6 +1180,15 @@ public:
 	  trace_unsplit_2d_along_dir(qLocNeighbor,
 				     dqX_neighbor,dqY_neighbor,
 				     dtdx, dtdy, FACE_YMAX, qleft);
+	  
+	  if (gravity_enabled) {
+	    // we need to modify input to flux computation with
+	    // gravity predictor (half time step)
+	    
+	    qleft[IU]  += 0.5 * dt * gravity(i,j-1,IX);
+	    qleft[IV]  += 0.5 * dt * gravity(i,j-1,IY);
+	    
+	  }
 	  
 	  // Solve Riemann problem at Y-interfaces and compute Y-fluxes
 	  swapValues(&(qleft[IU]) ,&(qleft[IV]) );
@@ -1156,7 +1212,9 @@ public:
   DataArray2d Qdata;
   DataArray2d Slopes_x, Slopes_y;
   DataArray2d Fluxes;
-  real_t dtdx, dtdy;
+  real_t dt, dtdx, dtdy;
+  bool gravity_enabled;
+  VectorField2d gravity;
   
 }; // ComputeTraceAndFluxes_Functor2D
 
@@ -1195,7 +1253,7 @@ public:
 		    real_t dt)
   {
     int nbCells = params.isize * params.jsize;
-    GravitySourceTermFunctor2D functor(params, Udata_in, Udata_out,gravity, dt);
+    GravitySourceTermFunctor2D functor(params, Udata_in, Udata_out, gravity, dt);
     Kokkos::parallel_for(nbCells, functor);
   }
   
@@ -1209,8 +1267,8 @@ public:
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
-    if(j >= ghostWidth-1 && j <= jsize-ghostWidth  &&
-       i >= ghostWidth-1 && i <= isize-ghostWidth ) {
+    if(j >= ghostWidth && j < jsize-ghostWidth  &&
+       i >= ghostWidth && i < isize-ghostWidth ) {
 
       real_t rhoOld = Udata_in(i,j,ID);
       real_t rhoNew = Udata_out(i,j,ID);

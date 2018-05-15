@@ -431,7 +431,9 @@ void SolverHydroMuscl<2>::godunov_unsplit_impl(DataArray data_in,
     ComputeTraceAndFluxes_Functor2D<XDIR>::apply(params, Q,
 						 Slopes_x, Slopes_y,
 						 Fluxes_x,
-						 dtdx, dtdy, nbCells);
+						 dt,
+						 m_gravity_enabled,
+						 gravity);
     
     // and update along X axis
     UpdateDirFunctor2D<XDIR>::apply(params, data_out, Fluxes_x, nbCells);
@@ -440,11 +442,18 @@ void SolverHydroMuscl<2>::godunov_unsplit_impl(DataArray data_in,
     ComputeTraceAndFluxes_Functor2D<YDIR>::apply(params, Q,
 						 Slopes_x, Slopes_y,
 						 Fluxes_y,
-						 dtdx, dtdy, nbCells);
+						 dt,
+						 m_gravity_enabled,
+						 gravity);
     
     // and update along Y axis
     UpdateDirFunctor2D<YDIR>::apply(params, data_out, Fluxes_y, nbCells);
     
+    // gravity source term
+    if (m_gravity_enabled) {
+      GravitySourceTermFunctor2D::apply(params, data_in, data_out, gravity, dt);
+    }
+
   } // end params.implementationVersion == 1
   
   timers[TIMER_NUM_SCHEME]->stop();
