@@ -455,7 +455,7 @@ public:
     const real_t gravity_y = rtiparams.gy;
     const real_t gravity_z = rtiparams.gz;
     
-    real_t         P0 = 1.0/(gamma0-1.0);
+    real_t         P0 = 1.0;
       
   
     // the initial condition must ensure the condition of
@@ -484,7 +484,10 @@ public:
       (1+cos(2*M_PI*x/Lx))*
       (1+cos(2*M_PI*y/Ly))/4;
 
-    Udata(i,j,IE) = P0 + Udata(i,j,ID)*(gravity_x*x + gravity_y*y);
+    // initial hydrostatic equilibrium :
+    // -dP/dz + rho*g = 0
+    // P = P0 + rho g z
+    Udata(i,j,IE) = (P0 + Udata(i,j,ID)*(gravity_x*x + gravity_y*y))/(gamma0-1.0);
 
     // init gravity field
     gravity(i,j,IX) = gravity_x;

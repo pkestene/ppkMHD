@@ -330,7 +330,7 @@ public:
     const real_t gravity_y = rtiparams.gy;
     const real_t gravity_z = rtiparams.gz;
     
-    real_t         P0 = 1.0/(gamma0-1.0);
+    real_t         P0 = 1.0;
       
   
     // the initial condition must ensure the condition of
@@ -360,8 +360,9 @@ public:
       (1+cos(2*M_PI*x/Lx))*
       (1+cos(2*M_PI*y/Ly))/4;
 
-    Udata(i,j,k,IE) = P0 +
-      Udata(i,j,k,ID)*(gravity_x*x + gravity_y*y + gravity_z*z);
+    Udata(i,j,k,IE) = (P0 + Udata(i,j,k,ID)*(gravity_x*x +
+					     gravity_y*y +
+					     gravity_z*z))/(gamma0-1);
 
     // init gravity field
     gravity(i,j,k,IX) = gravity_x;
