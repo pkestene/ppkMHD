@@ -264,7 +264,7 @@ public:
                     DataArray3d Udata,
 		    VectorField3d gravity)
   {
-    uint64_t nbCells = params.isize * params.jsize;
+    uint64_t nbCells = params.isize * params.jsize * params.ksize;
     RayleighTaylorInstabilityFunctor3D functor(params, rtiparams, Udata, gravity);
     Kokkos::parallel_for(nbCells, functor);
   }
@@ -346,7 +346,7 @@ public:
     // h_U(i,j,IU) = 0.0;
     // h_U(i,j,IV) = amplitude*(1+cos(2*M_PI*x))*(1+cos(0.5*M_PI*y))/4;
     
-    if ( y > (ymin+ymax)/2 ) {
+    if ( z > (zmin+zmax)/2 ) {
       Udata(i,j,k,ID) = d1;
     } else {
       Udata(i,j,k,ID) = d0;

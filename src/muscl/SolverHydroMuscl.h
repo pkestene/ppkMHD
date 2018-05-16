@@ -478,7 +478,7 @@ void SolverHydroMuscl<dim>::convertToPrimitives(DataArray Udata)
 			      ConvertToPrimitivesFunctor3D>::type;
 
   // call device functor
-  ConvertToPrimitivesFunctor::apply(params, Udata, Q, nbCells);
+  ConvertToPrimitivesFunctor::apply(params, Udata, Q);
   
 } // SolverHydroMuscl::convertToPrimitives
 

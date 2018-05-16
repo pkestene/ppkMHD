@@ -135,9 +135,9 @@ public:
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
                     DataArray2d Udata,
-                    DataArray2d Qdata,
-		    int nbCells)
+                    DataArray2d Qdata)
   {
+    int nbCells = params.isize * params.jsize;
     ConvertToPrimitivesFunctor2D functor(params, Udata, Qdata);
     Kokkos::parallel_for(nbCells, functor);
   }
@@ -436,10 +436,8 @@ public:
   /**
    * Compute (all-in-one) reconstructed states on faces, then compute Riemann fluxes and store them.
    *
-   * \note All-in-onehere means the stencil of this operator is larger (need to fetch data in
-   *  neighbor of neighbor).
-   *
-   * no gravity.
+   * \note All-in-one here means the stencil of this operator is larger (need to 
+   * fetch data in neighbor of neighbor).
    *
    * \param[in] Qdata primitive variables (at cell center)
    * \param[out] FluxData_x flux coming from the left neighbor along X
@@ -740,9 +738,9 @@ public:
   static void apply(HydroParams params,
                     DataArray2d Udata,
 		    DataArray2d FluxData_x,
-		    DataArray2d FluxData_y,  
-		    int nbCells)
+		    DataArray2d FluxData_y)
   {
+    int nbCells = params.isize * params.jsize;
     UpdateFunctor2D functor(params, Udata, FluxData_x, FluxData_y);
     Kokkos::parallel_for(nbCells, functor);
   }
@@ -816,9 +814,9 @@ public:
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
                     DataArray2d Udata,
-		    DataArray2d FluxData,
-		    int nbCells)
+		    DataArray2d FluxData)
   {
+    int nbCells = params.isize * params.jsize;
     UpdateDirFunctor2D<dir> functor(params, Udata, FluxData);
     Kokkos::parallel_for(nbCells, functor);
   }
@@ -897,9 +895,9 @@ public:
   static void apply(HydroParams params,
                     DataArray2d Qdata,
 		    DataArray2d Slopes_x,
-		    DataArray2d Slopes_y,  
-		    int nbCells)
+		    DataArray2d Slopes_y)
   {
+    int nbCells = params.isize * params.jsize;
     ComputeSlopesFunctor2D functor(params, Qdata, Slopes_x, Slopes_y);
     Kokkos::parallel_for(nbCells, functor);
   }
