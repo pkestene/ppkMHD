@@ -48,6 +48,7 @@
 // for specific init / border conditions
 #include "shared/problems/BlastParams.h"
 #include "shared/problems/KHParams.h"
+#include "shared/problems/GreshoParams.h"
 #include "shared/problems/WedgeParams.h"
 #include "shared/problems/JetParams.h"
 
@@ -321,6 +322,7 @@ public:
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
   void init_kelvin_helmholtz(DataArray Udata);
+  void init_gresho_vortex(DataArray Udata);
   void init_wedge(DataArray Udata);
   void init_jet(DataArray Udata);
   void init_isentropic_vortex(DataArray Udata);
@@ -621,6 +623,11 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   // 	      !m_problem_name.compare("kelvin_helmholtz")) {
 
   //   init_kelvin_helmholtz(U);
+
+  } else if ( !m_problem_name.compare("gresho-vortex") or
+	      !m_problem_name.compare("gresho_vortex")) {
+
+    init_gresho_vortex(U);
 
   } else if ( !m_problem_name.compare("wedge") ) {
     
@@ -1941,6 +1948,26 @@ void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
   // Kokkos::parallel_for(nbCells, functor);
 
 } // SolverHydroSDM::init_kelvin_helmholtz
+
+// =======================================================
+// =======================================================
+/**
+ * Hydrodynamical Gresho Vortex test.
+ * 
+ */
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::init_gresho_vortex(DataArray Udata)
+{
+  
+  GreshoParams gvParams = GreshoParams(configMap);
+  
+  InitGreshoVortexFunctor<dim,N> functor(params,
+                                         sdm_geom,
+                                         gvParams,
+					 Udata);
+  Kokkos::parallel_for(nbCells, functor);
+
+} // SolverHydroSDM::init_gresho_vortex
 
 // =======================================================
 // =======================================================
