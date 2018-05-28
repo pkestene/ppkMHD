@@ -314,6 +314,10 @@ void SolverHydroMuscl<2>::init(DataArray Udata)
       
       init_kelvin_helmholtz(Udata);
       
+    } else if ( !m_problem_name.compare("gresho_vortex") ) {
+      
+      init_gresho_vortex(Udata);
+      
     } else if ( !m_problem_name.compare("four_quadrant") ) {
       
       init_four_quadrant(Udata);
