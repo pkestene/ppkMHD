@@ -619,10 +619,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
     init_four_quadrant(U);
 
-  // } else if ( !m_problem_name.compare("kelvin-helmholtz") or
-  // 	      !m_problem_name.compare("kelvin_helmholtz")) {
-
-  //   init_kelvin_helmholtz(U);
+  } else if ( !m_problem_name.compare("kelvin-helmholtz") or
+   	      !m_problem_name.compare("kelvin_helmholtz")) {
+    
+    init_kelvin_helmholtz(U);
 
   } else if ( !m_problem_name.compare("gresho-vortex") or
 	      !m_problem_name.compare("gresho_vortex")) {
@@ -1939,13 +1939,13 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
 {
 
-  // KHParams khParams = KHParams(configMap);
+  KHParams khParams = KHParams(configMap);
 
-  // InitKelvinHelmholtzFunctor<dim,N> functor(params,
-  // 						 monomialMap.data,
-  // 						 khParams,
-  // 						 Udata);
-  // Kokkos::parallel_for(nbCells, functor);
+  InitKelvinHelmholtzFunctor<dim,N> functor(params,
+					    sdm_geom,
+					    khParams,
+					    Udata);
+  Kokkos::parallel_for(nbCells, functor);
 
 } // SolverHydroSDM::init_kelvin_helmholtz
 
