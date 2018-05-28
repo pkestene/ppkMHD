@@ -256,7 +256,7 @@ public:
 	
 	Udata(i,j,ID) = d_out;
 	Udata(i,j,IU) = d_out * (vflow_out + ampl * (rand_gen.drand() - 0.5));
-	Udata(i,j,IV) = d_out * (0.0       + ampl * (rand_gen.drand() - 0.5));;
+	Udata(i,j,IV) = d_out * (0.0       + ampl * (rand_gen.drand() - 0.5));
 	Udata(i,j,IP) = pressure/(gamma0-1.0) +
 	  0.5*(Udata(i,j,IU)*Udata(i,j,IU) +
 	       Udata(i,j,IV)*Udata(i,j,IV))/Udata(i,j,ID);
