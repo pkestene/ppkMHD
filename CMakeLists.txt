@@ -11,6 +11,7 @@ option (USE_SDM "build Spectral Difference Method numerical schemes" OFF)
 option (USE_HDF5 "build HDF5 input/output support" OFF)
 option (USE_PNETCDF "build PNETCDF input/output support (MPI required)" OFF)
 option (USE_FPE_DEBUG "build with floating point Nan tracing (signal handler)" OFF)
+option (USE_MPI_CUDA_AWARE_ENFORCED "Some MPI cuda-aware implementation are not well detected; use this to enforce" OFF)
 
 # C++11 is for Kokkos
 set(CMAKE_CXX_STANDARD 11)
@@ -84,7 +85,7 @@ if (USE_MPI)
     if (OMPI_INFO)
       execute_process(COMMAND ${OMPI_INFO}
         OUTPUT_VARIABLE _output)
-      if (_output MATCHES "smcuda")
+      if ( (_output MATCHES "smcuda") OR (USE_MPI_CUDA_AWARE_ENFORCED) )
         message(STATUS "Found OpenMPI with CUDA support built.")
       else()
         message(WARNING "OpenMPI found, but it is not built with CUDA support.")
