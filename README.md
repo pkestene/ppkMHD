@@ -35,12 +35,16 @@ make -j 4
 
 ### Build with MPI / With Kokkos-cuda
 
-* Make sure MPI compiler wrapper will use `nvcc_wrapper` from Kokkos
+* Make sure MPI compiler wrapper will use `nvcc_wrapper` from Kokkos; if your MPI implementation
+is OpenMPI or IBM Spectrum, you need to set environment variable OMPI_CXX (for MPICH, use MPICH_CXX):
+
+
 ```shell
 export OMPI_CXX=/path/to/nvcc_wrapper
 ```
 
 * Create a build directory, configure and make
+
 ```shell
 mkdir build; cd build
 CXX=mpicxx cmake ..
