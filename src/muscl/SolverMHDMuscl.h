@@ -468,7 +468,8 @@ void SolverMHDMuscl<dim>::init(DataArray Udata)
     std::cout << "Problem : " << m_problem_name
 	      << " is not recognized / implemented."
 	      << std::endl;
-    std::cout <<  "Use default - implode" << std::endl;
+    std::cout <<  "Use default - Orszag-Tang vortex" << std::endl;
+    m_problem_name = "orszag_tang";
     init_orszag_tang(Udata);
 
   }
