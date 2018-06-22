@@ -402,9 +402,9 @@ public:
       Qp_y(i  ,j  , ID) = qpY[ID];
       
       Qm_x(i  ,j  , IP) = qmX[IP];
-      Qp_x(i  ,j  , ID) = qpX[IP];
-      Qm_y(i  ,j  , ID) = qmY[IP];
-      Qp_y(i  ,j  , ID) = qpY[IP];
+      Qp_x(i  ,j  , IP) = qpX[IP];
+      Qm_y(i  ,j  , IP) = qmY[IP];
+      Qp_y(i  ,j  , IP) = qpY[IP];
       
       Qm_x(i  ,j  , IU) = qmX[IU];
       Qp_x(i  ,j  , IU) = qpX[IU];
