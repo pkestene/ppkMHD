@@ -496,22 +496,23 @@ public:
 
     int boundary_type;
     
-    int i0, j0;
-    int iVar;
-
     if (faceId == FACE_XMIN) {
       
       // boundary xmin
+      boundary_type = params.boundary_type_xmin;
+
       j = index / ghostWidth;
       i = index - j*ghostWidth;
       
-      boundary_type = params.boundary_type_xmin;
       
       if(j >= jmin && j <= jmax    &&
 	 i >= 0    && i <ghostWidth) {
+
+	int i0 = 0;
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
@@ -533,17 +534,20 @@ public:
     if (faceId == FACE_XMAX) {
       
       // boundary xmax
+      boundary_type = params.boundary_type_xmax;
+      
       j = index / ghostWidth;
       i = index - j*ghostWidth;
       i += (nx+ghostWidth);
 
-      boundary_type = params.boundary_type_xmax;
-      
       if(j >= jmin          && j <= jmax             &&
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
+
+	int i0 = 0;
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
@@ -564,17 +568,20 @@ public:
     if (faceId == FACE_YMIN) {
       
       // boundary ymin
+      boundary_type = params.boundary_type_ymin;
+      
       i = index / ghostWidth;
       j = index - i*ghostWidth;
 
-      boundary_type = params.boundary_type_ymin;
-      
       if(i >= imin && i <= imax    &&
 	 j >= 0    && j <ghostWidth) {
+
+	int j0 = 0;
 	
-	real_t sign=1.0;
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+
+	  real_t sign=1.0;
 	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
 	    if (iVar==IV) sign=-1.0;
@@ -593,17 +600,20 @@ public:
     if (faceId == FACE_YMAX) {
 
       // boundary ymax
+      boundary_type = params.boundary_type_ymax;
+      
       i = index / ghostWidth;
       j = index - i*ghostWidth;
       j += (ny+ghostWidth);
 
-      boundary_type = params.boundary_type_ymax;
-      
       if(i >= imin          && i <= imax              &&
 	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	int j0 = 0;
+
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
@@ -677,23 +687,24 @@ public:
     int boundary_type;
     
     int i0, j0, k0;
-    int iVar;
-    
+
     if (faceId == FACE_XMIN) {
+
       // boundary xmin (index = i + j * ghostWidth + k * ghostWidth*jsize)
+      boundary_type = params.boundary_type_xmin;
+      
       k = index / (ghostWidth*jsize);
       j = (index - k*ghostWidth*jsize) / ghostWidth;
       i = index - j*ghostWidth - k*ghostWidth*jsize;
 
-      boundary_type = params.boundary_type_xmin;
-      
       if(k >= kmin && k <= kmax &&
 	 j >= jmin && j <= jmax &&
 	 i >= 0    && i <ghostWidth) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
 	
+	  real_t sign=1.0;
+	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
 	    if (iVar==IU) sign=-1.0;
@@ -715,21 +726,22 @@ public:
       
       // boundary xmax (index = i + j *ghostWidth + k * ghostWidth*jsize)
       // same i,j,k as xmin, except translation along x-axis
+      boundary_type = params.boundary_type_xmax;
+      
       k = index / (ghostWidth*jsize);
       j = (index - k*ghostWidth*jsize) / ghostWidth;
       i = index - j*ghostWidth - k*ghostWidth*jsize;
 
       i += (nx+ghostWidth);
       
-      boundary_type = params.boundary_type_xmax;
-      
       if(k >= kmin          && k <= kmax &&
 	 j >= jmin          && j <= jmax &&
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
 
+	  real_t sign=1.0;
+	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
 	    if (iVar==IU) sign=-1.0;
@@ -749,19 +761,20 @@ public:
     if (faceId == FACE_YMIN) {
 
       // boundary ymin (index = i + j*isize + k*isize*ghostWidth)
+      boundary_type = params.boundary_type_ymin;
+      
       k = index / (isize*ghostWidth);
       j = (index - k*isize*ghostWidth) / isize;
       i = index - j*isize - k*isize*ghostWidth;
 
-      boundary_type = params.boundary_type_ymin;
-      
       if(k >= kmin && k <= kmax       && 
 	 j >= 0    && j <  ghostWidth &&
 	 i >= imin && i <= imax) {
 	
-	real_t sign=1.0;
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
 
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	  real_t sign=1.0;
+
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
 	    if (iVar==IV) sign=-1.0;
@@ -782,21 +795,22 @@ public:
       
       // boundary ymax (index = i + j*isize + k*isize*ghostWidth)
       // same i,j,k as ymin, except translation along y-axis
+      boundary_type = params.boundary_type_ymax;
+      
       k = index / (isize*ghostWidth);
       j = (index - k*isize*ghostWidth) / isize;
       i = index - j*isize - k*isize*ghostWidth;
 
       j += (ny+ghostWidth);
 
-      boundary_type = params.boundary_type_ymax;
-      
       if(k >= kmin           && k <= kmax              &&
 	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
 	 i >= imin           && i <= imax) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
 
+	  real_t sign=1.0;
+	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
 	    if (iVar==IV) sign=-1.0;
@@ -817,19 +831,20 @@ public:
     if (faceId == FACE_ZMIN) {
       
       // boundary zmin (index = i + j*isize + k*isize*jsize)
+      boundary_type = params.boundary_type_zmin;
+      
       k = index / (isize*jsize);
       j = (index - k*isize*jsize) / isize;
       i = index - j*isize - k*isize*jsize;
 
-      boundary_type = params.boundary_type_zmin;
-      
       if(k >= 0    && k <  ghostWidth &&
 	 j >= jmin && j <= jmax       &&
 	 i >= imin && i <= imax) {
 	
-	real_t sign=1.0;
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
 
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	  real_t sign=1.0;
+
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*ghostWidth-1-k;
 	    if (iVar==IW) sign=-1.0;
@@ -850,21 +865,22 @@ public:
       
       // boundary zmax (index = i + j*isize + k*isize*jsize)
       // same i,j,k as ymin, except translation along y-axis
+      boundary_type = params.boundary_type_zmax;
+      
       k = index / (isize*jsize);
       j = (index - k*isize*jsize) / isize;
       i = index - j*isize - k*isize*jsize;
 
       k += (nz+ghostWidth);
 
-      boundary_type = params.boundary_type_zmax;
-      
       if(k >= nz+ghostWidth && k <= nz+2*ghostWidth-1 &&
 	 j >= jmin          && j <= jmax              &&
 	 i >= imin          && i <= imax) {
 	
-	real_t sign=1.0;
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+
+	  real_t sign=1.0;
 	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*nz+2*ghostWidth-1-k;
 	    if (iVar==IW) sign=-1.0;
