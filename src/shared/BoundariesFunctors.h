@@ -48,9 +48,6 @@ public:
     
     int boundary_type;
     
-    int i0, j0;
-    int iVar;
-    
     if (faceId == FACE_XMIN) {
       
       // boundary xmin
@@ -62,12 +59,15 @@ public:
       if(j >= jmin && j <= jmax    &&
 	 i >= 0    && i <ghostWidth) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	int i0 = 0;
+	
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
 	  } else if( boundary_type == BC_NEUMANN ) {
 	    i0=ghostWidth;
 	  } else { // periodic
@@ -93,12 +93,15 @@ public:
       if(j >= jmin          && j <= jmax             &&
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	int i0 = 0;
+	
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    i0=nx+ghostWidth-1;
 	  } else { // periodic
@@ -122,12 +125,15 @@ public:
       if(i >= imin && i <= imax    &&
 	 j >= 0    && j <ghostWidth) {
 	
-	real_t sign=1.0;
+	int j0 = 0;
 	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
+	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ghostWidth;
 	  } else { // periodic
@@ -150,12 +156,15 @@ public:
       if(i >= imin          && i <= imax              &&
 	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	int j0 = 0;
+	
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ny+ghostWidth-1;
 	  } else { // periodic
@@ -228,7 +237,6 @@ public:
     int boundary_type;
     
     int i0, j0, k0;
-    int iVar;
     
     if (faceId == FACE_XMIN) {
       
@@ -243,12 +251,13 @@ public:
 	 j >= jmin && j <= jmax &&
 	 i >= 0    && i <ghostWidth) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
 	  } else if( boundary_type == BC_NEUMANN ) {
 	    i0=ghostWidth;
 	  } else { // periodic
@@ -278,12 +287,13 @@ public:
 	 j >= jmin          && j <= jmax &&
 	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    i0=nx+ghostWidth-1;
 	  } else { // periodic
@@ -309,12 +319,14 @@ public:
 	 j >= 0    && j <  ghostWidth &&
 	 i >= imin && i <= imax) {
 	
-	real_t sign=1.0;
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+
+	  real_t sign=1.0;
 	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
+	    else sign=1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ghostWidth;
 	  } else { // periodic
@@ -343,12 +355,13 @@ public:
 	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
 	 i >= imin           && i <= imax) {
 	
-	real_t sign=1.0;
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+	  
+	  real_t sign=1.0;
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ny+ghostWidth-1;
 	  } else { // periodic
@@ -375,12 +388,13 @@ public:
 	 j >= jmin && j <= jmax       &&
 	 i >= imin && i <= imax) {
 	
-	real_t sign=1.0;
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+
+	  real_t sign=1.0;
 	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*ghostWidth-1-k;
-	    if (iVar==IW) sign=-ONE_F;
+	    if (iVar==IW) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    k0=ghostWidth;
 	  } else { // periodic
@@ -409,12 +423,14 @@ public:
 	 j >= jmin          && j <= jmax              &&
 	 i >= imin          && i <= imax) {
 	
-	real_t sign=1.0;
 	
-	for ( iVar=0; iVar<nbvar; iVar++ ) {
+	for ( int iVar=0; iVar<nbvar; iVar++ ) {
+
+	  real_t sign=1.0;
+	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*nz+2*ghostWidth-1-k;
-	    if (iVar==IW) sign=-ONE_F;
+	    if (iVar==IW) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    k0=nz+ghostWidth-1;
 	  } else { // periodic
@@ -499,8 +515,8 @@ public:
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	    if (iVar==IA) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
+	    if (iVar==IA) sign=-1.0;
 	  } else if( boundary_type == BC_NEUMANN ) {
 	    i0=ghostWidth;
 	  } else { // periodic
@@ -531,8 +547,8 @@ public:
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	    if (iVar==IA) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
+	    if (iVar==IA) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    i0=nx+ghostWidth-1;
 	  } else { // periodic
@@ -561,8 +577,8 @@ public:
 	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	    if (iVar==IB) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
+	    if (iVar==IB) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ghostWidth;
 	  } else { // periodic
@@ -591,8 +607,8 @@ public:
 	  
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	    if (iVar==IB) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
+	    if (iVar==IB) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ny+ghostWidth-1;
 	  } else { // periodic
@@ -680,8 +696,8 @@ public:
 	
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	    if (iVar==IA) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
+	    if (iVar==IA) sign=-1.0;
 	  } else if( boundary_type == BC_NEUMANN ) {
 	    i0=ghostWidth;
 	  } else { // periodic
@@ -716,8 +732,8 @@ public:
 
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    i0=2*nx+2*ghostWidth-1-i;
-	    if (iVar==IU) sign=-ONE_F;
-	    if (iVar==IA) sign=-ONE_F;
+	    if (iVar==IU) sign=-1.0;
+	    if (iVar==IA) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    i0=nx+ghostWidth-1;
 	  } else { // periodic
@@ -748,8 +764,8 @@ public:
 	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	    if (iVar==IB) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
+	    if (iVar==IB) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ghostWidth;
 	  } else { // periodic
@@ -783,8 +799,8 @@ public:
 
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    j0=2*ny+2*ghostWidth-1-j;
-	    if (iVar==IV) sign=-ONE_F;
-	    if (iVar==IB) sign=-ONE_F;
+	    if (iVar==IV) sign=-1.0;
+	    if (iVar==IB) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    j0=ny+ghostWidth-1;
 	  } else { // periodic
@@ -816,8 +832,8 @@ public:
 	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*ghostWidth-1-k;
-	    if (iVar==IW) sign=-ONE_F;
-	    if (iVar==IC) sign=-ONE_F;
+	    if (iVar==IW) sign=-1.0;
+	    if (iVar==IC) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    k0=ghostWidth;
 	  } else { // periodic
@@ -851,8 +867,8 @@ public:
 	for ( iVar=0; iVar<nbvar; iVar++ ) {
 	  if ( boundary_type == BC_DIRICHLET ) {
 	    k0=2*nz+2*ghostWidth-1-k;
-	    if (iVar==IW) sign=-ONE_F;
-	    if (iVar==IC) sign=-ONE_F;
+	    if (iVar==IW) sign=-1.0;
+	    if (iVar==IC) sign=-1.0;
 	  } else if ( boundary_type == BC_NEUMANN ) {
 	    k0=nz+ghostWidth-1;
 	  } else { // periodic
