@@ -3,6 +3,7 @@
 #######################
 set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/BlastParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/problems/ImplodeParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/KHParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/WedgeParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/JetParams.h
