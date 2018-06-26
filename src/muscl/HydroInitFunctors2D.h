@@ -31,7 +31,7 @@ class InitImplodeFunctor2D : public HydroBaseFunctor2D {
 public:
   InitImplodeFunctor2D(HydroParams params,
 		       ImplodeParams iparams,
-               DataArray2d Udata) :
+		       DataArray2d Udata) :
     HydroBaseFunctor2D(params), iparams(iparams), Udata(Udata)  {};
 
   // static method which does it all: create and execute functor

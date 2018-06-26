@@ -70,7 +70,7 @@ class InitImplodeFunctor3D : public HydroBaseFunctor3D {
 public:
   InitImplodeFunctor3D(HydroParams params,
 		       ImplodeParams iparams,
-               DataArray3d Udata) :
+		       DataArray3d Udata) :
     HydroBaseFunctor3D(params), iparams(iparams), Udata(Udata)  {};
   
   // static method which does it all: create and execute functor
@@ -146,15 +146,15 @@ public:
     
     if (tmp) {
       Udata(i  ,j  ,k  , ID) = rho_out;
-      Udata(i  ,j  ,k  , IP) = p_out/(gamma0-1.0) + 0.5 * rho_out * (
-        u_out*u_out + v_out*v_out + w_out*w_out);
+      Udata(i  ,j  ,k  , IP) = p_out/(gamma0-1.0) + 0.5 * rho_out *
+	(u_out*u_out + v_out*v_out + w_out*w_out);
       Udata(i  ,j  ,k  , IU) = u_out;
       Udata(i  ,j  ,k  , IV) = v_out;
       Udata(i  ,j  ,k  , IW) = w_out;
     } else {
       Udata(i  ,j  ,k  , ID) = rho_in;
-      Udata(i  ,j  ,k  , IP) = p_in/(gamma0-1.0) + 0.5 * rho_in * (
-        u_in*u_in + v_in*v_in + w_in*w_in);
+      Udata(i  ,j  ,k  , IP) = p_in/(gamma0-1.0) + 0.5 * rho_in *
+	(u_in*u_in + v_in*v_in + w_in*w_in);
       Udata(i  ,j  ,k  , IU) = u_in;
       Udata(i  ,j  ,k  , IV) = v_in;
       Udata(i  ,j  ,k  , IW) = w_in;    
