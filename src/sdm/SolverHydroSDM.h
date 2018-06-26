@@ -1874,7 +1874,9 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_implode(DataArray Udata)
 {
 
-  InitImplodeFunctor<dim,N> functor(params, sdm_geom, Udata);
+  ImplodeParams iParams = ImplodeParams(configMap);
+
+  InitImplodeFunctor<dim,N> functor(params, sdm_geom, iParams, Udata);
   Kokkos::parallel_for(nbCells, functor);
   
 } // init_implode
