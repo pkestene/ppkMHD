@@ -427,7 +427,7 @@ public:
     } else {
 
       uphi = 0;
-      p    = p0-2+4*log(2);
+      p    = p0-2+4*log(2.0);
       
     }
 
