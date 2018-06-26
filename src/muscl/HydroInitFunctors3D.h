@@ -745,9 +745,9 @@ public:
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;
 
-    const real_t xmax = params.xmax;
-    const real_t ymax = params.ymax;
-    const real_t zmax = params.zmax;
+    // const real_t xmax = params.xmax;
+    // const real_t ymax = params.ymax;
+    // const real_t zmax = params.zmax;
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
