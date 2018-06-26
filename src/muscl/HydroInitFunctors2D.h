@@ -10,8 +10,8 @@
 #include "HydroBaseFunctor2D.h"
 
 // init conditions
-#include "shared/problems/BlastParams.h"
 #include "shared/problems/ImplodeParams.h"
+#include "shared/problems/BlastParams.h"
 #include "shared/problems/KHParams.h"
 #include "shared/problems/GreshoParams.h"
 #include "shared/problems/IsentropicVortexParams.h"
