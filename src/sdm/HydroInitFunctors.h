@@ -75,7 +75,7 @@ public:
     const real_t ymin = this->params.ymin;
     
     const real_t xmax = this->params.xmax;
-    const real_t ymax = this->params.ymax;
+    //const real_t ymax = this->params.ymax;
     
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
@@ -165,8 +165,8 @@ public:
     const real_t zmin = this->params.zmin;
 
     const real_t xmax = this->params.xmax;
-    const real_t ymax = this->params.ymax;
-    const real_t zmax = this->params.zmax;
+    //const real_t ymax = this->params.ymax;
+    //const real_t zmax = this->params.zmax;
 
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
@@ -481,10 +481,10 @@ public:
 
     const int nx = this->params.nx;
     const int ny = this->params.ny;
-
+    
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
-    const real_t xmax = this->params.xmax;
+    //const real_t xmax = this->params.xmax;
     const real_t ymax = this->params.ymax;
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
@@ -519,7 +519,7 @@ public:
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
 	// normalized coordinates in [0,1]
-	real_t xn = (x-xmin)/(xmax-xmin);
+	//real_t xn = (x-xmin)/(xmax-xmin);
 	real_t yn = (y-ymin)/(ymax-ymin);
 	
 	if (khParams.p_rand) {
@@ -617,8 +617,8 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t zmin = this->params.zmin;
 
-    const real_t xmax = this->params.xmax;
-    const real_t ymax = this->params.ymax;
+    //const real_t xmax = this->params.xmax;
+    //const real_t ymax = this->params.ymax;
     const real_t zmax = this->params.zmax;
 
     const real_t dx = this->params.dx;
@@ -657,8 +657,8 @@ public:
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 
 	  // normalized coordinates in [0,1]
-	  real_t xn = (x-xmin)/(xmax-xmin);
-	  real_t yn = (y-ymin)/(ymax-ymin);
+	  //real_t xn = (x-xmin)/(xmax-xmin);
+	  //real_t yn = (y-ymin)/(ymax-ymin);
 	  real_t zn = (z-zmin)/(zmax-zmin);
 	  
 	  if (khParams.p_rand) {
