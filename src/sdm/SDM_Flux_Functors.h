@@ -65,7 +65,7 @@ public:
     index2coord(index,i,j,isize,jsize);
 
     // state variable for conservative variables, and flux
-    HydroState q, flux;
+    HydroState q = {}, flux;
 
     /*
      * first handle interior point, then end points.
@@ -116,7 +116,7 @@ public:
 	for (int idy=0; idy<N; ++idy) {
 	  
 	  // conservative state
-	  HydroState qL, qR;
+	  HydroState qL = {}, qR = {};
 	  
 	  // primitive state
 	  HydroState wL, wR;
@@ -193,7 +193,7 @@ public:
 	for (int idx=0; idx<N; ++idx) {
 	  
 	  // conservative state
-	  HydroState qL, qR;
+	  HydroState qL = {}, qR = {};
 	  
 	  // primitive state
 	  HydroState wL, wR;
@@ -257,7 +257,7 @@ public:
     index2coord(index,i,j,k,isize,jsize,ksize);
 
     // state variable for conservative variables, and flux
-    HydroState q, flux;
+    HydroState q = {}, flux;
         
     /*
      * first handle interior point, then end points.
@@ -310,7 +310,7 @@ public:
 	  for (int idy=0; idy<N; ++idy) {
 	  
 	    // conservative state
-	    HydroState qL, qR;
+	    HydroState qL = {}, qR = {};
 	    
 	    // primitive state
 	    HydroState wL, wR;
@@ -390,7 +390,7 @@ public:
 	  for (int idx=0; idx<N; ++idx) {
 	  
 	    // conservative state
-	    HydroState qL, qR;
+	    HydroState qL = {}, qR = {};
 	    
 	    // primitive state
 	    HydroState wL, wR;
@@ -479,7 +479,7 @@ public:
 	  for (int idx=0; idx<N; ++idx) {
 	  
 	    // conservative state
-	    HydroState qL, qR;
+	    HydroState qL = {}, qR = {};
 	    
 	    // primitive state
 	    HydroState wL, wR;

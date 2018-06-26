@@ -824,7 +824,7 @@ public:
       return;
 
     // read cell-average conservative variables
-    HydroState Uave; Uave[IE]=0;
+    HydroState Uave = {}; //Uave[IE]=0;
     for (int ivar = 0; ivar<nbvar; ++ivar) {
       Uave[ivar] = Uaverage(i,j,ivar);
     }
