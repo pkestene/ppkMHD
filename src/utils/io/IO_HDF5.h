@@ -248,11 +248,11 @@ public:
     }
 
     // Create the datasets.
-    hid_t dataType;
-    if (sizeof(real_t) == sizeof(float))
-      dataType = H5T_NATIVE_FLOAT;
-    else
-      dataType = H5T_NATIVE_DOUBLE;
+    // hid_t dataType;
+    // if (sizeof(real_t) == sizeof(float))
+    //   dataType = H5T_NATIVE_FLOAT;
+    // else
+    //   dataType = H5T_NATIVE_DOUBLE;
     
 
     // select data with or without ghost zones
