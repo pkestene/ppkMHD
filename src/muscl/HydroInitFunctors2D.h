@@ -248,7 +248,7 @@ public:
 
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
-    const real_t xmax = params.xmax;
+    //const real_t xmax = params.xmax;
     const real_t ymax = params.ymax;
     const real_t dx = params.dx;
     const real_t dy = params.dy;
@@ -269,7 +269,7 @@ public:
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
     // normalized coordinates in [0,1]
-    real_t xn = (x-xmin)/(xmax-xmin);
+    //real_t xn = (x-xmin)/(xmax-xmin);
     real_t yn = (y-ymin)/(ymax-ymin);
     
     if (khParams.p_rand) {
@@ -386,8 +386,8 @@ public:
 
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
-    const real_t xmax = params.xmax;
-    const real_t ymax = params.ymax;
+    //const real_t xmax = params.xmax;
+    //const real_t ymax = params.ymax;
     const real_t dx = params.dx;
     const real_t dy = params.dy;
     
@@ -725,7 +725,6 @@ public:
     /* uniform static gravity field */
     const real_t gravity_x = rtiparams.gx;
     const real_t gravity_y = rtiparams.gy;
-    const real_t gravity_z = rtiparams.gz;
     
     real_t         P0 = 1.0;
       
@@ -825,12 +824,9 @@ public:
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
 
-    const real_t xmax = params.xmax;
-    const real_t ymax = params.ymax;
-
-    const real_t Lx = xmax-xmin;
-    const real_t Ly = ymax-ymin;
-
+    //const real_t xmax = params.xmax;
+    //const real_t ymax = params.ymax;
+    
     const real_t dx = params.dx;
     const real_t dy = params.dy;
     

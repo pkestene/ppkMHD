@@ -318,8 +318,8 @@ public:
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;
 
-    const real_t xmax = params.xmax;
-    const real_t ymax = params.ymax;
+    //const real_t xmax = params.xmax;
+    //const real_t ymax = params.ymax;
     const real_t zmax = params.zmax;
 
     const real_t dx = params.dx;
@@ -343,8 +343,8 @@ public:
     real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
 
     // normalized coordinates in [0,1]
-    real_t xn = (x-xmin)/(xmax-xmin);
-    real_t yn = (y-ymin)/(ymax-ymin);
+    //real_t xn = (x-xmin)/(xmax-xmin);
+    //real_t yn = (y-ymin)/(ymax-ymin);
     real_t zn = (z-zmin)/(zmax-zmin);
 
     if ( khParams.p_rand) {
@@ -470,24 +470,24 @@ public:
 #else
     const int i_mpi = 0;
     const int j_mpi = 0;
-    const int k_mpi = 0;
+    //const int k_mpi = 0;
 #endif
 
     const int nx = params.nx;
     const int ny = params.ny;
-    const int nz = params.nz;
+    //const int nz = params.nz;
 
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
-    const real_t zmin = params.zmin;
+    //const real_t zmin = params.zmin;
 
-    const real_t xmax = params.xmax;
-    const real_t ymax = params.ymax;
-    const real_t zmax = params.zmax;
+    //const real_t xmax = params.xmax;
+    //const real_t ymax = params.ymax;
+    //const real_t zmax = params.zmax;
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
-    const real_t dz = params.dz;
+    //const real_t dz = params.dz;
     
     const real_t gamma0 = params.settings.gamma0;
 
@@ -501,7 +501,7 @@ public:
     
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-    real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
+    //real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
 
     real_t r = sqrt(x*x+y*y);
     real_t theta = atan2(y,x);
@@ -613,7 +613,7 @@ public:
 
     const real_t Lx = xmax-xmin;
     const real_t Ly = ymax-ymin;
-    const real_t Lz = zmax-zmin;
+    //const real_t Lz = zmax-zmin;
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
@@ -748,10 +748,6 @@ public:
     const real_t xmax = params.xmax;
     const real_t ymax = params.ymax;
     const real_t zmax = params.zmax;
-
-    const real_t Lx = xmax-xmin;
-    const real_t Ly = ymax-ymin;
-    const real_t Lz = zmax-zmin;
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
