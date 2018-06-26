@@ -16,6 +16,7 @@
 #include "shared/problems/GreshoParams.h"
 #include "shared/problems/IsentropicVortexParams.h"
 #include "shared/problems/RayleighTaylorInstabilityParams.h"
+#include "shared/problems/RisingBubbleParams.h"
 #include "shared/problems/initRiemannConfig2d.h"
 
 // kokkos random numbers
@@ -771,6 +772,125 @@ public:
   VectorField2d gravity;
   
 }; // class RayleighTaylorInstabilityFunctor2D
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+/**
+ * Test of the rising bubble.
+ */
+class RisingBubbleFunctor2D : public HydroBaseFunctor2D {
+
+public:
+  RisingBubbleFunctor2D(HydroParams params,
+			RisingBubbleParams rbparams,
+			DataArray2d Udata,
+			VectorField2d gravity) :
+    HydroBaseFunctor2D(params),
+    rbparams(rbparams),
+    Udata(Udata),
+    gravity(gravity)
+  {};
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams params,
+		    RisingBubbleParams rbparams,
+                    DataArray2d Udata,
+		    VectorField2d gravity)
+  {
+    uint64_t nbCells = params.isize * params.jsize;
+    RisingBubbleFunctor2D functor(params, rbparams, Udata, gravity);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+
+    const real_t xmin = params.xmin;
+    const real_t ymin = params.ymin;
+
+    const real_t xmax = params.xmax;
+    const real_t ymax = params.ymax;
+
+    const real_t Lx = xmax-xmin;
+    const real_t Ly = ymax-ymin;
+
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    
+    const real_t gamma0 = params.settings.gamma0;
+  
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+
+    /* retrieve bubble parameter */
+
+    // density in and out of the bubble
+    const real_t din       = rbparams.din;
+    const real_t dout      = rbparams.dout;
+
+    // bubble center
+    const real_t x0 = rbparams.x0;
+    const real_t y0 = rbparams.y0;
+
+    const real_t R = rbparams.R;
+    
+    /* uniform static gravity field */
+    const real_t gravity_x = rbparams.gx;
+    const real_t gravity_y = rbparams.gy;
+    
+    const real_t P0 = 1.0;
+
+
+    double r = sqrt( (x-x0)*(x-x0) + (y-y0)*(y-y0) );
+    
+    // the initial condition must ensure the condition of
+    // hydrostatic equilibrium for pressure P = P0 - 0.1*\rho*y
+	
+    
+    if ( r < R ) {
+      Udata(i,j,ID) = din;
+    } else {
+      Udata(i,j,ID) = dout;
+    }
+    Udata(i,j,IU) = 0.0;
+    Udata(i,j,IV) = 0.0;
+
+    // initial hydrostatic equilibrium :
+    // -dP/dz + rho*g = 0
+    // P = P0 + rho g z
+    Udata(i,j,IE) = (P0 + Udata(i,j,ID)*(gravity_x*x + gravity_y*y))/(gamma0-1.0);
+
+    // init gravity field
+    gravity(i,j,IX) = gravity_x;
+    gravity(i,j,IY) = gravity_y;
+    
+  } // end operator ()
+
+  RisingBubbleParams rbparams;
+  DataArray2d Udata;
+  VectorField2d gravity;
+  
+}; // class RisingBubbleFunctor2D
 
 } // namespace muscl
 

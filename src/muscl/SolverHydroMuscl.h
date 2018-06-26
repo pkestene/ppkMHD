@@ -110,6 +110,7 @@ public:
   void init_four_quadrant(DataArray Udata); // 2d only
   void init_isentropic_vortex(DataArray Udata); // 2d only
   void init_rayleigh_taylor(DataArray Udata, VectorField gravity); // 2d and 3d
+  void init_rising_bubble(DataArray Udata, VectorField gravity); // 2d and 3d
 
   //! init restart (load data from file)
   void init_restart(DataArray Udata);
@@ -428,6 +429,31 @@ void SolverHydroMuscl<dim>::init_rayleigh_taylor(DataArray Udata,
   RTIFunctor::apply(params, rtiParams, Udata, gravity);
   
 } // SolverHydroMuscl::init_rayleigh_taylor
+
+// =======================================================
+// =======================================================
+/**
+ * Hydrodynamical rising bubble test.
+ *
+ */
+template<int dim>
+void SolverHydroMuscl<dim>::init_rising_bubble(DataArray Udata,
+					       VectorField gravity)
+{
+  
+  RisingBubbleParams rbParams =
+    RisingBubbleParams(configMap);
+  
+  // alias to actual device functor
+  using RBFunctor =
+    typename std::conditional<dim==2,
+  			      RisingBubbleFunctor2D,
+  			      RisingBubbleFunctor3D>::type;
+  
+  // perform init
+  RBFunctor::apply(params, rbParams, Udata, gravity);
+  
+} // SolverHydroMuscl::init_rising_bubble
 
 // =======================================================
 // =======================================================
