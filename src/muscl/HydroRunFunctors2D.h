@@ -1270,14 +1270,23 @@ public:
 
       real_t rhoOld = Udata_in(i,j,ID);
       real_t rhoNew = Udata_out(i,j,ID);
+
+      // compute kinetic energy before updating momentum
+      real_t u = Udata_out(i,j,IU);
+      real_t v = Udata_out(i,j,IV);
+      real_t ekin_old = 0.5 * rhoNew * (u*u + v*v);
       
       // update momentum
       Udata_out(i,j,IU) += 0.5 * dt * gravity(i,j,IX) * (rhoOld + rhoNew); 
       Udata_out(i,j,IV) += 0.5 * dt * gravity(i,j,IY) * (rhoOld + rhoNew);
 
-      Udata_out(i,j,IE) +=
-	0.5 * dt * gravity(i,j,IX) * (rhoOld + rhoNew) * Udata_in(i,j,IU) +
-	0.5 * dt * gravity(i,j,IY) * (rhoOld + rhoNew) * Udata_in(i,j,IV) ;
+      // compute kinetic energy after updating momentum
+      u = Udata_out(i,j,IU);
+      v = Udata_out(i,j,IV);
+      real_t ekin_new = 0.5 * rhoNew * (u*u+v*v);
+
+      // update total energy
+      Udata_out(i,j,IE) += (ekin_new - ekin_old);
       
     }
     
