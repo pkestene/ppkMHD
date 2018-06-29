@@ -462,7 +462,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   }
 
   /*
-   * Init Spectral Difference Mmethod geometry
+   * Init Spectral Difference Method geometry
    * (solution + flux points locations)
    */
   init_sdm_geometry();
