@@ -79,6 +79,7 @@ public:
   
   //! gravity enabled ?
   bool                 m_static_gravity_enabled;
+  bool                 m_point_gravity_enabled;
   bool                 m_gravity_enabled;
 
   /*
