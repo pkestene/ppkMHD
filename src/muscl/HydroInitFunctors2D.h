@@ -1031,7 +1031,8 @@ public:
       
       const double pressure = csound * csound * rho;
       
-      Udata(i  ,j  , IE) = pressure / (gamma0 - 1.0)
+      Udata(i  ,j  , IE) =
+	pressure / (gamma0 - 1.0)
 	+ 0.5 * rho * omega2 * (r2 + eps*eps);
 
     }
