@@ -18,6 +18,8 @@
 #include "shared/problems/RayleighTaylorInstabilityParams.h"
 #include "shared/problems/RisingBubbleParams.h"
 #include "shared/problems/initRiemannConfig2d.h"
+#include "shared/problems/PointSourceGravity.h"
+#include "shared/problems/DiskParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
@@ -888,6 +890,116 @@ public:
   
 }; // class RisingBubbleFunctor2D
 
+/*************************************************/
+/*************************************************/
+/*************************************************/
+class InitDiskFunctor2D : public HydroBaseFunctor2D {
+  
+public:
+  InitDiskFunctor2D(HydroParams        params,
+		    DiskParams         dparams,
+		    PointSourceGravity grav,
+		    DataArray2d        Udata,
+		    VectorField2d      gravity) :
+    HydroBaseFunctor2D(params),
+    dparams(dparams),
+    grav(grav),
+    Udata(Udata),
+    gravity(gravity)
+  {};
+  
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams        params,
+		    DiskParams         dparams,
+                    PointSourceGravity grav,
+                    DataArray2d        Udata,
+		    VectorField2d      gravity)
+  {
+    uint64_t nbCells = params.isize * params.jsize;
+    InitDiskFunctor2D functor(params, dparams, grav, Udata, gravity);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+
+    const real_t xmin = params.xmin;
+    const real_t xmax = params.xmax;
+    const real_t ymin = params.ymin;
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    
+    const real_t gamma0 = params.settings.gamma0;
+    
+    // disk center coordinates
+    const real_t xc = dparams.xc;
+    const real_t yc = dparams.yc;
+
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx - xc;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy - yc;
+
+    
+    const real_t GM = grav.GM;
+
+    // init gravity field components
+    {
+      real_t gx, gy, gz;
+      grav.eval(x,y,0,gx,gy,gz);
+      gravity(i,j,IX) = gx;
+      gravity(i,j,IY) = gy;
+    }
+
+    // TODO - TODO - TODO
+    {
+      const real_t eps = grav.eps;
+      
+      real_t r2    = x*x + y*y;
+      real_t r     = sqrt(r2);
+      real_t rsoft = sqrt(r2+eps*eps);
+      //real_r rsph  = sqrt(r2+eps*eps+z*z);
+
+      // Use softened coordinates
+      real_t x_soft = x * (rsoft / r);
+      real_t y_soft = y * (rsoft / r);
+
+      // local speed of sound
+      real_t csound = 0;
+      //radial_speed_of_sound(r, &csound);
+
+      Udata(i  ,j  , ID) = 0;
+      Udata(i  ,j  , IE) = 0;
+      Udata(i  ,j  , IU) = 0;
+      Udata(i  ,j  , IV) = 0;
+    }
+
+  } // end operator ()
+
+  DiskParams         dparams;
+  PointSourceGravity grav;
+  DataArray2d        Udata;
+  VectorField2d      gravity;
+
+}; // InitDiskFunctor2D
+  
 } // namespace muscl
 
 } // namespace ppkMHD
