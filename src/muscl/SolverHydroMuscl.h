@@ -471,15 +471,15 @@ void SolverHydroMuscl<dim>::init_disk(DataArray Udata,
   PointSourceGravity pgrav = PointSourceGravity(configMap);
   
   // alias to actual device functor
-  using InitDiskFunctor = InitDiskFunctor2D;
-    // typename std::conditional<dim==2,
-    // 			      InitDiskFunctor2D,
-    // 			      InitDiskFunctor3D>::type;
+  using InitDiskFunctor = 
+    typename std::conditional<dim==2,
+    			      InitDiskFunctor2D,
+    			      InitDiskFunctor3D>::type;
   
   // perform init
   InitDiskFunctor::apply(params, dParams, pgrav, Udata, gravity);
   
-} // SolverHydroMuscl::init_rising_bubble
+} // SolverHydroMuscl::init_disk
 
 // =======================================================
 // =======================================================

@@ -974,7 +974,6 @@ public:
       gravity(i,j,IY) = gy;
     }
 
-    // TODO - TODO - TODO
     {
       const real_t eps = grav.eps;
       

@@ -385,6 +385,10 @@ void SolverHydroMuscl<3>::init(DataArray Udata)
       
     init_rising_bubble(Udata,gravity);
     
+  } else if ( !m_problem_name.compare("disk") ) {
+      
+    init_disk(Udata,gravity);
+      
   } else {
     
     std::cout << "Problem : " << m_problem_name

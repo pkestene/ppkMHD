@@ -13,6 +13,8 @@
 #include "shared/problems/BlastParams.h"
 #include "shared/problems/ImplodeParams.h"
 #include "shared/problems/KHParams.h"
+#include "shared/problems/PointSourceGravity.h"
+#include "shared/problems/DiskParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
@@ -813,6 +815,171 @@ public:
   VectorField3d gravity;
   
 }; // class RisingBubbleFunctor3D
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+class InitDiskFunctor3D : public HydroBaseFunctor3D {
+  
+public:
+  InitDiskFunctor3D(HydroParams        params,
+		    DiskParams         dparams,
+		    PointSourceGravity grav,
+		    DataArray3d        Udata,
+		    VectorField3d      gravity) :
+    HydroBaseFunctor3D(params),
+    dparams(dparams),
+    grav(grav),
+    Udata(Udata),
+    gravity(gravity)
+  {};
+  
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams        params,
+		    DiskParams         dparams,
+                    PointSourceGravity grav,
+                    DataArray3d        Udata,
+		    VectorField3d      gravity)
+  {
+    uint64_t nbCells = params.isize * params.jsize * params.ksize;
+    InitDiskFunctor3D functor(params, dparams, grav, Udata, gravity);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+    const int ghostWidth = params.ghostWidth;
+    
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+    const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
+    const real_t xmin = params.xmin;
+    const real_t xmax = params.xmax;
+    const real_t ymin = params.ymin;
+    const real_t zmin = params.zmin;
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    const real_t dz = params.dz;
+    
+    const real_t gamma0 = params.settings.gamma0;
+    
+    // disk center coordinates
+    const real_t xc = dparams.xc;
+    const real_t yc = dparams.yc;
+    const real_t zc = dparams.zc;
+
+    const real_t radius         = dparams.radius;
+    const real_t radius_inner   = dparams.radius_inner;
+    const real_t rho0           = dparams.ref_density;
+    const real_t rho_contrast   = dparams.contrast_density;
+    const real_t contrast_width = dparams.contrast_width;
+    
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx - xc;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy - yc;
+    real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz - zc;
+    
+    
+    const real_t GM = grav.GM;
+
+    // init gravity field components
+    {
+      real_t gx, gy, gz;
+      grav.eval(x,y,z,gx,gy,gz);
+      gravity(i,j,k,IX) = gx;
+      gravity(i,j,k,IY) = gy;
+      gravity(i,j,k,IZ) = gz;
+    }
+
+    {
+      const real_t eps = grav.eps;
+      
+      real_t r2     = x*x + y*y;
+      real_t r      = sqrt(r2);
+      real_t r_soft = sqrt(r2+eps*eps);
+      real_t r_sph  = sqrt(r2+eps*eps+z*z);
+
+      // Use softened coordinates
+      real_t x_soft = x * (r_soft / r);
+      real_t y_soft = y * (r_soft / r);
+
+      // local speed of sound
+      const real_t csound = dparams.radial_speed_of_sound(r);
+
+      // local angular velocity (square)
+      double omega2 = 0 ;
+      if (r >= radius_inner) {
+	omega2 =  GM / (r_soft * r_soft * r_sph) - 3.5 * (csound / r_soft)*(csound / r_soft);
+      } else {
+	omega2 =  GM / (r_soft * r_soft * r_soft) - 2.5 * (csound / r_soft)*(csound / r_soft);
+      }
+      
+      // local angular velocity
+      const double omega = sqrt(fmax(omega2, 0.0));
+
+      // local density
+      real_t rho = rho0 * pow(r_soft / radius, -2.5) *
+	exp(GM / (csound*csound) * (1. / r_sph - 1. / r_soft)) ;
+
+      if (r > radius || fabs(z) > 0.5 * radius)  {
+	
+	if (r > radius + contrast_width ||
+	    fabs(z) > 0.5 * radius + contrast_width) {
+
+	  rho  /= rho_contrast;
+
+	} else {
+
+	  const real_t cutdown = fmax( (r - radius) / contrast_width,
+				       (fabs(z) - 0.5 * radius) /  contrast_width );
+	  rho *= pow(rho_contrast, - cutdown);
+	  
+	}
+      }
+      
+      
+      // prevent low densities
+      rho = fmax(rho, 1e-6);
+
+      Udata(i  ,j  ,k  , ID) = rho;
+      Udata(i  ,j  ,k  , IU) = -y_soft * omega * rho;
+      Udata(i  ,j  ,k  , IV) =  x_soft * omega * rho;
+      Udata(i  ,j  ,k  , IW) = 0.0;
+      
+      const double pressure = csound * csound * rho;
+      
+      Udata(i  ,j  ,k  , IE) =
+	pressure / (gamma0 - 1.0)
+	+ 0.5 * rho * omega2 * (r2 + eps*eps);
+
+    }
+
+  } // end operator ()
+
+  DiskParams         dparams;
+  PointSourceGravity grav;
+  DataArray3d        Udata;
+  VectorField3d      gravity;
+
+}; // InitDiskFunctor3D
 
 } // namespace  muscl
 
