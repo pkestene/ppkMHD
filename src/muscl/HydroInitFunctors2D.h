@@ -951,12 +951,18 @@ public:
     const real_t xc = dparams.xc;
     const real_t yc = dparams.yc;
 
+    const real_t radius         = dparams.radius;
+    const real_t radius_inner   = dparams.radius_inner;
+    const real_t rho0           = dparams.ref_density;
+    const real_t rho_contrast   = dparams.contrast_density;
+    const real_t contrast_width = dparams.contrast_width;
+    
     int i,j;
     index2coord(index,i,j,isize,jsize);
     
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx - xc;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy - yc;
-
+    real_t z = 0;
     
     const real_t GM = grav.GM;
 
@@ -972,23 +978,62 @@ public:
     {
       const real_t eps = grav.eps;
       
-      real_t r2    = x*x + y*y;
-      real_t r     = sqrt(r2);
-      real_t rsoft = sqrt(r2+eps*eps);
-      //real_r rsph  = sqrt(r2+eps*eps+z*z);
+      real_t r2     = x*x + y*y;
+      real_t r      = sqrt(r2);
+      real_t r_soft = sqrt(r2+eps*eps);
+      real_t r_sph  = sqrt(r2+eps*eps+z*z);
 
       // Use softened coordinates
-      real_t x_soft = x * (rsoft / r);
-      real_t y_soft = y * (rsoft / r);
+      real_t x_soft = x * (r_soft / r);
+      real_t y_soft = y * (r_soft / r);
 
       // local speed of sound
-      real_t csound = 0;
-      //radial_speed_of_sound(r, &csound);
+      const real_t csound = dparams.radial_speed_of_sound(r);
 
-      Udata(i  ,j  , ID) = 0;
-      Udata(i  ,j  , IE) = 0;
-      Udata(i  ,j  , IU) = 0;
-      Udata(i  ,j  , IV) = 0;
+      // local angular velocity (square)
+      double omega2 = 0 ;
+      if (r >= radius_inner) {
+	omega2 =  GM / (r_soft * r_soft * r_sph) - 3.5 * (csound / r_soft)*(csound / r_soft);
+      } else {
+	omega2 =  GM / (r_soft * r_soft * r_soft) - 2.5 * (csound / r_soft)*(csound / r_soft);
+      }
+      
+      // local angular velocity
+      const double omega = sqrt(fmax(omega2, 0.0));
+
+      // local density
+      real_t rho = rho0 * pow(r_soft / radius, -2.5) *
+	exp(GM / (csound*csound) * (1. / r_sph - 1. / r_soft)) ;
+
+      if(r > radius || fabs(z) > 0.5 * radius)  {
+	
+	if (r > radius + contrast_width ||
+	    fabs(z) > 0.5 * radius + contrast_width) {
+
+	  rho  /= rho_contrast;
+
+	} else {
+
+	  const real_t cutdown = fmax( (r - radius) / contrast_width,
+				       (fabs(z) - 0.5 * radius) /  contrast_width );
+	  rho *= pow(rho_contrast, - cutdown);
+	  
+	}
+      }
+      
+      
+      // prevent low densities
+      rho = fmax(rho, 1e-6);
+
+      Udata(i  ,j  , ID) = rho;
+      Udata(i  ,j  , IU) = -y_soft * omega * rho;
+      Udata(i  ,j  , IV) =  x_soft * omega * rho;
+      
+      const double pressure = csound * csound * rho;
+      
+      Udata(i  ,j  , IE) = pressure / (gamma0 - 1.0)
+	+ 0.5 * rho * omega2 * (r2 + eps*eps);
+
     }
 
   } // end operator ()

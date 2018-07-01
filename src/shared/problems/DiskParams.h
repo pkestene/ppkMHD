@@ -28,7 +28,8 @@ struct DiskParams {
   //! radial distance (after the end of the disk) where density drops by
   //! a factor of contrast_density
   real_t contrast_width;
-
+  
+  real_t ref_sound_speed;
   
   DiskParams(ConfigMap& configMap)
   {
@@ -46,16 +47,26 @@ struct DiskParams {
     yc = configMap.getFloat("disk","yc", (ymin+ymax)/2);
     zc = configMap.getFloat("disk","zc", (zmin+zmax)/2);
 
-    ref_density = configMap.getFloat("disk","ref_density", 1.0);;
-    contrast_density = configMap.getFloat("disk","constrast_density",100.0);
-    contrast_width = configMap.getFloat("disk","constrast_width",0.01);
+    ref_density      = configMap.getFloat("disk","ref_density", 1.0);
+    contrast_density = configMap.getFloat("disk","contrast_density",100.0);
+    contrast_width   = configMap.getFloat("disk","contrast_width",0.01);
+    ref_sound_speed  = configMap.getFloat("disk","ref_sound_speed", 0.2);
     
   }
 
   KOKKOS_INLINE_FUNCTION
   real_t radial_speed_of_sound(real_t r) const {
 
-    // TODO
+    real_t csound = 0;
+
+    // saturate at the center to prevent diverging values
+    if (r < radius_inner) {
+      csound = ref_sound_speed / sqrt(radius_inner / radius);
+    } else {
+      csound = ref_sound_speed / sqrt(r            / radius);
+    }
+
+    return csound;
     
   } // radial_speed_of_sound
   

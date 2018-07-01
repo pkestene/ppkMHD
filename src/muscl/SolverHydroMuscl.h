@@ -111,6 +111,7 @@ public:
   void init_isentropic_vortex(DataArray Udata); // 2d only
   void init_rayleigh_taylor(DataArray Udata, VectorField gravity); // 2d and 3d
   void init_rising_bubble(DataArray Udata, VectorField gravity); // 2d and 3d
+  void init_disk(DataArray Udata, VectorField gravity); // 2d and 3d
 
   //! init restart (load data from file)
   void init_restart(DataArray Udata);
@@ -452,6 +453,31 @@ void SolverHydroMuscl<dim>::init_rising_bubble(DataArray Udata,
   
   // perform init
   RBFunctor::apply(params, rbParams, Udata, gravity);
+  
+} // SolverHydroMuscl::init_rising_bubble
+
+// =======================================================
+// =======================================================
+/**
+ * Disk setup.
+ *
+ */
+template<int dim>
+void SolverHydroMuscl<dim>::init_disk(DataArray Udata,
+				      VectorField gravity)
+{
+  
+  DiskParams dParams = DiskParams(configMap);
+  PointSourceGravity pgrav = PointSourceGravity(configMap);
+  
+  // alias to actual device functor
+  using InitDiskFunctor = InitDiskFunctor2D;
+    // typename std::conditional<dim==2,
+    // 			      InitDiskFunctor2D,
+    // 			      InitDiskFunctor3D>::type;
+  
+  // perform init
+  InitDiskFunctor::apply(params, dParams, pgrav, Udata, gravity);
   
 } // SolverHydroMuscl::init_rising_bubble
 
