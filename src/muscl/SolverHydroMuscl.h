@@ -518,9 +518,6 @@ double SolverHydroMuscl<dim>::compute_dt_local()
 			    nbCells,
 			    invDt);
     
-    // cfl parameter is already taken into account in functor
-    dt = 1.0/invDt;
-
   } else {
 
     // regular cfl
@@ -534,8 +531,9 @@ double SolverHydroMuscl<dim>::compute_dt_local()
     // call device functor
     ComputeDtFunctor::apply(params, Udata, nbCells, invDt);
     
-    dt = params.settings.cfl/invDt;
   }
+  
+  dt = params.settings.cfl/invDt;
   
   return dt;
 
