@@ -42,7 +42,8 @@ struct DiskParams {
     double ymax = configMap.getFloat("mesh", "ymax", 0.5);
     double zmax = configMap.getFloat("mesh", "zmax", 0.5);
     
-    radius   = configMap.getFloat("disk","radius", (xmax-xmin) * 0.125);
+    radius        = configMap.getFloat("disk","radius", (xmax-xmin) * 0.125);
+    radius_inner  = configMap.getFloat("disk","radius_inner", radius/10);
     xc = configMap.getFloat("disk","xc", (xmin+xmax)/2);
     yc = configMap.getFloat("disk","yc", (ymin+ymax)/2);
     zc = configMap.getFloat("disk","zc", (zmin+zmax)/2);
