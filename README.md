@@ -24,6 +24,7 @@ A few example builds
 ### Build without MPI / With Kokkos-openmp
 
 * Create a build directory, configure and make
+
 ```shell
 mkdir build; cd build
 cmake -DUSE_MPI=OFF ..
@@ -35,6 +36,7 @@ Add variable CXX on the cmake command line to change the compiler (clang++, icpc
 ### Build without MPI / With Kokkos-cuda
 
 * Create a build directory, configure and make
+
 ```shell
 mkdir build; cd build
 CXX=/path/to/nvcc_wrapper cmake -DUSE_MPI=OFF ..
