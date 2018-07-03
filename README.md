@@ -4,6 +4,14 @@
 
 ppkMHD stands for Performance Portable Kokkos for Magnetohydrodynamics solvers.
 
+Here a small list of numerical schemes implementations:
+
+- second order MUSCL-HANCOCK scheme for hydro and MHD
+- high-order MOOD (hydro only)
+- high-order Spectral Difference Method schemes: hydro only
+
+All scheme are available in 2D and 3D using Kokkos+MPI implementation.
+
 ## Dependencies
 
 * [Kokkos](https://github.com/kokkos/kokkos): for now (Feb 2017) it is required to use a version of kokkos that comes with kokkos.cmake (e.g. https://github.com/pkestene/kokkos branch develop_cmake). Kokkos library will be built by ppkMHD using the same flags (architecture, optimization, ...).
