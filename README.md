@@ -6,7 +6,7 @@ ppkMHD stands for Performance Portable Kokkos for Magnetohydrodynamics solvers.
 
 ## Dependencies
 
-* [Kokkos](https://github.com/kokkos/kokkos): for now (Feb 2017) it is required to use a version of kokkos that comes with kokkos.cmake (e.g. https://github.com/pkestene/kokkos branch develop_cmake). We assume you know what you are doing, and have build kokkos previous with the right options (architecture, flags, ...).
+* [Kokkos](https://github.com/kokkos/kokkos): for now (Feb 2017) it is required to use a version of kokkos that comes with kokkos.cmake (e.g. https://github.com/pkestene/kokkos branch develop_cmake). Kokkos library will be built by ppkMHD using the same flags (architecture, optimization, ...).
  
    
 ## Build
@@ -62,7 +62,7 @@ If you want to enforce the use of OpenBLAS, just use a recent CMake (>=3.6) and 
 
 On a recent Ubuntu, if atlas is not installed, but OpenBLAS is, you don't need to have a bleeding edge CMake, current cmake will find OpenBLAS.
 
-### Developping with vim and youcomplete plugin
+### Developping with vim or emacs and youcomplete plugin
 
 Assuming you are using vim (or neovim) text editor and have installed the youcomplete plugin, you can have
 semantic autocompletion in a C++ project.
