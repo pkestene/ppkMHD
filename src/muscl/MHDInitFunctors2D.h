@@ -333,7 +333,7 @@ public:
 
     const int isize = params.isize;
     const int jsize = params.jsize;
-    const int ghostWidth = params.ghostWidth;
+    //const int ghostWidth = params.ghostWidth;
     
     //const double xmin = params.xmin;
     //const double ymin = params.ymin;
@@ -361,24 +361,6 @@ public:
 		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
 		0.25*SQR(Udata(i,j,IBX) + Udata(i+1,j,IBX)) + 
 		0.25*SQR(Udata(i,j,IBY) + Udata(i,j+1,IBY)) );
-    } else if ( (i <isize-1) and (j==jsize-1)) {
-      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
-		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
-		0.25*SQR(Udata(i,j,IBX) + Udata(i+1,j           ,IBX)) + 
-		0.25*SQR(Udata(i,j,IBY) + Udata(i  ,2*ghostWidth,IBY)) );
-    } else if ( (i==isize-1) and (j <jsize-1)) {
-      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
-		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
-		0.25*SQR(Udata(i,j,IBX) + Udata(2*ghostWidth,j  ,IBX)) + 
-		0.25*SQR(Udata(i,j,IBY) + Udata(i           ,j+1,IBY)) );
-    } else if ( (i==isize-1) and (j==jsize-1) ) {
-      Udata(i,j,IP)  = p0 / (gamma0-1.0) +
-	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
-		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
-		0.25*SQR(Udata(i,j,IBX) + Udata(2*ghostWidth,j ,IBX)) + 
-		0.25*SQR(Udata(i,j,IBY) + Udata(i,2*ghostWidth ,IBY)) );
     }
     
   } // init_energy
