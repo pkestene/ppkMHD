@@ -15,7 +15,6 @@
 // init conditions
 #include "shared/problems/BlastParams.h"
 #include "shared/problems/ImplodeParams.h"
-#include "shared/problems/OrszagTangInit.h"
 #include "shared/problems/RotorParams.h"
 
 namespace ppkMHD { namespace muscl {
@@ -256,8 +255,13 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-template<OrszagTang_init_type ot_type>
 class InitOrszagTangFunctor3D : public MHDBaseFunctor3D {
+
+private:
+  enum PhaseType {
+    INIT_ALL_VAR_BUT_ENERGY = 0,
+    INIT_ENERGY = 1
+  };
 
 public:
   InitOrszagTangFunctor3D(HydroParams params,
@@ -269,7 +273,12 @@ public:
                     DataArray3d Udata,
 		    int         nbCells)
   {
-    InitOrszagTangFunctor3D<ot_type> functor(params, Udata);
+    InitOrszagTangFunctor3D functor(params, Udata);
+
+    functor.phase = INIT_ALL_VAR_BUT_ENERGY;
+    Kokkos::parallel_for(nbCells, functor);
+
+    functor.phase = INIT_ENERGY;
     Kokkos::parallel_for(nbCells, functor);
   }
 
@@ -277,9 +286,9 @@ public:
   void operator()(const int& index) const
   {
 
-    if (ot_type == INIT_ALL_VAR_BUT_ENERGY)
+    if (phase == INIT_ALL_VAR_BUT_ENERGY)
       init_all_var_but_energy(index);
-    else if(ot_type == INIT_ENERGY)
+    else if(phase == INIT_ENERGY)
       init_energy(index);
 
   } // end operator ()
@@ -390,6 +399,7 @@ public:
   } // init_energy
   
   DataArray3d Udata;
+  PhaseType   phase ;
   
 }; // InitOrszagTangFunctor3D
 

@@ -12,7 +12,6 @@
 // init conditions
 #include "shared/problems/BlastParams.h"
 #include "shared/problems/ImplodeParams.h"
-#include "shared/problems/OrszagTangInit.h"
 #include "shared/problems/RotorParams.h"
 #include "shared/problems/FieldLoopParams.h"
 
@@ -236,9 +235,15 @@ public:
 /*************************************************/
 /*************************************************/
 /*************************************************/
-template<OrszagTang_init_type ot_type>
 class InitOrszagTangFunctor2D : public MHDBaseFunctor2D {
 
+private:
+  enum PhaseType {
+    INIT_ALL_VAR_BUT_ENERGY = 0,
+    INIT_ENERGY = 1
+  };
+
+  
 public:
   InitOrszagTangFunctor2D(HydroParams params,
 			  DataArray2d Udata) :
@@ -249,17 +254,23 @@ public:
                     DataArray2d Udata,
 		    int         nbCells)
   {
-    InitOrszagTangFunctor2D<ot_type> functor(params, Udata);
+    InitOrszagTangFunctor2D functor(params, Udata);
+
+    functor.phase = INIT_ALL_VAR_BUT_ENERGY;
     Kokkos::parallel_for(nbCells, functor);
+
+    functor.phase = INIT_ENERGY;
+    Kokkos::parallel_for(nbCells, functor);
+    
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
   {
 
-    if (ot_type == INIT_ALL_VAR_BUT_ENERGY)
+    if (phase == INIT_ALL_VAR_BUT_ENERGY)
       init_all_var_but_energy(index);
-    else if(ot_type == INIT_ENERGY)
+    else if(phase == INIT_ENERGY)
       init_energy(index);
 
   } // end operator ()
@@ -366,6 +377,7 @@ public:
   } // init_energy
   
   DataArray2d Udata;
+  PhaseType   phase ;
   
 }; // InitOrszagTangFunctor2D
 
