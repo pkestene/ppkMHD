@@ -740,19 +740,6 @@ public:
 	( A(i+1,j  ,k,1) - A(i,j,k,1) ) / dx -
 	( A(i  ,j+1,k,0) - A(i,j,k,0) ) / dy ; //+ amp*(drand48()-0.5);
       
-      // total energy
-      // if (params.settings.cIso>0) {
-      // 	Udata(i,j,k,IP) = ZERO_F;
-      // } else {
-      // 	Udata(i,j,k,IP) = 1.0f/(gamma0-1.0) + 
-      // 	  0.5 * (Udata(i,j,k,IA) * Udata(i,j,k,IA)  + 
-      // 		 Udata(i,j,k,IB) * Udata(i,j,k,IB)  +
-      // 		 Udata(i,j,k,IC) * Udata(i,j,k,IC)) +
-      // 	  0.5 * (Udata(i,j,k,IU) * Udata(i,j,k,IU) + 
-      // 		 Udata(i,j,k,IV) * Udata(i,j,k,IV) +
-      // 		 Udata(i,j,k,IW) * Udata(i,j,k,IW))/Udata(i,j,k,ID);
-      // }
-      
     }
     
   } // end do_init_condition

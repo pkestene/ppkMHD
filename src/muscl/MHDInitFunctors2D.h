@@ -510,14 +510,16 @@ class InitFieldLoopFunctor2D_MHD : public MHDBaseFunctor2D {
 private:
   enum PhaseType {
     COMPUTE_VECTOR_POTENTIAL,
-    DO_INIT_CONDITION
+    DO_INIT_CONDITION,
+    DO_INIT_ENERGY
   };
   
 public:
 
   struct TagComputeVectorPotential {};
   struct TagInitCond {};
-  
+  struct TagInitEnergy {};
+
   InitFieldLoopFunctor2D_MHD(HydroParams     params,
 			     FieldLoopParams flParams,
 			     DataArray2d     Udata,
@@ -527,13 +529,6 @@ public:
     Udata(Udata)
   {
     Az = DataArrayScalar("Az", params.isize, params.jsize);
-
-    phase = COMPUTE_VECTOR_POTENTIAL;
-    Kokkos::parallel_for(nbCells, *this);
-
-    phase = DO_INIT_CONDITION;
-    Kokkos::parallel_for(nbCells, *this);
-
   };
   
   // static method which does it all: create and execute functor
@@ -543,6 +538,16 @@ public:
 		    int         nbCells)
   {
     InitFieldLoopFunctor2D_MHD functor(params, flParams, Udata, nbCells);
+
+    functor.phase = COMPUTE_VECTOR_POTENTIAL;
+    Kokkos::parallel_for(nbCells, functor);
+
+    functor.phase = DO_INIT_CONDITION;
+    Kokkos::parallel_for(nbCells, functor);
+
+    functor.phase = DO_INIT_ENERGY;
+    Kokkos::parallel_for(nbCells, functor);
+
   } // apply
   
   KOKKOS_INLINE_FUNCTION
@@ -552,6 +557,8 @@ public:
       compute_vector_potential(index);
     } else if (phase == DO_INIT_CONDITION) {
       do_init_condition(index);
+    } else if (phase == DO_INIT_ENERGY) {
+      do_init_energy(index);
     }
   }
   
@@ -675,15 +682,42 @@ public:
       // bz
       Udata(i,j,IC) = ZERO_F;
       
-      // total energy
-      Udata(i,j,IP) = 1.0/(gamma0-1.0) + 
-	0.5 * (Udata(i,j,IA) * Udata(i,j,IA) + Udata(i,j,IB) * Udata(i,j,IB)) +
-	0.5 * (Udata(i,j,IU) * Udata(i,j,IU) + Udata(i,j,IV) * Udata(i,j,IV))/Udata(i,j,ID);
-
     }
 
   } // do_init_condition
   
+  KOKKOS_INLINE_FUNCTION
+  void do_init_energy(const int& index) const
+  {
+    
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ghostWidth = params.ghostWidth;
+    
+    const real_t gamma0 = params.settings.gamma0;
+    
+    int i,j;
+    index2coord(index,i,j,isize,jsize);
+    
+    if (i>=ghostWidth and i<isize-ghostWidth and
+	j>=ghostWidth and j<jsize-ghostWidth )
+      {
+	
+	// total energy
+	if (params.settings.cIso>0) {
+	  Udata(i,j,IP) = ZERO_F;
+	} else {
+	  Udata(i,j,IP) = 1.0f/(gamma0-1.0) + 
+	    0.5 * ( 0.25*SQR(Udata(i,j,IA) + Udata(i+1,j,IA)) + 
+		    0.25*SQR(Udata(i,j,IB) + Udata(i,j+1,IB)) ) +
+	    0.5 * ( Udata(i,j,IU) * Udata(i,j,IU) + 
+		    Udata(i,j,IV) * Udata(i,j,IV) )/Udata(i,j,ID);
+	}
+      
+      }
+    
+  } // end do_init_energy
+
   FieldLoopParams flParams;
   DataArray2d     Udata;
 
