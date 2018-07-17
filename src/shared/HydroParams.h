@@ -175,7 +175,7 @@ struct HydroParams {
 
   virtual ~HydroParams() {}
 
-  //! This is the genuine initialiation / setup (fed by parameter file)
+  //! This is the genuine initialization / setup (fed by parameter file)
   virtual void setup(ConfigMap& map);
 
 #ifdef USE_MPI
