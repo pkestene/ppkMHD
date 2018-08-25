@@ -14,10 +14,11 @@
 	url = https://github.com/thewtex/breathelink.git
 [submodule "external/SphinxExtensions/breathe"]
 	path = external/SphinxExtensions/breathe
-	url = https://github.com/michaeljones/breathe
+	url = https://github.com/michaeljones/breathe.git
+	branch = v4.10.0
 [submodule "external/SphinxExtensions/gitstats"]
 	path = external/SphinxExtensions/gitstats
 	url = https://github.com/arnaudgelas/gitstats.git
 [submodule "external/SphinxExtensions/sphinx-bootstrap-theme"]
 	path = external/SphinxExtensions/sphinx-bootstrap-theme
-	url = https://github.com/ryan-roemer/sphinx-bootstrap-theme
+	url = https://github.com/ryan-roemer/sphinx-bootstrap-theme.git
