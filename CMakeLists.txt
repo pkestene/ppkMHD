@@ -240,7 +240,7 @@ if(${BUILD_CODE})
 endif()
 
 if(NOT DOC STREQUAL "OFF")
-  #add_subdirectory(doc)
+  add_subdirectory(doc)
 endif()
   
 ############################ PRINT CONFIGURE STATUS ############################
