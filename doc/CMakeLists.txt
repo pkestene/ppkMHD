@@ -4,9 +4,10 @@ get_target_property(DOXY_DOT_PATH Doxygen::dot IMPORTED_LOCATION)
 get_filename_component(DOXY_DOT_PATH "${DOXY_DOT_PATH}" DIRECTORY)
 file(TO_NATIVE_PATH "${DOXY_DOT_PATH}" DOXY_DOT_PATH)
 
-set(DOC_SRC "${CMAKE_SOURCE_DIR}/doc")
-set(DOC_DEST "${CMAKE_BINARY_DIR}/doc/${DOC}")
-set(DOC_TMP "${CMAKE_BINARY_DIR}/tmp/doc")
+set(DOC_SRC_DIR "${CMAKE_SOURCE_DIR}/doc")
+set(DOC_BIN_DIR "${CMAKE_BINARY_DIR}/doc")
+set(DOC_DEST_DIR "${CMAKE_BINARY_DIR}/doc/${DOC}")
+#set(DOC_TMP "${CMAKE_BINARY_DIR}/tmp/doc")
 
 set(DOXY_WARN_AS_ERR "NO")
 
@@ -17,7 +18,7 @@ if(DOC STREQUAL "doxygen")
 
   set(DOXY_BUILD_HTML "YES")
   set(DOXY_BUILD_XML "NO")
-  set(DOXY_OUTPUT_DIR "${DOC_DEST}")
+  set(DOXY_OUTPUT_DIR "${DOC_DEST_DIR}")
   
 # otherwise generate only XML and configure sphinx
 else()
@@ -30,11 +31,19 @@ else()
   
   set(DOXY_BUILD_HTML "NO")
   set(DOXY_BUILD_XML "YES")
-  set(DOXY_OUTPUT_DIR "${DOC_TMP}/doxygen")
+  set(DOXY_OUTPUT_DIR "${DOC_DEST_DIR}/doxygen")
   
   # https://git.mel.vin/template/c/issues/50
   # https://bugzilla.gnome.org/show_bug.cgi?id=792676
   set(DOXY_WARN_AS_ERR "NO")
+
+  # copy rst files into build dir
+  add_custom_target(copy_files ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/doc" "${CMAKE_CURRENT_BINARY_DIR}/doc" ) 
+
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/index.rst"
+    "${CMAKE_CURRENT_BINARY_DIR}/index.rst")
   
   find_package(PythonInterp REQUIRED)
   include(find_python_module)
@@ -69,19 +78,19 @@ else()
   include(plantuml)
   
   configure_file(
-    "${DOC_SRC}/conf.py.in"
-    "${DOC_TMP}/sphinx/conf.py"
+    "${DOC_SRC_DIR}/conf.py.in"
+    "${DOC_BIN_DIR}/conf.py"
     @ONLY)
 endif()
 
 configure_file(
-  "${DOC_SRC}/doxyfile.in"
-  "${DOC_TMP}/doxygen/doxyfile"
+  "${DOC_SRC_DIR}/doxyfile.in"
+  "${DOC_BIN_DIR}/doxyfile"
   @ONLY)
 
 if(DOC STREQUAL "doxygen")
   add_custom_target(doc
-    COMMAND Doxygen::doxygen "${DOC_TMP}/doxygen/doxyfile"
+    COMMAND Doxygen::doxygen "${DOC_BIN_DIR}/doxyfile"
     COMMENT "Generating HTML API documentation with Doxygen")
   
   add_custom_command(TARGET doc POST_BUILD
@@ -100,20 +109,34 @@ else()
   #     "${CMAKE_CURRENT_BINARY_DIR}/${filepath}" COPYONLY)
   # endforeach()  
   
+  configure_file(
+    "${DOC_SRC_DIR}/doxyfile.in"
+    "${DOC_DEST_DIR}/doxyfile"
+    @ONLY)
+  
   add_custom_target(doc
+
+    DEPENDS copy_files
+    
     COMMAND "${CMAKE_COMMAND}" -E echo
     "Generating Doxygen XML API documentation"
-    COMMAND Doxygen::doxygen "${DOC_TMP}/doxygen/doxyfile"
+
+    COMMAND Doxygen::doxygen "${DOC_DEST_DIR}/doxyfile"
     
     COMMAND "${CMAKE_COMMAND}" -E echo
     "Generating sphinx ${DOC} documentation"
+    # COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${PYTHONPATH}"
+    # "${PYTHON_EXECUTABLE}" -m sphinx -w ${SPHINX_LOG_FILE} -b "${DOC}"
+    # -c "${DOC_DEST_DIR}" -q ${SPHINX_WERROR}
+    # "${DOC_SRC_DIR}" "${DOC_DEST_DIR}")
+  
     COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${PYTHONPATH}"
     "${PYTHON_EXECUTABLE}" -m sphinx -w ${SPHINX_LOG_FILE} -b "${DOC}"
-    -c "${DOC_TMP}/sphinx" -q ${SPHINX_WERROR}
-    "${DOC_SRC}" "${DOC_DEST}")
+    -c "${DOC_BIN_DIR}" -q ${SPHINX_WERROR}
+    "${DOC_BIN_DIR}" "${DOC_DEST_DIR}")
   
   add_custom_command(TARGET doc POST_BUILD
     COMMAND ;
-    COMMENT "Output at ${DOC_DEST}")
+    COMMENT "Output at ${DOC_DEST_DIR}")
 
 endif()

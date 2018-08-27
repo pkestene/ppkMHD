@@ -57,7 +57,7 @@ exhale_args = {
     ############################################################################
     # These arguments are required.                                            #
     ############################################################################
-    "containmentFolder":     "./tmp/doc/sphinx/api",
+    "containmentFolder":     "./api",
     "rootFileName":          "@PROJECT_NAME@_root.rst",
     "rootFileTitle":         "@PROJECT_NAME@ API",
     "doxygenStripFromPath":  ".",
@@ -66,36 +66,34 @@ exhale_args = {
     ############################################################################
     "createTreeView":        True,
     "exhaleExecutesDoxygen": True,
-    "exhaleUseDoxyfile" : True,
-    # "exhaleDoxygenStdin": textwrap.dedent('''
-    #     DOT_MULTI_TARGETS     = YES
-    # 	DOT_PATH              = "@DOXY_DOT_PATH@"
-    # 	ENABLE_PREPROCESSING  = YES
-    # 	EXPAND_ONLY_PREDEF    = YES
-    # 	EXTRACT_LOCAL_CLASSES = NO
-    # 	GENERATE_HTML         = @DOXY_BUILD_HTML@
-    # 	GENERATE_LATEX        = @DOXY_BUILD_LATEX@
-    # 	GENERATE_XML          = @DOXY_BUILD_XML@
-    # 	HAVE_DOT              = YES
-    # 	INPUT                 = "@CMAKE_SOURCE_DIR@/src" "@CMAKE_SOURCE_DIR@/test"
-    # 	JAVADOC_AUTOBRIEF     = YES
-    # 	MACRO_EXPANSION       = YES
-    # 	OUTPUT_DIRECTORY      = "@DOXY_OUTPUT_DIR@"
-    # 	PREDEFINED            = restrict=
-    # 	PROJECT_NAME          = "@PROJECT_NAME@"
-    # 	PROJECT_NUMBER        = @PROJECT_VERSION@
-    # 	QT_AUTOBRIEF          = YES
-    # 	QUIET                 = YES
-    # 	RECURSIVE             = YES
-    # 	STRIP_FROM_PATH       = "@CMAKE_SOURCE_DIR@"
-    # 	WARN_AS_ERROR         = @DOXY_WARN_AS_ERR@
-    # 	WARN_NO_PARAMDOC      = YES
-    #     # For this code-base, the following helps Doxygen get past a macro
-    #     # that it has trouble with.  It is only meaningful for this code,
-    #     # not for yours.
-    #     PREDEFINED += NAMESPACE_BEGIN(arbitrary)="namespace arbitrary {"
-    #     PREDEFINED += NAMESPACE_END(arbitrary)="}"
-    # '''),
+    #"exhaleUseDoxyfile" : True,
+    "exhaleDoxygenStdin": textwrap.dedent('''
+        DOT_MULTI_TARGETS     = YES
+    	DOT_PATH              = "@DOXY_DOT_PATH@"
+    	ENABLE_PREPROCESSING  = YES
+    	EXPAND_ONLY_PREDEF    = YES
+    	EXTRACT_LOCAL_CLASSES = NO
+    	GENERATE_HTML         = @DOXY_BUILD_HTML@
+    	GENERATE_LATEX        = @DOXY_BUILD_LATEX@
+    	GENERATE_XML          = @DOXY_BUILD_XML@
+    	HAVE_DOT              = YES
+    	INPUT                 = "@CMAKE_SOURCE_DIR@/src" "@CMAKE_SOURCE_DIR@/test"
+    	JAVADOC_AUTOBRIEF     = YES
+    	MACRO_EXPANSION       = YES
+    	PREDEFINED            = restrict=
+    	PROJECT_NAME          = "@PROJECT_NAME@"
+    	PROJECT_NUMBER        = @PROJECT_VERSION@
+    	QT_AUTOBRIEF          = YES
+    	QUIET                 = YES
+    	RECURSIVE             = YES
+    	WARN_AS_ERROR         = @DOXY_WARN_AS_ERR@
+    	WARN_NO_PARAMDOC      = YES
+        # For this code-base, the following helps Doxygen get past a macro
+        # that it has trouble with.  It is only meaningful for this code,
+        # not for yours.
+        PREDEFINED += NAMESPACE_BEGIN(arbitrary)="namespace arbitrary {"
+        PREDEFINED += NAMESPACE_END(arbitrary)="}"
+    '''),
     ############################################################################
     # HTML Theme specific configurations.                                      #
     ############################################################################
@@ -278,7 +276,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['@DOC_SRC@/_static']
+html_static_path = ['@DOC_SRC_DIR@/_static']
 
 # Fix table line wrapping for RTD theme
 # https://rackerlabs.github.io/docs-rackspace/tools/rtd-tables.html
@@ -479,7 +477,7 @@ def setup(app):
     in_theme    = False
 
     import codecs
-    with codecs.open("@CMAKE_BINARY_DIR@/tmp/doc/sphinx/conf.py", "r", "utf-8") as conf:
+    with codecs.open("@CMAKE_BINARY_DIR@/doc/html/conf.py", "r", "utf-8") as conf:
         for line in conf:
             # determine where we are / if we should be grabbing lines
             if line.startswith(begin_ext):
@@ -511,7 +509,7 @@ def setup(app):
 
     # write out the requirements used
     requirements = []
-    with open("@DOC_SRC@/requirements.txt", "r") as req:
+    with open("@DOC_SRC_DIR@/requirements.txt", "r") as req:
         for line in req:
             requirements.append(line)
 
