@@ -10,30 +10,35 @@ set(DOC_TMP "${CMAKE_BINARY_DIR}/tmp/doc")
 
 set(DOXY_WARN_AS_ERR "NO")
 
+set(SPHINX_LOG_FILE ${CMAKE_BINARY_DIR}/doc/sphinx_warnings.log)
+
 # if the target is doxygen build only doxygen HTML
 if(DOC STREQUAL "doxygen")
+
   set(DOXY_BUILD_HTML "YES")
   set(DOXY_BUILD_XML "NO")
   set(DOXY_OUTPUT_DIR "${DOC_DEST}")
-  # otherwise generate only XML and configure sphinx
+  
+# otherwise generate only XML and configure sphinx
 else()
+
   if(DOC STREQUAL "html")
     set(EXTRA_PYTHON_MODULES "sphinx_rtd_theme")
   else()
     unset(EXTRA_PYTHON_MODULES)
   endif()
-
+  
   set(DOXY_BUILD_HTML "NO")
   set(DOXY_BUILD_XML "YES")
   set(DOXY_OUTPUT_DIR "${DOC_TMP}/doxygen")
-
+  
   # https://git.mel.vin/template/c/issues/50
   # https://bugzilla.gnome.org/show_bug.cgi?id=792676
   set(DOXY_WARN_AS_ERR "NO")
-
+  
   find_package(PythonInterp REQUIRED)
   include(find_python_module)
-
+  
   # do not change the ENV, doesn't work with add_custom_target
   # https://cmake.org/Bug/view.php?id=5145
   if(ENV{PYTHONPATH})
@@ -44,7 +49,7 @@ else()
       "import sys; sys.stdout.write(':'.join(sys.path))"
       OUTPUT_VARIABLE PYTHONPATH)
   endif()
-
+  
   foreach(module
       breathe
       sphinx
@@ -54,15 +59,15 @@ else()
     find_python_module("${module}" "${module_upper}")
     set(PYTHONPATH "${${module_upper}_PATH}:${PYTHONPATH}")
   endforeach(module)
-
+  
   if(${WERROR})
     set(SPHINX_WERROR "-W")
   else()
     unset(SPHINX_WERROR)
   endif()
-
+  
   include(plantuml)
-
+  
   configure_file(
     "${DOC_SRC}/conf.py.in"
     "${DOC_TMP}/sphinx/conf.py"
@@ -78,24 +83,27 @@ if(DOC STREQUAL "doxygen")
   add_custom_target(doc
     COMMAND Doxygen::doxygen "${DOC_TMP}/doxygen/doxyfile"
     COMMENT "Generating HTML API documentation with Doxygen")
-
+  
   add_custom_command(TARGET doc POST_BUILD
     COMMAND ;
     COMMENT "Output at ${DOC_DEST}/html/index.html")
+  
 else()
+
   add_custom_target(doc
     COMMAND "${CMAKE_COMMAND}" -E echo
     "Generating Doxygen XML API documentation"
     COMMAND Doxygen::doxygen "${DOC_TMP}/doxygen/doxyfile"
-
+    
     COMMAND "${CMAKE_COMMAND}" -E echo
     "Generating sphinx ${DOC} documentation"
     COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${PYTHONPATH}"
-    "${PYTHON_EXECUTABLE}" -m sphinx -b "${DOC}"
+    "${PYTHON_EXECUTABLE}" -m sphinx -w ${SPHINX_LOG_FILE} -b "${DOC}"
     -c "${DOC_TMP}/sphinx" -q ${SPHINX_WERROR}
     "${DOC_SRC}" "${DOC_DEST}")
-
+  
   add_custom_command(TARGET doc POST_BUILD
     COMMAND ;
     COMMENT "Output at ${DOC_DEST}")
+
 endif()
