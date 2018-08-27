@@ -477,7 +477,7 @@ def setup(app):
     in_theme    = False
 
     import codecs
-    with codecs.open("@CMAKE_BINARY_DIR@/doc/html/conf.py", "r", "utf-8") as conf:
+    with codecs.open("@CMAKE_BINARY_DIR@/doc/conf.py", "r", "utf-8") as conf:
         for line in conf:
             # determine where we are / if we should be grabbing lines
             if line.startswith(begin_ext):
