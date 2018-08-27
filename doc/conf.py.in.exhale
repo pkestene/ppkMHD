@@ -57,10 +57,10 @@ exhale_args = {
     ############################################################################
     # These arguments are required.                                            #
     ############################################################################
-    "containmentFolder":     "./api",
+    "containmentFolder":     "./tmp/doc/sphinx/api",
     "rootFileName":          "@PROJECT_NAME@_root.rst",
     "rootFileTitle":         "@PROJECT_NAME@ API",
-    #"doxygenStripFromPath":  "../include",
+    "doxygenStripFromPath":  ".",
     ############################################################################
     # Suggested optional arguments.                                            #
     ############################################################################
@@ -479,7 +479,7 @@ def setup(app):
     in_theme    = False
 
     import codecs
-    with codecs.open("conf.py", "r", "utf-8") as conf:
+    with codecs.open("@CMAKE_BINARY_DIR@/tmp/doc/sphinx/conf.py", "r", "utf-8") as conf:
         for line in conf:
             # determine where we are / if we should be grabbing lines
             if line.startswith(begin_ext):
@@ -511,7 +511,7 @@ def setup(app):
 
     # write out the requirements used
     requirements = []
-    with open("requirements.txt", "r") as req:
+    with open("@DOC_SRC@/requirements.txt", "r") as req:
         for line in req:
             requirements.append(line)
 
