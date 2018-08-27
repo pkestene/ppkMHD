@@ -90,6 +90,16 @@ if(DOC STREQUAL "doxygen")
   
 else()
 
+  # # List and copy all rst files from source dir to binary dir
+  # file(GLOB_RECURSE files_rst RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  #   ${CMAKE_CURRENT_SOURCE_DIR}/*.rst)
+  # foreach(filepath ${files_rst})
+    
+  #   configure_file (
+  #     "${CMAKE_CURRENT_SOURCE_DIR}/${filepath}"
+  #     "${CMAKE_CURRENT_BINARY_DIR}/${filepath}" COPYONLY)
+  # endforeach()  
+  
   add_custom_target(doc
     COMMAND "${CMAKE_COMMAND}" -E echo
     "Generating Doxygen XML API documentation"
