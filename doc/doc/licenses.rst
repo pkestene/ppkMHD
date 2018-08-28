@@ -2,23 +2,20 @@
 License Info
 ================================
 
-CanoP License
+ppMHD License
 ----------------
 
 .. include:: ../../../LICENSE.CECILL.EN.utf8
-..
-   .. raw:: html
-      :file: ../../../Licence_CeCILL_V2-en.html
 
 	     
 Third Party Builtin Libraries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is a list of the software components used by CanoP.
+Here is a list of the software components used by ppkMHD.
 
 C and C++ Libraries
 =====================
-- *p4est*: https://github.com/cburstedde/p4est (GPL License)
+- *kokkos*: https://github.com/kokkos/kokkos (BSD Clause 3 License)
 - *hdf5*: https://support.hdfgroup.org/HDF5/ (BSD Style License)
 
 Build System
