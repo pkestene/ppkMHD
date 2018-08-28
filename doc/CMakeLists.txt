@@ -37,10 +37,14 @@ else()
   # https://bugzilla.gnome.org/show_bug.cgi?id=792676
   set(DOXY_WARN_AS_ERR "NO")
 
+  if(USE_SPHINX_EXHALE)
+    set(EXHALE_API_COMMAND "api/${PROJECT_NAME}_root")
+  endif()
+  
   # copy rst files into build dir
   add_custom_target(copy_files ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/doc" "${CMAKE_CURRENT_BINARY_DIR}/doc" ) 
-
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/doc" "${CMAKE_CURRENT_BINARY_DIR}/doc" )
+  
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/index.rst"
     "${CMAKE_CURRENT_BINARY_DIR}/index.rst")
@@ -76,11 +80,19 @@ else()
   endif()
   
   include(plantuml)
+
+  if (USE_SPHINX_EXHALE)
+    configure_file(
+      "${DOC_SRC_DIR}/conf.py.in.exhale"
+      "${DOC_BIN_DIR}/conf.py"
+      @ONLY)
+  else()
+    configure_file(
+      "${DOC_SRC_DIR}/conf.py.in"
+      "${DOC_BIN_DIR}/conf.py"
+      @ONLY)
+  endif()
   
-  configure_file(
-    "${DOC_SRC_DIR}/conf.py.in"
-    "${DOC_BIN_DIR}/conf.py"
-    @ONLY)
 endif()
 
 configure_file(
@@ -95,7 +107,10 @@ if(DOC STREQUAL "doxygen")
   
   add_custom_command(TARGET doc POST_BUILD
     COMMAND ;
-    COMMENT "Output at ${DOC_DEST}/html/index.html")
+    COMMENT "Output at ${DOC_DEST_DIR}/html/index.html")
+
+  add_custom_target(clean_doc
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${DOC_DEST_DIR}")
   
 else()
 
@@ -138,5 +153,8 @@ else()
   add_custom_command(TARGET doc POST_BUILD
     COMMAND ;
     COMMENT "Output at ${DOC_DEST_DIR}")
+
+  add_custom_target(clean_doc
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${DOC_DEST_DIR}")
 
 endif()

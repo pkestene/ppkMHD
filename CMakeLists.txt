@@ -23,7 +23,8 @@ include(initBuildType)
 
 # options
 option (BUILD_CODE "Enable / disable project build" ON)
-option (BUILD_DOC  "Enable / disable documentation build" OFF)
+option (BUILD_DOC  "Enable / disable documentation build (sphinx/html)" OFF)
+option (USE_SPHINX_EXHALE "Enable / Disable building API documentation (very long)" OFF)
 option (USE_MPI "Activate / want MPI build" OFF)
 option (USE_VTK "Activate / want VTK build" OFF)
 option (USE_DOUBLE "build with double precision" ON)
@@ -37,7 +38,7 @@ option (USE_MPI_CUDA_AWARE_ENFORCED "Some MPI cuda-aware implementation are not 
 # Documentation type
 if(NOT DEFINED DOC)
   set(DOC OFF CACHE STRING
-    "The documentation type to generate. Available values are OFF, html and doxygen" FORCE)
+    "The documentation type to generate. Available values are html and doxygen" FORCE)
 endif()
 
 # disable base languages
