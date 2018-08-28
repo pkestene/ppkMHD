@@ -1,7 +1,7 @@
-ppkMHD
-======
+@PROJECT_NAME@
+================
 
-**ppkMHD performance portable kernels for CFD applications on regular cartesian grids**
+**@PROJECT_NAME@ performance portable kernels for CFD applications on regular cartesian grids**
 
 Introduction
 ------------
