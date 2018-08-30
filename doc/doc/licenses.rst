@@ -2,7 +2,7 @@
 License Info
 ================================
 
-ppMHD License
+ppkMHD License
 ----------------
 
 .. include:: ../../../LICENSE.CECILL.EN.utf8
