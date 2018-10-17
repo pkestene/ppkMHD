@@ -1787,6 +1787,9 @@ public:
     // must be allocated (TODO)
     real_t* data;
     
+    // here for simplicity, we don't care if the restart is done
+    // with upscaling; actually the sizes used here are necessary
+    // for a regular restart (and thus sufficient for an upscaled restart)
     if (dimType == TWO_D)
       data = new real_t[isize*jsize];
     else
@@ -2330,7 +2333,10 @@ public:
     // pointer to data in memory buffer
     // must be allocated (TODO)
     real_t* data;
-    
+
+    // here for simplicity, we don't care if the restart is done
+    // with upscaling; actually the sizes used here are necessary
+    // for a regular restart (and thus sufficient for an upscaled restart)
     if (dimType == TWO_D)
       data = new real_t[isize*jsize];
     else
@@ -2398,7 +2404,7 @@ public:
     attr_id         = H5Aopen(group_id, "time step", H5P_DEFAULT);
     status          = H5Aread(attr_id, H5T_NATIVE_INT, &timeStep);
     status          = H5Aclose(attr_id);
-    this->iStep           = timeStep;
+    this->iStep     = timeStep;
 
     // read global time
     double timeValue;
