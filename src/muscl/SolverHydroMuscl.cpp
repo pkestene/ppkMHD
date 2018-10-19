@@ -277,6 +277,16 @@ void SolverHydroMuscl<dim>::init_restart(DataArray Udata)
   //   }
     
   // } // end restart problem turbulence-Ornstein-Uhlenbeck
+
+  // do we force total time to be zero ?
+  bool resetTotalTime = configMap.getBool("run","restart_reset_totaltime",false);
+  if (resetTotalTime)
+    m_t=0;
+  
+  if (myRank == 0) {
+    std::cout << "### This is a restarted run ! Current time is " << m_t << " ###\n";
+  }
+  
   
   // some extra stuff that need to be done here (usefull when MRI is activated)
   //restart_run_extra_work();
