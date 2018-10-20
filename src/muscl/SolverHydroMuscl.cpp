@@ -62,17 +62,6 @@ void SolverHydroMuscl<3>::make_boundaries(DataArray Udata)
 
 // =======================================================
 // =======================================================
-template<int dim>
-void SolverHydroMuscl<dim>::make_boundaries(DataArray Udata)
-{
-
-  // this routine is specialized for 2d / 3d
-  
-} // SolverHydroMuscl<dim>::make_boundaries
-
-
-// =======================================================
-// =======================================================
 /**
  * Four quadrant 2D riemann problem.
  *
@@ -111,7 +100,7 @@ void SolverHydroMuscl<dim>::init_four_quadrant(DataArray Udata)
   // specialized only for 2d
   std::cerr << "You shouldn't be here: four quadrant problem is not implemented in 3D !\n";
   
-} // SolverHydroMuscl::init_four_quadrant
+} // SolverHydroMuscl<dim>::init_four_quadrant
 
 // =======================================================
 // =======================================================
@@ -143,165 +132,12 @@ void SolverHydroMuscl<dim>::init_isentropic_vortex(DataArray Udata)
 
 // =======================================================
 // =======================================================
-template<int dim>
-void SolverHydroMuscl<dim>::init_restart(DataArray Udata)
-{
-
-  // get input filename from configMap
-  std::string inputFilename = configMap.getString("run", "restart_filename", "");
-  
-  // check filename extension
-  std::string h5Suffix(".h5");
-  std::string ncSuffix(".nc"); // pnetcdf file only available when MPI is activated
-  
-  bool isHdf5=false, isNcdf=false;
-  if (inputFilename.length() >= 3) {
-    isHdf5 = (0 == inputFilename.compare (inputFilename.length() -
-					  h5Suffix.length(),
-					  h5Suffix.length(),
-					  h5Suffix) );
-    isNcdf = (0 == inputFilename.compare (inputFilename.length() -
-					  ncSuffix.length(),
-					  ncSuffix.length(),
-					  ncSuffix) );
-  }
-
-  // get output directory
-  std::string outputDir    = configMap.getString("output", "outputDir", "./");
-  
-  // upscale init data from a file twice smaller
-  bool restartUpscaleEnabled = configMap.getBool("run","restart_upscale",false);
-
-  const int nx = params.nx;
-  const int ny = params.ny;
-  const int nz = params.nz;
-  const int ghostWidth = params.ghostWidth;
-  const int nbvar = params.nbvar;
-
-  int myRank=0;
-#ifdef USE_MPI
-  myRank = params.myRank;
-#endif // USE_MPI
-  
-  if (restartUpscaleEnabled) { // load low resolution data from file
-    
-    // allocate h_input (half resolution, ghost included)
-    DataArray input;
-    if (dim == 2) 
-      input = DataArray("h_input",
-			nx/2+2*ghostWidth,
-			ny/2+2*ghostWidth,
-			nbvar);
-    else if (dim==3)
-      input = DataArray("h_input",
-			nx/2+2*ghostWidth,
-			ny/2+2*ghostWidth,
-			nz/2+2*ghostWidth,
-			nbvar);
-    
-    // read input date into temporary array h_input
-    bool halfResolution=true;
-    
-    if (isHdf5) {
-      //inputHdf5(input, outputDir+"/"+inputFilename, halfResolution);
-    }
-    
-#ifdef USE_MPI
-    else if (isNcdf) {
-      //inputPnetcdf(h_input, outputDir+"/"+inputFilename, halfResolution);
-    }
-#endif // USE_MPI
-
-    else {
-      if (myRank == 0) {
-	std::cerr << "Unknown input filename extension !\n";
-	std::cerr << "Should be \".h5\" or \".nc\"\n";
-      }
-    }
-    
-    // upscale h_input into h_U (i.e. double resolution)
-    //upscale(Udata, input);
-    
-  } else { // standard restart
-    
-    // read input file into h_U buffer , and return time Step
-    if (isHdf5) {
-      //timeStep = inputHdf5(h_U, outputDir+"/"+inputFilename);
-    }
-    
-#ifdef USE_MPI
-    else if (isNcdf) {
-      //timeStep = inputPnetcdf(h_U, outputDir+"/"+inputFilename);
-    }
-#endif // USE_MPI
-    
-    else {
-      if (myRank == 0) {
-	std::cerr << "Unknown input filename extension !\n";
-	std::cerr << "Should be \".h5\" or \".nc\"\n";
-      }
-    }
-    
-  } // if (restartUpscaleEnabled)
-  
-  // in case of turbulence problem, we also need to re-initialize the
-  // random forcing field
-  // if (!problemName.compare("turbulence")) {
-  //   this->init_randomForcing();
-  // } 
-  
-  // in case of Ornstein-Uhlenbeck turbulence problem, 
-  // we also need to re-initialize the random forcing field
-  // if (!problemName.compare("turbulence-Ornstein-Uhlenbeck")) {
-    
-  //   bool restartEnabled = true;
-    
-  //   std::string forcing_filename = configMap.getString("turbulence-Ornstein-Uhlenbeck", "forcing_input_file",  "");
-    
-  //   if (restartUpscaleEnabled) {
-      
-  //     // use default parameter when restarting and upscaling
-  //     pForcingOrnsteinUhlenbeck -> init_forcing(false);
-      
-  //   } else if ( forcing_filename.size() != 0) {
-      
-  //     // if forcing filename is provided, we use it
-  //     pForcingOrnsteinUhlenbeck -> init_forcing(false); // call to allocate
-  //     pForcingOrnsteinUhlenbeck -> input_forcing(forcing_filename);
-      
-  //   } else {
-      
-  //     // the forcing parameter filename is build upon configMap information
-  //     pForcingOrnsteinUhlenbeck -> init_forcing(restartEnabled, timeStep);
-      
-  //   }
-    
-  // } // end restart problem turbulence-Ornstein-Uhlenbeck
-
-  // do we force total time to be zero ?
-  bool resetTotalTime = configMap.getBool("run","restart_reset_totaltime",false);
-  if (resetTotalTime)
-    m_t=0;
-  
-  if (myRank == 0) {
-    std::cout << "### This is a restarted run ! Current time is " << m_t << " ###\n";
-  }
-  
-  
-  // some extra stuff that need to be done here (usefull when MRI is activated)
-  //restart_run_extra_work();
-
-  
-} // SolverHydroMuscl<2>::init_restart
-
-// =======================================================
-// =======================================================
 template<>
 void SolverHydroMuscl<2>::init(DataArray Udata)
 {
 
   // test if we are performing a re-start run (default : false)
-  bool restartEnabled = configMap.getBool("run","restart",false);
+  bool restartEnabled = configMap.getBool("run","restart_enabled",false);
 
   if (restartEnabled) { // load data from input data file
 
@@ -368,46 +204,57 @@ template<>
 void SolverHydroMuscl<3>::init(DataArray Udata)
 {
 
-  /*
-   * initialize hydro array at t=0
-   */
-  if ( !m_problem_name.compare("implode") ) {
+  // test if we are performing a re-start run (default : false)
+  bool restartEnabled = configMap.getBool("run","restart_enabled",false);
 
-    init_implode(Udata);
+  if (restartEnabled) { // load data from input data file
 
-  } else if ( !m_problem_name.compare("blast") ) {
+    init_restart(Udata);
+    
+  } else { // regular initialization
 
-    init_blast(Udata);
+    /*
+     * initialize hydro array at t=0
+     */
+    if ( !m_problem_name.compare("implode") ) {
 
-  } else if ( !m_problem_name.compare("kelvin_helmholtz") ) {
+      init_implode(Udata);
       
-    init_kelvin_helmholtz(Udata);
-    
-  } else if ( !m_problem_name.compare("gresho_vortex") ) {
+    } else if ( !m_problem_name.compare("blast") ) {
       
-    init_gresho_vortex(Udata);
-    
-  } else if ( !m_problem_name.compare("rayleigh_taylor") ) {
-    
-    init_rayleigh_taylor(Udata,gravity);
-    
-  } else if ( !m_problem_name.compare("rising_bubble") ) {
+      init_blast(Udata);
       
-    init_rising_bubble(Udata,gravity);
-    
-  } else if ( !m_problem_name.compare("disk") ) {
+    } else if ( !m_problem_name.compare("kelvin_helmholtz") ) {
       
-    init_disk(Udata,gravity);
+      init_kelvin_helmholtz(Udata);
       
-  } else {
-    
-    std::cout << "Problem : " << m_problem_name
-	      << " is not recognized / implemented."
+    } else if ( !m_problem_name.compare("gresho_vortex") ) {
+      
+      init_gresho_vortex(Udata);
+      
+    } else if ( !m_problem_name.compare("rayleigh_taylor") ) {
+      
+      init_rayleigh_taylor(Udata,gravity);
+      
+    } else if ( !m_problem_name.compare("rising_bubble") ) {
+      
+      init_rising_bubble(Udata,gravity);
+      
+    } else if ( !m_problem_name.compare("disk") ) {
+      
+      init_disk(Udata,gravity);
+      
+    } else {
+      
+      std::cout << "Problem : " << m_problem_name
+		<< " is not recognized / implemented."
 	      << std::endl;
-    std::cout <<  "Use default - implode" << std::endl;
-    init_implode(Udata);
-    
-  }
+      std::cout <<  "Use default - implode" << std::endl;
+      init_implode(Udata);
+      
+    }
+
+  } // end regular initialization
 
 } // SolverHydroMuscl<3>::init
 
