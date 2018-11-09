@@ -34,6 +34,7 @@ add_executable(${EXE_NAME}
 target_include_directories(${EXE_NAME}
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/src
   )
 
 #target_link_libraries(${EXE_NAME} solver_factory config kokkos hwloc dl muscl io shared monitoring)
