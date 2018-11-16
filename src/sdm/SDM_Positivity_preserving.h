@@ -1404,9 +1404,13 @@ public:
 	    real_t a1 = 2.0*drho*dE - dm2;
 	    real_t b1 = 2.0*drho*(e_ave - eps2/(gamma0-1.0))
 	      + 2.0*rho_ave*dE
-	      - 2.0*(rhou_ave*drhou + rhov_ave*drhov + rhow_ave*drhow);
+	      - 2.0*(rhou_ave*drhou +
+		     rhov_ave*drhov +
+		     rhow_ave*drhow);
 	    real_t c1 = 2.0*rho_ave*e_ave
-	      - (rhou_ave*rhou_ave + rhov_ave*rhov_ave + rhow_ave*rhow_ave)
+	      - (rhou_ave*rhou_ave +
+		 rhov_ave*rhov_ave +
+		 rhow_ave*rhow_ave)
 	      - 2.0*eps2*rho_ave/(gamma0-1.0);
 	    // Divide by a1 to avoid round-off error
 	    b1 /= a1;
@@ -1494,9 +1498,13 @@ public:
 	    real_t a1 = 2.0*drho*dE - dm2;
 	    real_t b1 = 2.0*drho*(e_ave - eps2/(gamma0-1.0))
 	      + 2.0*rho_ave*dE
-	      - 2.0*(rhou_ave*drhou + rhov_ave*drhov + rhow_ave*drhow);
+	      - 2.0*(rhou_ave*drhou +
+		     rhov_ave*drhov +
+		     rhow_ave*drhow);
 	    real_t c1 = 2.0*rho_ave*e_ave
-	      - (rhou_ave*rhou_ave + rhov_ave*rhov_ave + rhow_ave*rhow_ave)
+	      - (rhou_ave*rhou_ave +
+		 rhov_ave*rhov_ave +
+		 rhow_ave*rhow_ave)
 	      - 2.0*eps2*rho_ave/(gamma0-1.0);
 	    // Divide by a1 to avoid round-off error
 	    b1 /= a1;
@@ -1584,9 +1592,13 @@ public:
 	    real_t a1 = 2.0*drho*dE - dm2;
 	    real_t b1 = 2.0*drho*(e_ave - eps2/(gamma0-1.0))
 	      + 2.0*rho_ave*dE
-	      - 2.0*(rhou_ave*drhou + rhov_ave*drhov + rhow_ave*drhow);
+	      - 2.0*(rhou_ave*drhou +
+		     rhov_ave*drhov +
+		     rhow_ave*drhow);
 	    real_t c1 = 2.0*rho_ave*e_ave
-	      - (rhou_ave*rhou_ave + rhov_ave*rhov_ave + rhow_ave*rhow_ave)
+	      - (rhou_ave*rhou_ave +
+		 rhov_ave*rhov_ave +
+		 rhow_ave*rhow_ave)
 	      - 2.0*eps2*rho_ave/(gamma0-1.0);
 	    // Divide by a1 to avoid round-off error
 	    b1 /= a1;
