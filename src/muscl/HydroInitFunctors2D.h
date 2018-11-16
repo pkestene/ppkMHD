@@ -940,7 +940,7 @@ public:
     const int ny = params.ny;
 
     const real_t xmin = params.xmin;
-    const real_t xmax = params.xmax;
+    //const real_t xmax = params.xmax;
     const real_t ymin = params.ymin;
     const real_t dx = params.dx;
     const real_t dy = params.dy;

@@ -870,7 +870,7 @@ public:
     const int nz = params.nz;
 
     const real_t xmin = params.xmin;
-    const real_t xmax = params.xmax;
+    //const real_t xmax = params.xmax;
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;
     const real_t dx = params.dx;
