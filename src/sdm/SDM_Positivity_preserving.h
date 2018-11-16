@@ -465,7 +465,7 @@ public:
 #endif
 
     // compute rho_min over the flux points
-    for (int idz=0; idz<idy_flux_end; ++idz) {
+    for (int idz=0; idz<idz_flux_end; ++idz) {
       for (int idy=0; idy<idy_flux_end; ++idy) {
 	for (int idx=0; idx<idx_flux_end; ++idx) {
 	  
