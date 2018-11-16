@@ -177,7 +177,9 @@ public:
 	      real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
 	      
 	      // delta Q (dp) is used in q_recons = q_center + dq
-	      dq = gradx * delta_x + grady * delta_y;
+	      dq =
+		gradx * delta_x +
+		grady * delta_y;
 	      
 	      // proposed reconstructed state from cell center value
 	      real_t qr = Uaverage(i,j,ivar) + dq;
@@ -278,7 +280,9 @@ public:
 	      real_t delta_y = (this->sdm_geom.flux_pts_1d(idy)-0.5)*dy;
 	      
 	      // delta Q (dp) is used in q_recons = q_center + dq
-	      dq = gradx * delta_x + grady * delta_y;
+	      dq =
+		gradx * delta_x +
+		grady * delta_y;
 	      
 	      // proposed reconstructed state from cell center value
 	      real_t qr = Uaverage(i,j,ivar) + dq;
