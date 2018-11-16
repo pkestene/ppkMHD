@@ -1699,7 +1699,7 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
     make_boundary_sdm_wedge<FACE_YMIN>(Udata, wparams);
     make_boundary_sdm_wedge<FACE_YMAX>(Udata, wparams);
 
-  } else if (dim==2 and !m_problem_name.compare("jet")) {
+  } else if (!m_problem_name.compare("jet")) {
 
     JetParams jparams(configMap);
     
@@ -1708,6 +1708,11 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
     make_boundary_sdm_jet<FACE_YMIN>(Udata, jparams);
     make_boundary_sdm_jet<FACE_YMAX>(Udata, jparams);
 
+    if (dim==3) {
+      make_boundary_sdm_jet<FACE_ZMIN>(Udata, jparams);
+      make_boundary_sdm_jet<FACE_ZMAX>(Udata, jparams);
+    }
+    
   } else {
 
     /*
