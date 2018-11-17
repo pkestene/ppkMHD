@@ -17,20 +17,40 @@ namespace sdm {
 /*************************************************/
 /*************************************************/
 /*************************************************/
+/**
+ * A parallel functor to reset either a Solution point / Flux point
+ * data arrary.
+ */
 template<int dim, int N>
 class SDM_Erase_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
 
-  static constexpr auto dofMap = DofMap<dim,N>;
+  static constexpr auto dofMap  = DofMap<dim,N>;
+  static constexpr auto dofMapF = DofMapFlux<dim,N,IX>;
   
   SDM_Erase_Functor(HydroParams         params,
 		    SDM_Geometry<dim,N> sdm_geom,
-		    DataArray           Udata) :
-    SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
+		    DataArray           Udata,
+		    bool                isFlux) :
+    SDMBaseFunctor<dim,N>(params,sdm_geom),
+    Udata(Udata),
+    isFlux(isFlux)
+  {};
 
-  
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+		    DataArray           Udata,
+		    bool                isFlux,
+		    int                 nbCells)
+  {
+    SDM_Erase_Functor functor(params, sdm_geom, Udata, isFlux);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   /*
    * 2D version.
    */
@@ -46,18 +66,37 @@ public:
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-
+    
     // loop over cell DoF's
-    for (int idy=0; idy<N; ++idy) {
-      for (int idx=0; idx<N; ++idx) {
-	
-	Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 0.0;
-	Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 0.0;
-	Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;
-	Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0.0;
-	
-      } // end for idx
-    } // end for idy
+
+    if (isFlux) {
+
+      for (int idy=0; idy<N; ++idy) {
+	for (int idx=0; idx<N+1; ++idx) {
+	  
+	  Udata(i  ,j  , dofMapF(idx,idy,0,ID)) = 0.0;
+	  Udata(i  ,j  , dofMapF(idx,idy,0,IP)) = 0.0;
+	  Udata(i  ,j  , dofMapF(idx,idy,0,IU)) = 0.0;
+	  Udata(i  ,j  , dofMapF(idx,idy,0,IV)) = 0.0;
+	  
+	} // end for idx
+      } // end for idy
+
+
+    } else {
+      
+      for (int idy=0; idy<N; ++idy) {
+	for (int idx=0; idx<N; ++idx) {
+	  
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 0.0;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 0.0;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0.0;
+	  
+	} // end for idx
+      } // end for idy
+
+    } // end isFlux
     
   } // end operator () - 2d
 
@@ -79,24 +118,46 @@ public:
     index2coord(index,i,j,k,isize,jsize,ksize);
 
     // loop over cell DoF's
-    for (int idz=0; idz<N; ++idz) {
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
-	  
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 0.0;
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 0.0;
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	  Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
-	  
-	} // end for idx
-      } // end for idy
-    } // end for idz
+
+    if (isFlux) {
+      
+      for (int idz=0; idz<N; ++idz) {
+	for (int idy=0; idy<N; ++idy) {
+	  for (int idx=0; idx<N; ++idx) {
+	    
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+	    
+	  } // end for idx
+	} // end for idy
+      } // end for idz
+
+    } else {
+
+      for (int idz=0; idz<N; ++idz) {
+	for (int idy=0; idy<N; ++idy) {
+	  for (int idx=0; idx<N+1; ++idx) {
+	    
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,ID)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IP)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IU)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IV)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IW)) = 0.0;
+	    
+	  } // end for idx
+	} // end for idy
+      } // end for idz
+
+    } // end isFlux
     
   } // end operator () - 3d
   
   DataArray Udata;
-
+  bool      isFlux;
+  
 }; // SDM_Erase_Functor
 
 // =======================================================================

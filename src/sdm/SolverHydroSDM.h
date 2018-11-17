@@ -289,7 +289,7 @@ public:
 			real_t dt);
 
   //! erase a solution data array
-  void erase(DataArray data);
+  void erase(DataArray data, bool isFlux=false);
 
   //! avoid override the base class make_boundary method
   template<FaceIdType faceId>
@@ -1035,12 +1035,15 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
 								      real_t dt)
 {
 
+  // erase fluxes
+  erase(Fluxes, true);
+  
   if (dim==2 and dir==IZ)
     return;
   
   // 1. interpolate conservative variables from solution points to flux points
   {
-    
+
     Interpolate_At_FluxPoints_Functor<dim,N,dir> functor(params,
 							 sdm_geom,
 							 Udata,
@@ -1253,7 +1256,7 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 
   // erase Udata_fdiv
   erase(Udata_fdiv);
-
+  
   apply_pre_step_computation(Udata);
   
   apply_limiting(Udata);
@@ -1565,12 +1568,10 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
 // =======================================================
 // =======================================================
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::erase(DataArray data)
+void SolverHydroSDM<dim,N>::erase(DataArray data, bool isFlux)
 {
 
-  SDM_Erase_Functor<dim,N> functor(params, sdm_geom, data);
-  
-  Kokkos::parallel_for(nbCells, functor);
+  SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data, isFlux, nbCells);
   
 } // SolverHydroSDM<dim,N>::erase
 
