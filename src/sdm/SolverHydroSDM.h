@@ -976,7 +976,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
 
   if (limiter_enabled) {
 
-     // we assume here that Uaverage has been computed in routine apply_pre_step_computation
+    // we assume here that Uaverage has been computed in routine apply_pre_step_computation
     // we just need to compute cell-average gradient component.
     {
       Average_Gradient_Functor<dim,N,IX> functor(params,
