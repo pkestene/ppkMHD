@@ -813,6 +813,7 @@ public:
     HydroState DuYL; // neighbor on the left
     HydroState DuYR; // neighbor on the right
 
+    // Needs explanation here !!!
     const real_t dx = 1.0; //this->params.dx;
     
     // local cell index
@@ -925,12 +926,143 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
 
-    //const int nbvar = this->params.nbvar;
+    const int nbvar = this->params.nbvar;
+
+    const real_t gamma0 = this->params.settings.gamma0;
+
+    HydroState DuX;
+    HydroState DuX_new;
+    HydroState DuXL; // neighbor on the left
+    HydroState DuXR; // neighbor on the right
+    
+    HydroState DuY;
+    HydroState DuY_new;
+    HydroState DuYL; // neighbor on the left
+    HydroState DuYR; // neighbor on the right
+
+    HydroState DuZ;
+    HydroState DuZ_new;
+    HydroState DuZL; // neighbor on the left
+    HydroState DuZR; // neighbor on the right
+
+    // Needs explanation here !!!
+    const real_t dx = 1.0; //this->params.dx;
 
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
+
+    if (i==0 or i==isize-1 or
+	j==0 or j==jsize-1 or
+	k==0 or k==ksize-1 )
+      return;
+
+    // read cell-average conservative variables
+    HydroState Uave = {}; //Uave[IE]=0;
+    for (int ivar = 0; ivar<nbvar; ++ivar) {
+      Uave[ivar] = Uaverage(i,j,k,ivar);
+    }
+
+    // speed of sound from cell-averaged values
+    const real_t c = euler.compute_speed_of_sound(Uave, gamma0);
+
+    // read cell-averaged gradient, and compute difference with close neighbors
+    for (int ivar = 0; ivar<nbvar; ++ivar) {
+
+      DuX[ivar]  = Ugradx(i,j,k,ivar) * dx;
+      DuXL[ivar] = Uaverage(i  ,j,k,ivar) - Uaverage(i-1,j,k,ivar);
+      DuXR[ivar] = Uaverage(i+1,j,k,ivar) - Uaverage(i  ,j,k,ivar);
+
+      DuY[ivar]  = Ugrady(i,j,k,ivar) * dx;
+      DuYL[ivar] = Uaverage(i,j  ,k,ivar) - Uaverage(i,j-1,k,ivar);
+      DuYR[ivar] = Uaverage(i,j+1,k,ivar) - Uaverage(i,j  ,k,ivar);
+
+      DuZ[ivar]  = Ugradz(i,j,k,ivar) * dx;
+      DuZL[ivar] = Uaverage(i,j,k  ,ivar) - Uaverage(i,j,k-1,ivar);
+      DuZR[ivar] = Uaverage(i,j,k+1,ivar) - Uaverage(i,j,k  ,ivar);
+    }
     
+    // if limiter_characteristics_enabled ...
+    // transform to characteristics variables
+    euler.template cons_to_charac<IX>(DuX,  Uave, c, gamma0);
+    euler.template cons_to_charac<IX>(DuXL, Uave, c, gamma0);
+    euler.template cons_to_charac<IX>(DuXR, Uave, c, gamma0);
+
+    euler.template cons_to_charac<IY>(DuY,  Uave, c, gamma0);
+    euler.template cons_to_charac<IY>(DuYL, Uave, c, gamma0);
+    euler.template cons_to_charac<IY>(DuYR, Uave, c, gamma0);
+
+    euler.template cons_to_charac<IZ>(DuZ,  Uave, c, gamma0);
+    euler.template cons_to_charac<IZ>(DuZL, Uave, c, gamma0);
+    euler.template cons_to_charac<IZ>(DuZR, Uave, c, gamma0);
+
+    // Apply minmod limiter
+    double change_x = 0;
+    double change_y = 0;
+    double change_z = 0;
+    const double beta = 1.0;
+    
+    for(int ivar=0; ivar<nbvar; ++ivar) {
+
+      DuX_new[ivar] = minmod(DuX[ivar],  beta*DuXL[ivar], beta*DuXR[ivar], Mdx2);
+      change_x += fabs(DuX_new[ivar] - DuX[ivar]);
+ 
+      DuY_new[ivar] = minmod(DuY[ivar],  beta*DuYL[ivar], beta*DuYR[ivar], Mdx2);
+      change_y += fabs(DuY_new[ivar] - DuY[ivar]);
+
+      DuZ_new[ivar] = minmod(DuZ[ivar],  beta*DuZL[ivar], beta*DuZR[ivar], Mdx2);
+      change_z += fabs(DuZ_new[ivar] - DuZ[ivar]);
+
+    }
+    change_x /= nbvar;
+    change_y /= nbvar;
+    change_z /= nbvar;
+
+    // If limiter is active, reduce polynomial to linear
+    // recompute all DoF in current cell
+    if(change_x + change_y  + change_z > 1.0e-10) {
+
+      for(int ivar=0; ivar<nbvar; ++ivar) {
+      	DuX_new[ivar] /= dx;
+      	DuY_new[ivar] /= dx;
+      	DuZ_new[ivar] /= dx;
+      }
+      
+      euler.template charac_to_cons<IX> (DuX_new, Uave, c, gamma0);
+      euler.template charac_to_cons<IY> (DuY_new, Uave, c, gamma0);
+      euler.template charac_to_cons<IZ> (DuZ_new, Uave, c, gamma0);
+      
+      // for each variable : ID, IE, IU, IV, IW
+      for (int ivar = 0; ivar<nbvar; ++ivar) {
+	
+    	// for each dof
+    	for (int idz=0; idz<N; ++idz) {
+	  
+    	  real_t rz = this->sdm_geom.solution_pts_1d(idz) - 0.5;
+	  
+	  for (int idy=0; idy<N; ++idy) {
+	    
+	    real_t ry = this->sdm_geom.solution_pts_1d(idy) - 0.5;
+	    
+	    for (int idx=0; idx<N; ++idx) {
+	      
+	      real_t rx = this->sdm_geom.solution_pts_1d(idx) - 0.5;
+	      
+	      Udata(i,j,k,dofMap(idx,idy,idz,ivar)) = Uave[ivar] +
+		rx*DuX_new[ivar] +
+		ry*DuY_new[ivar] +
+		rz*DuZ_new[ivar];
+	      
+	    } // end for idx
+	    
+	  } // end for idy
+
+	} // end for idz
+	
+      } // end for ivar
+      
+    } // end change_x + change_y + change_z
+
   } // operator () - 3d
   
   ppkMHD::EulerEquations<dim> euler;
