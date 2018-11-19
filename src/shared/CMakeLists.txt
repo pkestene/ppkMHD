@@ -14,6 +14,7 @@ set (shared_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/GreshoParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/PointSourceGravity.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/DiskParams.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/problems/WaveParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctors.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BoundariesFunctorsWedge.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroParams.cpp

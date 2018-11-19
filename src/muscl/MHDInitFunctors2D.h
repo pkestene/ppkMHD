@@ -15,6 +15,7 @@
 #include "shared/problems/KHParams.h"
 #include "shared/problems/RotorParams.h"
 #include "shared/problems/FieldLoopParams.h"
+#include "shared/problems/WaveParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
@@ -937,6 +938,44 @@ public:
   PhaseType       phase ;
   
 }; // InitFieldLoopFunctor2D_MHD
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+class InitWaveFunctor2D_MHD : public MHDBaseFunctor2D {
+  
+public:
+  
+  InitWaveFunctor2D_MHD(HydroParams params,
+			WaveParams wParams,
+			DataArray2d Udata) :
+    MHDBaseFunctor2D(params),
+    wParams(wParams),
+    Udata(Udata)
+  {};
+  
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams params,
+		    WaveParams wParams,
+		    DataArray2d Udata,
+		    int         nbCells)
+  {
+    
+    InitWaveFunctor2D_MHD functor(params, wParams, Udata);
+    
+    Kokkos::parallel_for(nbCells, functor);
+    
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+  } // end operator ()
+		
+  WaveParams wParams;
+  DataArray2d Udata;
+
+}; // InitWaveFunctor2D_MHD
 
 } // namespace muscl
 

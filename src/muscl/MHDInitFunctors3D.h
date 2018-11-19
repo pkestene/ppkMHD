@@ -17,6 +17,7 @@
 #include "shared/problems/ImplodeParams.h"
 #include "shared/problems/KHParams.h"
 #include "shared/problems/RotorParams.h"
+#include "shared/problems/WaveParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
@@ -1009,6 +1010,287 @@ public:
   PhaseType       phase ;
 
 }; // InitFieldLoopFunctor3D_MHD
+
+/*************************************************/
+/*************************************************/
+/*************************************************/
+/* Initialization of 3D linear wave test problem.
+ * Adapted from
+ * https://github.com/PrincetonUniversity/athena-public-version/blob/master/src/pgen/linear_wave.cpp
+ * Changeset 77ea410
+ * authored by James M. Stone and other code contributors under 3-clause BSD License
+ */
+class InitWaveFunctor3D_MHD : public MHDBaseFunctor3D {
+
+private:
+  enum PhaseType {
+    COMPUTE_VECTOR_POTENTIAL,
+    COMPUTE_FACE_CENTERED_B,
+    DO_INIT_CONDITION
+  };
+
+public:
+  InitWaveFunctor3D_MHD(HydroParams params,
+			WaveParams wParams,
+			 DataArray3d Udata,
+       int         nbCells) :
+    MHDBaseFunctor3D(params), wParams(wParams), Udata(Udata)  {
+    
+    A = DataArrayVector3("A", params.isize, params.jsize,params.ksize);
+
+    phase = COMPUTE_VECTOR_POTENTIAL;
+    Kokkos::parallel_for(nbCells, *this);
+
+    phase = COMPUTE_FACE_CENTERED_B;
+    Kokkos::parallel_for(nbCells, *this);
+
+    phase = DO_INIT_CONDITION;
+    Kokkos::parallel_for(nbCells, *this);
+      
+      };
+  
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams params,
+		    WaveParams wParams,
+                    DataArray3d Udata,
+		    int         nbCells)
+  {
+    InitWaveFunctor3D_MHD functor(params, wParams, Udata,nbCells);
+  }
+  
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& index) const
+  {
+    if ( phase == COMPUTE_VECTOR_POTENTIAL ) {
+      compute_vector_potential(index);
+    } else if (phase == COMPUTE_FACE_CENTERED_B) {
+      compute_face_centered_B(index);
+    } else if (phase == DO_INIT_CONDITION) {
+      do_init_condition(index);
+    }
+  }
+  
+  KOKKOS_INLINE_FUNCTION
+  void compute_vector_potential(const int& index) const
+  {
+    
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+    const int ghostWidth = params.ghostWidth;
+    
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+    const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const real_t xmin = params.xmin;
+    const real_t ymin = params.ymin;
+    const real_t zmin = params.zmin;
+
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    const real_t dz = params.dz;
+
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
+    
+    const real_t bx0    = wParams.bx0;
+    const real_t by0    = wParams.by0;
+    const real_t bz0    = wParams.bz0;
+    
+    const real_t dby    = wParams.dby;
+    const real_t dbz    = wParams.dbz;
+
+    const real_t cos_a2 = wParams.cos_a2;
+    const real_t sin_a2 = wParams.sin_a2;
+    const real_t cos_a3 = wParams.cos_a3;
+    const real_t sin_a3 = wParams.sin_a3;
+    
+    const real_t k_par  = wParams.k_par;
+    
+    real_t Ay, Az, tmpx, tmpy;
+    real_t x1,x2,x3;
+
+    // Ax component
+    x1 = x;
+    x2 = y-dy/2;
+    x3 = z-dz/2;
+    tmpx =  x1*cos_a2*cos_a3 + x2*cos_a2*sin_a3 + x3*sin_a2;
+    tmpy = -x1*sin_a3 + x2*cos_a3;
+    Ay =  bz0*tmpx - (dbz/k_par)*cos(k_par*tmpx);
+    Az = -by0*tmpx + (dby/k_par)*cos(k_par*tmpx) + bx0*tmpy;
+    A(i,j,k,IX) = -Ay*sin_a3 - Az*sin_a2*cos_a3;
+    
+    // Ay component
+    x1 = x-dx/2;
+    x2 = y;
+    x3 = z-dz/2;
+    tmpx =  x1*cos_a2*cos_a3 + x2*cos_a2*sin_a3 + x3*sin_a2;
+    tmpy = -x1*sin_a3 + x2*cos_a3;
+    Ay =  bz0*tmpx - (dbz/k_par)*cos(k_par*tmpx);
+    Az = -by0*tmpx + (dby/k_par)*cos(k_par*tmpx) + bx0*tmpy;
+    A(i,j,k,IY) = Ay*cos_a3 - Az*sin_a2*sin_a3;
+    
+    // Az component
+    x1 = x-dx/2;
+    x2 = y-dy/2;
+    x3 = z;
+    tmpx =  x1*cos_a2*cos_a3 + x2*cos_a2*sin_a3 + x3*sin_a2;
+    tmpy = -x1*sin_a3 + x2*cos_a3;
+    Az = -by0*tmpx + (dby/k_par)*cos(k_par*tmpx) + bx0*tmpy;
+    A(i,j,k,IZ) = Az*cos_a2;
+    
+  } // compute_vector_potential
+
+  KOKKOS_INLINE_FUNCTION
+  void compute_face_centered_B(const int& index) const
+  {
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+    const int ghostWidth = params.ghostWidth;
+    
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    const real_t dz = params.dz;
+    
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    if (i>=ghostWidth-1 and i<isize-ghostWidth+1 and
+	j>=ghostWidth-1 and j<jsize-ghostWidth+1 and
+	k>=ghostWidth-1 and k<ksize-ghostWidth+1) {
+      // bx
+      Udata(i,j,k,IBX) =
+	( A(i,j+1,k  ,2) - A(i,j,k,2) ) / dy -
+	( A(i,j  ,k+1,1) - A(i,j,k,1) ) / dz ;
+      
+      // by
+      Udata(i,j,k,IBY) = 
+	( A(i  ,j,k+1,0) - A(i,j,k,0) ) / dz -
+	( A(i+1,j,k  ,2) - A(i,j,k,2) ) / dx ;
+      
+      // bz
+      Udata(i,j,k,IBZ) = 
+	( A(i+1,j  ,k,1) - A(i,j,k,1) ) / dx -
+	( A(i  ,j+1,k,0) - A(i,j,k,0) ) / dy ;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void do_init_condition(const int& index) const
+  {
+
+    const int isize = params.isize;
+    const int jsize = params.jsize;
+    const int ksize = params.ksize;
+    const int ghostWidth = params.ghostWidth;
+    
+#ifdef USE_MPI
+    const int i_mpi = params.myMpiPos[IX];
+    const int j_mpi = params.myMpiPos[IY];
+    const int k_mpi = params.myMpiPos[IZ];
+#else
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
+#endif
+
+    const int nx = params.nx;
+    const int ny = params.ny;
+    const int nz = params.nz;
+
+    const real_t xmin = params.xmin;
+    const real_t ymin = params.ymin;
+    const real_t zmin = params.zmin;
+
+    const real_t dx = params.dx;
+    const real_t dy = params.dy;
+    const real_t dz = params.dz;
+
+    const real_t gamma0 = params.settings.gamma0;
+
+    // wave problem parameters
+    const real_t wave_amplitude   = wParams.wave_amplitude;
+    const real_t wave_V0          = wParams.wave_V0;
+    const real_t *rev             = wParams.rev;
+    
+    const real_t d0    = wParams.d0;
+    const real_t p0    = wParams.p0;
+    
+    const real_t bx0    = wParams.bx0;
+    const real_t by0    = wParams.by0;
+    const real_t bz0    = wParams.bz0;
+    
+    const real_t cos_a2 = wParams.cos_a2;
+    const real_t sin_a2 = wParams.sin_a2;
+    const real_t cos_a3 = wParams.cos_a3;
+    const real_t sin_a3 = wParams.sin_a3;
+
+    const real_t k_par  = wParams.k_par;
+    
+  
+    int i,j,k;
+    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    if (i>=ghostWidth and i<isize-ghostWidth and
+	j>=ghostWidth and j<jsize-ghostWidth and
+	k>=ghostWidth and k<ksize-ghostWidth) {
+    
+      real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+      real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+      real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
+    
+      real_t X = cos_a2*(x*cos_a3 + y*sin_a3) + z*sin_a2;
+      real_t sn = sin(k_par*X); 
+      real_t Mx = d0*wave_V0 + wave_amplitude*sn*rev[1];
+      real_t My = wave_amplitude*sn*rev[2];
+      real_t Mz = wave_amplitude*sn*rev[3];
+
+      // density
+      Udata(i,j,k,ID) = d0 + wave_amplitude*sn*rev[0];
+    
+      // rho*vx
+      Udata(i,j,k,IU)  = static_cast<real_t>(Mx*cos_a2*cos_a3 - My*sin_a3 - Mz*sin_a2*cos_a3);
+    
+      // rho*vy
+      Udata(i,j,k,IV)  = static_cast<real_t>(Mx*cos_a2*sin_a3 + My*cos_a3 - Mz*sin_a2*sin_a3);
+    
+      // rho*vz
+      Udata(i,j,k,IW)  = static_cast<real_t>(Mx*sin_a2                    + Mz*cos_a2);
+
+      Udata(i,j,k , IE) = p0/(gamma0-1.0) +
+        0.5 * d0 * wave_V0 * wave_V0 +
+        0.5 * (bx0*bx0 + by0*by0 + bz0*bz0) +
+        wave_amplitude*sn*rev[4];
+    }
+
+
+  } // end operator ()
+  
+  WaveParams wParams;
+  DataArray3d Udata;
+  
+  // vector potential
+  DataArrayVector3 A;
+  
+  PhaseType       phase ;
+  
+}; // InitWaveFunctor3D_MHD
 
 } // namespace muscl
 
