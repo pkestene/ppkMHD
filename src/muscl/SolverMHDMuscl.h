@@ -38,6 +38,7 @@
 #include "shared/problems/BlastParams.h"
 #include "shared/problems/ImplodeParams.h"
 #include "shared/problems/RotorParams.h"
+#include "shared/problems/WaveParams.h"
 
 namespace ppkMHD { namespace muscl {
 
@@ -125,6 +126,7 @@ public:
   void init_kelvin_helmholtz(DataArray Udata); // 2d and 3d
   void init_rotor(DataArray Udata);
   void init_field_loop(DataArray Udata);
+  void init_wave(DataArray Udata);
   
   //! init restart (load data from file)
   void init_restart(DataArray Udata);
@@ -499,6 +501,28 @@ void SolverMHDMuscl<dim>::init_field_loop(DataArray Udata)
 
 // =======================================================
 // =======================================================
+/**
+ * Linear wave test.
+ * 
+ */
+template<int dim>
+void SolverMHDMuscl<dim>::init_wave(DataArray Udata)
+{
+
+  WaveParams wParams = WaveParams(configMap);
+  
+  using InitWaveFunctor =
+    typename std::conditional<dim==2,
+			      InitWaveFunctor2D_MHD,
+			      InitWaveFunctor3D_MHD>::type;
+
+  // perform init
+  InitWaveFunctor::apply(params, wParams, Udata, nbCells);
+
+} // SolverMHDMuscl::init_wave
+
+// =======================================================
+// =======================================================
 template<int dim>
 void SolverMHDMuscl<dim>::init_restart(DataArray Udata)
 {
@@ -571,6 +595,10 @@ void SolverMHDMuscl<dim>::init(DataArray Udata)
 		!m_problem_name.compare("field loop")) {
       
       init_field_loop(U);
+      
+    } else if ( !m_problem_name.compare("wave") ) {
+      
+      init_wave(U);
       
     } else {
       
