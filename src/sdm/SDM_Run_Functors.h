@@ -123,13 +123,13 @@ public:
       
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
+	  for (int idx=0; idx<N+1; ++idx) {
 	    
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,ID)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IP)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IU)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IV)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IW)) = 0.0;
 	    
 	  } // end for idx
 	} // end for idy
@@ -139,13 +139,13 @@ public:
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N+1; ++idx) {
+	  for (int idx=0; idx<N; ++idx) {
 	    
-	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,ID)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IP)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IW)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
 	    
 	  } // end for idx
 	} // end for idy
