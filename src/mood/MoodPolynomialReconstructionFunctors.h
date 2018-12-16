@@ -26,7 +26,7 @@ namespace mood {
  * cartesian mesh).
  *
  * Stencil has been carefuly chosen to have a number of cells sufficiently large 
- * so that the least-square system can be solved. If the stencil sisze is low, 
+ * so that the least-square system can be solved. If the stencil size is low, 
  * one can notice that the pseudo inverse can not be computer using the QR
  * decomposition.
  *
