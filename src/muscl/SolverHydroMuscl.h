@@ -17,7 +17,6 @@
 #include "shared/SolverBase.h"
 #include "shared/HydroParams.h"
 #include "shared/kokkos_shared.h"
-#include "shared/BoundariesFunctors.h"
 #include "shared/problems/initRiemannConfig2d.h"
 
 // the actual computational functors called in HydroRun
