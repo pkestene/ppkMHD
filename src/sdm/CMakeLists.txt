@@ -23,10 +23,6 @@ add_library(sdm
 target_include_directories(sdm
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
-  ${CMAKE_SOURCE_DIR}/kokkos/core/src
-  ${CMAKE_SOURCE_DIR}/kokkos/containers/src
-  ${CMAKE_SOURCE_DIR}/kokkos/algorithms/src
-  ${CMAKE_BINARY_DIR}/kokkos
   ) 
 target_link_libraries(sdm
   kokkos

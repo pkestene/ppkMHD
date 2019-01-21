@@ -34,10 +34,6 @@ target_compile_options(mood
 target_include_directories(mood
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
-  ${CMAKE_SOURCE_DIR}/kokkos/core/src
-  ${CMAKE_SOURCE_DIR}/kokkos/containers/src
-  ${CMAKE_SOURCE_DIR}/kokkos/algorithms/src
-  ${CMAKE_BINARY_DIR}/kokkos
   ${LAPACKE_INCLUDE_DIR}
   )
 target_link_libraries(mood
