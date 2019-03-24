@@ -5,3 +5,4 @@ euler2d.omp
 euler2d.cuda
 build_*
 !build_doc.rst
+.ccls-cache
