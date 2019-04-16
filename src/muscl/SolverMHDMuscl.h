@@ -389,6 +389,8 @@ void SolverMHDMuscl<dim>::init_blast(DataArray Udata)
 template<int dim>
 void SolverMHDMuscl<dim>::init_orszag_tang(DataArray Udata)
 {
+
+  OrszagTangParams otParams = OrszagTangParams(configMap);
   
   // alias to actual device functor
   using InitOrszagTangFunctor =
@@ -396,7 +398,7 @@ void SolverMHDMuscl<dim>::init_orszag_tang(DataArray Udata)
 			      InitOrszagTangFunctor2D,
 			      InitOrszagTangFunctor3D>::type;
   
-  InitOrszagTangFunctor::apply(params, Udata, nbCells);
+  InitOrszagTangFunctor::apply(params, otParams, Udata, nbCells);
   
 } // init_orszag_tang
 

@@ -16,6 +16,7 @@
 #include "shared/problems/RotorParams.h"
 #include "shared/problems/FieldLoopParams.h"
 #include "shared/problems/WaveParams.h"
+#include "shared/problems/OrszagTangParams.h"
 
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
@@ -251,15 +252,17 @@ private:
   
 public:
   InitOrszagTangFunctor2D(HydroParams params,
-			  DataArray2d Udata) :
-    MHDBaseFunctor2D(params), Udata(Udata)  {};
+			  OrszagTangParams otParams,
+                          DataArray2d Udata) :
+    MHDBaseFunctor2D(params), otParams(otParams), Udata(Udata)  {};
   
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
+                    OrszagTangParams otParams,
                     DataArray2d Udata,
 		    int         nbCells)
   {
-    InitOrszagTangFunctor2D functor(params, Udata);
+    InitOrszagTangFunctor2D functor(params, otParams, Udata);
 
     functor.phase = INIT_ALL_VAR_BUT_ENERGY;
     Kokkos::parallel_for(nbCells, functor);
@@ -381,8 +384,9 @@ public:
     
   } // init_energy
   
+  OrszagTangParams otParams;
   DataArray2d Udata;
-  PhaseType   phase ;
+  PhaseType   phase;
   
 }; // InitOrszagTangFunctor2D
 
