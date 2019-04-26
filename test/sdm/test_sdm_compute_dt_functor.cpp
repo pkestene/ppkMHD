@@ -40,12 +40,11 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
     typename std::conditional<dim==2,
                               sdm::ComputeDt_Functor_2d<N>,
                               sdm::ComputeDt_Functor_3d<N> >::type;
-  ComputeDtFunctor functor(solver.params,
-			   solver.sdm_geom,
-			   euler,
-			   solver.U);
-  
-  Kokkos::parallel_reduce(nbCells, functor, invDt);
+  invDt = ComputeDtFunctor::apply(solver.params,
+                                  solver.sdm_geom,
+                                  euler,
+                                  solver.U,
+                                  nbCells);  
   
   real_t dt = solver.params.settings.cfl/invDt;
   printf("dt = %f (invDt = %f)\n", dt,invDt);
