@@ -39,7 +39,6 @@ public:
     isFlux(isFlux)
   {};
 
-
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
@@ -190,7 +189,20 @@ public:
     mdUdt(mdUdt),
     dt(dt)
   {};
-  
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata,
+                    DataArray           mdUdt,
+                    real_t              dt,
+                    int                 nbCells)
+  {
+    SDM_Update_Functor functor(params, sdm_geom, 
+                               Udata, mdUdt, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
@@ -295,7 +307,21 @@ public:
     dt(dt)
   {};
   
-  //! functor for 2d 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata,
+                    DataArray           URK,
+                    DataArray           mdUdt,
+                    real_t              dt,
+                    int                 nbCells)
+  {
+    SDM_Update_sspRK2_Functor functor(params, sdm_geom, 
+                                      Udata, URK, mdUdt, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
@@ -437,7 +463,23 @@ public:
     dt(dt)
   {};
   
-  //! functor for 2d 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Uout,
+                    DataArray           U_0,
+                    DataArray           U_1,
+                    DataArray           U_2,
+                    coefs_t             coefs,
+                    real_t              dt,
+                    int                 nbCells)
+  {
+    SDM_Update_RK_Functor functor(params, sdm_geom, 
+                                  Uout, U_0, U_1, U_2, coefs, dt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+    //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const

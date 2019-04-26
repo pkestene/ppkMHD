@@ -225,6 +225,19 @@ public:
     Udata(Udata)
   {};
 
+  // static method which does it all: create and execute functor
+  static real_t apply(HydroParams               params,
+                      SDM_Geometry<2,N>         sdm_geom,
+                      ppkMHD::EulerEquations<2> euler,
+                      DataArray                 Udata,
+                      int                       nbCells)
+  {
+    real_t invDt = 0;
+    ComputeDt_Functor_2d<N> functor(params, sdm_geom, euler, Udata);
+    Kokkos::parallel_reduce(nbCells, functor, invDt);
+    return invDt;
+  }
+
   // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
   void init (real_t& dst) const
@@ -344,7 +357,20 @@ public:
     Udata(Udata)
   {};
 
-  // Tell each thread how to initialize its reduction result.
+  // static method which does it all: create and execute functor
+  static real_t apply(HydroParams               params,
+                      SDM_Geometry<3,N>         sdm_geom,
+                      ppkMHD::EulerEquations<3> euler,
+                      DataArray                 Udata,
+                      int                       nbCells)
+  {
+    real_t invDt = 0;
+    ComputeDt_Functor_3d<N> functor(params, sdm_geom, euler, Udata);
+    Kokkos::parallel_reduce(nbCells, functor, invDt);
+    return invDt;
+  }
+
+    // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
   void init (real_t& dst) const
   {

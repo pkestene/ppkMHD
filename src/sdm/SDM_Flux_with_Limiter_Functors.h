@@ -78,6 +78,25 @@ public:
     UdataFlux(UdataFlux)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    ppkMHD::EulerEquations<dim> euler,
+                    DataArray           Udata,
+                    DataArray           Uaverage,
+                    DataArray           Umin,
+                    DataArray           Umax,
+                    DataArray           UdataFlux,
+                    int                 nbCells)
+  {
+    Compute_Reconstructed_state_with_Limiter_Functor functor(params, sdm_geom, 
+                                                             euler, Udata,
+                                                             Uaverage, 
+                                                             Umin, Umax,
+                                                             UdataFlux);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   // ================================================
   //
   // 2D version.

@@ -43,6 +43,18 @@ public:
     Uaverage(Uaverage)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata,
+                    DataArray           Uaverage,
+                    int                 nbCells)
+  {
+    Average_Conservative_Variables_Functor functor(params, sdm_geom, 
+                                                   Udata, Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   // ================================================
   //
   // 2D version.

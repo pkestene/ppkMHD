@@ -1,5 +1,5 @@
-#ifndef SDM_INTERPOLATE_FUNCTORS_H_
-#define SDM_INTERPOLATE_FUNCTORS_H_
+#ifndef SDM_INTERPOLATE_FUNCTORS2_H_
+#define SDM_INTERPOLATE_FUNCTORS2_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
@@ -48,17 +48,6 @@ public:
     UdataFlux(UdataFlux)
   {};
 
-  // static method which does it all: create and execute functor
-  static void apply(HydroParams         params,
-                    SDM_Geometry<dim,N> sdm_geom,
-                    DataArray           UdataSol,
-                    DataArray           UdataFlux,
-                    int                 nbCells)
-  {
-    Interpolate_At_FluxPoints_Functor functor(params, sdm_geom, 
-                                              UdataSol, UdataFlux);
-    Kokkos::parallel_for(nbCells, functor);
-  }
   
   // =========================================================
   /*
@@ -76,12 +65,18 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // get cell index
+    int ij = index / (N+1);
+
+    // get flux point index
+    int fluxId = index - (N+1)*ij;
+
+    // get local cell coordinate
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+    index2coord(ij,i,j,isize,jsize);
 
     solution_values_t sol;
-    flux_values_t     flux;
+    double            flux;
     
     // loop over cell DoF's
     if (dir == IX) {
@@ -98,21 +93,16 @@ public:
 
 	  }
 	  
-	  // interpolate at flux points for this given variable
-	  this->sol2flux_vector(sol, flux);
+	  // interpolate at fluxId for this given variable
+	  flux = this->sol2flux(sol, fluxId);
 
 	  // positivity preserving for density
 	  if (ivar==ID) {
-	    for (int idf=0; idf<N+1; ++idf)
-	      flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+            flux = fmax(flux, this->params.settings.smallr);
 	  }
 	  
 	  // copy back interpolated value
-	  for (int idx=0; idx<N+1; ++idx) {
-	    
-	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idx];
-	    
-	  } // end for idx
+          UdataFlux(i  ,j  , dofMapF(fluxId,idy,0,ivar)) = flux;
 	  
 	} // end for ivar
 	
@@ -136,20 +126,15 @@ public:
 	  }
 	  
 	  // interpolate at flux points for this given variable
-	  this->sol2flux_vector(sol, flux);
+	  flux = this->sol2flux(sol, fluxId);
 	  
 	  // positivity preserving for density
 	  if (ivar==ID) {
-	    for (int idf=0; idf<N+1; ++idf)
-	      flux[idf] = fmax(flux[idf], this->params.settings.smallr);
+            flux = fmax(flux, this->params.settings.smallr);
 	  }
 
 	  // copy back interpolated value
-	  for (int idy=0; idy<N+1; ++idy) {
-	    
-	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idy];
-	    
-	  }
+          UdataFlux(i  ,j  , dofMapF(idx,fluxId,0,ivar)) = flux;
 	  
 	} // end for ivar
 	
@@ -346,17 +331,6 @@ public:
     UdataSol(UdataSol)
   {};
 
-  // static method which does it all: create and execute functor
-  static void apply(HydroParams         params,
-                    SDM_Geometry<dim,N> sdm_geom,
-                    DataArray           UdataFlux,
-                    DataArray           UdataSol,
-                    int                 nbCells)
-  {
-    Interpolate_At_SolutionPoints_Functor functor(params, sdm_geom, 
-                                                  UdataFlux, UdataSol);
-    Kokkos::parallel_for(nbCells, functor);
-  }
   
   // =========================================================
   /*
@@ -628,4 +602,4 @@ public:
 
 } // namespace sdm
 
-#endif // SDM_INTERPOLATE_FUNCTORS_H_
+#endif // SDM_INTERPOLATE_FUNCTORS2_H_

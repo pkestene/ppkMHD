@@ -75,6 +75,19 @@ public:
     Uaverage(Uaverage)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           UdataSol,
+                    DataArray           UdataFlux,
+                    DataArray           Uaverage,
+                    int                 nbCells)
+  {
+    Apply_positivity_Functor functor(params, sdm_geom, 
+                                     UdataSol, UdataFlux, Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   // =========================================================
   /*
    * 2D version.
@@ -871,6 +884,18 @@ public:
     UdataSol(UdataSol),
     Uaverage(Uaverage)
   {};
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           UdataSol,
+                    DataArray           Uaverage,
+                    int                 nbCells)
+  {
+    Apply_positivity_Functor_v2 functor(params, sdm_geom, 
+                                        UdataSol, Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
   // =========================================================
   /*
