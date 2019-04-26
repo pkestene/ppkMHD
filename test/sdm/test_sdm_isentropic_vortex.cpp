@@ -165,22 +165,24 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
 
   // perform the actual error computation
   {
-    sdm::Compute_Error_Functor_2d<N,sdm::NORM_L1> functor(solver->params,
-							  solver->sdm_geom,
-							  solver->U,
-							  solver->Uaux,
-							  ID);
-    Kokkos::parallel_reduce(nbCells, functor, error_L1);
+    error_L1 = 
+      sdm::Compute_Error_Functor_2d<N,sdm::NORM_L1>::apply(solver->params,
+                                                           solver->sdm_geom,
+                                                           solver->U,
+                                                           solver->Uaux,
+                                                           ID,
+                                                           nbCells);
     error[sdm::NORM_L1] = error_L1/nbCells/N/N;
   }
 
   {
-    sdm::Compute_Error_Functor_2d<N,sdm::NORM_L2> functor(solver->params,
-							  solver->sdm_geom,
-							  solver->U,
-							  solver->Uaux,
-							  ID);
-    Kokkos::parallel_reduce(nbCells, functor, error_L2);
+    error_L2 = 
+      sdm::Compute_Error_Functor_2d<N,sdm::NORM_L2>::apply(solver->params,
+                                                           solver->sdm_geom,
+                                                           solver->U,
+                                                           solver->Uaux,
+                                                           ID,
+                                                           nbCells);
     error[sdm::NORM_L2] = std::sqrt(error_L2)/nbCells/N/N;
   }
 

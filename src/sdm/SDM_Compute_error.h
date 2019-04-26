@@ -55,6 +55,21 @@ public:
     varId(varId)
   {};
 
+  // static method which does it all: create and execute functor
+  static double apply(HydroParams       params,
+                      SDM_Geometry<2,N> sdm_geom,
+                      DataArray         Udata1,
+                      DataArray         Udata2,
+                      int               varId,
+                      int               nbCells)
+  {
+    real_t error = 0;
+    Compute_Error_Functor_2d<N,norm> functor(params, sdm_geom,
+                                             Udata1, Udata2, varId);
+    Kokkos::parallel_reduce(nbCells, functor, error);
+    return error;
+  }
+
   // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
   void init (real_t& dst) const
