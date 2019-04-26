@@ -29,7 +29,7 @@ namespace sdm {
  *
  */
 template<int dim, int N, int dir>
-class Interpolate_At_FluxPoints_Functor : public SDMBaseFunctor<dim,N> {
+class Interpolate_At_FluxPoints_Functor_v2 : public SDMBaseFunctor<dim,N> {
 
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
@@ -48,6 +48,17 @@ public:
     UdataFlux(UdataFlux)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           UdataSol,
+                    DataArray           UdataFlux,
+                    int                 nbCells)
+  {
+    Interpolate_At_FluxPoints_Functor_v2 functor(params, sdm_geom, 
+                                                 UdataSol, UdataFlux);
+    Kokkos::parallel_for(nbCells, functor);
+  }
   
   // =========================================================
   /*
@@ -312,7 +323,7 @@ enum Interpolation_type_t {
  */
 template<int dim, int N, int dir,
 	 Interpolation_type_t itype=INTERPOLATE_DERIVATIVE>
-class Interpolate_At_SolutionPoints_Functor : public SDMBaseFunctor<dim,N> {
+class Interpolate_At_SolutionPoints_Functor_v2 : public SDMBaseFunctor<dim,N> {
 
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
@@ -331,6 +342,17 @@ public:
     UdataSol(UdataSol)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           UdataFlux,
+                    DataArray           UdataSol,
+                    int                 nbCells)
+  {
+    Interpolate_At_SolutionPoints_Functor_v2 functor(params, sdm_geom, 
+                                                     UdataFlux, UdataSol);
+    Kokkos::parallel_for(nbCells, functor);
+  }
   
   // =========================================================
   /*
