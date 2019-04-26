@@ -1882,9 +1882,7 @@ void SolverHydroSDM<dim,N>::init_implode(DataArray Udata)
 
   ImplodeParams iParams = ImplodeParams(configMap);
 
-  InitImplodeFunctor<dim,N> functor(params, sdm_geom, iParams, Udata);
-  Kokkos::parallel_for(nbCells, functor);
-  
+  InitImplodeFunctor<dim,N>::apply(params, sdm_geom, iParams, Udata, nbCells);
 } // init_implode
 
 // =======================================================
@@ -1899,8 +1897,7 @@ void SolverHydroSDM<dim,N>::init_blast(DataArray Udata)
 
   BlastParams blastParams = BlastParams(configMap);
   
-  InitBlastFunctor<dim,N> functor(params, sdm_geom, blastParams, Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitBlastFunctor<dim,N>::apply(params, sdm_geom, blastParams, Udata, nbCells);
 
 } // SolverHydroSDM::init_blast
 
@@ -1929,13 +1926,13 @@ void SolverHydroSDM<dim,N>::init_four_quadrant(DataArray Udata)
   ppkMHD::primToCons_2D(U2, params.settings.gamma0);
   ppkMHD::primToCons_2D(U3, params.settings.gamma0);
   
-  InitFourQuadrantFunctor<dim,N> functor(params, sdm_geom,
-					 Udata,
-					 U0, U1, U2, U3,
-					 xt, yt);
-  Kokkos::parallel_for(nbCells, functor);
+  InitFourQuadrantFunctor<dim,N>::apply(params, sdm_geom,
+                                        Udata,
+                                        U0, U1, U2, U3,
+                                        xt, yt,
+                                        nbCells);
     
-} // init_four_quadrant
+} // SolverHydroSDM::init_four_quadrant
 
 // =======================================================
 // =======================================================
@@ -1949,11 +1946,11 @@ void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
 
   KHParams khParams = KHParams(configMap);
 
-  InitKelvinHelmholtzFunctor<dim,N> functor(params,
-					    sdm_geom,
-					    khParams,
-					    Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitKelvinHelmholtzFunctor<dim,N>::apply(params,
+                                           sdm_geom,
+                                           khParams,
+                                           Udata,
+                                           nbCells);
 
 } // SolverHydroSDM::init_kelvin_helmholtz
 
@@ -1969,11 +1966,11 @@ void SolverHydroSDM<dim,N>::init_gresho_vortex(DataArray Udata)
   
   GreshoParams gvParams = GreshoParams(configMap);
   
-  InitGreshoVortexFunctor<dim,N> functor(params,
-                                         sdm_geom,
-                                         gvParams,
-					 Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitGreshoVortexFunctor<dim,N>::apply(params,
+                                        sdm_geom,
+                                        gvParams,
+                                        Udata,
+                                        nbCells);
 
 } // SolverHydroSDM::init_gresho_vortex
 
@@ -1989,8 +1986,7 @@ void SolverHydroSDM<dim,N>::init_wedge(DataArray Udata)
 
   WedgeParams wparams(configMap, 0.0);
   
-  InitWedgeFunctor<dim,N> functor(params, sdm_geom, wparams, Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitWedgeFunctor<dim,N>::apply(params, sdm_geom, wparams, Udata, nbCells);
   
 } // init_wedge
 
@@ -2006,8 +2002,7 @@ void SolverHydroSDM<dim,N>::init_jet(DataArray Udata)
   
   JetParams jparams(configMap);
   
-  InitJetFunctor<dim,N> functor(params, sdm_geom, jparams, Udata);
-  Kokkos::parallel_for(nbCells, functor);
+  InitJetFunctor<dim,N>::apply(params, sdm_geom, jparams, Udata, nbCells);
   
 } // init_jet
 

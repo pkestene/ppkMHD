@@ -46,7 +46,17 @@ public:
     iparams(iparams),
     Udata(Udata) {};
 
-  
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    ImplodeParams       iparams,
+                    DataArray           Udata,
+                    int                 nbCells)
+  {
+    InitImplodeFunctor functor(params, sdm_geom, iparams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   /*
    * 2D version.
    */
@@ -258,7 +268,18 @@ public:
     bParams(bParams),
     Udata(Udata) {};
   
-  /*
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    BlastParams         bparams,
+                    DataArray           Udata,
+                    int                 nbCells)
+  {
+    InitBlastFunctor functor(params, sdm_geom, bparams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+    /*
    * 2D version.
    */
   //! functor for 2d 
@@ -458,7 +479,18 @@ public:
     rand_pool(khParams.seed)
   {};
   
-  /*
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    KHParams            khParams,
+                    DataArray           Udata,
+                    int                 nbCells)
+  {
+    InitKelvinHelmholtzFunctor functor(params, sdm_geom, khParams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+    /*
    * 2D version.
    */
   //! functor for 2d 
@@ -765,6 +797,17 @@ public:
     gvParams(gvParams),
     Udata(Udata) {};
   
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    GreshoParams        gvParams,
+                    DataArray           Udata,
+                    int                 nbCells)
+  {
+    InitGreshoVortexFunctor functor(params, sdm_geom, gvParams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   /*
    * 2D version.
    */
@@ -990,7 +1033,24 @@ public:
     U0(U0), U1(U1), U2(U2), U3(U3), xt(xt), yt(yt)
   {};
   
-  /*
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata,
+                    HydroState2d        U0,
+                    HydroState2d        U1,
+                    HydroState2d        U2,
+                    HydroState2d        U3,
+                    real_t              xt,
+                    real_t              yt,
+                    int                 nbCells)
+  {
+    InitFourQuadrantFunctor functor(params, sdm_geom, Udata,
+      U0, U1, U2, U3, xt, yt);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
+ /*
    * 2D version.
    */
   //! functor for 2d 
@@ -1164,6 +1224,16 @@ public:
   
   ~InitWedgeFunctor() {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    WedgeParams         wParams,
+                    DataArray           Udata,
+                    int                 nbCells)
+  {
+    InitWedgeFunctor functor(params, sdm_geom, wParams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
   /*
    * 2D version.
    */
@@ -1356,6 +1426,17 @@ public:
   {};
   
   ~InitJetFunctor() {};
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    JetParams           jParams,
+                    DataArray           Udata,
+                    int                 nbCells)
+  {
+    InitJetFunctor functor(params, sdm_geom, jParams, Udata);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
   /*
    * 2D version.
