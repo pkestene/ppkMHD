@@ -1234,6 +1234,7 @@ public:
     InitWedgeFunctor functor(params, sdm_geom, wParams, Udata);
     Kokkos::parallel_for(nbCells, functor);
   }
+  
   /*
    * 2D version.
    */

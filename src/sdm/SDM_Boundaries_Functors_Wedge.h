@@ -35,6 +35,17 @@ public:
     wparams(wparams),
     Udata(Udata) {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    WedgeParams         wparams,
+                    DataArray           Udata,
+                    int                 nbIter)
+  {
+    MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId> functor(params, sdm_geom, wparams, Udata);
+    Kokkos::parallel_for(nbIter, functor);
+  }
+
   // ================================================
   //
   // 2D version.

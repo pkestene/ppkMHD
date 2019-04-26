@@ -1594,13 +1594,8 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
     nbIter = ghostWidth * max_size * max_size;
   }
 
-  {
-
-    MakeBoundariesFunctor_SDM<dim,N,faceId> functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-
-  }
-    
+  MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata, nbIter);
+   
 } // SolverHydroSDM<dim,N>::make_boundary_sdm
 
 // =======================================================
@@ -1620,12 +1615,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_wedge(DataArray   Udata,
     nbIter = ghostWidth * max_size * max_size;
   }
 
-  {
-
-    MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId> functor(params, sdm_geom, wparams, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-
-  }
+  MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId>::apply(params, sdm_geom, wparams, Udata, nbIter);
     
 } // SolverHydroSDM<dim,N>::make_boundary_sdm_wedge
 
@@ -1646,13 +1636,8 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_jet(DataArray   Udata,
     nbIter = ghostWidth * max_size * max_size;
   }
 
-  {
-
-    MakeBoundariesFunctor_SDM_Jet<dim,N,faceId> functor(params, sdm_geom, jparams, Udata);
-    Kokkos::parallel_for(nbIter, functor);
-
-  }
-    
+  MakeBoundariesFunctor_SDM_Jet<dim,N,faceId>::apply(params, sdm_geom, jparams, Udata, nbIter);
+  
 } // SolverHydroSDM<dim,N>::make_boundary_sdm_jet
 
 // =======================================================
