@@ -112,11 +112,7 @@ int main(int argc, char* argv[])
           << "] )"
           << std::endl ;
     }
-#if defined( CUDA )
-    Kokkos::Cuda::print_configuration( msg );
-#else
-    Kokkos::OpenMP::print_configuration( msg );
-#endif
+    Kokkos::print_configuration( msg );
     std::cout << msg.str();
     std::cout << "##########################\n";
   }

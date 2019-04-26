@@ -206,13 +206,7 @@ int main(int argc, char* argv[])
           << std::endl ;
     }
 
-#if defined( CUDA )
-    Kokkos::Cuda::print_configuration( msg );
-#elif defined( OPENMP )
-    Kokkos::OpenMP::print_configuration( msg );
-#else
-    std::cout << "Using Kokkos::Serial device (so sad)...\n";
-#endif
+    Kokkos::print_configuration( msg );
     
     std::cout << msg.str();
     std::cout << "##########################\n";
