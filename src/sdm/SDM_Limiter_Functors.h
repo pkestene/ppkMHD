@@ -219,6 +219,21 @@ public:
     corner_included(corner_included)
   {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Uaverage,
+                    DataArray           Umin,
+                    DataArray           Umax,
+                    int                 corner_included,
+                    int                 nbCells)
+  {
+    MinMax_Conservative_Variables_Functor functor(params, sdm_geom, 
+                                                  Uaverage, Umin, Umax,
+                                                  corner_included);
+    Kokkos::parallel_for(nbCells, functor);
+  }
+
   KOKKOS_INLINE_FUNCTION
   real_t compute_min(real_t val1, real_t val2) const
   {
@@ -386,6 +401,18 @@ public:
     Udata(Udata),
     Uaverage(Uaverage)
   {};
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata,
+                    DataArray           Uaverage,
+                    int                 nbCells)
+  {
+    Average_Gradient_Functor functor(params, sdm_geom, 
+                                     Udata, Uaverage);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
   // ================================================
   //
@@ -774,6 +801,24 @@ public:
     Ugradz(Ugradz),
     Mdx2(Mdx2)
   {};
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    ppkMHD::EulerEquations<dim> euler,
+                    DataArray           Udata,
+                    DataArray           Uaverage,
+                    DataArray           Ugradx,
+                    DataArray           Ugrady,
+                    DataArray           Ugradz,
+                    const real_t        Mdx2,
+                    int                 nbCells)
+  {
+    Apply_limiter_Functor functor(params, sdm_geom, euler, 
+                                  Udata, Uaverage,
+                                  Ugradx, Ugrady, Ugradz, Mdx2);
+    Kokkos::parallel_for(nbCells, functor);
+  }
 
   /**
    * TVB version of minmod limiter. If Mdx2=0 then it is TVD limiter.
