@@ -3,94 +3,109 @@
 #
 
 ##############################################
-add_executable(test_monomials_ordering
+add_executable(test_monomials_ordering "")
+target_sources(test_monomials_ordering 
+  PUBLIC
   test_monomials_ordering.cpp)
-target_include_directories(test_monomials_ordering
+target_link_libraries(test_monomials_ordering
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
+  ppkMHD::mood )
 
 ##############################################
-add_executable(test_print_monomial_map
-  ${CMAKE_SOURCE_DIR}/src/mood/polynomials_utils.h
-  ${CMAKE_SOURCE_DIR}/src/mood/polynomials_utils.cpp
+add_executable(test_print_monomial_map "")
+target_sources(test_print_monomial_map
+  PUBLIC
   test_print_monomial_map.cpp)
-target_include_directories(test_print_monomial_map
+target_link_libraries(test_print_monomial_map
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
-target_link_libraries(test_print_monomial_map mood kokkos hwloc dl)
+  ppkMHD::mood 
+  kokkos hwloc dl)
 
 ##############################################
-add_executable(test_polynomial
+add_executable(test_polynomial "")
+target_sources(test_polynomial
+  PUBLIC
   test_polynomial.cpp)
-target_include_directories(test_polynomial
+target_link_libraries(test_polynomial
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
-target_link_libraries(test_polynomial kokkos hwloc dl)
+  ppkMHD::mood 
+  kokkos hwloc dl)
 
 ##############################################
-add_executable(test_stencil
+add_executable(test_stencil "")
+target_sources(test_stencil
+  PUBLIC
   test_stencil.cpp)
-target_include_directories(test_stencil
+target_link_libraries(test_stencil
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  ${OpenBLAS_INCLUDE_DIR}
-  )
-target_link_libraries(test_stencil mood kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+  ppkMHD::mood
+  kokkos hwloc dl)
 
 ##############################################
-add_executable(test_matrix_qr
+add_executable(test_matrix_qr "")
+target_sources(test_matrix_qr 
+  PUBLIC
   test_matrix_qr.cpp)
-target_include_directories(test_matrix_qr
+target_link_libraries(test_matrix_qr
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  ${OpenBLAS_INCLUDE_DIR}
-  )
-target_link_libraries(test_matrix_qr mood kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+  ppkMHD::mood 
+  kokkos hwloc dl)
 
 ##############################################
-add_executable(test_reconstruct_2d
+add_executable(test_reconstruct_2d "")
+target_sources(test_reconstruct_2d
+  PUBLIC
   test_reconstruct_2d.cpp)
-target_include_directories(test_reconstruct_2d
+target_link_libraries(test_reconstruct_2d 
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
-target_link_libraries(test_reconstruct_2d mood kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+  ppkMHD::mood
+  kokkos hwloc dl)
 
 ##############################################
-add_executable(test_reconstruct_3d
+add_executable(test_reconstruct_3d "")
+target_sources(test_reconstruct_3d 
+  PUBLIC
   test_reconstruct_3d.cpp)
-target_include_directories(test_reconstruct_3d
+target_link_libraries(test_reconstruct_3d
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
-target_link_libraries(test_reconstruct_3d mood kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
+  ppkMHD::mood
+  kokkos hwloc dl)
 
 ##############################################
-add_executable(test_mood_functor
+add_executable(test_mood_functor "")
+target_sources(test_mood_functor
+  PUBLIC
   test_mood_functor.cpp)
-target_include_directories(test_mood_functor
-  PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
-target_link_libraries(test_mood_functor shared mood io monitoring config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})
+target_link_libraries(test_mood_functor 
+  PUBLIC 
+  ppkMHD::shared
+  ppkMHD::mood 
+  ppkMHD::io
+  ppkMHD::monitoring
+  ppkMHD::config
+  kokkos hwloc dl
+  ${PAPI_LIBRARY})
 if (USE_MPI)
-  target_link_libraries(test_mood_functor mpiUtils)
-endif()
+  target_link_libraries(test_mood_functor PUBLIC ppkMHD::mpiUtils)
+endif(USE_MPI)
 
 ##############################################
-add_executable(test_mood_functor_flux
-  test_mood_functor_flux.cpp)
-target_include_directories(test_mood_functor_flux
+add_executable(test_mood_functor_flux "")
+target_sources(test_mood_functor_flux
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/src
-  )
-target_link_libraries(test_mood_functor_flux shared mood io monitoring config kokkos hwloc dl ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB} ${PAPI_LIBRARY})
+  test_mood_functor_flux.cpp)
+target_link_libraries(test_mood_functor_flux
+  PUBLIC
+  ppkMHD::shared
+  ppkMHD::mood
+  ppkMHD::io
+  ppkMHD::monitoring
+  ppkMHD::config 
+  kokkos hwloc dl
+  ${PAPI_LIBRARY})
 if (USE_MPI)
-  target_link_libraries(test_mood_functor_flux mpiUtils)
-endif()
+  target_link_libraries(test_mood_functor_flux PUBLIC ppkMHD::mpiUtils)
+endif(USE_MPI)
 
 ##############################################
 # add_executable(test_kokkos_eigen

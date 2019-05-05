@@ -1,4 +1,7 @@
-set (mood_SRCS
+add_library(mood "")
+
+target_sources(mood
+  PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/monomials_ordering.h
   ${CMAKE_CURRENT_SOURCE_DIR}/monomials_print_utils.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Polynomial.h
@@ -25,9 +28,6 @@ set (mood_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverHydroMood.h
   )
 
-add_library(mood
-  ${mood_SRCS}
-  )
 target_compile_options(mood
   PUBLIC ${KOKKOS_CXX_FLAGS}
   )
@@ -37,5 +37,10 @@ target_include_directories(mood
   ${LAPACKE_INCLUDE_DIR}
   )
 target_link_libraries(mood
+  PUBLIC
   kokkos
+  ${LAPACKE_LIBRARIES}
+  ${OpenBLAS_LIB}
   )
+
+  add_library(ppkMHD::mood ALIAS mood)
