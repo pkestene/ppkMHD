@@ -277,9 +277,9 @@ if (PNETCDF_FOUND)
   message("  PNETCDF libraries     : ${PNETCDF_LIBRARIES}")
 endif(PNETCDF_FOUND)
 
-message(STATUS "SDM      enabled : ${USE_SDM}")
-message(STATUS "MOOD     enabled : ${USE_MOOD}")
-message(STATUS "DOUBLE precision : ${USE_DOUBLE}")
-message(STATUS "HWLOC    enabled : ${KOKKOS_ENABLE_HWLOC}")
+message("SDM      enabled : ${USE_SDM}")
+message("MOOD     enabled : ${USE_MOOD}")
+message("DOUBLE precision : ${USE_DOUBLE}")
+message("HWLOC    enabled : ${KOKKOS_ENABLE_HWLOC}")
 
 message("")
