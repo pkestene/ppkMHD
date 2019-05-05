@@ -2,7 +2,7 @@
 
 ## What is it ?
 
-ppkMHD stands for Performance Portable Kokkos for Magnetohydrodynamics solvers.
+ppkMHD stands for Performance Portable Kokkos for Magneto-HydroDynamics (MHD) solvers.
 
 Here a small list of numerical schemes implementations:
 
@@ -24,6 +24,8 @@ git submodule init
 git submodule update
 ```
 
+Kokkos is built with the same flags as the main application.
+
 ## Build
 
 A few example builds, with minimal configuration options.
@@ -34,21 +36,35 @@ A few example builds, with minimal configuration options.
 
 ```shell
 mkdir build; cd build
-cmake -DUSE_MPI=OFF -DKOKKOS_ENABLE_OPENMP=ON ..
+cmake -DUSE_MPI=OFF -DKOKKOS_ENABLE_OPENMP=ON -DKOKKOS_ENABLE_HWLOC=ON ..
 make -j 4
 ```
 
 Add variable CXX on the cmake command line to change the compiler (clang++, icpc, pgcc, ....).
 
-You may also activate `hwloc` by using cmake option `-DKOKKOS_ENABLE_HWLOC=ON`
+### Build without MPI / With Kokkos-openmp for Intel KNL
+
+* Create a build directory, configure and make
+
+```shell
+export CXX=icpc
+mkdir build; cd build
+cmake -DUSE_MPI=OFF -DKOKKOS_ARCH=KNL -DKOKKOS_ENABLE_OPENMP=ON ..
+make -j 4
+```
 
 ### Build without MPI / With Kokkos-cuda
+
+Check for a valid KOKKOS_ARCH by looking into external/kokkos/Makefile.kokkos.
+To be able to build with CUDA backend, you need to use nvcc_wrapper located in
+kokkos source (external/kokkos/bin/nvcc_wrapper).
 
 * Create a build directory, configure and make
 
 ```shell
 mkdir build; cd build
-CXX=/path/to/nvcc_wrapper cmake -DUSE_MPI=OFF -DKOKKOS_ENABLE_CUDA=ON -DKOKKOS_ARCH=Maxwell50 ..
+export CXX=/path/to/nvcc_wrapper
+cmake -DUSE_MPI=OFF -DKOKKOS_ENABLE_CUDA=ON -DKOKKOS_ARCH=Maxwell50 ..
 make -j 4
 ```
 
@@ -59,23 +75,27 @@ Please set `KOKKOS_ARCH` to a value corresponding to your actual NVIDIA GPU hard
 
 ### Build with MPI / With Kokkos-cuda
 
-* Make sure MPI compiler wrapper will use `nvcc_wrapper` from Kokkos; if your MPI implementation
-is OpenMPI or IBM Spectrum, you need to set environment variable OMPI_CXX (for MPICH, use MPICH_CXX):
 
+Please make sure to use a CUDA-aware MPI implementation (OpenMPI or MVAPICH2) built with the proper flags for activating CUDA support.
 
-```shell
-export OMPI_CXX=/path/to/nvcc_wrapper
-```
+It may happen that eventhough your MPI implementation is actually cuda-aware, cmake find_package macro for MPI does not detect it to be cuda aware. In that case, you can enforce cuda awareness by turning option USE_MPI_CUDA_AWARE_ENFORCED to ON.
+
+You don't need to use mpi compiler wrapper mpicxx, cmake *should* be able to correctly populate MPI_CXX_INCLUDE_PATH, MPI_CXX_LIBRARIES which are passed to all final targets.
 
 * Create a build directory, configure and make
 
 ```shell
 mkdir build; cd build
-CXX=mpicxx cmake -DKOKKOS_ENABLE_CUDA=ON -DKOKKOS_ARCH=Maxwell50 ..
+export CXX=/path/to/nvcc_wrapper
+cmake -DUSE_MPI=ON -DKOKKOS_ENABLE_CUDA=ON -DKOKKOS_ARCH=Maxwell50 ..
 make -j 4
 ```
 
-Again, you 
+Example command line to run the application (1 GPU used per MPI task)
+
+```shell
+mpirun -np 4 ./ppkMHD ./test_implode_2D_mpi.ini
+```
 
 ### Additionnal requirements
 
@@ -90,13 +110,15 @@ If you want to enforce the use of OpenBLAS, just use a recent CMake (>=3.6) and 
 
 On a recent Ubuntu, if atlas is not installed, but OpenBLAS is, you don't need to have a bleeding edge CMake, current cmake will find OpenBLAS.
 
-### Developping with vim or emacs and youcomplete plugin
+### Developping with vim or emacs and semantic completion/navigation from ccls
 
-Assuming you are using vim (or neovim) text editor and have installed the youcomplete plugin, you can have
-semantic autocompletion in a C++ project.
+Make sure to have CMake variable CMAKE_EXPORT_COMPILE_COMMANDS set to ON, it will generate a file named _compile_commands.json_.
+Then you can symlink the generated file in the top level source directory.
 
-Make sure to have CMake variable CMAKE_EXPORT_COMPILE_COMMANDS set to ON, and symlink the generated file to the top level
-source directory.
+Please visit :
+* [ccls](https://github.com/MaskRay/ccls)
+* [editor configuration for using ccls](https://github.com/MaskRay/ccls/wiki/Editor-Configuration)
+* [project setup for using ccls](https://github.com/MaskRay/ccls/wiki/Project-Setup)
 
 ## Build Documentation
 
