@@ -21,31 +21,49 @@ endif()
 #
 # ppkMHD executable
 #
-set(EXE_NAME "${PROJECT_NAME}")
-add_executable(${EXE_NAME}
+add_executable(${PROJECT_NAME} "")
+
+target_sources(${PROJECT_NAME}
+  PRIVATE
   main.cpp
-  ${BACKWARD_ENABLE}
+  #${BACKWARD_ENABLE}
   )
 
-target_include_directories(${EXE_NAME}
+target_include_directories(${PROJECT_NAME}
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/src
   )
 
-#target_link_libraries(${EXE_NAME} solver_factory config kokkos hwloc dl muscl io shared monitoring)
-target_link_libraries(${EXE_NAME} solver_factory config kokkos dl muscl shared io monitoring)
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC
+  ppkMHD::solver_factory
+  ppkMHD::config
+  kokkos
+  dl
+  ppkMHD::muscl
+  ppkMHD::shared
+  ppkMHD::io
+  ppkMHD::monitoring)
 
-add_backward(${EXE_NAME})
+#add_backward(${PROJECT_NAME})
 
 # if (USE_SDM)
-#   target_link_libraries(${EXE_NAME} sdm)
+#   target_link_libraries(${PROJECT_NAME}
+#     PUBLIC
+#     sdm)
 # endif()
 
 if (USE_MOOD)
-  target_link_libraries(${EXE_NAME} mood ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
-endif()
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    ppkMHD::mood 
+    ${LAPACKE_LIBRARIES}
+    ${OpenBLAS_LIB})
+endif(USE_MOOD)
 
 if (USE_MPI)
-  target_link_libraries(${EXE_NAME} mpiUtils)
-endif()
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    ppkMHD::mpiUtils)
+endif(USE_MPI)

@@ -1,4 +1,7 @@
-set (muscl_SRCS
+add_library(muscl "")
+
+target_sources (muscl
+  PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/hydro_shared.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor2D.h
   ${CMAKE_CURRENT_SOURCE_DIR}/HydroBaseFunctor3D.h
@@ -18,13 +21,19 @@ set (muscl_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverMHDMuscl.cpp
   )
 
-add_library(muscl
-  ${muscl_SRCS}
-  )
 target_include_directories(muscl
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
-  ) 
+  )
+
 target_link_libraries(muscl
+  PUBLIC
   kokkos
   )
+
+if(USE_MPI)
+  target_link_libraries(muscl PUBLIC ppkMHD::mpiUtils)
+endif(USE_MPI)
+
+#Add an alias so that library can be used inside the build tree
+add_library(ppkMHD::muscl ALIAS muscl)

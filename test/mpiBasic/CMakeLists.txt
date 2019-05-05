@@ -6,13 +6,10 @@ macro(MPI_TEST_ADD_EXEC test_name)
   add_executable(${EXE_NAME}
     ${EXE_NAME}.cpp
     )
-  
-  target_include_directories(${EXE_NAME}
-    PUBLIC
-    ${CMAKE_SOURCE_DIR}/src/utils/mpiUtils
-    )
   target_link_libraries(${EXE_NAME}
-    monitoring mpiUtils)
+    PRIVATE
+    ppkMHD::monitoring 
+    ppkMHD::mpiUtils)
 endmacro(MPI_TEST_ADD_EXEC)
 
 

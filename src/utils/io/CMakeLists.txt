@@ -1,4 +1,7 @@
-set (io_SRCS
+add_library(io "")
+
+target_sources (io
+  PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/IO_common.h
   ${CMAKE_CURRENT_SOURCE_DIR}/IO_common.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/IO_ReadWriteBase.h
@@ -9,8 +12,8 @@ set (io_SRCS
   )
 
 if(USE_SDM)
-  set (io_SRCS
-    ${io_SRCS}
+  target_sources (io
+    PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_ReadWrite_SDM.h
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_ReadWrite_SDM.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_VTK_SDM_shared.h
@@ -23,8 +26,8 @@ if(USE_SDM)
 endif(USE_SDM)
 
 if(USE_HDF5)
-  set (io_SRCS
-    ${io_SRCS}
+  target_sources (io
+    PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_HDF5.h
     ${CMAKE_CURRENT_SOURCE_DIR}/IO_HDF5.cpp
     )
@@ -32,38 +35,40 @@ endif(USE_HDF5)
 
 if(USE_MPI)
   if(USE_PNETCDF)
-  set (io_SRCS
-    ${io_SRCS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/IO_PNETCDF.h
-    )    
+    target_sources (io
+      PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/IO_PNETCDF.h
+      )    
   endif(USE_PNETCDF)
 endif(USE_MPI)
-
-add_library(io
-  ${io_SRCS}
-  )
 
 target_include_directories(io
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   )
+
 target_link_libraries(io
+  PUBLIC
   kokkos shared
   )
+
 if (USE_HDF5)
   target_link_libraries(io
+    PUBLIC
     ${HDF5_LIBRARIES}
     )
-endif()
+endif(USE_HDF5)
 
 if (USE_PNETCDF)
   target_link_libraries(io
+    PUBLIC
     ${PNETCDF_LIBRARIES}
     )
-endif()
-  
-# if (USE_MPI)
-#   target_link_libraries(io
-#     ${MPI_CXX_LIBRARIES}
-#     )
-# endif()
+endif(USE_PNETCDF)
+
+if (USE_MPI)
+  target_link_libraries(io PUBLIC MPI::MPI_CXX)
+endif(USE_MPI)
+
+#Add an alias so that library can be used inside the build tree
+add_library(ppkMHD::io ALIAS io)
