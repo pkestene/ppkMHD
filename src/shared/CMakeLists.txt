@@ -3,7 +3,7 @@
 #######################
 add_library(shared "")
 target_sources (shared
-  PUBLIC
+  PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/BlastParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/DiskParams.h
   ${CMAKE_CURRENT_SOURCE_DIR}/problems/FieldLoopParams.h
@@ -57,7 +57,7 @@ add_library(ppkMHD::shared ALIAS shared)
 #######################
 add_library(solver_factory "")
 target_sources (solver_factory
-  PUBLIC
+  PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverFactory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/SolverFactory.h
   )
