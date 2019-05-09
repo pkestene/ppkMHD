@@ -520,157 +520,25 @@ void write_cells_connectivity(std::ostream& outFile,
 /**
  * Write VTK unstructured grid cells data - 2D.
  */
-template<int N>
 void write_cells_data(std::ostream& outFile,
 		      DataArray2d::HostMirror Uhost,
 		      HydroParams& params,
 		      ConfigMap& configMap,
 		      const std::map<int, std::string>& variables_names,
-		      uint64_t& offsetBytes)
-{
-
-  const int nx = params.nx;
-  const int ny = params.ny;
-
-  const int gw = params.ghostWidth;
-
-  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  const char* dataType = useDouble ? "Float64" : "Float32";
-  
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
-
-  const int nbvar = variables_names.size();
-  
-  /*
-   * write cell data.
-   */
-  outFile << "  <CellData>\n";
-
-  // loop over scalar variables
-  for ( int iVar=0; iVar<nbvar; iVar++ ) {
-    
-    outFile << "    <DataArray type=\"" << dataType
-	    << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"" << ascii_or_binary << "\"";
-    
-    if (!outputVtkAscii) {
-      outFile << " offset=\"" << offsetBytes << "\"";
-    }
-
-    outFile << " >\n";
-    
-    offsetBytes += sizeof(uint64_t) + sizeof(real_t)*nx*ny*N*N;
-    
-    if (outputVtkAscii) {
-      // no ghost !!
-      for (int j=0; j<ny; ++j) {
-	for (int i=0; i<nx; ++i) {
-	  
-	  // loop over sub-cells
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
-	      
-	      real_t data = Uhost(gw+i,gw+j, sdm::DofMap<2,N>(idx,idy, 0, iVar)); 
-	      
-	      outFile << data << " ";
-	      
-	    } // for idx
-	  } // for idy
-	  
-	} // for i
-      } // for j
-      
-      outFile << "\n";
-
-    } // end outputVtkAscii
-    
-    outFile << "    </DataArray>\n";
-    
-  } // end for variables
-  
-  outFile << "  </CellData>\n";
-  
-} // write_cells_data - 2D
+		      uint64_t& offsetBytes,
+                      int N);
 
 
 /**
  * Write VTK unstructured grid cells data - 3D.
  */
-template<int N>
 void write_cells_data(std::ostream& outFile,
 		      DataArray3d::HostMirror Uhost,
 		      HydroParams& params,
 		      ConfigMap& configMap,
 		      const std::map<int, std::string>& variables_names,
-		      uint64_t& offsetBytes)
-{
-
-  const int nx = params.nx;
-  const int ny = params.ny;
-  const int nz = params.nz;
-
-  const int gw = params.ghostWidth;
-
-  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  const char* dataType = useDouble ? "Float64" : "Float32";
-  
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
-
-  const int nbvar = variables_names.size();
-
-  /*
-   * write cell data.
-   */
-  outFile << "  <CellData>\n";
-
-  // loop over scalar variables
-  for ( int iVar=0; iVar<nbvar; iVar++ ) {
-    
-    outFile << "    <DataArray type=\"" << dataType
-	    << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"" << ascii_or_binary << "\"";
-
-    if (!outputVtkAscii) {
-      outFile << " offset=\"" << offsetBytes << "\"";
-    }
-
-    outFile<< " >\n";
-
-    offsetBytes += sizeof(uint64_t) + sizeof(real_t)*nx*ny*nz*N*N*N;
-
-    if (outputVtkAscii) {
-      // no ghost !!
-      for (int k=0; k<nz; ++k) {
-	for (int j=0; j<ny; ++j) {
-	  for (int i=0; i<nx; ++i) {
-	    
-	    // loop over sub-cells
-	    for (int idz=0; idz<N; ++idz) {
-	      for (int idy=0; idy<N; ++idy) {
-		for (int idx=0; idx<N; ++idx) {
-
-		  real_t data = Uhost(gw+i,gw+j, gw+k, sdm::DofMap<3,N>(idx,idy,idz, iVar));
-		  outFile << data << " ";
-		  
-		} // for idx
-	      } // for idy
-	    } // for idz
-	    
-	  } // for i
-	} // for j
-      } // for k
-      
-      outFile << "\n";
-
-    } // end outputVtkAscii
-    
-    outFile << "    </DataArray>\n";
-    
-  } // end for variables
-  
-  outFile << "  </CellData>\n";
-  
-} // write_cells_data - 3d
+		      uint64_t& offsetBytes,
+                      int N);
 
 
 // ================================================================
@@ -878,7 +746,9 @@ void write_appended_binary_data(std::ostream& outFile,
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 	      
-	      real_t data = Uhost(gw+i,gw+j, sdm::DofMap<2,N>(idx,idy, 0, iVar)); 
+	      real_t data = Uhost(idx+(gw+i)*N,
+                                  idy+(gw+j)*N, 
+                                  iVar);
 	      cells_data.push_back(data);
 	      
 	    } // for idx
@@ -1131,7 +1001,10 @@ void write_appended_binary_data(std::ostream& outFile,
 	      for (int idy=0; idy<N; ++idy) {
 		for (int idx=0; idx<N; ++idx) {
 		  
-		  real_t data = Uhost(gw+i,gw+j, gw+k, sdm::DofMap<3,N>(idx,idy,idz, iVar));
+		  real_t data = Uhost(idx+(gw+i)*N,
+                                      idy+(gw+j)*N,
+                                      idz+(gw+k)*N, 
+                                      iVar);
 
 		  cells_data.push_back(data);
 		  
@@ -1289,7 +1162,7 @@ void save_VTK_SDM(DataArray2d             Udata,
 
   write_cells_connectivity<N>(outFile,sdm_geom,params,configMap,offsetBytes);
 
-  write_cells_data<N>(outFile,Uhost,params,configMap,variables_names,offsetBytes);
+  write_cells_data(outFile,Uhost,params,configMap,variables_names,offsetBytes,N);
   
   outFile << " </Piece>\n";
   
@@ -1417,7 +1290,7 @@ void save_VTK_SDM(DataArray3d             Udata,
   
   write_cells_connectivity<N>(outFile,sdm_geom,params,configMap,offsetBytes);
   
-  write_cells_data<N>(outFile,Uhost,params,configMap,variables_names,offsetBytes);
+  write_cells_data(outFile,Uhost,params,configMap,variables_names,offsetBytes,N);
   
   outFile << " </Piece>\n";
   

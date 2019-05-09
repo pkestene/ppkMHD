@@ -796,7 +796,9 @@ void write_flux_points_data(std::ostream& outFile,
 
 	      }
 	      
-	      real_t data = Uhost(gw+i,gw+j, sdm::DofMapFlux<2,N,dir>(iidx,iidy, 0, iVar));
+	      real_t data = Uhost(iidx+(gw+i)*N,
+                                  iidy+(gw+j)*N, 
+                                  iVar);
 	      
 	      outFile << data << " ";
 	      
@@ -951,9 +953,10 @@ void write_flux_points_data(std::ostream& outFile,
 
 		  }
 
-		  real_t data = Uhost(gw+i,gw+j,gw+k,
-				      sdm::DofMapFlux<3,N,dir>(iidx,iidy,iidz,
-							       iVar));
+		  real_t data = Uhost(iidx+(gw+i)*N,
+                                      iidy+(gw+j)*N,
+                                      iidz+(gw+k)*N,
+                                      iVar);
 		  outFile << data << " ";
 		  
 		} // for idx
