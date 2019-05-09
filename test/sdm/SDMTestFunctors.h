@@ -103,35 +103,36 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
     // local cell index
-    int i,j;
-    index2coord(index,i,j,isize,jsize);
+    int i = ii/N;
+    int j = jj/N;
 
-    // loop over cell DoF's
-    for (int idy=0; idy<N; ++idy) {
-      for (int idx=0; idx<N; ++idx) {
+    // Dof index
+    int idx = ii-i*N;
+    int idy = jj-j*N;
 
-	// lower left corner
-	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+    // lower left corner
+    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 
-	x += this->sdm_geom.solution_pts_1d(idx) * dx;
-	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-
-	if (compare == 1) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) -= f0(x,y,0.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) -= f1(x,y,0.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) -= f2(x,y,0.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) -= f3(x,y,0.0);
-	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = f0(x,y,0.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = f1(x,y,0.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = f2(x,y,0.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = f3(x,y,0.0);
-	}
-	
-      } // end for idx
-    } // end for idy
+    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;
+    
+    if (compare == 1) {
+      Udata(ii, jj, ID) -= f0(x,y,0.0);
+      Udata(ii, jj, IP) -= f1(x,y,0.0);
+      Udata(ii, jj, IU) -= f2(x,y,0.0);
+      Udata(ii, jj, IV) -= f3(x,y,0.0);
+    } else {
+      Udata(ii, jj, ID) = f0(x,y,0.0);
+      Udata(ii, jj, IP) = f1(x,y,0.0);
+      Udata(ii, jj, IU) = f2(x,y,0.0);
+      Udata(ii, jj, IV) = f3(x,y,0.0);
+    }
     
   } // end operator () - 2d
 
@@ -171,41 +172,42 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+
     // local cell index
-    int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    int i = ii/N;
+    int j = jj/N;
+    int k = kk/N;
 
-    // loop over cell DoF's
-    for (int idz=0; idz<N; ++idz) {
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
-	  
-	  // lower left corner
-	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
-	  real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
+    // Dof index
+    int idx = ii-i*N;
+    int idy = jj-j*N;
+    int idz = kk-k*N;
 
-	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
-	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-	  
-	  if (compare == 1) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= f0(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) -= f1(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= f2(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) -= f3(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) -= f4(x,y,z);
-	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = f0(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = f1(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = f2(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = f3(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = f4(x,y,z);
-	  }
-	  
-	} // end for idx
-      } // end for idy
-    } // end for idz
+    // lower left corner
+    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
+    
+    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;
+    z += this->sdm_geom.solution_pts_1d(idz) * dz;
+    
+    if (compare == 1) {
+      Udata(ii, jj, kk, ID) -= f0(x,y,z);
+      Udata(ii, jj, kk, IP) -= f1(x,y,z);
+      Udata(ii, jj, kk, IU) -= f2(x,y,z);
+      Udata(ii, jj, kk, IV) -= f3(x,y,z);
+      Udata(ii, jj, kk, IW) -= f4(x,y,z);
+    } else {
+      Udata(ii, jj, kk, ID) = f0(x,y,z);
+      Udata(ii, jj, kk, IP) = f1(x,y,z);
+      Udata(ii, jj, kk, IU) = f2(x,y,z);
+      Udata(ii, jj, kk, IV) = f3(x,y,z);
+      Udata(ii, jj, kk, IW) = f4(x,y,z);
+    }
     
   } // end operator () - 3d
   

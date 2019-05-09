@@ -292,6 +292,40 @@ public:
   } // flux2sol_vector
   
   /**
+   * This routine used SDM_Geometry information to perform 
+   * interpolation of the derivative at a given solution point
+   * using values located at flux points.
+   *
+   * Please note and take care, here derivative are computed using 
+   * polynomial representation on interval [0,1]. 
+   * You will SURELY HAVE TO RESCALE the derivative values for 
+   * the target interval e.g. [x, x+dx], i.e. multiply by dx.
+   *
+   * \param[in]  flux_values is a static array containings N+1 values (flux pts)
+   * \param[in]  index is an integer identifying the Dof location
+   *
+   * \return derivative evaluations at a solution point.
+   *
+   */
+  KOKKOS_INLINE_FUNCTION
+  real_t flux2sol_derivative(const flux_values_t& flux_values,
+                             int index,
+                             real_t rescale) const
+  {
+
+    // evaluate derivative at solution points
+      
+    // compute interpolated value of the derivative
+    real_t val=0;
+    for (int k=0; k<N+1; ++k) {
+      val += flux_values[k] * sdm_geom.flux2sol_derivative(k,index);
+    }
+
+    return val*rescale;
+    
+  } // flux2sol_derivative
+  
+  /**
    * This routine used SDM_Geometry information to perform interpolation of the derivative 
    * at solution points using values located at flux points.
    *

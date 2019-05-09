@@ -6,6 +6,136 @@
 
 namespace sdm {
 
+/**
+ * from global index to local cell Id and Dof id
+ *
+ * \param[in] ii global index
+ * \param[out] i cell coordinate index
+ * \param[out] idx Dof index (solution)
+ */
+KOKKOS_INLINE_FUNCTION
+void global2local(int ii,   int jj,
+                  int &i,   int &j,
+                  int &idx, int &idy,
+                  int N)
+{
+
+    i = ii / N;
+    j = jj / N;
+    
+    idx = ii-i*N;
+    idy = jj-j*N;
+
+} // global2local - 2d
+
+/**
+ * from global index to local cell Id and Dof id
+ *
+ * \param[in] ii global index
+ * \param[out] i cell coordinate index
+ * \param[out] idx Dof index (solution)
+ */
+KOKKOS_INLINE_FUNCTION
+void global2local(int ii,   int jj,   int kk,
+                  int &i,   int &j,   int &k,
+                  int &idx, int &idy, int &idz,
+                  int N)
+{
+  
+  i = ii / N;
+  j = jj / N;
+  k = kk / N;
+  
+  idx = ii - i * N;
+  idy = jj - j * N;
+  idz = kk - k * N;
+  
+} // global2local - 3d
+
+/**
+ * from global index to local cell Id and Dof id
+ *
+ * \param[in] ii global index
+ * \param[out] i cell coordinate index
+ * \param[out] idx Dof index (flux)
+ */
+template<int dir>
+KOKKOS_INLINE_FUNCTION
+void global2local_flux(int ii,   int jj,
+                       int &i,   int &j,
+                       int &idx, int &idy,
+                       int N)
+{
+  
+  if (dir == IX) {
+    
+    i = ii / (N + 1);
+    j = jj / N;
+    
+    idx = ii-i*(N+1);
+    idy = jj-j*N;
+    
+  } else {
+    
+    i = ii / N;
+    j = jj / (N + 1);
+    
+    idx = ii-i*N;
+    idy = jj-j*(N+1);
+    
+  }
+  
+} // global2local_flux
+
+/**
+ * from global index to local cell Id and Dof id
+ *
+ * \param[in] ii global index
+ * \param[out] i cell coordinate index
+ * \param[out] idx Dof index (flux)
+ */
+template<int dir>
+KOKKOS_INLINE_FUNCTION
+void global2local_flux(int ii,   int jj,   int kk,
+                       int &i,   int &j,   int &k,
+                       int &idx, int &idy, int &idz,
+                       int N)
+{
+  
+  if (dir == IX) {
+    
+    i = ii / (N + 1);
+    j = jj / N;
+    k = kk / N;
+    
+    idx = ii-i*(N+1);
+    idy = jj-j*N;
+    idz = kk-k*N;
+    
+  } else if (dir == IY) {
+    
+    i = ii / N;
+    j = jj / (N + 1);
+    k = kk / N;
+    
+    idx = ii-i*N;
+    idy = jj-j*(N+1);
+    idz = kk-k*N;
+    
+  } else {
+    
+    i = ii / N;
+    j = jj / N;
+    k = kk / (N + 1);
+    
+    idx = ii-i*N;
+    idy = jj-j*N;
+    idz = kk-k*(N+1);
+    
+  }
+  
+} // global2local_flux
+
 //! Degree of freedom mapping inside a given cell for solution points.
 //! the 3-uplet (i,j,k) identifies the location
 //! index iv identifies the variable.

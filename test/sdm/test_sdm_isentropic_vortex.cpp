@@ -149,6 +149,8 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
   int nbCells =
     solver->params.isize *
     solver->params.jsize;
+
+  int nbDofs = nbCells * N * N;
   
   // retrieve exact solution in auxiliary data arrary : solver.Uaux
   {
@@ -171,10 +173,10 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
                                                            solver->U,
                                                            solver->Uaux,
                                                            ID,
-                                                           nbCells);
+                                                           nbDofs);
     error[sdm::NORM_L1] = error_L1/nbCells/N/N;
   }
-
+  
   {
     error_L2 = 
       sdm::Compute_Error_Functor_2d<N,sdm::NORM_L2>::apply(solver->params,
@@ -182,7 +184,7 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
                                                            solver->U,
                                                            solver->Uaux,
                                                            ID,
-                                                           nbCells);
+                                                           nbDofs);
     error[sdm::NORM_L2] = std::sqrt(error_L2)/nbCells/N/N;
   }
 
