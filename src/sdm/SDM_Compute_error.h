@@ -10,7 +10,7 @@
 #include "sdm/SDMBaseFunctor.h"
 
 #include "sdm/SDM_Geometry.h"
-#include "sdm/sdm_shared.h" // for DofMap
+#include "sdm/sdm_shared.h"
 
 #include "shared/EulerEquations.h"
 
@@ -37,9 +37,6 @@ class Compute_Error_Functor_2d : public SDMBaseFunctor<2,N> {
 public:
   using typename SDMBaseFunctor<2,N>::DataArray;
   using typename SDMBaseFunctor<2,N>::HydroState;
-  
-  //! intra-cell degrees of freedom mapping at solution points
-  static constexpr auto dofMap = DofMap<2,N>;
 
   /**
    * \param[in] varId identify which variable to reduce (ID, IE, IU, ...)
@@ -170,9 +167,6 @@ public:
   using typename SDMBaseFunctor<3,N>::DataArray;
   using typename SDMBaseFunctor<3,N>::HydroState;
   
-  //! intra-cell degrees of freedom mapping at solution points
-  static constexpr auto dofMap = DofMap<3,N>;
-
   /**
    * \param[in] varId identify which variable to reduce (ID, IE, IU, ...)
    */

@@ -10,7 +10,7 @@
 #include "sdm/SDMBaseFunctor.h"
 
 #include "sdm/SDM_Geometry.h"
-#include "sdm/sdm_shared.h" // for DofMap
+#include "sdm/sdm_shared.h"
 
 #include "shared/EulerEquations.h"
 
@@ -211,10 +211,7 @@ class ComputeDt_Functor_2d : public SDMBaseFunctor<2,N> {
 public:
   using typename SDMBaseFunctor<2,N>::DataArray;
   using typename SDMBaseFunctor<2,N>::HydroState;
-  //using typename ppkMHD::EulerEquations<2>;
-  
-  //! intra-cell degrees of freedom mapping at solution points
-  static constexpr auto dofMap = DofMap<2,N>;
+  //using typename ppkMHD::EulerEquations<2>;  
   
   ComputeDt_Functor_2d(HydroParams         params,
 		       SDM_Geometry<2,N> sdm_geom,
@@ -345,10 +342,7 @@ class ComputeDt_Functor_3d : public SDMBaseFunctor<3,N> {
 public:
   using typename SDMBaseFunctor<3,N>::DataArray;
   using typename SDMBaseFunctor<3,N>::HydroState;
-  //using typename ppkMHD::EulerEquations<3>;
-  
-  //! intra-cell degrees of freedom mapping at solution points
-  static constexpr auto dofMap = DofMap<3,N>;
+  //using typename ppkMHD::EulerEquations<3>;  
   
   ComputeDt_Functor_3d(HydroParams         params,
 		       SDM_Geometry<3,N> sdm_geom,
