@@ -300,8 +300,6 @@ public:
       uLoc[IU] = Udata(ii,jj, IU);
       uLoc[IV] = Udata(ii,jj, IV);
 
-      printf("compute dt : %d %d %f %f %f %f\n",ii,jj,uLoc[ID],uLoc[IE],uLoc[IU],uLoc[IV]);
-
       // get primitive variables in current cell
       euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
       
