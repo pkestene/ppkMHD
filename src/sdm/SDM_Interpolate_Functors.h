@@ -10,7 +10,7 @@
 #include "sdm/SDMBaseFunctor.h"
 
 #include "sdm/SDM_Geometry.h"
-#include "sdm/sdm_shared.h" // for DofMap
+#include "sdm/sdm_shared.h"
 
 #include "shared/EulerEquations.h"
 
@@ -317,9 +317,6 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   using typename SDMBaseFunctor<dim,N>::flux_values_t;
-  
-  static constexpr auto dofMapS = DofMap<dim,N>;
-  static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
   
   Interpolate_At_SolutionPoints_Functor(HydroParams         params,
 					SDM_Geometry<dim,N> sdm_geom,
