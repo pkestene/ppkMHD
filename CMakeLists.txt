@@ -61,7 +61,7 @@ if(${BUILD_CODE})
   # C++11 is for Kokkos
   set(CMAKE_CXX_STANDARD 11)
   set(CMAKE_CXX_EXTENSIONS OFF)
-  
+
   #
   # Write a small header with build data, git version, etc...
   #
@@ -234,7 +234,10 @@ if(${BUILD_CODE})
   add_subdirectory(external/kokkos)
   
   # pass Kokkos include directories to our target application
-  include_directories(${Kokkos_INCLUDE_DIRS_RET})
+  include_directories(${Kokkos_INCLUDE_DIRS_RET})  
+
+  # CTest
+  enable_testing()
   
   add_subdirectory(test)
   add_subdirectory(src)
@@ -243,7 +246,8 @@ endif()
 if(NOT DOC STREQUAL "OFF")
   add_subdirectory(doc)
 endif()
-  
+
+
 ##################### PRINT CONFIGURE STATUS ######################
 message("//===================================================")
 message("  ${PROJECT_NAME} build configuration:")

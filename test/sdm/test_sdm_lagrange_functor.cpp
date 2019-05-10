@@ -37,7 +37,7 @@
  */
 template<int dim,
 	 int N>
-void test_lagrange_functor()
+bool test_lagrange_functor()
 {
 
   using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
@@ -97,10 +97,6 @@ void test_lagrange_functor()
     DataArray("Fluxes", isize*N, jsize*(N+1), ksize*N, params.nbvar);
   
   DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
-
-  // initialize the IO_ReadWrite object (normally done in
-  // SolverFactory's create method)
-  //solver.init_io();
   
   int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
 
@@ -182,6 +178,7 @@ void test_lagrange_functor()
   }
 
   // compute L1 error between U and U2
+  double error_accum = 0.0;
   if (dim==2) {
 
     for (int ivar = 0; ivar < params.nbvar; ++ivar) {
@@ -193,6 +190,7 @@ void test_lagrange_functor()
                                                               ivar,
                                                               nbDofs);
       printf("L1 error for variable %d : %e\n",ivar,error_L1);
+      error_accum += error_L1;
     }
 
   } else if (dim==3) {
@@ -229,7 +227,9 @@ void test_lagrange_functor()
                               "");
     
   }
-  
+
+  return (error_accum < 1e-10);
+
 } // test_lagrange_functor
 
 int main(int argc, char* argv[])
@@ -260,18 +260,21 @@ int main(int argc, char* argv[])
   std::cout << "==== Spectral Difference Lagrange Interpolation test ====\n";
   std::cout << "=========================================================\n";
 
+  bool passed = true;
+
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_lagrange_functor<2,4>();
+    passed *= test_lagrange_functor<2,4>();
 
     // 3d
-    test_lagrange_functor<3,4>();
+    passed *= test_lagrange_functor<3,4>();
 
   }
 
   Kokkos::finalize();
 
-  return EXIT_SUCCESS;
+  // return 0 if all tests passed
+  return (int) !passed;
   
 }

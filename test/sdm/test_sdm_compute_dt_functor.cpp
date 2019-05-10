@@ -65,7 +65,7 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
  */
 template<int dim,
 	 int N>
-void test_compute_dt_functors()
+int test_compute_dt_functors()
 {
 
   int myRank = 0;
@@ -107,7 +107,13 @@ void test_compute_dt_functors()
   solver.save_solution();
 
   // actual test here
-  compute_dt<dim,N>(solver);
+  real_t dt = compute_dt<dim,N>(solver);
+
+  int status = 0;
+  if (dt>0.1)
+    status=1;
+
+  return status;
 
 } // test_compute_dt_functors
 
@@ -144,18 +150,20 @@ int main(int argc, char* argv[])
   std::cout << "==== Spectral Difference Method : CFL functors test ====\n";
   std::cout << "=========================================================\n";
 
+  int status2d = 0;
+  int status3d = 0;
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_compute_dt_functors<2,4>();
+    status2d = test_compute_dt_functors<2,4>();
 
     // 3d
-    test_compute_dt_functors<3,4>();
+    status3d = test_compute_dt_functors<3,4>();
 
   }
 
   Kokkos::finalize();
 
-  return EXIT_SUCCESS;
+  return status2d+status3d;
   
 }

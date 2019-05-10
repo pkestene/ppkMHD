@@ -93,6 +93,8 @@ if (USE_MPI)
   target_link_libraries(test_sdm_lagrange_functor PUBLIC mpiUtils)
 endif(USE_MPI)
 
+add_test(NAME sdm_lagrange_functor COMMAND test_sdm_lagrange_functor)
+
 ##############################################
 add_executable(test_sdm_flux_functor "")
 target_sources(test_sdm_flux_functor
@@ -157,6 +159,8 @@ target_link_libraries(test_sdm_compute_dt_functor
 if (USE_MPI)
   target_link_libraries(test_sdm_compute_dt_functor PUBLIC ppkMHD::mpiUtils)
 endif(USE_MPI)
+
+add_test(NAME sdm_compute_dt_functor COMMAND test_sdm_compute_dt_functor)
 
 ##############################################
 add_executable(test_sdm_chebyshev_quadrature "")
