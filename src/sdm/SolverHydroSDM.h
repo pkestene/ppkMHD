@@ -1848,7 +1848,7 @@ void SolverHydroSDM<dim,N>::init_blast(DataArray Udata)
 
   BlastParams blastParams = BlastParams(configMap);
   
-  InitBlastFunctor<dim,N>::apply(params, sdm_geom, blastParams, Udata, nbCells);
+  InitBlastFunctor<dim,N>::apply(params, sdm_geom, blastParams, Udata, nbDofs);
 
 } // SolverHydroSDM::init_blast
 
@@ -1881,7 +1881,7 @@ void SolverHydroSDM<dim,N>::init_four_quadrant(DataArray Udata)
                                         Udata,
                                         U0, U1, U2, U3,
                                         xt, yt,
-                                        nbCells);
+                                        nbDofs);
     
 } // SolverHydroSDM::init_four_quadrant
 
@@ -1901,7 +1901,7 @@ void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
                                            sdm_geom,
                                            khParams,
                                            Udata,
-                                           nbCells);
+                                           nbDofs);
 
 } // SolverHydroSDM::init_kelvin_helmholtz
 
@@ -1921,7 +1921,7 @@ void SolverHydroSDM<dim,N>::init_gresho_vortex(DataArray Udata)
                                         sdm_geom,
                                         gvParams,
                                         Udata,
-                                        nbCells);
+                                        nbDofs);
 
 } // SolverHydroSDM::init_gresho_vortex
 
@@ -1937,7 +1937,7 @@ void SolverHydroSDM<dim,N>::init_wedge(DataArray Udata)
 
   WedgeParams wparams(configMap, 0.0);
   
-  InitWedgeFunctor<dim,N>::apply(params, sdm_geom, wparams, Udata, nbCells);
+  InitWedgeFunctor<dim,N>::apply(params, sdm_geom, wparams, Udata, nbDofs);
   
 } // init_wedge
 
@@ -1953,7 +1953,7 @@ void SolverHydroSDM<dim,N>::init_jet(DataArray Udata)
   
   JetParams jparams(configMap);
   
-  InitJetFunctor<dim,N>::apply(params, sdm_geom, jparams, Udata, nbCells);
+  InitJetFunctor<dim,N>::apply(params, sdm_geom, jparams, Udata, nbDofs);
   
 } // init_jet
 
