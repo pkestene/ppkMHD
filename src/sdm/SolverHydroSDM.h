@@ -159,17 +159,19 @@ public:
    */
   virtual std::string get_name () const;
 
-  DataArray     U;     /*!< hydrodynamics conservative variables arrays */
+  DataArray     U;     /*!< hydrodynamics conservative variables arrays, size = nbDofs */
   DataArrayHost Uhost; /*!< U mirror on host memory space */
   DataArray     Uaux;  /*!< auxiliary hydrodynamics conservative variables arrays (used in computing fluxes divergence) */
 
-  DataArray     Uaverage; /*! used if limiting is enabled */
+
+  /*
+   * limiter specific arrays:
+   * - Uaverage : average conservative value, one per cell
+   */
+  DataArray     Uaverage; /*! used if limiting is enabled, size = nbCells */
   //DataArray     Umin;     /*! used if limiting is enabled */
   //DataArray     Umax;     /*! used if limiting is enabled */
 
-  /*
-   * limiter specific arrays
-   */
   DataArray     Ugradx; /*! used if limiting is enabled, cell-averaged gradient, x component */
   DataArray     Ugrady; /*! used if limiting is enabled, cell-averaged gradient, y component */
   DataArray     Ugradz; /*! used if limiting is enabled, cell-averaged gradient, z component */
@@ -355,8 +357,18 @@ public:
 
   //! thermal diffusivity terms : kappa * rho * cp * gradient(T)
   bool thermal_diffusivity_terms_enabled;
+
+  //! number of cells along each direction
+  int isize, jsize, ksize;
+
+  //! total number of cells
+  int nbCells;
   
-  int isize, jsize, ksize, nbCells;
+  //! number of Dofs locations = nbCells * N^d
+  int nbDofs;
+
+  //! total size along each direction in terms of Dofs location
+  int iisize, jjsize, kksize;
 
 }; // class SolverHydroSDM
 
@@ -390,23 +402,32 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   isize(params.isize),
   jsize(params.jsize),
   ksize(params.ksize),
-  nbCells(params.isize*params.jsize)
+  nbCells(params.isize*params.jsize),
+  nbDofs(params.isize*params.jsize*N*N),
+  iisize(params.isize*N),
+  jjsize(params.jsize*N),
+  kksize(params.ksize*N)
 {
 
   solver_type = SOLVER_SDM;
 
-  if (dim==3)
-    nbCells = params.isize*params.jsize*params.ksize;
-  
+  if (dim == 3) {
+    nbCells = params.isize * params.jsize * params.ksize;
+    nbDofs = nbCells*N*N*N;
+  }
+
+  // set number of cells in base class
   m_nCells = nbCells;
 
-  int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
-  int nb_dof = params.nbvar * nb_dof_per_cell;
+  const int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
+  //const int nb_dof = params.nbvar * nb_dof_per_cell;
 
   m_nDofsPerCell = nb_dof_per_cell;
   
   // useful for allocating Fluxes, for conservative variables at flux points
-  int nb_dof_flux = dim==2 ? (N+1)*N*params.nbvar : (N+1)*N*N*params.nbvar;
+  // int nb_dof_flux = dim==2 ? 
+  //   (N+1)*N*params.nbvar : 
+  //   (N+1)*N*N*params.nbvar;
   
   long long int total_mem_size = 0;
 
@@ -419,6 +440,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (dim==3)
     m_variables_names[IW] = "rho_vz"; // momentum component Z
 
+  const int nbvar = params.nbvar;
   
   /*
    * Viscous terms computations.
@@ -437,27 +459,27 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    */
   if (dim==2) {
 
-    U     = DataArray("U", isize, jsize, nb_dof);
+    U     = DataArray("U", iisize, jjsize, nbvar);
     Uhost = Kokkos::create_mirror(U);
-    Uaux  = DataArray("Uaux",isize, jsize, nb_dof);
+    Uaux  = DataArray("Uaux",iisize, jjsize, nbvar);
     
-    Fluxes = DataArray("Fluxes", isize, jsize, nb_dof_flux);
+    Fluxes = DataArray("Fluxes", isize*(N+1), jjsize, nbvar);
 
-    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U
-    total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // Uaux
-    total_mem_size += isize*jsize*nb_dof_flux * sizeof(real_t); // Fluxes
+    total_mem_size += iisize*jjsize*nbvar * sizeof(real_t); // U
+    total_mem_size += iisize*jjsize*nbvar * sizeof(real_t); // Uaux
+    total_mem_size += isize*(N+1)*jjsize*nbvar * sizeof(real_t); // Fluxes
     
   } else if (dim==3) {
 
-    U     = DataArray("U", isize, jsize, ksize, nb_dof);
+    U     = DataArray("U", iisize, jjsize, kksize, nbvar);
     Uhost = Kokkos::create_mirror(U);
-    Uaux  = DataArray("Uaux",isize, jsize, ksize, nb_dof);
+    Uaux  = DataArray("Uaux",iisize, jjsize, kksize, nbvar);
     
-    Fluxes = DataArray("Fluxes", isize, jsize, ksize, nb_dof_flux);
+    Fluxes = DataArray("Fluxes", isize*(N+1), jjsize, kksize, nbvar);
 
-    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U
-    total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // Uaux
-    total_mem_size += isize*jsize*ksize*nb_dof_flux * sizeof(real_t); // Fluxes
+    total_mem_size += iisize*jjsize*kksize*nbvar      * sizeof(real_t); // U
+    total_mem_size += iisize*jjsize*kksize*nbvar      * sizeof(real_t); // Uaux
+    total_mem_size += isize*(N+1)*jjsize*kksize*nbvar * sizeof(real_t); // Fluxes
 
   }
 
@@ -481,39 +503,39 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (ssprk2_enabled) {
 
     if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
-      total_mem_size += isize*jsize*nb_dof * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",iisize, jjsize, nbvar);
+      total_mem_size += iisize*jjsize*nbvar * sizeof(real_t);
     } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
-      total_mem_size += isize*jsize*ksize*nb_dof * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",iisize, jjsize, kksize, nbvar);
+      total_mem_size += iisize*jjsize*kksize*nbvar * sizeof(real_t);
     }
     
   } else if (ssprk3_enabled) {
 
     if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
-      U_RK2 = DataArray("U_RK2",isize, jsize, nb_dof);
-      total_mem_size += isize*jsize*nb_dof * 2 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",iisize, jjsize, nbvar);
+      U_RK2 = DataArray("U_RK2",iisize, jjsize, nbvar);
+      total_mem_size += iisize*jjsize*nbvar * 2 * sizeof(real_t);
     } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
-      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nb_dof);
-      total_mem_size += isize*jsize*ksize*nb_dof * 2 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1",iisize, jjsize, kksize, nbvar);
+      U_RK2 = DataArray("U_RK2",iisize, jjsize, kksize, nbvar);
+      total_mem_size += iisize*jjsize*kksize*nbvar * 2 * sizeof(real_t);
     }
     
   } else if (ssprk54_enabled) {
 
     if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, nb_dof);
-      U_RK2 = DataArray("U_RK2",isize, jsize, nb_dof);
-      U_RK3 = DataArray("U_RK3",isize, jsize, nb_dof);
-      U_RK4 = DataArray("U_RK4",isize, jsize, nb_dof);
-      total_mem_size += isize*jsize*nb_dof * 4 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1", iisize, jjsize, nbvar);
+      U_RK2 = DataArray("U_RK2", iisize, jjsize, nbvar);
+      U_RK3 = DataArray("U_RK3", iisize, jjsize, nbvar);
+      U_RK4 = DataArray("U_RK4", iisize, jjsize, nbvar);
+      total_mem_size += iisize*jjsize*nbvar * 4 * sizeof(real_t);
     } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
-      U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nb_dof);
-      U_RK3 = DataArray("U_RK3",isize, jsize, ksize, nb_dof);
-      U_RK4 = DataArray("U_RK4",isize, jsize, ksize, nb_dof);
-      total_mem_size += isize*jsize*ksize*nb_dof * 4 * sizeof(real_t);
+      U_RK1 = DataArray("U_RK1", iisize, jjsize, kksize, nbvar);
+      U_RK2 = DataArray("U_RK2", iisize, jjsize, kksize, nbvar);
+      U_RK3 = DataArray("U_RK3", iisize, jjsize, kksize, nbvar);
+      U_RK4 = DataArray("U_RK4", iisize, jjsize, kksize, nbvar);
+      total_mem_size += iisize*jjsize*kksize*nbvar * 4 * sizeof(real_t);
     }
     
   }
@@ -535,27 +557,29 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     
     // memory allocation to store velocity gradients at solution points
     if (dim==2) {
-      Ugradx_v   = DataArray("Ugradx_v"    ,isize,jsize,nb_components);
-      Ugrady_v   = DataArray("Ugrady_v"    ,isize,jsize,nb_components);
-      total_mem_size += isize*jsize*nb_components * 2 * sizeof(real_t);
+      Ugradx_v   = DataArray("Ugradx_v"    ,iisize,jjsize,dim);
+      Ugrady_v   = DataArray("Ugrady_v"    ,iisize,jjsize,dim);
+      total_mem_size += iisize*jjsize*dim * 2 * sizeof(real_t);
     } else if (dim==3) {
-      Ugradx_v   = DataArray("Ugradx_v"    ,isize,jsize,ksize,nb_components);
-      Ugrady_v   = DataArray("Ugrady_v"    ,isize,jsize,ksize,nb_components);
-      Ugradz_v   = DataArray("Ugradz_v"    ,isize,jsize,ksize,nb_components);
-      total_mem_size += isize*jsize*ksize*nb_components * 3 * sizeof(real_t);
+      Ugradx_v   = DataArray("Ugradx_v"    ,iisize,jjsize,kksize,dim);
+      Ugrady_v   = DataArray("Ugrady_v"    ,iisize,jjsize,kksize,dim);
+      Ugradz_v   = DataArray("Ugradz_v"    ,iisize,jjsize,kksize,dim);
+      total_mem_size += iisize*jjsize*kksize*dim * 3 * sizeof(real_t);
     }
 
     // number of flux points, as used to address array FUgrad
-    int nb_flux_pts = dim==2 ? (N+1)*N : (N+1)*N*N;
+    //int nb_flux_pts = dim==2 ? (N+1)*N : (N+1)*N*N;
 
-    // number of components to address FUgrad : dim for velocity + dim*dim for velocity gradients (tensor)
-    int nb_components_FUgrad = dim + dim*dim; // that is 6 in 2D and 12 in 3D
+    // number of components to address FUgrad :
+    // dim for velocity + dim*dim for velocity gradients (tensor)
+    // that is 6 in 2D and 12 in 3D
+    int nb_components_FUgrad = dim + dim*dim;
 
     // memory allocation for FUgrad
     if (dim==2)
-      FUgrad = DataArray("FUgrad", isize, jsize,        nb_flux_pts*nb_components_FUgrad);
+      FUgrad = DataArray("FUgrad", isize*(N+1), jjsize, nb_components_FUgrad);
     else
-      FUgrad = DataArray("FUgrad", isize, jsize, ksize, nb_flux_pts*nb_components_FUgrad);
+      FUgrad = DataArray("FUgrad", isize*(N+1), jjsize, kksize, nb_components_FUgrad);
     
   }
   
@@ -571,14 +595,14 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     
     // memory allocation to store cell-averaged gradient components
     if (dim==2) {
-      Ugradx   = DataArray("Ugradx"    ,isize,jsize,params.nbvar);
-      Ugrady   = DataArray("Ugrady"    ,isize,jsize,params.nbvar);
-      total_mem_size += isize*jsize*params.nbvar * 2 * sizeof(real_t);
+      Ugradx   = DataArray("Ugradx"    ,isize,jsize,nbvar);
+      Ugrady   = DataArray("Ugrady"    ,isize,jsize,nbvar);
+      total_mem_size += isize*jsize*nbvar * 2 * sizeof(real_t);
     } else if (dim==3) {
-      Ugradx   = DataArray("Ugradx"    ,isize,jsize,ksize,params.nbvar);
-      Ugrady   = DataArray("Ugrady"    ,isize,jsize,ksize,params.nbvar);
-      Ugradz   = DataArray("Ugradz"    ,isize,jsize,ksize,params.nbvar);
-      total_mem_size += isize*jsize*ksize*params.nbvar * 3 * sizeof(real_t);
+      Ugradx   = DataArray("Ugradx"    ,isize,jsize,ksize,nbvar);
+      Ugrady   = DataArray("Ugrady"    ,isize,jsize,ksize,nbvar);
+      Ugradz   = DataArray("Ugradz"    ,isize,jsize,ksize,nbvar);
+      total_mem_size += isize*jsize*ksize*nbvar * 3 * sizeof(real_t);
     }
 
   }
@@ -595,11 +619,11 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (positivity_enabled or limiter_enabled) {
 
     if (dim==2) {
-      Uaverage = DataArray("Uaverage",isize,jsize,params.nbvar);
-      total_mem_size += isize*jsize*params.nbvar * 1 * sizeof(real_t);
+      Uaverage = DataArray("Uaverage",isize,jsize,nbvar);
+      total_mem_size += isize*jsize*nbvar * 1 * sizeof(real_t);
     } else if (dim==3) {
-      Uaverage = DataArray("Uaverage",isize,jsize,ksize,params.nbvar);
-      total_mem_size += isize*jsize*ksize*params.nbvar * 1 * sizeof(real_t);
+      Uaverage = DataArray("Uaverage",isize,jsize,ksize,nbvar);
+      total_mem_size += isize*jsize*ksize*nbvar * 1 * sizeof(real_t);
     }
     
   }
@@ -808,7 +832,7 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   			      ComputeDt_Functor_3d<N>>::type;
   
   // call device functor
-  invDt = ComputeDtFunctor::apply(params, sdm_geom, euler, Udata, nbCells);
+  invDt = ComputeDtFunctor::apply(params, sdm_geom, euler, Udata, nbDofs);
     
   dt = params.settings.cfl/invDt;
 
@@ -1809,7 +1833,7 @@ void SolverHydroSDM<dim,N>::init_implode(DataArray Udata)
 
   ImplodeParams iParams = ImplodeParams(configMap);
 
-  InitImplodeFunctor<dim,N>::apply(params, sdm_geom, iParams, Udata, nbCells);
+  InitImplodeFunctor<dim,N>::apply(params, sdm_geom, iParams, Udata, nbDofs);
 } // init_implode
 
 // =======================================================

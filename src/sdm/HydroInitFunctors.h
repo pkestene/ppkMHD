@@ -51,10 +51,10 @@ public:
                     SDM_Geometry<dim,N> sdm_geom,
                     ImplodeParams       iparams,
                     DataArray           Udata,
-                    int                 nbCells)
+                    int                 nbDofs)
   {
     InitImplodeFunctor functor(params, sdm_geom, iparams, Udata);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(nbDofs, functor);
   }
 
   /*
@@ -104,41 +104,43 @@ public:
     const real_t u_in    = this->iparams.u_in;
     const real_t v_in    = this->iparams.v_in;
 
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
     // local cell index
     int i,j;
-    index2coord(index,i,j,isize,jsize);
 
-    // loop over cell DoF's
-    for (int idy=0; idy<N; ++idy) {
-      for (int idx=0; idx<N; ++idx) {
+    // Dof index for flux
+    int idx,idy;
 
-	// lower left corner
-	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
-
-	x += this->sdm_geom.solution_pts_1d(idx) * dx;
-	y += this->sdm_geom.solution_pts_1d(idy) * dy;
+    // mapping thread to solution Dof
+    global2local(ii,jj, i,j,idx,idy, N);
+    
+    // lower left corner
+    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+    
+    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	
-	bool tmp;
-	if (this->iparams.shape == 1)
-	  tmp = x+y*y > 0.5 && x+y*y < 1.5;
-	else
-	  tmp = x+y > (xmin+xmax)/2. + ymin;
-	
-	if (tmp) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho_out;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p_out/(gamma0-1.0) + 0.5 * rho_out * (u_out*u_out + v_out*v_out);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = u_out;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = v_out;
-	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho_in;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p_in/(gamma0-1.0) + 0.5 * rho_in * (u_in*u_in + v_in*v_in);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = u_in;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = v_in;
-	}
-	
-      } // end for idx
-    } // end for idy
+    bool tmp;
+    if (this->iparams.shape == 1)
+      tmp = x+y*y > 0.5 and x+y*y < 1.5;
+    else
+      tmp = x+y > (xmin+xmax)/2. + ymin;
+    
+    if (tmp) {
+      Udata(ii  ,jj  , ID) = rho_out;
+      Udata(ii  ,jj  , IE) = p_out/(gamma0-1.0) + 0.5 * rho_out * (u_out*u_out + v_out*v_out);
+      Udata(ii  ,jj  , IU) = u_out;
+      Udata(ii  ,jj  , IV) = v_out;
+    } else {
+      Udata(ii  ,jj  , ID) = rho_in;
+      Udata(ii  ,jj  , IE) = p_in/(gamma0-1.0) + 0.5 * rho_in * (u_in*u_in + v_in*v_in);
+      Udata(ii  ,jj  , IU) = u_in;
+      Udata(ii  ,jj  , IV) = v_in;
+    }
     
   } // end operator () - 2d
 
@@ -198,49 +200,49 @@ public:
     const real_t v_in    = this->iparams.v_in;
     const real_t w_in    = this->iparams.w_in;
 
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+
     // local cell index
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
 
-    // loop over cell DoF's
-    for (int idz=0; idz<N; ++idz) {
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
-	  
-	  // lower left corner
-	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
-	  real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
+    // Dof index for flux
+    int idx,idy,idz;
 
-	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
-	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
+    // mapping thread to solution Dof
+    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
 	  
-	  bool tmp;
-	  if (this->iparams.shape == 1)
-	    tmp = x+y+z > 0.5 && x+y+z < 2.5;
-	  else
-	    tmp = x+y+z > (xmin+xmax)/2. + ymin + zmin;
-	  
-	  if (tmp) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho_out;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p_out/(gamma0-1.0) + 0.5 * rho_out *
+    // lower left corner
+    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
+    
+    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;
+    z += this->sdm_geom.solution_pts_1d(idz) * dz;
+    
+    bool tmp;
+    if (this->iparams.shape == 1)
+      tmp = x+y+z > 0.5 and x+y+z < 2.5;
+    else
+      tmp = x+y+z > (xmin+xmax)/2. + ymin + zmin;
+    
+    if (tmp) {
+      Udata(ii,jj,kk, ID) = rho_out;
+      Udata(ii,jj,kk, IE) = p_out/(gamma0-1.0) + 0.5 * rho_out *
 	(u_out*u_out + v_out*v_out + w_out*w_out);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = u_out;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = v_out;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = w_out;
-	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho_in;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p_in/(gamma0-1.0) + 0.5 * rho_in *
+      Udata(ii,jj,kk, IU) = u_out;
+      Udata(ii,jj,kk, IV) = v_out;
+      Udata(ii,jj,kk, IW) = w_out;
+    } else {
+      Udata(ii,jj,kk, ID) = rho_in;
+      Udata(ii,jj,kk, IE) = p_in/(gamma0-1.0) + 0.5 * rho_in *
 	(u_in*u_in + v_in*v_in + w_in*w_in);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = u_in;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = v_in;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = w_in;
-	  }
-	  
-	} // end for idx
-      } // end for idy
-    } // end for idz
+      Udata(ii,jj,kk, IU) = u_in;
+      Udata(ii,jj,kk, IV) = v_in;
+      Udata(ii,jj,kk, IW) = w_in;
+    }
     
   } // end operator () - 3d
   

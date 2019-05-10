@@ -32,7 +32,11 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
   int nbCells = dim==2 ?
     solver.params.isize * solver.params.jsize :
     solver.params.isize * solver.params.jsize * solver.params.ksize;
-  
+
+  int nbDofs = dim==2 ?
+    nbCells * N * N :
+    nbCells * N * N * N;
+
   real_t invDt = 0.0;
 
   // alias to the computational functor, dimension dependend
@@ -44,7 +48,7 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
                                   solver.sdm_geom,
                                   euler,
                                   solver.U,
-                                  nbCells);  
+                                  nbDofs);  
   
   real_t dt = solver.params.settings.cfl/invDt;
   printf("dt = %f (invDt = %f)\n", dt,invDt);

@@ -230,11 +230,11 @@ public:
                       SDM_Geometry<2,N>         sdm_geom,
                       ppkMHD::EulerEquations<2> euler,
                       DataArray                 Udata,
-                      int                       nbCells)
+                      int                       nbDofs)
   {
     real_t invDt = 0;
     ComputeDt_Functor_2d<N> functor(params, sdm_geom, euler, Udata);
-    Kokkos::parallel_reduce(nbCells, functor, invDt);
+    Kokkos::parallel_reduce(nbDofs, functor, invDt);
     return invDt;
   }
 
@@ -273,40 +273,44 @@ public:
     const real_t dx = this->params.dx/N;
     const real_t dy = this->params.dy/N;
 
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
     // local cell index
     int i,j;
-    index2coord(index,i,j,isize,jsize);
 
-    if(j >= ghostWidth && j < jsize - ghostWidth &&
-       i >= ghostWidth && i < isize - ghostWidth) {
+    // Dof index for flux
+    int idx,idy;
+
+    // mapping thread to solution Dof
+    global2local(ii,jj, i,j,idx,idy, N);
+
+    if(j >= ghostWidth and j < jsize - ghostWidth and
+       i >= ghostWidth and i < isize - ghostWidth) {
 
       HydroState uLoc; // conservative    variables in current cell
       HydroState qLoc; // primitive       variables in current cell
       real_t c=0.0;
       real_t vx, vy;
 
-      // loop over current cell DoF solution points
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
+      // get local conservative variable
+      uLoc[ID] = Udata(ii,jj, ID);
+      uLoc[IE] = Udata(ii,jj, IE);
+      uLoc[IU] = Udata(ii,jj, IU);
+      uLoc[IV] = Udata(ii,jj, IV);
 
-	  // get local conservative variable
-	  uLoc[ID] = Udata(i,j, dofMap(idx,idy,0,ID));
-	  uLoc[IE] = Udata(i,j, dofMap(idx,idy,0,IE));
-	  uLoc[IU] = Udata(i,j, dofMap(idx,idy,0,IU));
-	  uLoc[IV] = Udata(i,j, dofMap(idx,idy,0,IV));
+      printf("compute dt : %d %d %f %f %f %f\n",ii,jj,uLoc[ID],uLoc[IE],uLoc[IU],uLoc[IV]);
 
-	  // get primitive variables in current cell
-	  euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
-
-	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
-	  
-	  vx = c+FABS(qLoc[IU]);
-	  vy = c+FABS(qLoc[IV]);
-	  
-	  invDt = FMAX(invDt, vx/dx + vy/dy);
-	  
-	} // end for idx
-      } // end for idy
+      // get primitive variables in current cell
+      euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
+      
+      c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
+      
+      vx = c+FABS(qLoc[IU]);
+      vy = c+FABS(qLoc[IV]);
+      
+      invDt = FMAX(invDt, vx/dx + vy/dy);
       
     } // end guard - ghostcells
 
@@ -362,11 +366,11 @@ public:
                       SDM_Geometry<3,N>         sdm_geom,
                       ppkMHD::EulerEquations<3> euler,
                       DataArray                 Udata,
-                      int                       nbCells)
+                      int                       nbDofs)
   {
     real_t invDt = 0;
     ComputeDt_Functor_3d<N> functor(params, sdm_geom, euler, Udata);
-    Kokkos::parallel_reduce(nbCells, functor, invDt);
+    Kokkos::parallel_reduce(nbDofs, functor, invDt);
     return invDt;
   }
 
@@ -408,45 +412,45 @@ public:
     const real_t dy = this->params.dy/N;
     const real_t dz = this->params.dz/N;
     
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+
     // local cell index
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
 
-    if(k >= ghostWidth && k < ksize - ghostWidth &&
-       j >= ghostWidth && j < jsize - ghostWidth &&
-       i >= ghostWidth && i < isize - ghostWidth) {
+    // Dof index for flux
+    int idx,idy,idz;
+
+    // mapping thread to solution Dof
+    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+
+    if(k >= ghostWidth and k < ksize - ghostWidth and
+       j >= ghostWidth and j < jsize - ghostWidth and
+       i >= ghostWidth and i < isize - ghostWidth) {
       
       HydroState uLoc; // conservative    variables in current cell
       HydroState qLoc; // primitive       variables in current cell
       real_t c=0.0;
       real_t vx, vy, vz;
       
-      // loop over current cell DoF solution points
-      for (int idz=0; idz<N; ++idz) {
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
-	  
-	    // get local conservative variable
-	    uLoc[ID] = Udata(i,j,k, dofMap(idx,idy,idz,ID));
-	    uLoc[IE] = Udata(i,j,k, dofMap(idx,idy,idz,IE));
-	    uLoc[IU] = Udata(i,j,k, dofMap(idx,idy,idz,IU));
-	    uLoc[IV] = Udata(i,j,k, dofMap(idx,idy,idz,IV));
-	    uLoc[IW] = Udata(i,j,k, dofMap(idx,idy,idz,IW));
-	    
-	    // get primitive variables in current cell
-	    euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
-	    
-	    c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
-	    
-	    vx = c+FABS(qLoc[IU]);
-	    vy = c+FABS(qLoc[IV]);
-	    vz = c+FABS(qLoc[IW]);
-	    
-	    invDt = FMAX(invDt, vx/dx + vy/dy + vz/dz);
-	    
-	  } // end for idx
-	} // end for idy
-      } // end for idz
+      // get local conservative variable
+      uLoc[ID] = Udata(ii,jj,kk, ID);
+      uLoc[IE] = Udata(ii,jj,kk, IE);
+      uLoc[IU] = Udata(ii,jj,kk, IU);
+      uLoc[IV] = Udata(ii,jj,kk, IV);
+      uLoc[IW] = Udata(ii,jj,kk, IW);
+      
+      // get primitive variables in current cell
+      euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
+      
+      c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
+      
+      vx = c+FABS(qLoc[IU]);
+      vy = c+FABS(qLoc[IV]);
+      vz = c+FABS(qLoc[IW]);
+      
+      invDt = FMAX(invDt, vx/dx + vy/dy + vz/dz);
       
     } // end guard - ghostcells
     
