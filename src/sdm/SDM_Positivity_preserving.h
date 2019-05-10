@@ -1016,13 +1016,17 @@ public:
 
     // compute rho_min over the flux points along X
     for (int idy=0; idy<N; ++idy) {
+      jj = idy + j*N;
 
       // vector of values at solution points
       solution_values_t sol;
       flux_values_t     flux;
 
-      for (int idx=0; idx<N; ++idx)
-	sol[idx] = UdataSol(i,j, dofMapS(idx,idy,0,ID));
+      for (int idx = 0; idx < N; ++idx) {
+        ii = idx + i*N;
+
+        sol[idx] = UdataSol(ii, jj, ID);
+      }
 
       // interpolate at flux points for this given variable
       this->sol2flux_vector(sol, flux);
@@ -1036,13 +1040,16 @@ public:
 
     // do the same along Y axis
     for (int idx=0; idx<N; ++idx) {
+      ii = idx + i*N;
 
       // vector of values at solution points
       solution_values_t sol;
       flux_values_t     flux;
 
-      for (int idy=0; idy<N; ++idy)
-	sol[idy] = UdataSol(i,j, dofMapS(idx,idy,0,ID));
+      for (int idy = 0; idy < N; ++idy) {
+        jj = idy + j*N;
+        sol[idy] = UdataSol(ii, jj, ID);
+      }
 
       // interpolate at flux points for this given variable
       this->sol2flux_vector(sol, flux);
@@ -1068,13 +1075,16 @@ public:
 	
       // sweep solution points
       for (int idy=0; idy<N; ++idy) {
+        jj = idy + j*N;
+
 	for (int idx=0; idx<N; ++idx) {
+          ii = idx + i*N;
 	  
-	  const real_t rho = UdataSol(i,j,dofMapS(idx,idy,0,ID));
+	  const real_t rho = UdataSol(ii,jj,ID);
 	  const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 
 	  // modify density at solution point
-	  UdataSol(i,j,dofMapS(idx,idy,0,ID)) = rho_new;
+	  UdataSol(ii,jj,ID) = rho_new;
 	  
 	} // end for idx
       } // end for idy
@@ -1106,22 +1116,31 @@ public:
 
       // along X-axis
       for (int idy=0; idy<N; ++idy) {
+        jj = idy + j*N;
 
 	// recompute (interpolate) conservative variables at flux points
-	for (int idx=0; idx<N; ++idx)
-	  sol[idx] = UdataSol(i,j, dofMapS(idx,idy,0,ID));
+        for (int idx = 0; idx < N; ++idx) {
+          ii = idx + i * N;
+          sol[idx] = UdataSol(ii, jj, ID);
+        }
         this->sol2flux_vector(sol, flux_id);
 
-	for (int idx=0; idx<N; ++idx)
-	  sol[idx] = UdataSol(i,j, dofMapS(idx,idy,0,IE));
+        for (int idx = 0; idx < N; ++idx) {
+          ii = idx + i * N;
+          sol[idx] = UdataSol(ii, jj, IE);
+        }
         this->sol2flux_vector(sol, flux_ie);
 
-	for (int idx=0; idx<N; ++idx)
-	  sol[idx] = UdataSol(i,j, dofMapS(idx,idy,0,IU));
+        for (int idx = 0; idx < N; ++idx) {
+          ii = idx + i * N;
+          sol[idx] = UdataSol(ii, jj, IU);
+        }
         this->sol2flux_vector(sol, flux_iu);
 
-	for (int idx=0; idx<N; ++idx)
-	  sol[idx] = UdataSol(i,j, dofMapS(idx,idy,0,IV));
+        for (int idx = 0; idx < N; ++idx) {
+          ii = idx + i * N;
+          sol[idx] = UdataSol(ii, jj, IV);
+        }
         this->sol2flux_vector(sol, flux_iv);
 
 	for (int idx=0; idx<N+1; ++idx) {
@@ -1185,22 +1204,31 @@ public:
     
       // along Y-axis
       for (int idx=0; idx<N; ++idx) {
+        ii = idx + i * N;
 
 	// recompute (interpolate) conservative variables at flux points
-	for (int idy=0; idy<N; ++idy)
-	  sol[idy] = UdataSol(i,j, dofMapS(idx,idy,0,ID));
+        for (int idy = 0; idy < N; ++idy) {
+          jj = idy + j * N;
+          sol[idy] = UdataSol(ii, jj, ID);
+        }
         this->sol2flux_vector(sol, flux_id);
 
-	for (int idy=0; idy<N; ++idy)
-	  sol[idy] = UdataSol(i,j, dofMapS(idx,idy,0,IE));
+        for (int idy = 0; idy < N; ++idy) {
+          jj = idy + j * N;
+          sol[idy] = UdataSol(ii, jj, IE);
+        }
         this->sol2flux_vector(sol, flux_ie);
 
-	for (int idy=0; idy<N; ++idy)
-	  sol[idy] = UdataSol(i,j, dofMapS(idx,idy,0,IU));
+        for (int idy = 0; idy < N; ++idy) {
+          jj = idy + j * N;
+          sol[idy] = UdataSol(ii, jj, IU);
+        }
         this->sol2flux_vector(sol, flux_iu);
 
-	for (int idy=0; idy<N; ++idy)
-	  sol[idy] = UdataSol(i,j, dofMapS(idx,idy,0,IV));
+        for (int idy = 0; idy < N; ++idy) {
+          jj = idy + j * N;
+          sol[idy] = UdataSol(ii, jj, IV);
+        }
         this->sol2flux_vector(sol, flux_iv);
 
 	for (int idy=0; idy<N+1; ++idy) {
@@ -1266,25 +1294,28 @@ public:
 	
 	// we need to modify the values at solution points:
 	for (int idy=0; idy<N; ++idy) {
+          jj = idy + j*N;
+
 	  for (int idx=0; idx<N; ++idx) {
-	    
+            ii = idx + i*N;
+  
 	    real_t val;
 	    
-	    val = UdataSol(i,j,dofMapS(idx,idy,0,ID));
+	    val = UdataSol(ii,jj,ID);
 	    val = theta2 * ( val - rho_ave ) + rho_ave;
-	    UdataSol(i,j,dofMapS(idx,idy,0,ID)) = val;
+	    UdataSol(ii,jj,ID) = val;
 	    
-	    val = UdataSol(i,j,dofMapS(idx,idy,0,IE));
+	    val = UdataSol(ii,jj,IE);
 	    val = theta2 * ( val - e_ave ) + e_ave;
-	    UdataSol(i,j,dofMapS(idx,idy,0,IE)) = val;
+	    UdataSol(ii,jj,IE) = val;
 	    
-	    val = UdataSol(i,j,dofMapS(idx,idy,0,IU));
+	    val = UdataSol(ii,jj,IU);
 	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
-	    UdataSol(i,j,dofMapS(idx,idy,0,IU)) = val;
+	    UdataSol(ii,jj,IU) = val;
 	    
-	    val = UdataSol(i,j,dofMapS(idx,idy,0,IV));
+	    val = UdataSol(ii,jj,IV);
 	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
-	    UdataSol(i,j,dofMapS(idx,idy,0,IV)) = val;
+	    UdataSol(ii,jj,IV) = val;
 	    
 	  } // end for idx
 	} // end for idy
