@@ -146,7 +146,7 @@ public:
 
     // compute rho_min over the flux points
     for (int idy=0; idy<idy_flux_end; ++idy) {
-      jj = (dir == IX) ? idy+jsize*N : idy+jsize*(N+1);
+      jj = (dir == IY) ? idy+jsize*(N+1) : idy+jsize*N;
 
       for (int idx=0; idx<idx_flux_end; ++idx) {
         ii = (dir == IX) ? idx+isize*(N+1) : idx+isize*N;
@@ -172,9 +172,10 @@ public:
 	
 	// sweep solution points
 	for (int idy=0; idy<N; ++idy) {
-          jj = idy+jsize*N;
+          jj = idy + jsize*N;
+
 	  for (int idx=0; idx<N; ++idx) {
-            ii = idx+isize*N;
+            ii = idx + isize*N;
 	    
 	    const real_t rho = UdataSol(ii,jj,ID);
 	    const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
@@ -192,9 +193,10 @@ public:
 	  
 	  // copy back interpolated value in Fluxes data array
 	  for (int idx=0; idx<N+1; ++idx) {
-	    
+	    ii = idx+isize*(N+1);
+
 	    // modify density at flux point
-	    UdataFlux(idx+isize*(N+1), idy+jsize*N, ID) = flux[idx];
+	    UdataFlux(ii, jj, ID) = flux[idx];
 	    
 	  } // end for idx
 	} // end for idy
@@ -203,10 +205,10 @@ public:
 
 	// sweep solution points
 	for (int idx=0; idx<N; ++idx) {
-          ii = idx+isize*N;
+          ii = idx + isize*N;
 
 	  for (int idy=0; idy<N; ++idy) {
-            jj = idy+jsize*N;
+            jj = idy + jsize*N;
           
 	    const real_t rho = UdataSol(ii,jj,ID);
 	    const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
@@ -223,8 +225,9 @@ public:
 	  
 	  // copy back interpolated value in Fluxes data array
 	  for (int idy=0; idy<N+1; ++idy) {
-	    
-	    UdataFlux(idx+isize*N, idy+jsize*(N+1), ID) = flux[idy];
+            jj = idy + jsize*(N+1);
+
+	    UdataFlux(ii, jj, ID) = flux[idy];
 	    
 	  } // end for idy
 	} // end for idx	
@@ -252,7 +255,7 @@ public:
     
     // sweep flux points to find minimal theta2
     for (int idy=0; idy<idy_flux_end; ++idy) {
-      jj = (dir == IX) ? idy+jsize*N : idy+jsize*(N+1);
+      jj = (dir == IY) ? idy+jsize*(N+1) : idy+jsize*N;
 
       for (int idx=0; idx<idx_flux_end; ++idx) {
         ii = (dir == IX) ? idx+isize*(N+1) : idx+isize*N;
@@ -460,6 +463,9 @@ public:
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
+    // global index
+    int ii, jj, kk;
+
     int idx_flux_end = N+1;
     int idy_flux_end = N;
     int idz_flux_end = N;
@@ -502,11 +508,16 @@ public:
 
     // compute rho_min over the flux points
     for (int idz=0; idz<idz_flux_end; ++idz) {
+      kk = (dir == IZ) ? idz+ksize*(N+1) : idz+ksize*N;
+
       for (int idy=0; idy<idy_flux_end; ++idy) {
-	for (int idx=0; idx<idx_flux_end; ++idx) {
-	  
-	  const real_t rho = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ID));
-	  rho_min = rho_min < rho ? rho_min : rho;
+        jj = (dir == IY) ? idy+jsize*(N+1) : idy+jsize*N;
+
+          for (int idx=0; idx<idx_flux_end; ++idx) {
+            ii = (dir == IX) ? idx+isize*(N+1) : idx+isize*N;
+
+            const real_t rho = UdataFlux(ii,jj,kk,ID);
+            rho_min = rho_min < rho ? rho_min : rho;
 	  
 	} // end for idx
       } // end for idy
@@ -527,15 +538,19 @@ public:
 	
 	// sweep solution points
 	for (int idz=0; idz<N; ++idz) {
+          kk = idz + ksize*N;
+                    
 	  for (int idy=0; idy<N; ++idy) {
-
+            jj = idy + jsize*N;
+            
 	    for (int idx=0; idx<N; ++idx) {
+              ii = idx + isize*N;
 	    
-	      const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
+	      const real_t rho = UdataSol(ii,jj,kk,ID);
 	      const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 
 	      // modify density at solution point
-	      UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
+	      UdataSol(ii,jj,kk,ID) = rho_new;
 	      
 	      // prepare vector to recompute density at flux points
 	      sol[idx] = rho_new;
@@ -547,9 +562,10 @@ public:
 	    
 	    // copy back interpolated value in Fluxes data array
 	    for (int idx=0; idx<N+1; ++idx) {
-	      
+              ii = idx + isize*(N+1);
+
 	      // modify density at flux point
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID)) = flux[idx];
+	      UdataFlux(ii,jj,kk, ID) = flux[idx];
 	      
 	    } // end for idx
 	    
@@ -560,14 +576,18 @@ public:
 
 	// sweep solution points
 	for (int idz=0; idz<N; ++idz) {
-	  for (int idx=0; idx<N; ++idx) {
-	    
+          kk = idz + ksize*N;
+
+          for (int idx=0; idx<N; ++idx) {
+            ii = idx + isize*N;
+  
 	    for (int idy=0; idy<N; ++idy) {
-	      
-	      const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
+              jj = idy + jsize*N;
+
+	      const real_t rho = UdataSol(ii,jj,kk,ID);
 	      const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 	      
-	      UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
+	      UdataSol(ii,jj,kk,ID) = rho_new;
 	      
 	      // prepare vector to recompute density at flux points
 	      sol[idy] = rho_new;
@@ -579,8 +599,9 @@ public:
 	    
 	    // copy back interpolated value in Fluxes data array
 	    for (int idy=0; idy<N+1; ++idy) {
-	      
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID)) = flux[idy];
+              jj = idy + jsize*(N+1);
+
+	      UdataFlux(ii,jj,kk, ID) = flux[idy];
 	      
 	    } // end for idy
 	    
@@ -591,14 +612,18 @@ public:
 
 	// sweep solution points
 	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
-	    
+          jj = idy + jsize*N;
+          
+          for (int idx=0; idx<N; ++idx) {
+	    ii = idx + isize*N;
+
 	    for (int idz=0; idz<N; ++idz) {
-	      
-	      const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
+              kk = idz + ksize*N;
+
+	      const real_t rho = UdataSol(ii,jj,kk,ID);
 	      const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 	      
-	      UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
+	      UdataSol(ii,jj,kk,ID) = rho_new;
 	      
 	      // prepare vector to recompute density at flux points
 	      sol[idz] = rho_new;
@@ -610,8 +635,9 @@ public:
 	    
 	    // copy back interpolated value in Fluxes data array
 	    for (int idz=0; idz<N+1; ++idz) {
-	      
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID)) = flux[idz];
+	      kk = idz + ksize*(N+1);
+              
+	      UdataFlux(ii,jj,kk, ID) = flux[idz];
 	      
 	    } // end for idz
 	    
@@ -640,14 +666,19 @@ public:
     
     // sweep flux points to find minimal theta2
     for (int idz=0; idz<idz_flux_end; ++idz) {
+      kk = (dir == IZ) ? idz+ksize*(N+1) : idz+ksize*N;
+
       for (int idy=0; idy<idy_flux_end; ++idy) {
+        jj = (dir == IY) ? idy+jsize*(N+1) : idy+jsize*N;
+
 	for (int idx=0; idx<idx_flux_end; ++idx) {
-	  
-	  const real_t E    = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IE));
-	  const real_t rhou = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IU));
-	  const real_t rhov = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IV));
-	  const real_t rhow = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IW));
-	  const real_t rho  = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID));
+          ii = (dir == IX) ? idx+isize*(N+1) : idx+isize*N;
+  
+	  const real_t E    = UdataFlux(ii,jj,kk, IE);
+	  const real_t rhou = UdataFlux(ii,jj,kk, IU);
+	  const real_t rhov = UdataFlux(ii,jj,kk, IV);
+	  const real_t rhow = UdataFlux(ii,jj,kk, IW);
+	  const real_t rho  = UdataFlux(ii,jj,kk, ID);
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
 						     rhov*rhov+
 						     rhow*rhow)/rho);
@@ -715,30 +746,35 @@ public:
       
       // we need to modify the values at solution points:
       for (int idz=0; idz<N; ++idz) {
+        kk = idz + ksize*N;
+
 	for (int idy=0; idy<N; ++idy) {
+          jj = idy + jsize*N;
+
 	  for (int idx=0; idx<N; ++idx) {
+            ii = idx + isize*N;
 	    
 	    real_t val;
 	    
-	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
-	    val = theta2 * ( val - rho_ave ) + rho_ave;
-	    UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = val;
+	    val = UdataSol(ii,jj,kk,ID);
+	    val = theta2 * ( val - rho_ave )  + rho_ave;
+	    UdataSol(ii,jj,kk,ID) = val;
 	    
-	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IE));
-	    val = theta2 * ( val - e_ave ) + e_ave;
-	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IE)) = val;
+	    val = UdataSol(ii,jj,kk,IE);
+	    val = theta2 * ( val - e_ave )    + e_ave;
+	    UdataSol(ii,jj,kk,IE) = val;
 	    
-	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IU));
+	    val = UdataSol(ii,jj,kk,IU);
 	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
-	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IU)) = val;
+	    UdataSol(ii,jj,kk,IU) = val;
 	    
-	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IV));
+	    val = UdataSol(ii,jj,kk,IV);
 	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
-	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IV)) = val;
+	    UdataSol(ii,jj,kk,IV) = val;
 	    
-	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IW));
+	    val = UdataSol(ii,jj,kk,IW);
 	    val = theta2 * ( val - rhow_ave ) + rhow_ave;
-	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IW)) = val;
+	    UdataSol(ii,jj,kk,IW) = val;
 	    
 	  } // end for idx
 	} // end for idy
@@ -756,15 +792,19 @@ public:
 	if (dir == IX) {
 	  
 	  for (int idz=0; idz<N; ++idz) {
+            kk = idz + ksize*N;
+
 	    for (int idy=0; idy<N; ++idy) {
-	      
+              jj = idy + jsize*N;
+
 	      // for each variables
 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
 		
 		// get solution values vector along X direction
 		for (int idx=0; idx<N; ++idx) {
-		  
-		  sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
+                  ii = idx + isize*N;
+
+		  sol[idx] = UdataSol(ii,jj,kk, ivar);
 		  
 		}
 		
@@ -773,8 +813,9 @@ public:
 				
 		// copy back interpolated value
 		for (int idx=0; idx<N+1; ++idx) {
-		  
-		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idx];
+                  ii = idx + isize*(N+1);
+
+		  UdataFlux(ii,jj,kk, ivar) = flux[idx];
 		  
 		} // end for idx
 		
@@ -789,15 +830,19 @@ public:
 	if (dir == IY) {
 	  
 	  for (int idz=0; idz<N; ++idz) {
-	    for (int idx=0; idx<N; ++idx) {
-	      
+            kk = idz + ksize*N;
+
+            for (int idx=0; idx<N; ++idx) {
+              ii = idx + isize*N;
+      
 	      // for each variables
 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
 		
 		// get solution values vector along Y direction
 		for (int idy=0; idy<N; ++idy) {
-		  
-		  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
+                  jj = idy + jsize*N;
+
+		  sol[idy] = UdataSol(ii,jj,kk, ivar);
 		  
 		}
 		
@@ -806,10 +851,11 @@ public:
 		
 		// copy back interpolated value
 		for (int idy=0; idy<N+1; ++idy) {
+                  jj = idy + jsize*(N+1);
+
+		  UdataFlux(ii,jj,kk, ivar) = flux[idy];
 		  
-		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idy];
-		  
-		}
+		} // end for idy
 		
 	      } // end for ivar
 	      
@@ -822,15 +868,19 @@ public:
 	if (dir == IZ) {
 	  
 	  for (int idy=0; idy<N; ++idy) {
+            jj = idy + jsize*N;
+            
 	    for (int idx=0; idx<N; ++idx) {
+              ii = idx + isize*N;
 	      
 	      // for each variables
 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
+                
 		// get solution values vector along Z direction
 		for (int idz=0; idz<N; ++idz) {
+                  kk = idz + ksize*N;
 		  
-		  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
+		  sol[idz] = UdataSol(ii,jj,kk, ivar);
 		  
 		}
 		
@@ -839,8 +889,9 @@ public:
 		
 		// copy back interpolated value
 		for (int idz=0; idz<N+1; ++idz) {
-		  
-		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idz];
+                  kk = idz + ksize*(N+1);
+  
+		  UdataFlux(ii,jj,kk, ivar) = flux[idz];
 		  
 		} // end for idz
 		
