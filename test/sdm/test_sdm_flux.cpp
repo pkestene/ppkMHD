@@ -63,34 +63,35 @@ public:
      
     const real_t gamma0 = this->params.settings.gamma0;
 
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
     // local cell index
-    int i,j;
-    index2coord(index,i,j,isize,jsize);
+    // int i = ii/N;
+    // int j = jj/N;
 
-    // loop over cell DoF's
-    for (int idy=0; idy<N; ++idy) {
-      for (int idx=0; idx<N; ++idx) {
-	
-	HydroState q, flux;
-	q[ID] = Udata(i  ,j  , dofMap(idx,idy,0,ID));
-	q[IE] = Udata(i  ,j  , dofMap(idx,idy,0,IE));
-	q[IU] = Udata(i  ,j  , dofMap(idx,idy,0,IU));
-	q[IV] = Udata(i  ,j  , dofMap(idx,idy,0,IV));
+    // Dof index
+    //int idx = ii-i*N;
+    //int idy = jj-j*N;
 
-	// compute kineti energy, internal energy and then pressure
-	real_t eken = HALF_F * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
-	real_t e_internal = q[IE] - eken;
-	real_t pressure = (gamma0 - 1.0) * e_internal;
-	
-	eq::flux_x(q,pressure,flux);
-
-	Udata(i  ,j  , dofMap(idx,idy,0,ID)) = flux[ID];
-	Udata(i  ,j  , dofMap(idx,idy,0,IE)) = flux[IE];
-	Udata(i  ,j  , dofMap(idx,idy,0,IU)) = flux[IU];
-	Udata(i  ,j  , dofMap(idx,idy,0,IV)) = flux[IV];
-		
-      } // end for idx
-    } // end for idy
+    HydroState q, flux;
+    q[ID] = Udata(ii,jj  , ID);
+    q[IE] = Udata(ii,jj  , IE);
+    q[IU] = Udata(ii,jj  , IU);
+    q[IV] = Udata(ii,jj  , IV);
+    
+    // compute kineti energy, internal energy and then pressure
+    real_t eken = HALF_F * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
+    real_t e_internal = q[IE] - eken;
+    real_t pressure = (gamma0 - 1.0) * e_internal;
+    
+    eq::flux_x(q,pressure,flux);
+    
+    Udata(ii,jj, ID) = flux[ID];
+    Udata(ii,jj, IE) = flux[IE];
+    Udata(ii,jj, IU) = flux[IU];
+    Udata(ii,jj, IV) = flux[IV];
     
   } // end operator () - 2d
 
@@ -102,6 +103,47 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
   {
+
+    const int isize = this->params.isize;
+    const int jsize = this->params.jsize;
+    const int ksize = this->params.ksize;
+     
+    const real_t gamma0 = this->params.settings.gamma0;
+    
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+
+    // local cell index
+    // int i = ii/N;
+    // int j = jj/N;
+    // int k = kk/N;
+
+    // Dof index
+    //int idx = ii-i*N;
+    //int idy = jj-j*N;
+    //int idz = kk-k*N;
+
+    HydroState q, flux;
+    q[ID] = Udata(ii,jj,kk, ID);
+    q[IE] = Udata(ii,jj,kk, IE);
+    q[IU] = Udata(ii,jj,kk, IU);
+    q[IV] = Udata(ii,jj,kk, IV);
+    q[IW] = Udata(ii,jj,kk, IW);
+    
+    // compute kineti energy, internal energy and then pressure
+    real_t eken = HALF_F * (q[IU]*q[IU] + q[IV]*q[IV] + q[IW]*q[IW]) / q[ID];
+    real_t e_internal = q[IE] - eken;
+    real_t pressure = (gamma0 - 1.0) * e_internal;
+    
+    eq::flux_x(q,pressure,flux);
+    
+    Udata(ii,jj,kk, ID) = flux[ID];
+    Udata(ii,jj,kk, IE) = flux[IE];
+    Udata(ii,jj,kk, IU) = flux[IU];
+    Udata(ii,jj,kk, IV) = flux[IV];
+    Udata(ii,jj,kk, IW) = flux[IW];
+
   } // end operator () - 3d
 
   ppkMHD::EulerEquations<dim> euler;
@@ -167,10 +209,13 @@ void test_sdm_flux(int argc, char* argv[])
   ppkMHD::EulerEquations<dim> euler;
   
   // create test functor
+  std::cout << "Create sdm::TestFluxFunctor<" << dim << "," << N << ">\n";
   sdm::TestFluxFunctor<dim,N> functor(params, sdm_geom, euler, solver.U, solver.Uaux);
-  Kokkos::parallel_for(solver.nbCells, functor);
-  
+  Kokkos::parallel_for(solver.nbDofs, functor);
+
+  std::cout << "Save flux\n";
   solver.save_solution();
+  std::cout << "\n\n";
   
 } // test_sdm_io
 
