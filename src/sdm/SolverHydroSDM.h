@@ -1058,8 +1058,7 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
   Interpolate_At_FluxPoints_Functor<dim,N,dir>::apply(params,
                                                       sdm_geom,
                                                       Udata,
-                                                      Fluxes,
-                                                      nbCells);
+                                                      Fluxes);
   
   // 2. inplace computation of fluxes along direction <dir> at flux points
   ComputeFluxAtFluxPoints_Functor<dim,N,dir>::apply(params,
@@ -1072,8 +1071,7 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
   Interpolate_At_SolutionPoints_Functor<dim,N,dir>::apply(params,
                                                           sdm_geom,
                                                           Fluxes,
-                                                          Udata_fdiv,
-                                                          nbCells);
+                                                          Udata_fdiv);
   
 } // SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir
 

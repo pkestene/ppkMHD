@@ -150,11 +150,10 @@ bool test_lagrange_functor()
   // call the interpolation functors
   {
 
-    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(params,
-							     sdm_geom,
-							     U,
-							     Fluxes);
-    Kokkos::parallel_for(nbDofsFlux, functor);
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY>::apply(params,
+                                                            sdm_geom,
+                                                            U,
+                                                            Fluxes);
 
     io_writer-> template save_flux<IY>(Fluxes,
 				       FluxHost,
@@ -170,11 +169,10 @@ bool test_lagrange_functor()
     sdm::Interpolate_At_SolutionPoints_Functor<dim,
                                                N,
                                                IY,
-                                               interp> functor(params,
-                                                               sdm_geom,
-                                                               Fluxes,
-                                                               U);
-    Kokkos::parallel_for(nbDofs, functor);
+                                               interp>::apply(params,
+                                                              sdm_geom,
+                                                              Fluxes,
+                                                              U);
   }
 
   // compute L1 error between U and U2
@@ -209,7 +207,7 @@ bool test_lagrange_functor()
 
   }
 
-    // compute difference between original data and after sol2flux / flux2sol
+  // compute difference between original data and after sol2flux / flux2sol
   // difference should be zero if original data is polynomial of
   // degree less than N, or just small
   {

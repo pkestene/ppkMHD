@@ -49,12 +49,16 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           UdataSol,
-                    DataArray           UdataFlux,
-                    int                 nbDofs)
+                    DataArray           UdataFlux)
   {
+    int nbDofsPerCellFlux = (dim==2) ? N*(N+1) : N*N*(N+1);
+    int nbDofsFlux = dim==2 ? 
+      nbDofsPerCellFlux*params.isize*params.jsize : 
+      nbDofsPerCellFlux*params.isize*params.jsize*params.ksize;
+
     Interpolate_At_FluxPoints_Functor functor(params, sdm_geom, 
                                               UdataSol, UdataFlux);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for(nbDofsFlux, functor);
   }
   
   // =========================================================
@@ -331,10 +335,14 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           UdataFlux,
-                    DataArray           UdataSol,
-                    int                 nbDofs)
+                    DataArray           UdataSol)
   {
-    Interpolate_At_SolutionPoints_Functor functor(params, sdm_geom, 
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+    
+    Interpolate_At_SolutionPoints_Functor functor(params, sdm_geom,
                                                   UdataFlux, UdataSol);
     Kokkos::parallel_for(nbDofs, functor);
   }
