@@ -27,9 +27,6 @@ class SDM_Erase_Functor : public SDMBaseFunctor<dim,N> {
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
 
-  static constexpr auto dofMap  = DofMap<dim,N>;
-  static constexpr auto dofMapF = DofMapFlux<dim,N,IX>;
-  
   SDM_Erase_Functor(HydroParams         params,
 		    SDM_Geometry<dim,N> sdm_geom,
 		    DataArray           Udata) :
@@ -67,10 +64,10 @@ public:
     int ii,jj;
     index2coord(index,ii,jj,iisize,jjsize);
     
-    Udata(ii,jj, ID) = 0.0;
-    Udata(ii,jj, IP) = 0.0;
-    Udata(ii,jj, IU) = 0.0;
-    Udata(ii,jj, IV) = 0.0;
+    Udata(ii,jj,ID) = 0.0;
+    Udata(ii,jj,IP) = 0.0;
+    Udata(ii,jj,IU) = 0.0;
+    Udata(ii,jj,IV) = 0.0;
     
   } // end operator () - 2d
 
@@ -118,8 +115,6 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
   
-  static constexpr auto dofMap = DofMap<dim,N>;
-
   SDM_Update_Functor(HydroParams         params,
 		     SDM_Geometry<dim,N> sdm_geom,
 		     DataArray           Udata,
@@ -128,7 +123,11 @@ public:
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Udata(Udata),
     mdUdt(mdUdt),
-    dt(dt)
+    dt(dt),
+    isize(params.isize),
+    jsize(params.jsize),
+    ksize(params.ksize),
+    ghostWidth(ghostWidth)
   {};
 
   // static method which does it all: create and execute functor
@@ -136,42 +135,45 @@ public:
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
                     DataArray           mdUdt,
-                    real_t              dt,
-                    int                 nbCells)
+                    real_t              dt)
   {
-    SDM_Update_Functor functor(params, sdm_geom, 
+    int64_t nbDofs = (dim==2) ? 
+      params.isize * params.jsize * N * N :
+      params.isize * params.jsize * params.ksize * N * N * N;
+    
+    SDM_Update_Functor functor(params, sdm_geom,
                                Udata, mdUdt, dt);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("SDM_Update_Functor",nbDofs, functor);
   }
 
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
-  {
-    const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
-    const int ghostWidth = this->params.ghostWidth;
-    
+  {    
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
+    // local cell index
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+
+    // Dof index for flux
+    int idx,idy;
+
+    // mapping thread to solution Dof
+    global2local(ii,jj, i,j,idx,idy, N);
 
     HydroState tmp;
     
-    if(j >= ghostWidth && j < jsize-ghostWidth  &&
-       i >= ghostWidth && i < isize-ghostWidth ) {
+    if(j >= ghostWidth and j < jsize-ghostWidth  and
+       i >= ghostWidth and i < isize-ghostWidth ) {
 
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
-	
-	  Udata(i,j,dofMap(idx,idy,0,ID)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,ID));
-	  Udata(i,j,dofMap(idx,idy,0,IE)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,IE));
-	  Udata(i,j,dofMap(idx,idy,0,IU)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,IU));
-	  Udata(i,j,dofMap(idx,idy,0,IV)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,IV));
-
-	} // for idx
-      } // for idy
-	  
+      Udata(ii,jj,ID) -= dt*mdUdt(ii,jj,ID);
+      Udata(ii,jj,IE) -= dt*mdUdt(ii,jj,IE);
+      Udata(ii,jj,IU) -= dt*mdUdt(ii,jj,IU);
+      Udata(ii,jj,IV) -= dt*mdUdt(ii,jj,IV);
+      
     } // end if guard
     
   } // end operator ()
@@ -181,42 +183,41 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
   {
-    const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
     
+    // local cell index
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    // Dof index for flux
+    int idx,idy,idz;
+
+    // mapping thread to solution Dof
+    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
 
     HydroState tmp;
 
-    if(k >= ghostWidth && k < ksize-ghostWidth  &&
-       j >= ghostWidth && j < jsize-ghostWidth  &&
-       i >= ghostWidth && i < isize-ghostWidth ) {
-
-      for (int idz=0; idz<N; ++idz) {
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
+    if(k >= ghostWidth and k < ksize-ghostWidth  and
+       j >= ghostWidth and j < jsize-ghostWidth  and
+       i >= ghostWidth and i < isize-ghostWidth ) {
 	
-	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,ID));
-	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,IE));
-	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,IU));
-	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,IV));
-	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,IW));
-
-	  } // for idx
-	} // for idy
-      } // for idz
+      Udata(ii,jj,kk,ID) -= dt*mdUdt(ii,jj,kk,ID);
+      Udata(ii,jj,kk,IE) -= dt*mdUdt(ii,jj,kk,IE);
+      Udata(ii,jj,kk,IU) -= dt*mdUdt(ii,jj,kk,IU);
+      Udata(ii,jj,kk,IV) -= dt*mdUdt(ii,jj,kk,IV);
+      Udata(ii,jj,kk,IW) -= dt*mdUdt(ii,jj,kk,IW);
       
     } // end if guard
     
   } // end operator ()
   
-  DataArray Udata;
-  DataArray mdUdt;
-  real_t    dt;
-  
+  DataArray    Udata;
+  DataArray    mdUdt;
+  const real_t dt;
+  const int    isize, jsize, ksize;
+  const int    ghostWidth;
+
 }; // SDM_Update_Functor
 
 // =======================================================================
@@ -276,8 +277,8 @@ public:
 
     HydroState tmp;
     
-    if(j >= ghostWidth && j < jsize-ghostWidth  &&
-       i >= ghostWidth && i < isize-ghostWidth ) {
+    if(j >= ghostWidth and j < jsize-ghostWidth  and
+       i >= ghostWidth and i < isize-ghostWidth ) {
 
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
@@ -322,9 +323,9 @@ public:
 
     HydroState tmp;
 
-    if(k >= ghostWidth && k < ksize-ghostWidth  &&
-       j >= ghostWidth && j < jsize-ghostWidth  &&
-       i >= ghostWidth && i < isize-ghostWidth ) {
+    if(k >= ghostWidth and k < ksize-ghostWidth  and
+       j >= ghostWidth and j < jsize-ghostWidth  and
+       i >= ghostWidth and i < isize-ghostWidth ) {
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
@@ -438,8 +439,8 @@ public:
 
     HydroState tmp;
     
-    if(j >= ghostWidth && j < jsize-ghostWidth  &&
-       i >= ghostWidth && i < isize-ghostWidth ) {
+    if(j >= ghostWidth and j < jsize-ghostWidth  and
+       i >= ghostWidth and i < isize-ghostWidth ) {
 
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
@@ -495,9 +496,9 @@ public:
 
     HydroState tmp;
 
-    if(k >= ghostWidth && k < ksize-ghostWidth  &&
-       j >= ghostWidth && j < jsize-ghostWidth  &&
-       i >= ghostWidth && i < isize-ghostWidth ) {
+    if(k >= ghostWidth and k < ksize-ghostWidth  and
+       j >= ghostWidth and j < jsize-ghostWidth  and
+       i >= ghostWidth and i < isize-ghostWidth ) {
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
