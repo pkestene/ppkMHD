@@ -98,19 +98,12 @@ bool test_lagrange_functor()
   
   DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
   
-  int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
-
-  int nbDofsPerCellFlux = (dim==2) ? N*(N+1) : N*N*(N+1);
-  
+  int nbDofsPerCell = (dim==2) ? N*N : N*N*N;  
 
   int nbDofs = dim==2 ? 
     nbDofsPerCell*params.isize*params.jsize : 
     nbDofsPerCell*params.isize*params.jsize*params.ksize;
   
-  int nbDofsFlux = dim==2 ? 
-    nbDofsPerCellFlux*params.isize*params.jsize : 
-    nbDofsPerCellFlux*params.isize*params.jsize*params.ksize;
-   
   std::map<int, std::string> m_variables_names;
   m_variables_names.clear();
   m_variables_names[ID] = "rho";
