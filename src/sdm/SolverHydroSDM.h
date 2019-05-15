@@ -291,7 +291,7 @@ public:
 			real_t dt);
 
   //! erase a solution data array
-  void erase(DataArray data, bool isFlux=false);
+  void erase(DataArray data);
 
   //! avoid override the base class make_boundary method
   template<FaceIdType faceId>
@@ -1049,7 +1049,7 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
 {
 
   // erase fluxes
-  erase(Fluxes, true);
+  erase(Fluxes);
   
   if (dim==2 and dir==IZ)
     return;
@@ -1532,10 +1532,10 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
 // =======================================================
 // =======================================================
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::erase(DataArray data, bool isFlux)
+void SolverHydroSDM<dim,N>::erase(DataArray data)
 {
 
-  SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data, isFlux, nbCells);
+  SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data);
   
 } // SolverHydroSDM<dim,N>::erase
 
