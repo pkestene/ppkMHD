@@ -1064,8 +1064,7 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
   ComputeFluxAtFluxPoints_Functor<dim,N,dir>::apply(params,
                                                     sdm_geom,
                                                     euler,
-                                                    Fluxes,
-                                                    nbCells);
+                                                    Fluxes);
   
   // 3. compute derivative and accumulate in Udata_fdiv
   Interpolate_At_SolutionPoints_Functor<dim,N,dir>::apply(params,
