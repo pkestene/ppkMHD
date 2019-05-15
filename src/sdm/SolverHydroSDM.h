@@ -1830,7 +1830,7 @@ void SolverHydroSDM<dim,N>::init_implode(DataArray Udata)
 
   ImplodeParams iParams = ImplodeParams(configMap);
 
-  InitImplodeFunctor<dim,N>::apply(params, sdm_geom, iParams, Udata, nbDofs);
+  InitImplodeFunctor<dim,N>::apply(params, sdm_geom, iParams, Udata);
 } // init_implode
 
 // =======================================================
@@ -1845,7 +1845,7 @@ void SolverHydroSDM<dim,N>::init_blast(DataArray Udata)
 
   BlastParams blastParams = BlastParams(configMap);
   
-  InitBlastFunctor<dim,N>::apply(params, sdm_geom, blastParams, Udata, nbDofs);
+  InitBlastFunctor<dim,N>::apply(params, sdm_geom, blastParams, Udata);
 
 } // SolverHydroSDM::init_blast
 
@@ -1877,8 +1877,7 @@ void SolverHydroSDM<dim,N>::init_four_quadrant(DataArray Udata)
   InitFourQuadrantFunctor<dim,N>::apply(params, sdm_geom,
                                         Udata,
                                         U0, U1, U2, U3,
-                                        xt, yt,
-                                        nbDofs);
+                                        xt, yt);
     
 } // SolverHydroSDM::init_four_quadrant
 
@@ -1897,8 +1896,7 @@ void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
   InitKelvinHelmholtzFunctor<dim,N>::apply(params,
                                            sdm_geom,
                                            khParams,
-                                           Udata,
-                                           nbDofs);
+                                           Udata);
 
 } // SolverHydroSDM::init_kelvin_helmholtz
 
@@ -1917,8 +1915,7 @@ void SolverHydroSDM<dim,N>::init_gresho_vortex(DataArray Udata)
   InitGreshoVortexFunctor<dim,N>::apply(params,
                                         sdm_geom,
                                         gvParams,
-                                        Udata,
-                                        nbDofs);
+                                        Udata);
 
 } // SolverHydroSDM::init_gresho_vortex
 
@@ -1934,7 +1931,7 @@ void SolverHydroSDM<dim,N>::init_wedge(DataArray Udata)
 
   WedgeParams wparams(configMap, 0.0);
   
-  InitWedgeFunctor<dim,N>::apply(params, sdm_geom, wparams, Udata, nbDofs);
+  InitWedgeFunctor<dim,N>::apply(params, sdm_geom, wparams, Udata);
   
 } // init_wedge
 
@@ -1950,7 +1947,7 @@ void SolverHydroSDM<dim,N>::init_jet(DataArray Udata)
   
   JetParams jparams(configMap);
   
-  InitJetFunctor<dim,N>::apply(params, sdm_geom, jparams, Udata, nbDofs);
+  InitJetFunctor<dim,N>::apply(params, sdm_geom, jparams, Udata);
   
 } // init_jet
 

@@ -48,11 +48,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     ImplodeParams       iparams,
-                    DataArray           Udata,
-                    int                 nbDofs)
+                    DataArray           Udata)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+    
     InitImplodeFunctor functor(params, sdm_geom, iparams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitImplodeFunctor",nbDofs, functor);
   }
 
   /*
@@ -270,11 +274,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     BlastParams         bparams,
-                    DataArray           Udata,
-                    int                 nbDofs)
+                    DataArray           Udata)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+
     InitBlastFunctor functor(params, sdm_geom, bparams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitBlastFunctor",nbDofs, functor);
   }
 
     /*
@@ -481,11 +489,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     KHParams            khParams,
-                    DataArray           Udata,
-                    int                 nbDofs)
+                    DataArray           Udata)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+
     InitKelvinHelmholtzFunctor functor(params, sdm_geom, khParams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitKelvinHelmholtzFunctor",nbDofs, functor);
   }
 
   /*
@@ -799,11 +811,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     GreshoParams        gvParams,
-                    DataArray           Udata,
-                    int                 nbDofs)
+                    DataArray           Udata)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+    
     InitGreshoVortexFunctor functor(params, sdm_geom, gvParams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitGreshoVortexFunctor",nbDofs, functor);
   }
 
   /*
@@ -1040,12 +1056,16 @@ public:
                     HydroState2d        U2,
                     HydroState2d        U3,
                     real_t              xt,
-                    real_t              yt,
-                    int                 nbDofs)
+                    real_t              yt)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+    
     InitFourQuadrantFunctor functor(params, sdm_geom, Udata,
       U0, U1, U2, U3, xt, yt);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitFourQuadrantFunctor",nbDofs, functor);
   }
 
  /*
@@ -1261,11 +1281,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     WedgeParams         wParams,
-                    DataArray           Udata,
-                    int                 nbDofs)
+                    DataArray           Udata)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+
     InitWedgeFunctor functor(params, sdm_geom, wParams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitWedgeFunctor",nbDofs, functor);
   }
   
   /*
@@ -1465,11 +1489,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     JetParams           jParams,
-                    DataArray           Udata,
-                    int                 nbDofs)
+                    DataArray           Udata)
   {
+    int nbDofsPerCell = (dim==2) ? N*N : N*N*N;
+    int nbDofs = dim==2 ? 
+      nbDofsPerCell*params.isize*params.jsize : 
+      nbDofsPerCell*params.isize*params.jsize*params.ksize;
+
     InitJetFunctor functor(params, sdm_geom, jParams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitJetFunctor",nbDofs, functor);
   }
 
   /*
@@ -1571,7 +1599,7 @@ public:
       params.isize*params.jsize*params.ksize *N*N*N;
     
     InitIsentropicVortexFunctor<dim,N> functor(params, sdm_geom, iparams, Udata);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("InitIsentropicVortexFunctor",nbDofs, functor);
   }
 
   /*
