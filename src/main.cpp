@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
 
   int rank=0;
   int nRanks=1;
-  
+  UNUSED(nRanks);
+
   {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
