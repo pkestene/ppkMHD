@@ -21,8 +21,11 @@ namespace sdm {
 /*************************************************/
 /**
  * This functor takes as an input variables
- * at solution points and perform interpolation at flux points.
- *
+ * at solution points (UdataSol)and perform interpolation at 
+ * flux points (UdataFlux).
+ * It used Kokkos range execution policy, with a number of iterations
+ * mapping outputs, i.e. the flux Dof locations.
+ * 
  * It is essentially a wrapper arround interpolation method sol2flux_vector.
  *
  * Perform exactly the inverse of Interpolate_At_SolutionPoints_Functor.
@@ -306,9 +309,11 @@ enum Interpolation_type_t {
 /*************************************************/
 /**
  * This functor takes as an input variables
- * at flux points and perform interpolation at solution points, and
- * accumulates result in output array (UdataSol).
- *
+ * at flux points (UdataFlux) and perform interpolation at solution
+ * points, and accumulates result in output array (UdataSol).
+ * It used Kokkos range execution policy, with a number of iterations
+ * mapping outputs, i.e. the solution Dof locations.
+  *
  * Its is essentially a wrapper arround interpolation method flux2sol_vector.
  *
  * Perform exactly the inverse of Interpolate_At_FluxPoints_Functor
