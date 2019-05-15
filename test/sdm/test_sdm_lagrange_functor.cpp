@@ -124,10 +124,9 @@ bool test_lagrange_functor()
   // init data
   {
 
-    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,0> functor(params,
-							  sdm_geom,
-							  U);
-    Kokkos::parallel_for(nbDofs, functor);
+    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,0>::apply(params,
+                                                         sdm_geom,
+                                                         U);
 
     Kokkos::deep_copy(U2,U);
 
@@ -205,12 +204,10 @@ bool test_lagrange_functor()
   // degree less than N, or just small
   {
 
-    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,1> functor(params,
-							  sdm_geom,
-							  U);
+    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,1>::apply(params,
+                                                         sdm_geom,
+                                                         U);
   
-    Kokkos::parallel_for(nbDofs, functor);
-    
     io_writer->save_data_impl(U,
                               UHost,
                               1,

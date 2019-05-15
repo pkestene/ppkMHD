@@ -49,6 +49,21 @@ public:
     Udata(Udata),
     FluxData(FluxData) {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    ppkMHD::EulerEquations<dim> euler,
+                    DataArray           Udata,
+                    DataArray           FluxData)
+  {
+    int64_t nbDofs = (dim==2) ? 
+      params.isize * params.jsize * N * N :
+      params.isize * params.jsize * params.ksize * N * N * N;
+    
+    TestFluxFunctor functor(params, sdm_geom, euler, Udata, FluxData);
+    Kokkos::parallel_for("TestFluxFunctor", nbDofs, functor);
+  }
+
   /*
    * 2D version.
    */
@@ -76,10 +91,10 @@ public:
     //int idy = jj-j*N;
 
     HydroState q, flux;
-    q[ID] = Udata(ii,jj  , ID);
-    q[IE] = Udata(ii,jj  , IE);
-    q[IU] = Udata(ii,jj  , IU);
-    q[IV] = Udata(ii,jj  , IV);
+    q[ID] = Udata(ii,jj,ID);
+    q[IE] = Udata(ii,jj,IE);
+    q[IU] = Udata(ii,jj,IU);
+    q[IV] = Udata(ii,jj,IV);
     
     // compute kineti energy, internal energy and then pressure
     real_t eken = HALF_F * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
@@ -88,10 +103,10 @@ public:
     
     eq::flux_x(q,pressure,flux);
     
-    Udata(ii,jj, ID) = flux[ID];
-    Udata(ii,jj, IE) = flux[IE];
-    Udata(ii,jj, IU) = flux[IU];
-    Udata(ii,jj, IV) = flux[IV];
+    Udata(ii,jj,ID) = flux[ID];
+    Udata(ii,jj,IE) = flux[IE];
+    Udata(ii,jj,IU) = flux[IU];
+    Udata(ii,jj,IV) = flux[IV];
     
   } // end operator () - 2d
 
@@ -125,11 +140,11 @@ public:
     //int idz = kk-k*N;
 
     HydroState q, flux;
-    q[ID] = Udata(ii,jj,kk, ID);
-    q[IE] = Udata(ii,jj,kk, IE);
-    q[IU] = Udata(ii,jj,kk, IU);
-    q[IV] = Udata(ii,jj,kk, IV);
-    q[IW] = Udata(ii,jj,kk, IW);
+    q[ID] = Udata(ii,jj,kk,ID);
+    q[IE] = Udata(ii,jj,kk,IE);
+    q[IU] = Udata(ii,jj,kk,IU);
+    q[IV] = Udata(ii,jj,kk,IV);
+    q[IW] = Udata(ii,jj,kk,IW);
     
     // compute kineti energy, internal energy and then pressure
     real_t eken = HALF_F * (q[IU]*q[IU] + q[IV]*q[IV] + q[IW]*q[IW]) / q[ID];
@@ -138,11 +153,11 @@ public:
     
     eq::flux_x(q,pressure,flux);
     
-    Udata(ii,jj,kk, ID) = flux[ID];
-    Udata(ii,jj,kk, IE) = flux[IE];
-    Udata(ii,jj,kk, IU) = flux[IU];
-    Udata(ii,jj,kk, IV) = flux[IV];
-    Udata(ii,jj,kk, IW) = flux[IW];
+    Udata(ii,jj,kk,ID) = flux[ID];
+    Udata(ii,jj,kk,IE) = flux[IE];
+    Udata(ii,jj,kk,IU) = flux[IU];
+    Udata(ii,jj,kk,IV) = flux[IV];
+    Udata(ii,jj,kk,IW) = flux[IW];
 
   } // end operator () - 3d
 
@@ -210,8 +225,7 @@ void test_sdm_flux(int argc, char* argv[])
   
   // create test functor
   std::cout << "Create sdm::TestFluxFunctor<" << dim << "," << N << ">\n";
-  sdm::TestFluxFunctor<dim,N> functor(params, sdm_geom, euler, solver.U, solver.Uaux);
-  Kokkos::parallel_for(solver.nbDofs, functor);
+  sdm::TestFluxFunctor<dim,N>::apply(params, sdm_geom, euler, solver.U, solver.Uaux);
 
   std::cout << "Save flux\n";
   solver.save_solution();

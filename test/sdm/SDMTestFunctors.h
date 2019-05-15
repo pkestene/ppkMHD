@@ -10,7 +10,7 @@
 #include "sdm/SDMBaseFunctor.h"
 
 #include "sdm/SDM_Geometry.h"
-#include "sdm/sdm_shared.h" // for DofMap
+#include "sdm/sdm_shared.h"
 
 #include "shared/EulerEquations.h"
 
@@ -32,12 +32,23 @@ class InitTestFunctor : public SDMBaseFunctor<dim,N> {
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
 
-  static constexpr auto dofMap = DofMap<dim,N>;
-  
   InitTestFunctor(HydroParams         params,
 		  SDM_Geometry<dim,N> sdm_geom,
 		  DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
+
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata)
+  {
+    int64_t nbDofs = (dim==2) ? 
+      params.isize * params.jsize * N * N :
+      params.isize * params.jsize * params.ksize * N * N * N;
+    
+    InitTestFunctor functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for("IniTestFunctor", nbDofs, functor);
+  }
 
   KOKKOS_INLINE_FUNCTION
   real_t f0(real_t x, real_t y, real_t z) const

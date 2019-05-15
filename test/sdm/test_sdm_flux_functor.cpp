@@ -84,11 +84,9 @@ void test_flux_functors()
   // init data
   {
 
-    sdm::InitTestFluxFunctor<dim,N,0> functor(solver.params,
-					      solver.sdm_geom,
-					      solver.U);
-    Kokkos::parallel_for(nbCells, functor);
-
+    sdm::InitTestFluxFunctor<dim,N,0>::apply(solver.params,
+                                             solver.sdm_geom,
+                                             solver.U);
       
     solver.save_solution();
 
@@ -111,25 +109,16 @@ void test_flux_functors()
   //
   {
     // interpolate conservative variables from solution points to flux points
-    {
-      
-      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(solver.params,
-							       solver.sdm_geom,
-							       solver.U,
-							       solver.Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX>::apply(solver.params,
+                                                            solver.sdm_geom,
+                                                            solver.U,
+                                                            solver.Fluxes);      
     
-    {
-      // compute some flux along X direction
-      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
-							     solver.sdm_geom,
-							     euler,
-							     solver.Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-    }
-    
+    // compute some flux along X direction
+    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX>::apply(solver.params,
+                                                          solver.sdm_geom,
+                                                          euler,
+                                                          solver.Fluxes);
     /*
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
@@ -145,24 +134,16 @@ void test_flux_functors()
   //
   {  
     // interpolate conservative variables from solution points to flux points
-    {
-      
-      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(solver.params,
-							       solver.sdm_geom,
-							       solver.U,
-							       solver.Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
-
-    {
-      // compute some flux along X direction
-      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(solver.params,
-							     solver.sdm_geom,
-							     euler,
-							     solver.Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-    }
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY>::apply(solver.params,
+                                                            solver.sdm_geom,
+                                                            solver.U,
+                                                            solver.Fluxes);
+    
+    // compute some flux along X direction
+    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IY>::apply(solver.params,
+                                                          solver.sdm_geom,
+                                                          euler,
+                                                          solver.Fluxes);
     
     /*
      * thanks to this post on the template use
@@ -179,24 +160,16 @@ void test_flux_functors()
   //
   if (dim==3) {  
     // interpolate conservative variables from solution points to flux points
-    {
-      
-      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(solver.params,
-							       solver.sdm_geom,
-							       solver.U,
-							       solver.Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-      
-    }
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IZ>apply(solver.params,
+                                                          solver.sdm_geom,
+                                                          solver.U,
+                                                          solver.Fluxes);
     
-    {
-      // compute some flux along X direction
-      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
-							     solver.sdm_geom,
-							     euler,
-							     solver.Fluxes);
-      Kokkos::parallel_for(nbCells, functor);
-    }
+    // compute some flux along X direction
+    sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
+                                                           solver.sdm_geom,
+                                                           euler,
+                                                           solver.Fluxes);
   
     /*
      * thanks to this post on the template use
@@ -207,7 +180,7 @@ void test_flux_functors()
 				       0,
 				       0.0);
   } // end dim==3 / dir Z
-
+  
 } // test_flux_functors
 
 int main(int argc, char* argv[])

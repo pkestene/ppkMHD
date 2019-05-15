@@ -32,6 +32,19 @@ public:
 		      DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
   
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata)
+  {
+    int64_t nbDofs = (dim==2) ? 
+      params.isize * params.jsize * N * N :
+      params.isize * params.jsize * params.ksize * N * N * N;
+    
+    InitTestFluxFunctor functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for("IniTestFluxFunctor", nbDofs, functor);
+  }
+
   KOKKOS_INLINE_FUNCTION
   real_t rho(real_t x, real_t y, real_t z=0.0) const
   {
@@ -118,35 +131,36 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
     // local cell index
-    int i,j;
-    index2coord(index,i,j,isize,jsize);
+    int i = ii/N;
+    int j = jj/N;
 
-    // loop over cell DoF's
-    for (int idy=0; idy<N; ++idy) {
-      for (int idx=0; idx<N; ++idx) {
+    // Dof index
+    int idx = ii-i*N;
+    int idy = jj-j*N;
 
-	// lower left corner
-	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
-
-	x += this->sdm_geom.solution_pts_1d(idx) * dx;
-	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-
-	if (compare == 1) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) -= rho(x,y);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) -= e(x,y);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) -= rho_u(x,y);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) -= rho_v(x,y);
-	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho(x,y);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = e(x,y);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = rho_u(x,y);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = rho_v(x,y);
-	}
-	
-      } // end for idx
-    } // end for idy
+    // lower left corner
+    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+    
+    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;
+    
+    if (compare == 1) {
+      Udata(ii,jj,ID) -= rho(x,y);
+      Udata(ii,jj,IP) -= e(x,y);
+      Udata(ii,jj,IU) -= rho_u(x,y);
+      Udata(ii,jj,IV) -= rho_v(x,y);
+    } else {
+      Udata(ii,jj,ID) = rho(x,y);
+      Udata(ii,jj,IP) = e(x,y);
+      Udata(ii,jj,IU) = rho_u(x,y);
+      Udata(ii,jj,IV) = rho_v(x,y);
+    }
     
   } // end operator () - 2d
 
@@ -186,41 +200,42 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+
     // local cell index
-    int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    int i = ii/N;
+    int j = jj/N;
+    int k = kk/N;
 
-    // loop over cell DoF's
-    for (int idz=0; idz<N; ++idz) {
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
+    // Dof index
+    int idx = ii-i*N;
+    int idy = jj-j*N;
+    int idz = kk-k*N;
 	  
-	  // lower left corner
-	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
-	  real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
-
-	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
-	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-	  
-	  if (compare == 1) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) -= rho(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) -= e(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) -= rho_u(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) -= rho_v(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) -= rho_w(x,y,z);
-	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = e(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = rho_u(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = rho_v(x,y,z);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = rho_w(x,y,z);
-	  }
-	  	  
-	} // end for idx
-      } // end for idy
-    } // end for idz
+    // lower left corner
+    real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
+    real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t z = zmin + (k+nz*k_mpi-ghostWidth)*dz;
+    
+    x += this->sdm_geom.solution_pts_1d(idx) * dx;
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;
+    z += this->sdm_geom.solution_pts_1d(idz) * dz;
+    
+    if (compare == 1) {
+      Udata(ii,jj,kk,ID) -= rho(x,y,z);
+      Udata(ii,jj,kk,IP) -= e(x,y,z);
+      Udata(ii,jj,kk,IU) -= rho_u(x,y,z);
+      Udata(ii,jj,kk,IV) -= rho_v(x,y,z);
+      Udata(ii,jj,kk,IW) -= rho_w(x,y,z);
+    } else {
+      Udata(ii,jj,kk,ID) = rho(x,y,z);
+      Udata(ii,jj,kk,IP) = e(x,y,z);
+      Udata(ii,jj,kk,IU) = rho_u(x,y,z);
+      Udata(ii,jj,kk,IV) = rho_v(x,y,z);
+      Udata(ii,jj,kk,IW) = rho_w(x,y,z);
+    }
     
   } // end operator () - 3d
   
