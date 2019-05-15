@@ -99,126 +99,126 @@ public:
 
 // =======================================================================
 // =======================================================================
-/**
- * Given the array (-dU/dt), perform update of Udata (conservative variable
- * array).
- *
- * The minus sign comes from the conservative form ofthe Euler equation (all
- * the terms are on the same side of the equation).
- *
- * \tparam dim dimension (2 or 3).
- */
-template<int dim, int N>
-class SDM_Update_Functor : public SDMBaseFunctor<dim,N> {
+// /**
+//  * Given the array (-dU/dt), perform update of Udata (conservative variable
+//  * array).
+//  *
+//  * The minus sign comes from the conservative form ofthe Euler equation (all
+//  * the terms are on the same side of the equation).
+//  *
+//  * \tparam dim dimension (2 or 3).
+//  */
+// template<int dim, int N>
+// class SDM_Update_Functor : public SDMBaseFunctor<dim,N> {
   
-public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-  using typename SDMBaseFunctor<dim,N>::HydroState;
+// public:
+//   using typename SDMBaseFunctor<dim,N>::DataArray;
+//   using typename SDMBaseFunctor<dim,N>::HydroState;
   
-  SDM_Update_Functor(HydroParams         params,
-		     SDM_Geometry<dim,N> sdm_geom,
-		     DataArray           Udata,
-		     DataArray           mdUdt,
-		     real_t              dt) :
-    SDMBaseFunctor<dim,N>(params,sdm_geom),
-    Udata(Udata),
-    mdUdt(mdUdt),
-    dt(dt),
-    isize(params.isize),
-    jsize(params.jsize),
-    ksize(params.ksize),
-    ghostWidth(params.ghostWidth)
-  {};
+//   SDM_Update_Functor(HydroParams         params,
+// 		     SDM_Geometry<dim,N> sdm_geom,
+// 		     DataArray           Udata,
+// 		     DataArray           mdUdt,
+// 		     real_t              dt) :
+//     SDMBaseFunctor<dim,N>(params,sdm_geom),
+//     Udata(Udata),
+//     mdUdt(mdUdt),
+//     dt(dt),
+//     isize(params.isize),
+//     jsize(params.jsize),
+//     ksize(params.ksize),
+//     ghostWidth(params.ghostWidth)
+//   {};
 
-  // static method which does it all: create and execute functor
-  static void apply(HydroParams         params,
-                    SDM_Geometry<dim,N> sdm_geom,
-                    DataArray           Udata,
-                    DataArray           mdUdt,
-                    real_t              dt)
-  {
-    int64_t nbDofs = (dim==2) ? 
-      params.isize * params.jsize * N * N :
-      params.isize * params.jsize * params.ksize * N * N * N;
+//   // static method which does it all: create and execute functor
+//   static void apply(HydroParams         params,
+//                     SDM_Geometry<dim,N> sdm_geom,
+//                     DataArray           Udata,
+//                     DataArray           mdUdt,
+//                     real_t              dt)
+//   {
+//     int64_t nbDofs = (dim==2) ? 
+//       params.isize * params.jsize * N * N :
+//       params.isize * params.jsize * params.ksize * N * N * N;
     
-    SDM_Update_Functor functor(params, sdm_geom,
-                               Udata, mdUdt, dt);
-    Kokkos::parallel_for("SDM_Update_Functor",nbDofs, functor);
-  }
+//     SDM_Update_Functor functor(params, sdm_geom,
+//                                Udata, mdUdt, dt);
+//     Kokkos::parallel_for("SDM_Update_Functor",nbDofs, functor);
+//   }
 
-  //! functor for 2d 
-  template<int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
-  {    
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+//   //! functor for 2d 
+//   template<int dim_ = dim>
+//   KOKKOS_INLINE_FUNCTION
+//   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
+//   {    
+//     // global index
+//     int ii,jj;
+//     index2coord(index,ii,jj,isize*N,jsize*N);
 
-    // local cell index
-    int i,j;
+//     // local cell index
+//     int i,j;
 
-    // Dof index for flux
-    int idx,idy;
+//     // Dof index for flux
+//     int idx,idy;
 
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+//     // mapping thread to solution Dof
+//     global2local(ii,jj, i,j,idx,idy, N);
 
-    HydroState tmp;
+//     HydroState tmp;
     
-    if(j >= ghostWidth and j < jsize-ghostWidth  and
-       i >= ghostWidth and i < isize-ghostWidth ) {
+//     if(j >= ghostWidth and j < jsize-ghostWidth  and
+//        i >= ghostWidth and i < isize-ghostWidth ) {
 
-      Udata(ii,jj,ID) -= dt*mdUdt(ii,jj,ID);
-      Udata(ii,jj,IE) -= dt*mdUdt(ii,jj,IE);
-      Udata(ii,jj,IU) -= dt*mdUdt(ii,jj,IU);
-      Udata(ii,jj,IV) -= dt*mdUdt(ii,jj,IV);
+//       Udata(ii,jj,ID) -= dt*mdUdt(ii,jj,ID);
+//       Udata(ii,jj,IE) -= dt*mdUdt(ii,jj,IE);
+//       Udata(ii,jj,IU) -= dt*mdUdt(ii,jj,IU);
+//       Udata(ii,jj,IV) -= dt*mdUdt(ii,jj,IV);
       
-    } // end if guard
+//     } // end if guard
     
-  } // end operator ()
+//   } // end operator ()
   
-  //! functor for 3d 
-  template<int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
-  {
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+//   //! functor for 3d 
+//   template<int dim_ = dim>
+//   KOKKOS_INLINE_FUNCTION
+//   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
+//   {
+//     // global index
+//     int ii,jj,kk;
+//     index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
     
-    // local cell index
-    int i,j,k;
+//     // local cell index
+//     int i,j,k;
     
-    // Dof index for flux
-    int idx,idy,idz;
+//     // Dof index for flux
+//     int idx,idy,idz;
 
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+//     // mapping thread to solution Dof
+//     global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
 
-    HydroState tmp;
+//     HydroState tmp;
 
-    if(k >= ghostWidth and k < ksize-ghostWidth  and
-       j >= ghostWidth and j < jsize-ghostWidth  and
-       i >= ghostWidth and i < isize-ghostWidth ) {
+//     if(k >= ghostWidth and k < ksize-ghostWidth  and
+//        j >= ghostWidth and j < jsize-ghostWidth  and
+//        i >= ghostWidth and i < isize-ghostWidth ) {
 	
-      Udata(ii,jj,kk,ID) -= dt*mdUdt(ii,jj,kk,ID);
-      Udata(ii,jj,kk,IE) -= dt*mdUdt(ii,jj,kk,IE);
-      Udata(ii,jj,kk,IU) -= dt*mdUdt(ii,jj,kk,IU);
-      Udata(ii,jj,kk,IV) -= dt*mdUdt(ii,jj,kk,IV);
-      Udata(ii,jj,kk,IW) -= dt*mdUdt(ii,jj,kk,IW);
+//       Udata(ii,jj,kk,ID) -= dt*mdUdt(ii,jj,kk,ID);
+//       Udata(ii,jj,kk,IE) -= dt*mdUdt(ii,jj,kk,IE);
+//       Udata(ii,jj,kk,IU) -= dt*mdUdt(ii,jj,kk,IU);
+//       Udata(ii,jj,kk,IV) -= dt*mdUdt(ii,jj,kk,IV);
+//       Udata(ii,jj,kk,IW) -= dt*mdUdt(ii,jj,kk,IW);
       
-    } // end if guard
+//     } // end if guard
     
-  } // end operator ()
+//   } // end operator ()
   
-  DataArray    Udata;
-  DataArray    mdUdt;
-  const real_t dt;
-  const int    isize, jsize, ksize;
-  const int    ghostWidth;
+//   DataArray    Udata;
+//   DataArray    mdUdt;
+//   const real_t dt;
+//   const int    isize, jsize, ksize;
+//   const int    ghostWidth;
 
-}; // SDM_Update_Functor
+// }; // SDM_Update_Functor
 
 // =======================================================================
 // =======================================================================
