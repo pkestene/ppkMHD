@@ -61,7 +61,7 @@ public:
 
     Interpolate_At_FluxPoints_Functor functor(params, sdm_geom, 
                                               UdataSol, UdataFlux);
-    Kokkos::parallel_for(nbDofsFlux, functor);
+    Kokkos::parallel_for("Interpolate_At_FluxPoints_Functor", nbDofsFlux, functor);
   }
   
   // =========================================================
@@ -349,7 +349,7 @@ public:
     
     Interpolate_At_SolutionPoints_Functor functor(params, sdm_geom,
                                                   UdataFlux, UdataSol);
-    Kokkos::parallel_for(nbDofs, functor);
+    Kokkos::parallel_for("Interpolate_At_SolutionPoints_Functor",nbDofs, functor);
   }
   
   // =========================================================
