@@ -952,8 +952,7 @@ void SolverHydroSDM<dim,N>::apply_pre_step_computation(DataArray Udata)
     Average_Conservative_Variables_Functor<dim,N>::apply(params,
                                                          sdm_geom,
                                                          Udata,
-                                                         Uaverage,
-                                                         nbCells);
+                                                         Uaverage);
     
   } // end limiter_enabled or positivity_enabled true
 
@@ -1001,23 +1000,20 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
     Average_Gradient_Functor<dim,N,IX>::apply(params,
                                               sdm_geom,
                                               Udata,
-                                              Ugradx,
-                                              nbCells);
+                                              Ugradx);
 
     Average_Gradient_Functor<dim,N,IY>::apply(params,
                                               sdm_geom,
                                               Udata,
-                                              Ugrady,
-                                              nbCells);
+                                              Ugrady);
     
     if (dim == 3) {
       Average_Gradient_Functor<dim,N,IZ>::apply(params,
                                                 sdm_geom,
                                                 Udata,
-                                                Ugradz,
-                                                nbCells);
+                                                Ugradz);
     }
-
+    
     // retrieve parameter M_TVB (used in the modified minmod routine)
     real_t M_TVB = configMap.getFloat("sdm","M_TVB",40);
     //const real_t dx = this->params.dx;

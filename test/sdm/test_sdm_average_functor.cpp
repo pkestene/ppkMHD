@@ -37,51 +37,34 @@
  * sdm::Average_Conservative_Variables_Functor
  */
 template< int dim, int N >
-void compute_Uaverage(sdm::SolverHydroSDM<dim,N>& solver) {
-      
-  int nbCells = dim==2 ?
-    solver.params.isize * solver.params.jsize :
-    solver.params.isize * solver.params.jsize * solver.params.ksize;
+void compute_Uaverage(sdm::SolverHydroSDM<dim,N>& solver) 
+{
   
   // compute cell average
-  {
-    sdm::Average_Conservative_Variables_Functor<dim,N>
-      functor(solver.params,
-	      solver.sdm_geom,
-	      solver.U,
-	      solver.Uaverage);
+  sdm::Average_Conservative_Variables_Functor<dim,N>::apply(solver.params,
+                                                            solver.sdm_geom,
+                                                            solver.U,
+                                                            solver.Uaverage);
   
-    Kokkos::parallel_for(nbCells, functor);
-  }
 
   // compute x gradient cell-averaged
-  {
-    sdm::Average_Gradient_Functor<dim,N,IX> functor(solver.params,
-						    solver.sdm_geom,
-						    solver.U,
-						    solver.Ugradx);
-    Kokkos::parallel_for(nbCells, functor);
-
-  }
-
+  sdm::Average_Gradient_Functor<dim,N,IX>::apply(solver.params,
+                                                 solver.sdm_geom,
+                                                 solver.U,
+                                                 solver.Ugradx);
+  
   // compute y gradient cell-averaged
-  {
-    sdm::Average_Gradient_Functor<dim,N,IY> functor(solver.params,
-						    solver.sdm_geom,
-						    solver.U,
-						    solver.Ugrady);
-    Kokkos::parallel_for(nbCells, functor);
-
-  }
+  sdm::Average_Gradient_Functor<dim,N,IY>::apply(solver.params,
+                                                 solver.sdm_geom,
+                                                 solver.U,
+                                                 solver.Ugrady);
 
   // compute z gradient cell-averaged
   if (dim==3) {
-    sdm::Average_Gradient_Functor<dim,N,IZ> functor(solver.params,
-						    solver.sdm_geom,
-						    solver.U,
-						    solver.Ugradz);
-    Kokkos::parallel_for(nbCells, functor);
-
+    sdm::Average_Gradient_Functor<dim,N,IZ>::apply(solver.params,
+                                                   solver.sdm_geom,
+                                                   solver.U,
+                                                   solver.Ugradz);
   }
 
   return;

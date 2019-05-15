@@ -47,9 +47,12 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
-                    DataArray           Uaverage,
-                    int                 nbCells)
+                    DataArray           Uaverage)
   {
+    int64_t nbCells = dim==2 ? 
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     Average_Conservative_Variables_Functor functor(params, sdm_geom, 
                                                    Udata, Uaverage);
     Kokkos::parallel_for(nbCells, functor);
@@ -406,9 +409,12 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
-                    DataArray           Uaverage,
-                    int                 nbCells)
+                    DataArray           Uaverage)
   {
+    int64_t nbCells = dim==2 ? 
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     Average_Gradient_Functor functor(params, sdm_geom, 
                                      Udata, Uaverage);
     Kokkos::parallel_for(nbCells, functor);
