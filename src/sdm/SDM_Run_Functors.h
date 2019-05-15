@@ -127,7 +127,7 @@ public:
     isize(params.isize),
     jsize(params.jsize),
     ksize(params.ksize),
-    ghostWidth(ghostWidth)
+    ghostWidth(params.ghostWidth)
   {};
 
   // static method which does it all: create and execute functor
@@ -238,8 +238,6 @@ public:
 
   using coefs_t = Kokkos::Array<real_t,3>;
   
-  static constexpr auto dofMap = DofMap<dim,N>;
-
   SDM_Update_RK_Functor(HydroParams         params,
 			SDM_Geometry<dim,N> sdm_geom,
 			DataArray           Uout,
@@ -254,7 +252,11 @@ public:
     U_1(U_1),
     U_2(U_2),
     coefs(coefs),
-    dt(dt)
+    dt(dt),
+    isize(params.isize),
+    jsize(params.jsize),
+    ksize(params.ksize),
+    ghostWidth(params.ghostWidth)
   {};
   
   // static method which does it all: create and execute functor
@@ -265,12 +267,15 @@ public:
                     DataArray           U_1,
                     DataArray           U_2,
                     coefs_t             coefs,
-                    real_t              dt,
-                    int                 nbCells)
+                    real_t              dt)
   {
-    SDM_Update_RK_Functor functor(params, sdm_geom, 
+    int64_t nbDofs = (dim==2) ? 
+      params.isize * params.jsize * N * N :
+      params.isize * params.jsize * params.ksize * N * N * N;
+
+    SDM_Update_RK_Functor functor(params, sdm_geom,
                                   Uout, U_0, U_1, U_2, coefs, dt);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("SDM_Update_RK_Functor",nbDofs, functor);
   }
 
     //! functor for 2d
@@ -278,52 +283,52 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
   {
-    const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
-    const int ghostWidth = this->params.ghostWidth;
-
     const real_t c0   = coefs[0];
     const real_t c1   = coefs[1];
     const real_t c2dt = coefs[2]*dt;
     
+    // global index
+    int ii,jj;
+    index2coord(index,ii,jj,isize*N,jsize*N);
+
+    // local cell index
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+
+    // Dof index for flux
+    int idx,idy;
+
+    // mapping thread to solution Dof
+    global2local(ii,jj, i,j,idx,idy, N);
 
     HydroState tmp;
     
     if(j >= ghostWidth and j < jsize-ghostWidth  and
        i >= ghostWidth and i < isize-ghostWidth ) {
 
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
-
-	  tmp[ID] =
-	    c0   * U_0 (i,j,dofMap(idx,idy,0,ID)) +
-	    c1   * U_1 (i,j,dofMap(idx,idy,0,ID)) +
-	    c2dt * U_2 (i,j,dofMap(idx,idy,0,ID)) ;
-
-	  tmp[IE] =
-	    c0   * U_0 (i,j,dofMap(idx,idy,0,IE)) +
-	    c1   * U_1 (i,j,dofMap(idx,idy,0,IE)) +
-	    c2dt * U_2 (i,j,dofMap(idx,idy,0,IE)) ;
-	  
-	  tmp[IU] =
-	    c0   * U_0 (i,j,dofMap(idx,idy,0,IU)) +
-	    c1   * U_1 (i,j,dofMap(idx,idy,0,IU)) +
-	    c2dt * U_2 (i,j,dofMap(idx,idy,0,IU)) ;
-
-	  tmp[IV] =
-	    c0   * U_0 (i,j,dofMap(idx,idy,0,IV)) +
-	    c1   * U_1 (i,j,dofMap(idx,idy,0,IV)) +
-	    c2dt * U_2 (i,j,dofMap(idx,idy,0,IV)) ;
-
-	  Uout(i,j,dofMap(idx,idy,0,ID)) = tmp[ID];
-	  Uout(i,j,dofMap(idx,idy,0,IE)) = tmp[IE];
-	  Uout(i,j,dofMap(idx,idy,0,IU)) = tmp[IU];
-	  Uout(i,j,dofMap(idx,idy,0,IV)) = tmp[IV];
-
-	} // for idx
-      } // for idy
+      tmp[ID] =
+        c0   * U_0 (ii,jj,ID) +
+        c1   * U_1 (ii,jj,ID) +
+        c2dt * U_2 (ii,jj,ID) ;
+      
+      tmp[IE] =
+        c0   * U_0 (ii,jj,IE) +
+        c1   * U_1 (ii,jj,IE) +
+        c2dt * U_2 (ii,jj,IE) ;
+      
+      tmp[IU] =
+        c0   * U_0 (ii,jj,IU) +
+        c1   * U_1 (ii,jj,IU) +
+        c2dt * U_2 (ii,jj,IU) ;
+      
+      tmp[IV] =
+        c0   * U_0 (ii,jj,IV) +
+        c1   * U_1 (ii,jj,IV) +
+        c2dt * U_2 (ii,jj,IV) ;
+      
+      Uout(ii,jj,ID) = tmp[ID];
+      Uout(ii,jj,IE) = tmp[IE];
+      Uout(ii,jj,IU) = tmp[IU];
+      Uout(ii,jj,IV) = tmp[IV];
 	  
     } // end if guard
     
@@ -334,62 +339,59 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index)  const
   {
-    const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
-    
     const real_t c0   = coefs[0];
     const real_t c1   = coefs[1];
     const real_t c2dt = coefs[2]*dt;
 
+    // global index
+    int ii,jj,kk;
+    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    
+    // local cell index
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    
+    // Dof index for flux
+    int idx,idy,idz;
+
+    // mapping thread to solution Dof
+    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
 
     HydroState tmp;
 
     if(k >= ghostWidth and k < ksize-ghostWidth  and
        j >= ghostWidth and j < jsize-ghostWidth  and
        i >= ghostWidth and i < isize-ghostWidth ) {
-
-      for (int idz=0; idz<N; ++idz) {
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
-	
-	    tmp[ID] =
-	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,ID)) +
-	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,ID)) +
-	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,ID)) ;
-	    
-	    tmp[IE] =
-	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IE)) +
-	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IE)) +
-	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IE)) ;
-	    
-	    tmp[IU] =
-	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IU)) +
-	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IU)) +
-	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IU)) ;
-	    
-	    tmp[IV] =
-	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IV)) +
-	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IV)) +
-	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IV)) ;
-	    
-	    tmp[IW] =
-	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IW)) +
-	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IW)) +
-	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IW)) ;
-	    
-	    Uout(i,j,k,dofMap(idx,idy,idz,ID)) = tmp[ID];
-	    Uout(i,j,k,dofMap(idx,idy,idz,IE)) = tmp[IE];
-	    Uout(i,j,k,dofMap(idx,idy,idz,IU)) = tmp[IU];
-	    Uout(i,j,k,dofMap(idx,idy,idz,IV)) = tmp[IV];
-	    Uout(i,j,k,dofMap(idx,idy,idz,IW)) = tmp[IW];
-	    
-	  } // for idx
-	} // for idy
-      } // for idz
+      
+      tmp[ID] =
+        c0   * U_0 (ii,jj,kk,ID) +
+        c1   * U_1 (ii,jj,kk,ID) +
+        c2dt * U_2 (ii,jj,kk,ID) ;
+      
+      tmp[IE] =
+        c0   * U_0 (ii,jj,kk,IE) +
+        c1   * U_1 (ii,jj,kk,IE) +
+        c2dt * U_2 (ii,jj,kk,IE) ;
+      
+      tmp[IU] =
+        c0   * U_0 (ii,jj,kk,IU) +
+        c1   * U_1 (ii,jj,kk,IU) +
+        c2dt * U_2 (ii,jj,kk,IU) ;
+      
+      tmp[IV] =
+        c0   * U_0 (ii,jj,kk,IV) +
+        c1   * U_1 (ii,jj,kk,IV) +
+        c2dt * U_2 (ii,jj,kk,IV) ;
+      
+      tmp[IW] =
+        c0   * U_0 (ii,jj,kk,IW) +
+        c1   * U_1 (ii,jj,kk,IW) +
+        c2dt * U_2 (ii,jj,kk,IW) ;
+      
+      Uout(ii,jj,kk,ID) = tmp[ID];
+      Uout(ii,jj,kk,IE) = tmp[IE];
+      Uout(ii,jj,kk,IU) = tmp[IU];
+      Uout(ii,jj,kk,IV) = tmp[IV];
+      Uout(ii,jj,kk,IW) = tmp[IW];
       
     } // end if guard
     
@@ -399,8 +401,10 @@ public:
   DataArray U_0;
   DataArray U_1;
   DataArray U_2;
-  coefs_t   coefs;
-  real_t    dt;
+  const coefs_t coefs;
+  const real_t  dt;
+  const int     isize, jsize, ksize;
+  const int     ghostWidth;
   
 }; // SDM_Update_RK_Functor
 
