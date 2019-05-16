@@ -98,12 +98,6 @@ bool test_lagrange_functor()
   
   DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
   
-  int nbDofsPerCell = (dim==2) ? N*N : N*N*N;  
-
-  int nbDofs = dim==2 ? 
-    nbDofsPerCell*params.isize*params.jsize : 
-    nbDofsPerCell*params.isize*params.jsize*params.ksize;
-  
   std::map<int, std::string> m_variables_names;
   m_variables_names.clear();
   m_variables_names[ID] = "rho";
@@ -177,8 +171,7 @@ bool test_lagrange_functor()
                                                               sdm_geom,
                                                               U,
                                                               U2,
-                                                              ivar,
-                                                              nbDofs);
+                                                              ivar);
       printf("L1 error for variable %d : %e\n",ivar,error_L1);
       error_accum += error_L1;
     }
@@ -191,8 +184,7 @@ bool test_lagrange_functor()
                                                              sdm_geom,
                                                              U,
                                                              U2,
-                                                             ivar,
-                                                             nbDofs);
+                                                             ivar);
       printf("L1 error for variable %d : %e\n",ivar,error_L1);
 
     }
