@@ -1558,16 +1558,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
 
   UNUSED(mhd_enabled);
   
-  const int ghostWidth=params.ghostWidth;
-  int max_size = std::max(params.isize,params.jsize);
-  int nbIter = ghostWidth * max_size;
-
-  if (dim==3) {
-    max_size = std::max(max_size,params.ksize);
-    nbIter = ghostWidth * max_size * max_size;
-  }
-
-  MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata, nbIter);
+  MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata);
    
 } // SolverHydroSDM<dim,N>::make_boundary_sdm
 

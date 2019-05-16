@@ -29,8 +29,6 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
   
-  static constexpr auto dofMap = DofMap<dim,N>;
-  
   MakeBoundariesFunctor_SDM(HydroParams           params,
 			    SDM_Geometry<dim,N>   sdm_geom,
 			    DataArray             Udata) :
@@ -40,9 +38,19 @@ public:
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
-                    DataArray           Udata,
-                    int                 nbIter)
+                    DataArray           Udata)
   {
+    const int ghostWidth=params.ghostWidth;
+    int max_size = std::max(params.isize,params.jsize);
+    int nbIter = ghostWidth * max_size;
+    nbIter *= (N*N);
+
+    if (dim==3) {
+      max_size = std::max(max_size,params.ksize);
+      nbIter = ghostWidth * max_size * max_size;
+      nbIter *= (N*N*N);
+    }
+
     MakeBoundariesFunctor_SDM<dim,N,faceId> functor(params, sdm_geom, Udata);
     Kokkos::parallel_for(nbIter, functor);
   }
@@ -61,6 +69,7 @@ public:
     const int ny = this->params.ny;
     
     const int ghostWidth = this->params.ghostWidth;
+    const int NghostWidth = N*ghostWidth;
     const int nbvar = this->params.nbvar;
     
     const int imin = this->params.imin;
@@ -68,12 +77,17 @@ public:
     
     const int jmin = this->params.jmin;
     const int jmax = this->params.jmax;
-    
+
+    // global index
+    int ii,jj;
+
+    // local index
     int i,j;
-    
+    int idx, idy;
+
     int boundary_type;
     
-    int i0, j0;
+    int i0, j0, ii0, jj0;
     int iVar;
 
     if (faceId == FACE_XMIN) {
@@ -81,46 +95,47 @@ public:
       // boundary xmin
       boundary_type = this->params.boundary_type_xmin;
 
-      j = index / ghostWidth;
-      i = index - j*ghostWidth;
-      
-      if(j >= jmin && j <= jmax    &&
-	 i >= 0    && i <ghostWidth) {
-	
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
-	    
-	    for ( iVar=0; iVar<nbvar; iVar++ ) {
-	      real_t sign=1.0;
-	      
-	      if ( boundary_type == BC_DIRICHLET ) {
-		i0=2*ghostWidth-1-i;
-		if (iVar==IU) sign=-ONE_F;
+      // compute global
+      jj = index / NghostWidth;
+      ii = index - jj*NghostWidth;
 
-		// mirror DoFs idx <-> N-1-idx
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i0  ,j  , dofMap(N-1-idx,idy,0,iVar))*sign;
-		
-	      } else if( boundary_type == BC_NEUMANN ) {
+      // compute local
+      global2local(ii,jj, i,j,idx,idy, N);
 
-		// TO BE MODIFIED: ghost cell DoFs must be extrapolated from
-		// the inside
-		i0=ghostWidth;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i0  ,j  , dofMap(idx,idy,0,iVar));
-
-	      } else { // periodic
-
-		i0=nx+i;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i0  ,j  , dofMap(idx,idy,0,iVar));
-		
-	      }
-	      
+      if(j >= jmin and j <= jmax    and
+	 i >= 0    and i <ghostWidth) {
+        
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
 	  
-	    } // end for iVar
-	  } // end for idx
-	} // end for idy
+          if ( boundary_type == BC_DIRICHLET ) {
+            i0  = 2*ghostWidth-1-i;
+            ii0 = N*i0 + N-1-idx;
+
+            if (iVar==IU) sign=-ONE_F;
+            
+            // mirror DoFs idx <-> N-1-idx
+            Udata(ii,jj,iVar) = Udata(ii0,jj,iVar)*sign;
+            
+          } else if( boundary_type == BC_NEUMANN ) {
+            
+            // TO BE MODIFIED: ghost cell DoFs must be extrapolated from
+            // the inside
+            i0  = ghostWidth;
+            ii0 = N*i0 + idx;
+            Udata(ii,jj,iVar) = Udata(ii0,jj,iVar);
+            
+          } else { // periodic
+            
+            i0  = nx+i;
+            ii0 = N*i0 + idx;
+
+            Udata(ii,jj,iVar) = Udata(ii0,jj,iVar);
+            
+          }
+	  
+	  
+        } // end for iVar
 	
       } // end guard
       
@@ -130,45 +145,47 @@ public:
       
       // boundary xmax
       boundary_type = this->params.boundary_type_xmax;
-      
-      j = index / ghostWidth;
-      i = index - j*ghostWidth;
-      i += (nx+ghostWidth);
 
-      if(j >= jmin          && j <= jmax             &&
-	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
+      // compute global
+      jj = index / NghostWidth;
+      ii = index - jj*NghostWidth;
+      ii += (nx+ghostWidth)*N;
+
+      // compute local
+      global2local(ii,jj, i,j,idx,idy, N);
+
+      if(j >= jmin          and j <= jmax             and
+	 i >= nx+ghostWidth and i <= nx+2*ghostWidth-1) {
 	
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
-
-	    for ( iVar=0; iVar<nbvar; iVar++ ) {
-	      real_t sign=1.0;
-	      
-	      if ( boundary_type == BC_DIRICHLET ) {
-
-		i0=2*nx+2*ghostWidth-1-i;
-		if (iVar==IU) sign=-ONE_F;
-
-		// mirror DoFs idx <-> N-1-idx
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i0 ,j  , dofMap(N-1-idx,idy,0,iVar))*sign;
-		
-	      } else if ( boundary_type == BC_NEUMANN ) {
-
-		i0=nx+ghostWidth-1;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i0 ,j  , dofMap(idx,idy,0,iVar));
-
-	      } else { // periodic
-
-		i0=i-nx;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i0 ,j  , dofMap(idx,idy,0,iVar));
-	      }
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
 	  
-	    } // end for iVar
-	  } // end for idx
-	} // end for idy
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            i0  = 2*nx+2*ghostWidth-1-i;
+            ii0 = N*i0 + N-1-idx;
+
+            if (iVar==IU) sign=-ONE_F;
+            
+            // mirror DoFs idx <-> N-1-idx
+            Udata(ii,jj,iVar) = Udata(ii0,jj,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            i0  = nx+ghostWidth-1;
+            ii0 = N*i0 + idx;
+
+            Udata(ii,jj,iVar) = Udata(ii0,jj,iVar);
+            
+          } else { // periodic
+            
+            i0  = i-nx;
+            ii0 = N*i0 + idx;
+
+            Udata(ii,jj,iVar) = Udata(ii0,jj,iVar);
+          }
+	  
+        } // end for iVar
 
       } // end guard
       
@@ -179,44 +196,46 @@ public:
       // boundary ymin
       boundary_type = this->params.boundary_type_ymin;
       
-      i = index / ghostWidth;
-      j = index - i*ghostWidth;
+      // compute global
+      ii = index / NghostWidth;
+      jj = index - ii*NghostWidth;
 
-      if(i >= imin && i <= imax    &&
-	 j >= 0    && j <ghostWidth) {
+      // compute local
+      global2local(ii,jj, i,j,idx,idy, N);
+
+      if(i >= imin and i <= imax    and
+	 j >= 0    and j <ghostWidth) {
 	
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+          
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            j0  = 2*ghostWidth-1-j;
+            jj0 = N*j0 + N-1-idy;
 
-	    for ( iVar=0; iVar<nbvar; iVar++ ) {
-	      real_t sign=1.0;
+            if (iVar==IV) sign=-ONE_F;
+            // mirror DoFs idy <-> N-1-idy
+            Udata(ii,jj,iVar) = Udata(ii,jj0,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            j0  = ghostWidth;
+            jj0 = N*j0 + idy;
 
-	      if ( boundary_type == BC_DIRICHLET ) {
+            Udata(ii,jj,iVar) = Udata(ii,jj0,iVar);
+            
+          } else { // periodic
+            
+            j0  = ny+j;
+            jj0 = N*j0 + idy;
 
-		j0=2*ghostWidth-1-j;
-		if (iVar==IV) sign=-ONE_F;
-		// mirror DoFs idy <-> N-1-idy
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i  ,j0 , dofMap(idx,N-1-idy,0,iVar))*sign;
-		
-	      } else if ( boundary_type == BC_NEUMANN ) {
-
-		j0=ghostWidth;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i  ,j0 , dofMap(idx,idy,0,iVar));
-		
-	      } else { // periodic
-
-		j0=ny+j;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i  ,j0 , dofMap(idx,idy,0,iVar));
-		
-	      }
+            Udata(ii,jj,iVar) = Udata(ii,jj0,iVar);
+            
+          }
 	  
-	    } // end for IVar
-	  } // end for idx
-	} // end for idy
-	
+        } // end for iVar
+
       } // end guard
       
     } // end FACE_YMIN
@@ -225,44 +244,47 @@ public:
 
       // boundary ymax
       boundary_type = this->params.boundary_type_ymax;
-      
-      i = index / ghostWidth;
-      j = index - i*ghostWidth;
-      j += (ny+ghostWidth);
-      if(i >= imin          && i <= imax              &&
-	 j >= ny+ghostWidth && j <= ny+2*ghostWidth-1) {
+
+      // compute global
+      ii = index / NghostWidth;
+      jj = index - ii*NghostWidth;
+      jj += (ny+ghostWidth)*N;
+
+      // compute local
+      global2local(ii,jj, i,j,idx,idy, N);
+
+      if(i >= imin          and i <= imax              and
+	 j >= ny+ghostWidth and j <= ny+2*ghostWidth-1) {
 	
-	for (int idy=0; idy<N; ++idy) {
-	  for (int idx=0; idx<N; ++idx) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+	  
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            j0  = 2*ny+2*ghostWidth-1-j;
+            jj0 = N*j0 + N-1-idy;
 
-	    for ( iVar=0; iVar<nbvar; iVar++ ) {
-	      real_t sign=1.0;
-	      
-	      if ( boundary_type == BC_DIRICHLET ) {
+            if (iVar==IV) sign=-ONE_F;
+            // mirror DoFs idy <-> N-1-idy
+            Udata(ii,jj,iVar) = Udata(ii,jj0,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            j0  = ny+ghostWidth-1;
+            jj0 = N*j0 + idy;
 
-		j0=2*ny+2*ghostWidth-1-j;
-		if (iVar==IV) sign=-ONE_F;
-		// mirror DoFs idy <-> N-1-idy
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i  ,j0  , dofMap(idx,N-1-idy,0,iVar))*sign;
-		
-	      } else if ( boundary_type == BC_NEUMANN ) {
+            Udata(ii,jj,iVar) = Udata(ii,jj0,iVar);
+            
+          } else { // periodic
+            
+            j0  = j-ny;
+            jj0 = N*j0 + idy;
 
-		j0=ny+ghostWidth-1;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i  ,j0  , dofMap(idx,idy,0,iVar));
-		
-	      } else { // periodic
-
-		j0=j-ny;
-		Udata(i  ,j  , dofMap(idx,idy,0,iVar)) =
-		  Udata(i  ,j0  , dofMap(idx,idy,0,iVar));
-		
-	      }
-	      	      
-	    } // end for iVar
-	  } // end for idx
-	} // end for idy
+            Udata(ii,jj,iVar) = Udata(ii,jj0,iVar);
+            
+          }
+	  
+        } // end for iVar
 
       } // end guard
       
@@ -285,10 +307,15 @@ public:
     const int ny = this->params.ny;
     const int nz = this->params.nz;
     
-    const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int isize = this->params.isize;
+    //const int jsize = this->params.jsize;
     //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
+
+    const int iisize = this->params.isize*N;
+    const int jjsize = this->params.jsize*N;
+    const int NghostWidth = this->params.ghostWidth*N;
+
     const int nbvar = this->params.nbvar;
     
     const int imin = this->params.imin;
@@ -300,60 +327,64 @@ public:
     const int kmin = this->params.kmin;
     const int kmax = this->params.kmax;
     
+    // global index
+    int ii,jj,kk;
+
+    // local index
     int i,j,k;
+    int idx, idy, idz;
     
     int boundary_type;
     
     int i0, j0, k0;
+    int ii0, jj0, kk0;
     int iVar;
     
     if (faceId == FACE_XMIN) {
       
-      // boundary xmin (index = i + j * ghostWidth + k * ghostWidth*jsize)
-      k = index / (ghostWidth*jsize);
-      j = (index - k*ghostWidth*jsize) / ghostWidth;
-      i = index - j*ghostWidth - k*ghostWidth*jsize;
+      // boundary xmin (index = ii + jj * NghostWidth + kk * NghostWidth*jjsize)
+      kk = index / (NghostWidth*jjsize);
+      jj = (index - kk*NghostWidth*jjsize) / NghostWidth;
+      ii = index - jj*NghostWidth - kk*NghostWidth*jjsize;
+
+      // compute local
+      global2local(ii,jj,kk,  i,j,k,idx,idy,idz, N);
       
       boundary_type = this->params.boundary_type_xmin;
       
-      if(k >= kmin && k <= kmax &&
-	 j >= jmin && j <= jmax &&
-	 i >= 0    && i <ghostWidth) {
+      if(k >= kmin and k <= kmax and
+	 j >= jmin and j <= jmax and
+	 i >= 0    and i <ghostWidth) {
 	
-	for (int idz=0; idz<N; ++idz) {
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
-	      
-	      for ( iVar=0; iVar<nbvar; iVar++ ) {
-		real_t sign=1.0;
-		
-		if ( boundary_type == BC_DIRICHLET ) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+          
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            i0  = 2*ghostWidth-1-i;
+            ii0 = N*i0 + N-1-idx;
 
-		  i0=2*ghostWidth-1-i;
-		  if (iVar==IU) sign=-ONE_F;
-		  // mirror DoFs idx <-> N-1-idx
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i0,j,k, dofMap(N-1-idx,idy,idz,iVar))*sign;
+            if (iVar==IU) sign=-ONE_F;
+            // mirror DoFs idx <-> N-1-idx
+            Udata(ii,jj,kk,iVar) = Udata(ii0,jj,kk,iVar)*sign;
+            
+          } else if( boundary_type == BC_NEUMANN ) {
+            
+            i0  = ghostWidth;
+            ii0 = N*i0 + idx;
 
-		} else if( boundary_type == BC_NEUMANN ) {
+            Udata(ii,jj,kk,iVar) = Udata(ii0,jj,kk,iVar);
+            
+          } else { // periodic
+            
+            i0  = nx+i;
+            ii0 = N*i0 + idx;
 
-		  i0=ghostWidth;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i0,j,k, dofMap(idx,idy,idz,iVar));
-
-		} else { // periodic
-
-		  i0=nx+i;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i0,j,k, dofMap(idx,idy,idz,iVar));
-		  
-		}
-		
+            Udata(ii,jj,kk,iVar) = Udata(ii0,jj,kk,iVar);
+            
+          }          
 	  
-	      } // end for iVar
-	    } // end for idx
-	  } // end for idy
-	} // end for idz
+        } // end for iVar
 	
       } // end guard
     } // end FACE_XMIN
@@ -362,259 +393,259 @@ public:
       
       // boundary xmax (index = i + j *ghostWidth + k * ghostWidth*jsize)
       // same i,j,k as xmin, except translation along x-axis
-      k = index / (ghostWidth*jsize);
-      j = (index - k*ghostWidth*jsize) / ghostWidth;
-      i = index - j*ghostWidth - k*ghostWidth*jsize;
+      kk = index / (NghostWidth*jjsize);
+      jj = (index - kk*NghostWidth*jjsize) / NghostWidth;
+      ii = index - jj*NghostWidth - kk*NghostWidth*jjsize;
 
-      i += (nx+ghostWidth);
+      ii += (nx+ghostWidth)*N;
       
+      // compute local
+      global2local(ii,jj,kk,  i,j,k,idx,idy,idz, N);
+
       boundary_type = this->params.boundary_type_xmax;
       
-      if(k >= kmin          && k <= kmax &&
-	 j >= jmin          && j <= jmax &&
-	 i >= nx+ghostWidth && i <= nx+2*ghostWidth-1) {
+      if(k >= kmin          and k <= kmax and
+	 j >= jmin          and j <= jmax and
+	 i >= nx+ghostWidth and i <= nx+2*ghostWidth-1) {
 	
-	for (int idz=0; idz<N; ++idz) {
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+          
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            i0=2*nx+2*ghostWidth-1-i;
+            ii0 = N*i0 +N-1-idx;
 
-	      for ( iVar=0; iVar<nbvar; iVar++ ) {
-		real_t sign=1.0;
-		
-		if ( boundary_type == BC_DIRICHLET ) {
+            if (iVar==IU) sign=-ONE_F;
+            // mirror DoFs idx <-> N-1-idx
+            Udata(ii,jj,kk,iVar) = Udata(ii0,jj,kk,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            i0  = nx+ghostWidth-1;
+            ii0 = N*i0 + idx;
 
-		  i0=2*nx+2*ghostWidth-1-i;
-		  if (iVar==IU) sign=-ONE_F;
-		  // mirror DoFs idx <-> N-1-idx
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i0,j,k, dofMap(N-1-idx,idy,idz,iVar))*sign;
+            Udata(ii,jj,kk,iVar) = Udata(ii0,jj,kk,iVar);
+            
+          } else { // periodic
+            
+            i0  = i-nx;
+            ii0 = N*i0 + idx;
 
-		} else if ( boundary_type == BC_NEUMANN ) {
-
-		  i0=nx+ghostWidth-1;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i0,j,k, dofMap(idx,idy,idz,iVar));
-
-		} else { // periodic
-
-		  i0=i-nx;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i0,j,k, dofMap(idx,idy,idz,iVar));
-
-		}
-				
-	      } // end for iVar
-	    } // end for idx
-	  } // end for idy
-	} // end for idz
+            Udata(ii,jj,kk,iVar) = Udata(ii0,jj,kk,iVar);
+            
+          }
+          
+        } // end for iVar
 
       } // end guard
+
     } // end FACE_XMAX
 
     if (faceId == FACE_YMIN) {
 
       // boundary ymin (index = i + j*isize + k*isize*ghostWidth)
-      k = index / (isize*ghostWidth);
-      j = (index - k*isize*ghostWidth) / isize;
-      i = index - j*isize - k*isize*ghostWidth;
+      kk = index / (iisize*NghostWidth);
+      jj = (index - kk*iisize*NghostWidth) / iisize;
+      ii = index - jj*iisize - kk*iisize*NghostWidth;
+
+      // compute local
+      global2local(ii,jj,kk,  i,j,k,idx,idy,idz, N);
 
       boundary_type = this->params.boundary_type_ymin;
       
-      if(k >= kmin && k <= kmax       && 
-	 j >= 0    && j <  ghostWidth &&
-	 i >= imin && i <= imax) {
+      if(k >= kmin and k <= kmax       and 
+	 j >= 0    and j <  ghostWidth and
+	 i >= imin and i <= imax) {
 	
-	for (int idz=0; idz<N; ++idz) {
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+	  
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            j0  = 2*ghostWidth-1-j;
+            jj0 = N*j0 + N-1-idy;
 
-	      for ( iVar=0; iVar<nbvar; iVar++ ) {
-		real_t sign=1.0;
-	      
-		if ( boundary_type == BC_DIRICHLET ) {
-
-		  j0=2*ghostWidth-1-j;
-		  if (iVar==IV) sign=-ONE_F;
-		  // mirror DoFs idy <-> N-1-idy
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j0,k, dofMap(idx,N-1-idy,idz,iVar))*sign;
-
-		} else if ( boundary_type == BC_NEUMANN ) {
-
-		  j0=ghostWidth;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j0,k, dofMap(idx,idy,idz,iVar));
-
-		} else { // periodic
-
-		  j0=ny+j;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j0,k, dofMap(idx,idy,idz,iVar));
-
-		}
-				
-	      } // end for iVar
-	    } // end for idx
-	  } // end for idy
-	} // end for idz
-
+            if (iVar==IV) sign=-ONE_F;
+            // mirror DoFs idy <-> N-1-idy
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj0,kk,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            j0  = ghostWidth;
+            jj0 = N*j0+idy;
+            
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj0,kk,iVar);
+            
+          } else { // periodic
+            
+            j0  = ny+j;
+            jj0 = N*j0+idy;
+            
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj0,kk,iVar);
+            
+          }
+          
+        } // end for iVar
+        
       } // end guard
+      
     } // end FACE_YMIN
-
+    
     if (faceId == FACE_YMAX) {
       
       // boundary ymax (index = i + j*isize + k*isize*ghostWidth)
       // same i,j,k as ymin, except translation along y-axis
-      k = index / (isize*ghostWidth);
-      j = (index - k*isize*ghostWidth) / isize;
-      i = index - j*isize - k*isize*ghostWidth;
+      kk = index / (iisize*NghostWidth);
+      jj = (index - kk*iisize*NghostWidth) / iisize;
+      ii = index - jj*iisize - kk*iisize*NghostWidth;
 
-      j += (ny+ghostWidth);
+      jj += (ny+ghostWidth)*N;
+
+      // compute local
+      global2local(ii,jj,kk,  i,j,k,idx,idy,idz, N);
 
       boundary_type = this->params.boundary_type_ymax;
       
-      if(k >= kmin           && k <= kmax              &&
-	 j >= ny+ghostWidth  && j <= ny+2*ghostWidth-1 &&
-	 i >= imin           && i <= imax) {
+      if(k >= kmin           and k <= kmax              and
+	 j >= ny+ghostWidth  and j <= ny+2*ghostWidth-1 and
+	 i >= imin           and i <= imax) {
 	
-	for (int idz=0; idz<N; ++idz) {
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+          
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            j0  = 2*ny+2*ghostWidth-1-j;
+            jj0 = N*j0 + N-1-idy;
 
-	      for ( iVar=0; iVar<nbvar; iVar++ ) {
-		real_t sign=1.0;
-		
-		if ( boundary_type == BC_DIRICHLET ) {
+            if (iVar==IV) sign=-ONE_F;
+            // mirror DoFs idy <-> N-1-idy
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj0,kk,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            j0  = ny+ghostWidth-1;
+            jj0 = N*j0 + idy;
 
-		  j0=2*ny+2*ghostWidth-1-j;
-		  if (iVar==IV) sign=-ONE_F;
-		  // mirror DoFs idy <-> N-1-idy
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j0,k, dofMap(idx,N-1-idy,idz,iVar))*sign;
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj0,kk,iVar);
+            
+          } else { // periodic
+            
+            j0  = j-ny;
+            jj0 = N*j0 + idy;
 
-		} else if ( boundary_type == BC_NEUMANN ) {
-
-		  j0=ny+ghostWidth-1;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j0,k, dofMap(idx,idy,idz,iVar));
-
-		} else { // periodic
-
-		  j0=j-ny;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j0,k, dofMap(idx,idy,idz,iVar));
-		  
-		}
-				
-	      } // end for iVar
-	    } // end for idx
-	  } // end for idy
-	} // end for idz
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj0,kk,iVar);
+            
+          }
+          
+        } // end for iVar
 		
       } // end guard
+
     } // end FACE_YMAX
 
     if (faceId == FACE_ZMIN) {
       
       // boundary zmin (index = i + j*isize + k*isize*jsize)
-      k = index / (isize*jsize);
-      j = (index - k*isize*jsize) / isize;
-      i = index - j*isize - k*isize*jsize;
+      kk = index / (iisize*jjsize);
+      jj = (index - kk*iisize*jjsize) / iisize;
+      ii = index - jj*iisize - kk*iisize*jjsize;
+
+      // compute local
+      global2local(ii,jj,kk,  i,j,k,idx,idy,idz, N);
 
       boundary_type = this->params.boundary_type_zmin;
       
-      if(k >= 0    && k <  ghostWidth &&
-	 j >= jmin && j <= jmax       &&
-	 i >= imin && i <= imax) {
+      if(k >= 0    and k <  ghostWidth and
+	 j >= jmin and j <= jmax       and
+	 i >= imin and i <= imax) {
 	
-	for (int idz=0; idz<N; ++idz) {
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
-	      
-	      for ( iVar=0; iVar<nbvar; iVar++ ) {
-		real_t sign=1.0;
-	      
-		if ( boundary_type == BC_DIRICHLET ) {
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+	  
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            k0  = 2*ghostWidth-1-k;
+            kk0 = N*k0 + N-1-idz;
 
-		  k0=2*ghostWidth-1-k;
-		  if (iVar==IW) sign=-ONE_F;
-		  // mirror DoFs idz <-> N-1-idz
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j,k0, dofMap(idx,idy,N-1-idz,iVar))*sign;
+            if (iVar==IW) sign=-ONE_F;
+            // mirror DoFs idz <-> N-1-idz
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj,kk0,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            k0  = ghostWidth;
+            kk0 = N*k0 + idz;
 
-		} else if ( boundary_type == BC_NEUMANN ) {
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj,kk0,iVar);
+            
+          } else { // periodic
+            
+            k0  = nz+k;
+            kk0 = N*k0 + idz;
 
-		  k0=ghostWidth;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j,k0, dofMap(idx,idy,idz,iVar));
-
-		} else { // periodic
-
-		  k0=nz+k;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j,k0, dofMap(idx,idy,idz,iVar));
-		  
-		}
-				
-	      } // end for iVar
-	    } // end for idx
-	  } // end for idy
-	} // end for idz
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj,kk0,iVar);
+            
+          }
+          
+        } // end for iVar
 
       } // end guard
+
     } // end FACE_ZMIN
     
     if (faceId == FACE_ZMAX) {
       
       // boundary zmax (index = i + j*isize + k*isize*jsize)
       // same i,j,k as ymin, except translation along y-axis
-      k = index / (isize*jsize);
-      j = (index - k*isize*jsize) / isize;
-      i = index - j*isize - k*isize*jsize;
+      kk = index / (iisize*jjsize);
+      jj = (index - kk*iisize*jjsize) / iisize;
+      ii = index - jj*iisize - kk*iisize*jjsize;
 
-      k += (nz+ghostWidth);
+      kk += (nz+ghostWidth)*N;
+
+      // compute local
+      global2local(ii,jj,kk,  i,j,k,idx,idy,idz, N);
 
       boundary_type = this->params.boundary_type_zmax;
       
-      if(k >= nz+ghostWidth && k <= nz+2*ghostWidth-1 &&
-	 j >= jmin          && j <= jmax              &&
-	 i >= imin          && i <= imax) {
+      if(k >= nz+ghostWidth and k <= nz+2*ghostWidth-1 and
+	 j >= jmin          and j <= jmax              and
+	 i >= imin          and i <= imax) {
 	
-	for (int idz=0; idz<N; ++idz) {
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
-
-	      for ( iVar=0; iVar<nbvar; iVar++ ) {
-		real_t sign=1.0;
-	
-		if ( boundary_type == BC_DIRICHLET ) {
-
-		  k0=2*nz+2*ghostWidth-1-k;
-		  if (iVar==IW) sign=-ONE_F;
-		  // mirror DoFs idz <-> N-1-idz
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j,k0, dofMap(idx,idy,N-1-idz,iVar))*sign;
-
-		} else if ( boundary_type == BC_NEUMANN ) {
-
-		  k0=nz+ghostWidth-1;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j,k0, dofMap(idx,idy,idz,iVar));
-
-		} else { // periodic
-
-		  k0=k-nz;
-		  Udata(i,j,k, dofMap(idx,idy,idz,iVar)) =
-		    Udata(i,j,k0, dofMap(idx,idy,idz,iVar));
-
-		}
-				
-	      } // end for iVar
-	    } // end for idx
-	  } // end for idy
-	} // end for idz
+        for ( iVar=0; iVar<nbvar; iVar++ ) {
+          real_t sign=1.0;
+          
+          if ( boundary_type == BC_DIRICHLET ) {
+            
+            k0  = 2*nz+2*ghostWidth-1-k;
+            kk0 = N*k0 + N-1-idz;
+            
+            if (iVar==IW) sign=-ONE_F;
+            // mirror DoFs idz <-> N-1-idz
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj,kk0,iVar)*sign;
+            
+          } else if ( boundary_type == BC_NEUMANN ) {
+            
+            k0  = nz+ghostWidth-1;
+            kk0 = N*k0 + idz;
+            
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj,kk0,iVar);
+            
+          } else { // periodic
+            
+            k0  = k-nz;
+            kk0 = N*k0 + idz;
+            
+            Udata(ii,jj,kk,iVar) = Udata(ii,jj,kk0,iVar);
+            
+          }
+          
+        } // end for iVar
 	
       } // end guard
+
     } // end FACE_ZMAX
 
   } // end operator () - 3d
