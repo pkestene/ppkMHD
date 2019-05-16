@@ -150,8 +150,6 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
     solver->params.isize *
     solver->params.jsize;
 
-  int nbDofs = nbCells * N * N;
-  
   // retrieve exact solution in auxiliary data arrary : solver.Uaux
   {
     solver->configMap.setBool("isentropic_vortex","use_tEnd",true);
@@ -172,8 +170,7 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
                                                            solver->sdm_geom,
                                                            solver->U,
                                                            solver->Uaux,
-                                                           ID,
-                                                           nbDofs);
+                                                           ID);
     error[sdm::NORM_L1] = error_L1/nbCells/N/N;
   }
   
@@ -183,8 +180,7 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
                                                            solver->sdm_geom,
                                                            solver->U,
                                                            solver->Uaux,
-                                                           ID,
-                                                           nbDofs);
+                                                           ID);
     error[sdm::NORM_L2] = std::sqrt(error_L2)/nbCells/N/N;
   }
 

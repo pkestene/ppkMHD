@@ -77,10 +77,6 @@ void test_flux_functors()
   // SolverFactory's create method)
   solver.init_io();
 
-  int nbCells = dim==2 ?
-    params.isize*params.jsize :
-    params.isize*params.jsize*params.ksize;
-  
   // init data
   {
 

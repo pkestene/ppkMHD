@@ -57,9 +57,10 @@ public:
                       SDM_Geometry<2,N> sdm_geom,
                       DataArray         Udata1,
                       DataArray         Udata2,
-                      int               varId,
-                      int               nbDofs)
+                      int               varId)
   {
+    int64_t nbDofs = params.isize * params.jsize * N * N;
+
     real_t error = 0;
     Compute_Error_Functor_2d<N,norm> functor(params, sdm_geom,
                                              Udata1, Udata2, varId);
@@ -72,8 +73,7 @@ public:
                       SDM_Geometry<3,N> sdm_geom,
                       DataArray3d       Udata1,
                       DataArray3d       Udata2,
-                      int               varId,
-                      int               nbDofs)
+                      int               varId)
   {
     return -1.0;
   }
@@ -186,9 +186,10 @@ public:
                       SDM_Geometry<3,N> sdm_geom,
                       DataArray         Udata1,
                       DataArray         Udata2,
-                      int               varId,
-                      int               nbDofs)
+                      int               varId)
   {
+    int64_t nbDofs = params.isize * params.jsize * params.ksize * N * N * N;
+
     real_t error = 0;
     Compute_Error_Functor_3d<N,norm> functor(params, sdm_geom,
                                              Udata1, Udata2, varId);
@@ -201,8 +202,7 @@ public:
                       SDM_Geometry<2,N> sdm_geom,
                       DataArray2d       Udata1,
                       DataArray2d       Udata2,
-                      int               varId,
-                      int               nbDofs)
+                      int               varId)
   {
     return -1.0;
   }
