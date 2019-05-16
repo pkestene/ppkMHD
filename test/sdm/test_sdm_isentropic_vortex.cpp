@@ -155,10 +155,10 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
     solver->configMap.setBool("isentropic_vortex","use_tEnd",true);
     IsentropicVortexParams iparams(solver->configMap);
 
-    sdm::InitIsentropicVortexFunctor<2,N>apply(solver->params,
-                                               solver->sdm_geom,
-                                               iparams,
-                                               solver->Uaux);
+    sdm::InitIsentropicVortexFunctor<2,N>::apply(solver->params,
+                                                 solver->sdm_geom,
+                                                 iparams,
+                                                 solver->Uaux);
                                                
     solver->configMap.setBool("isentropic_vortex","use_tEnd",false);
   }
