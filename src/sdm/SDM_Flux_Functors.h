@@ -93,7 +93,7 @@ public:
     global2local_flux<dir>(ii,jj, i,j,idx,idy, N);
 
     // state variable for conservative variables, and flux
-    HydroState q = {}, flux;
+    HydroState q = {}, flux = {};
 
     /*
      * first handle interior points, then end points.
@@ -286,7 +286,7 @@ public:
                            i,j,k, idx,idy, idz, N);
 
     // state variable for conservative variables, and flux
-    HydroState q = {}, flux;
+    HydroState q = {}, flux = {};
         
     /*
      * first handle interior points, then end points.
