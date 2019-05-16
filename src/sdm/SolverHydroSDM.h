@@ -133,6 +133,10 @@ public:
   //! Data array typedef for host memory space
   using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
 
+  //! unmanaged view
+  using DataArrayUnmanaged = typename std::conditional<dim==2,DataArray2dUM,DataArray3dUM>::type;
+
+
   //! a type to store some coefficients needed to perform Runge-Kutta integration
   using coefs_t = Kokkos::Array<real_t,3>;
 
@@ -191,7 +195,10 @@ public:
   //! fluxes : intermediate array containing fluxes, used in
   //! compute_fluxes_divergence_per_dir
   DataArray Fluxes;
-  
+
+  //! array of unmanaged views for flux computations
+  DataArrayUnmanaged FluxesDir[dim];
+
   /*
    * Override base class method to initialize IO writer object
    */
@@ -468,7 +475,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     total_mem_size += iisize*jjsize*nbvar * sizeof(real_t); // U
     total_mem_size += iisize*jjsize*nbvar * sizeof(real_t); // Uaux
     total_mem_size += isize*(N+1)*jjsize*nbvar * sizeof(real_t); // Fluxes
-    
+
+    FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, nbvar);
+    FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), nbvar);
+
   } else if (dim==3) {
 
     U     = DataArray("U", iisize, jjsize, kksize, nbvar);
@@ -480,6 +490,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     total_mem_size += iisize*jjsize*kksize*nbvar      * sizeof(real_t); // U
     total_mem_size += iisize*jjsize*kksize*nbvar      * sizeof(real_t); // Uaux
     total_mem_size += isize*(N+1)*jjsize*kksize*nbvar * sizeof(real_t); // Fluxes
+
+    FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, kksize, nbvar);
+    FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), kksize, nbvar);
+    FluxesDir[IZ] = DataArrayUnmanaged(Fluxes.data(), iisize, jjsize, ksize*(N+1), nbvar);
 
   }
 
@@ -1054,18 +1068,18 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
   Interpolate_At_FluxPoints_Functor<dim,N,dir>::apply(params,
                                                       sdm_geom,
                                                       Udata,
-                                                      Fluxes);
+                                                      FluxesDir[dir]);
   
   // 2. inplace computation of fluxes along direction <dir> at flux points
   ComputeFluxAtFluxPoints_Functor<dim,N,dir>::apply(params,
                                                     sdm_geom,
                                                     euler,
-                                                    Fluxes);
+                                                    FluxesDir[dir]);
   
   // 3. compute derivative and accumulate in Udata_fdiv
   Interpolate_At_SolutionPoints_Functor<dim,N,dir>::apply(params,
                                                           sdm_geom,
-                                                          Fluxes,
+                                                          FluxesDir[dir],
                                                           Udata_fdiv);
   
 } // SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir
