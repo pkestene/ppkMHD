@@ -34,8 +34,6 @@ template<int dim, int N>
 class InitImplodeFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   InitImplodeFunctor(HydroParams         params,
 		     SDM_Geometry<dim,N> sdm_geom,
 		     ImplodeParams       iparams,
@@ -106,18 +104,16 @@ public:
     const real_t u_in    = this->iparams.u_in;
     const real_t v_in    = this->iparams.v_in;
 
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
     
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -133,15 +129,15 @@ public:
       tmp = x+y > (xmin+xmax)/2. + ymin;
     
     if (tmp) {
-      Udata(ii  ,jj  , ID) = rho_out;
-      Udata(ii  ,jj  , IE) = p_out/(gamma0-1.0) + 0.5 * rho_out * (u_out*u_out + v_out*v_out);
-      Udata(ii  ,jj  , IU) = u_out;
-      Udata(ii  ,jj  , IV) = v_out;
+      Udata(iDof,iCell, ID) = rho_out;
+      Udata(iDof,iCell, IE) = p_out/(gamma0-1.0) + 0.5 * rho_out * (u_out*u_out + v_out*v_out);
+      Udata(iDof,iCell, IU) = u_out;
+      Udata(iDof,iCell, IV) = v_out;
     } else {
-      Udata(ii  ,jj  , ID) = rho_in;
-      Udata(ii  ,jj  , IE) = p_in/(gamma0-1.0) + 0.5 * rho_in * (u_in*u_in + v_in*v_in);
-      Udata(ii  ,jj  , IU) = u_in;
-      Udata(ii  ,jj  , IV) = v_in;
+      Udata(iDof,iCell, ID) = rho_in;
+      Udata(iDof,iCell, IE) = p_in/(gamma0-1.0) + 0.5 * rho_in * (u_in*u_in + v_in*v_in);
+      Udata(iDof,iCell, IU) = u_in;
+      Udata(iDof,iCell, IV) = v_in;
     }
     
   } // end operator () - 2d
@@ -202,18 +198,16 @@ public:
     const real_t v_in    = this->iparams.v_in;
     const real_t w_in    = this->iparams.w_in;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 	  
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -231,19 +225,19 @@ public:
       tmp = x+y+z > (xmin+xmax)/2. + ymin + zmin;
     
     if (tmp) {
-      Udata(ii,jj,kk, ID) = rho_out;
-      Udata(ii,jj,kk, IE) = p_out/(gamma0-1.0) + 0.5 * rho_out *
+      Udata(iDof,iCell, ID) = rho_out;
+      Udata(iDof,iCell, IE) = p_out/(gamma0-1.0) + 0.5 * rho_out *
 	(u_out*u_out + v_out*v_out + w_out*w_out);
-      Udata(ii,jj,kk, IU) = u_out;
-      Udata(ii,jj,kk, IV) = v_out;
-      Udata(ii,jj,kk, IW) = w_out;
+      Udata(iDof,iCell, IU) = u_out;
+      Udata(iDof,iCell, IV) = v_out;
+      Udata(iDof,iCell, IW) = w_out;
     } else {
-      Udata(ii,jj,kk, ID) = rho_in;
-      Udata(ii,jj,kk, IE) = p_in/(gamma0-1.0) + 0.5 * rho_in *
+      Udata(iDof,iCell, ID) = rho_in;
+      Udata(iDof,iCell, IE) = p_in/(gamma0-1.0) + 0.5 * rho_in *
 	(u_in*u_in + v_in*v_in + w_in*w_in);
-      Udata(ii,jj,kk, IU) = u_in;
-      Udata(ii,jj,kk, IV) = v_in;
-      Udata(ii,jj,kk, IW) = w_in;
+      Udata(iDof,iCell, IU) = u_in;
+      Udata(iDof,iCell, IV) = v_in;
+      Udata(iDof,iCell, IW) = w_in;
     }
     
   } // end operator () - 3d
@@ -260,8 +254,6 @@ template<int dim, int N>
 class InitBlastFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   InitBlastFunctor(HydroParams         params,
 		   SDM_Geometry<dim,N> sdm_geom,
 		   BlastParams         bParams,
@@ -326,18 +318,16 @@ public:
     const real_t blast_pressure_in = bParams.blast_pressure_in;
     const real_t blast_pressure_out= bParams.blast_pressure_out;
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
 	
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -352,15 +342,15 @@ public:
       (y-blast_center_y)*(y-blast_center_y);    
     
     if (d2 < radius2) {
-      Udata(ii,jj,ID) = blast_density_in;
-      Udata(ii,jj,IE) = blast_pressure_in/(gamma0-1.0);
-      Udata(ii,jj,IU) = 0.0;
-      Udata(ii,jj,IV) = 0.0;
+      Udata(iDof,iCell,ID) = blast_density_in;
+      Udata(iDof,iCell,IE) = blast_pressure_in/(gamma0-1.0);
+      Udata(iDof,iCell,IU) = 0.0;
+      Udata(iDof,iCell,IV) = 0.0;
     } else {
-      Udata(ii,jj,ID) = blast_density_out;
-      Udata(ii,jj,IE) = blast_pressure_out/(gamma0-1.0);
-      Udata(ii,jj,IU) = 0.0;
-      Udata(ii,jj,IV) = 0.0;
+      Udata(iDof,iCell,ID) = blast_density_out;
+      Udata(iDof,iCell,IE) = blast_pressure_out/(gamma0-1.0);
+      Udata(iDof,iCell,IU) = 0.0;
+      Udata(iDof,iCell,IV) = 0.0;
     }
     
   } // end operator () - 2d
@@ -414,18 +404,16 @@ public:
     const real_t blast_pressure_in = bParams.blast_pressure_in;
     const real_t blast_pressure_out= bParams.blast_pressure_out;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 	  
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -443,19 +431,19 @@ public:
     
     if (d2 < radius2) {
       
-      Udata(ii,jj,kk,ID) = blast_density_in;
-      Udata(ii,jj,kk,IE) = blast_pressure_in/(gamma0-1.0);
-      Udata(ii,jj,kk,IU) = 0.0;
-      Udata(ii,jj,kk,IV) = 0.0;
-      Udata(ii,jj,kk,IW) = 0.0;
+      Udata(iDof,iCell,ID) = blast_density_in;
+      Udata(iDof,iCell,IE) = blast_pressure_in/(gamma0-1.0);
+      Udata(iDof,iCell,IU) = 0.0;
+      Udata(iDof,iCell,IV) = 0.0;
+      Udata(iDof,iCell,IW) = 0.0;
       
     } else {
       
-      Udata(ii,jj,kk,ID) = blast_density_out;
-      Udata(ii,jj,kk,IE) = blast_pressure_out/(gamma0-1.0);
-      Udata(ii,jj,kk,IU) = 0.0;
-      Udata(ii,jj,kk,IV) = 0.0;
-      Udata(ii,jj,kk,IW) = 0.0;
+      Udata(iDof,iCell,ID) = blast_density_out;
+      Udata(iDof,iCell,IE) = blast_pressure_out/(gamma0-1.0);
+      Udata(iDof,iCell,IU) = 0.0;
+      Udata(iDof,iCell,IV) = 0.0;
+      Udata(iDof,iCell,IW) = 0.0;
       
     }
     
@@ -473,8 +461,6 @@ template<int dim, int N>
 class InitKelvinHelmholtzFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   InitKelvinHelmholtzFunctor(HydroParams         params,
 			     SDM_Geometry<dim,N> sdm_geom,
 			     KHParams            khParams,
@@ -541,18 +527,16 @@ public:
     const real_t ampl      = khParams.amplitude;
     const real_t pressure  = khParams.pressure;
 
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
 
     // get random number state
     rand_type rand_gen = rand_pool.get_state();
@@ -590,10 +574,10 @@ public:
       u += ampl * (rand_gen.drand() - 0.5);
       v += ampl * (rand_gen.drand() - 0.5);
       
-      Udata(ii,jj,ID) = d;
-      Udata(ii,jj,IU) = d * u;
-      Udata(ii,jj,IV) = d * v;
-      Udata(ii,jj,IE) =
+      Udata(iDof,iCell,ID) = d;
+      Udata(iDof,iCell,IU) = d * u;
+      Udata(iDof,iCell,IV) = d * v;
+      Udata(iDof,iCell,IE) =
         pressure/(gamma0-1.0) + 0.5*d*(u*u + v*v);
       
     } else if (khParams.p_sine_rob) {
@@ -616,10 +600,10 @@ public:
       const real_t u = v1   + ramp*(v2-v1);
       const real_t v = w0 * sin(n*M_PI*x);
       
-      Udata(ii,jj,ID) = d;
-      Udata(ii,jj,IU) = d * u;
-      Udata(ii,jj,IV) = d * v;
-      Udata(ii,jj,IE) =
+      Udata(iDof,iCell,ID) = d;
+      Udata(iDof,iCell,IU) = d * u;
+      Udata(iDof,iCell,IV) = d * v;
+      Udata(iDof,iCell,IE) =
         pressure / (gamma0-1.0) + 0.5*d*(u*u + v*v);
       
     }
@@ -679,18 +663,16 @@ public:
     const real_t ampl      = khParams.amplitude;
     const real_t pressure  = khParams.pressure;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     // get random number state
     rand_type rand_gen = rand_pool.get_state();
@@ -733,11 +715,11 @@ public:
       v += ampl * (rand_gen.drand() - 0.5);
       w += ampl * (rand_gen.drand() - 0.5);
       
-      Udata(ii,jj,kk,ID) = d;
-      Udata(ii,jj,kk,IU) = d * u;
-      Udata(ii,jj,kk,IV) = d * v;
-      Udata(ii,jj,kk,IW) = d * w;
-      Udata(ii,jj,kk,IE) =
+      Udata(iDof,iCell,ID) = d;
+      Udata(iDof,iCell,IU) = d * u;
+      Udata(iDof,iCell,IV) = d * v;
+      Udata(iDof,iCell,IW) = d * w;
+      Udata(iDof,iCell,IE) =
         pressure/(gamma0-1.0) + 0.5*d*(u*u + v*v + w*w);
       
     } else if (khParams.p_sine_rob) {
@@ -767,11 +749,11 @@ public:
       const real_t v = v1y   + ramp*(v2y-v1y);
       const real_t w = w0 * sin(n*M_PI*x) * sin(n*M_PI*y);
       
-      Udata(ii,jj,kk,ID) = d;
-      Udata(ii,jj,kk,IU) = d * u;
-      Udata(ii,jj,kk,IV) = d * v;
-      Udata(ii,jj,kk,IW) = d * w;
-      Udata(ii,jj,kk,IE) =
+      Udata(iDof,iCell,ID) = d;
+      Udata(iDof,iCell,IU) = d * u;
+      Udata(iDof,iCell,IV) = d * v;
+      Udata(iDof,iCell,IW) = d * w;
+      Udata(iDof,iCell,IE) =
         pressure / (gamma0-1.0) + 0.5*d*(u*u + v*v + w*w);
       
     }
@@ -797,8 +779,6 @@ template<int dim, int N>
 class InitGreshoVortexFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   InitGreshoVortexFunctor(HydroParams         params,
 			  SDM_Geometry<dim,N> sdm_geom,
 			  GreshoParams        gvParams,
@@ -859,18 +839,16 @@ public:
 
     const real_t p0 = rho0 / (gamma0 * Ma * Ma);
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
     
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -906,13 +884,13 @@ public:
       
     }
     
-    Udata(ii,jj,ID) = rho0;
-    Udata(ii,jj,IU) = rho0 * (-sinT * uphi);
-    Udata(ii,jj,IV) = rho0 * ( cosT * uphi);
-    Udata(ii,jj,IE) = p/(gamma0-1.0) +
-      0.5*(Udata(ii,jj,IU)*Udata(ii,jj,IU) +
-           Udata(ii,jj,IV)*Udata(ii,jj,IV))/
-      Udata(ii,jj,ID);
+    Udata(iDof,iCell,ID) = rho0;
+    Udata(iDof,iCell,IU) = rho0 * (-sinT * uphi);
+    Udata(iDof,iCell,IV) = rho0 * ( cosT * uphi);
+    Udata(iDof,iCell,IE) = p/(gamma0-1.0) +
+      0.5*(Udata(iDof,iCell,IU)*Udata(iDof,iCell,IU) +
+           Udata(iDof,iCell,IV)*Udata(iDof,iCell,IV))/
+      Udata(iDof,iCell,ID);
     
   } // end operator () - 2d
 
@@ -960,18 +938,16 @@ public:
 
     const real_t p0 = rho0 / (gamma0 * Ma * Ma);
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+     int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -1008,15 +984,15 @@ public:
       
     }
     
-    Udata(ii,jj,kk,ID) = rho0;
-    Udata(ii,jj,kk,IU) = rho0 * (-sinT * uphi);
-    Udata(ii,jj,kk,IV) = rho0 * ( cosT * uphi);
-    Udata(ii,jj,kk,IW) = 0.0;
-    Udata(ii,jj,kk,IE) = p/(gamma0-1.0) +
-      0.5*(Udata(ii,jj,kk,IU)*Udata(ii,jj,kk,IU) +
-           Udata(ii,jj,kk,IV)*Udata(ii,jj,kk,IV) +
-           Udata(ii,jj,kk,IW)*Udata(ii,jj,kk,IW))/
-      Udata(ii,jj,kk,ID);    
+    Udata(iDof,iCell,ID) = rho0;
+    Udata(iDof,iCell,IU) = rho0 * (-sinT * uphi);
+    Udata(iDof,iCell,IV) = rho0 * ( cosT * uphi);
+    Udata(iDof,iCell,IW) = 0.0;
+    Udata(iDof,iCell,IE) = p/(gamma0-1.0) +
+      0.5*(Udata(iDof,iCell,IU)*Udata(iDof,iCell,IU) +
+           Udata(iDof,iCell,IV)*Udata(iDof,iCell,IV) +
+           Udata(iDof,iCell,IW)*Udata(iDof,iCell,IW))/
+      Udata(iDof,iCell,ID);    
     
   } // end operator () - 3d
   
@@ -1032,8 +1008,6 @@ template<int dim, int N>
 class InitFourQuadrantFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   InitFourQuadrantFunctor(HydroParams params,
 			  SDM_Geometry<dim,N> sdm_geom,
 			  DataArray Udata,
@@ -1097,18 +1071,16 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
     
     // lower left corner
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
@@ -1121,30 +1093,30 @@ public:
     if (x<xt) {
       if (y<yt) {
         // quarter 2
-        Udata(ii,jj,ID) = U2[ID];
-        Udata(ii,jj,IE) = U2[IE];
-        Udata(ii,jj,IU) = U2[IU];
-        Udata(ii,jj,IV) = U2[IV];
+        Udata(iDof,iCell,ID) = U2[ID];
+        Udata(iDof,iCell,IE) = U2[IE];
+        Udata(iDof,iCell,IU) = U2[IU];
+        Udata(iDof,iCell,IV) = U2[IV];
       } else {
         // quarter 1
-        Udata(ii,jj,ID) = U1[ID];
-        Udata(ii,jj,IE) = U1[IE];
-        Udata(ii,jj,IU) = U1[IU];
-        Udata(ii,jj,IV) = U1[IV];
+        Udata(iDof,iCell,ID) = U1[ID];
+        Udata(iDof,iCell,IE) = U1[IE];
+        Udata(iDof,iCell,IU) = U1[IU];
+        Udata(iDof,iCell,IV) = U1[IV];
       }
     } else {
       if (y<yt) {
         // quarter 3
-        Udata(ii,jj,ID) = U3[ID];
-        Udata(ii,jj,IE) = U3[IE];
-        Udata(ii,jj,IU) = U3[IU];
-        Udata(ii,jj,IV) = U3[IV];
+        Udata(iDof,iCell,ID) = U3[ID];
+        Udata(iDof,iCell,IE) = U3[IE];
+        Udata(iDof,iCell,IU) = U3[IU];
+        Udata(iDof,iCell,IV) = U3[IV];
       } else {
         // quarter 0
-        Udata(ii,jj,ID) = U0[ID];
-        Udata(ii,jj,IE) = U0[IE];
-        Udata(ii,jj,IU) = U0[IU];
-        Udata(ii,jj,IV) = U0[IV];
+        Udata(iDof,iCell,ID) = U0[ID];
+        Udata(iDof,iCell,IE) = U0[IE];
+        Udata(iDof,iCell,IU) = U0[IU];
+        Udata(iDof,iCell,IV) = U0[IV];
       }
     }
     
@@ -1186,18 +1158,16 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -1211,34 +1181,34 @@ public:
     if (x<xt) {
       if (y<yt) {
         // quarter 2
-        Udata(ii,jj,kk,ID) = U2[ID];
-        Udata(ii,jj,kk,IE) = U2[IE];
-        Udata(ii,jj,kk,IU) = U2[IU];
-        Udata(ii,jj,kk,IV) = U2[IV];
-        Udata(ii,jj,kk,IW) = 0.0;
+        Udata(iDof,iCell,ID) = U2[ID];
+        Udata(iDof,iCell,IE) = U2[IE];
+        Udata(iDof,iCell,IU) = U2[IU];
+        Udata(iDof,iCell,IV) = U2[IV];
+        Udata(iDof,iCell,IW) = 0.0;
       } else {
         // quarter 1
-        Udata(ii,jj,kk,ID) = U1[ID];
-        Udata(ii,jj,kk,IE) = U1[IE];
-        Udata(ii,jj,kk,IU) = U1[IU];
-        Udata(ii,jj,kk,IV) = U1[IV];
-        Udata(ii,jj,kk,IW) = 0.0;
+        Udata(iDof,iCell,ID) = U1[ID];
+        Udata(iDof,iCell,IE) = U1[IE];
+        Udata(iDof,iCell,IU) = U1[IU];
+        Udata(iDof,iCell,IV) = U1[IV];
+        Udata(iDof,iCell,IW) = 0.0;
       }
     } else {
       if (y<yt) {
         // quarter 3
-        Udata(ii,jj,kk,ID) = U3[ID];
-        Udata(ii,jj,kk,IE) = U3[IE];
-        Udata(ii,jj,kk,IU) = U3[IU];
-        Udata(ii,jj,kk,IV) = U3[IV];
-        Udata(ii,jj,kk,IW) = 0.0;
+        Udata(iDof,iCell,ID) = U3[ID];
+        Udata(iDof,iCell,IE) = U3[IE];
+        Udata(iDof,iCell,IU) = U3[IU];
+        Udata(iDof,iCell,IV) = U3[IV];
+        Udata(iDof,iCell,IW) = 0.0;
       } else {
         // quarter 0
-        Udata(ii,jj,kk,ID) = U0[ID];
-        Udata(ii,jj,kk,IE) = U0[IE];
-        Udata(ii,jj,kk,IU) = U0[IU];
-        Udata(ii,jj,kk,IV) = U0[IV];
-        Udata(ii,jj,kk,IW) = 0.0;
+        Udata(iDof,iCell,ID) = U0[ID];
+        Udata(iDof,iCell,IE) = U0[IE];
+        Udata(iDof,iCell,IU) = U0[IU];
+        Udata(iDof,iCell,IV) = U0[IV];
+        Udata(iDof,iCell,IW) = 0.0;
       }
     }
 
@@ -1264,8 +1234,6 @@ class InitWedgeFunctor : public SDMBaseFunctor<dim,N>
 {
   
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-  
   InitWedgeFunctor(HydroParams params,
 		   SDM_Geometry<dim,N> sdm_geom,
 		   WedgeParams wparams,
@@ -1327,18 +1295,16 @@ public:
     const real_t slope_f = this->wparams.slope_f;
     const real_t x_f     = this->wparams.x_f;
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
     
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -1349,17 +1315,17 @@ public:
     
     if ( y > slope_f*(x-x_f) ) {
       
-      Udata(ii,jj,ID) = wparams.rho1;
-      Udata(ii,jj,IE) = wparams.e_tot1;
-      Udata(ii,jj,IU) = wparams.rho_u1;
-      Udata(ii,jj,IV) = wparams.rho_v1;
+      Udata(iDof,iCell,ID) = wparams.rho1;
+      Udata(iDof,iCell,IE) = wparams.e_tot1;
+      Udata(iDof,iCell,IU) = wparams.rho_u1;
+      Udata(iDof,iCell,IV) = wparams.rho_v1;
       
     } else {
 	  
-      Udata(ii,jj,ID) = wparams.rho2;
-      Udata(ii,jj,IE) = wparams.e_tot2;
-      Udata(ii,jj,IU) = wparams.rho_u2;
-      Udata(ii,jj,IV) = wparams.rho_v2;
+      Udata(iDof,iCell,ID) = wparams.rho2;
+      Udata(iDof,iCell,IE) = wparams.e_tot2;
+      Udata(iDof,iCell,IU) = wparams.rho_u2;
+      Udata(iDof,iCell,IV) = wparams.rho_v2;
       
     }
 
@@ -1406,19 +1372,17 @@ public:
     const real_t slope_f = this->wparams.slope_f;
     const real_t x_f     = this->wparams.x_f;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
-    
+    iDof_to_coord(iDof,N,idx,idy,idz);
+   
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -1430,19 +1394,19 @@ public:
     
     if ( y > slope_f*(x-x_f) ) {
       
-      Udata(ii,jj,kk,ID) = wparams.rho1;
-      Udata(ii,jj,kk,IE) = wparams.e_tot1;
-      Udata(ii,jj,kk,IU) = wparams.rho_u1;
-      Udata(ii,jj,kk,IV) = wparams.rho_v1;
-      Udata(ii,jj,kk,IW) = wparams.rho_w1;
+      Udata(iDof,iCell,ID) = wparams.rho1;
+      Udata(iDof,iCell,IE) = wparams.e_tot1;
+      Udata(iDof,iCell,IU) = wparams.rho_u1;
+      Udata(iDof,iCell,IV) = wparams.rho_v1;
+      Udata(iDof,iCell,IW) = wparams.rho_w1;
       
     } else {
       
-      Udata(ii,jj,kk,ID) = wparams.rho2;
-      Udata(ii,jj,kk,IE) = wparams.e_tot2;
-      Udata(ii,jj,kk,IU) = wparams.rho_u2;
-      Udata(ii,jj,kk,IV) = wparams.rho_v2;
-      Udata(ii,jj,kk,IW) = wparams.rho_w2;
+      Udata(iDof,iCell,ID) = wparams.rho2;
+      Udata(iDof,iCell,IE) = wparams.e_tot2;
+      Udata(iDof,iCell,IU) = wparams.rho_u2;
+      Udata(iDof,iCell,IV) = wparams.rho_v2;
+      Udata(iDof,iCell,IW) = wparams.rho_w2;
       
     }
 
@@ -1472,8 +1436,6 @@ class InitJetFunctor : public SDMBaseFunctor<dim,N>
 {
   
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-  
   InitJetFunctor(HydroParams params,
 		 SDM_Geometry<dim,N> sdm_geom,
 		 JetParams   jparams,
@@ -1512,23 +1474,21 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
         
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+     int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
-    
-    Udata(ii,jj,ID) = jparams.rho2;
-    Udata(ii,jj,IE) = jparams.e_tot2;
-    Udata(ii,jj,IU) = jparams.rho_u2;
-    Udata(ii,jj,IV) = jparams.rho_v2;
+    iDof_to_coord(iDof,N,idx,idy);
+   
+    Udata(iDof,iCell,ID) = jparams.rho2;
+    Udata(iDof,iCell,IE) = jparams.e_tot2;
+    Udata(iDof,iCell,IU) = jparams.rho_u2;
+    Udata(iDof,iCell,IV) = jparams.rho_v2;
 
   } // end operator () - 2d
 
@@ -1545,24 +1505,22 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
-    
-    Udata(ii,jj,kk,ID) = jparams.rho2;
-    Udata(ii,jj,kk,IE) = jparams.e_tot2;
-    Udata(ii,jj,kk,IU) = jparams.rho_u2;
-    Udata(ii,jj,kk,IV) = jparams.rho_v2;
-    Udata(ii,jj,kk,IW) = jparams.rho_w2;
+    iDof_to_coord(iDof,N,idx,idy,idz);
+   
+    Udata(iDof,iCell,ID) = jparams.rho2;
+    Udata(iDof,iCell,IE) = jparams.e_tot2;
+    Udata(iDof,iCell,IU) = jparams.rho_u2;
+    Udata(iDof,iCell,IV) = jparams.rho_v2;
+    Udata(iDof,iCell,IW) = jparams.rho_w2;
 
   } // end operator () - 3d
   
@@ -1578,8 +1536,6 @@ template<int dim, int N>
 class InitIsentropicVortexFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   InitIsentropicVortexFunctor(HydroParams            params,
 			      SDM_Geometry<dim,N>    sdm_geom,
 			      IsentropicVortexParams iparams,
@@ -1658,19 +1614,17 @@ public:
       vortex_y = fmod(vortex_y, ymax-ymin);
     }
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
-    
+    iDof_to_coord(iDof,N,idx,idy);
+   
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -1690,11 +1644,11 @@ public:
     real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
     real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
     
-    Udata(ii,jj,ID) = rho;
-    Udata(ii,jj,IU) = rho*(u_a + du);
-    Udata(ii,jj,IV) = rho*(v_a + dv);
-    //Udata(ii,jj,IE) = pow(rho,gamma0)/(gamma0-1.0) +
-    Udata(ii,jj,IE) = rho*T/(gamma0-1.0) +
+    Udata(iDof,iCell,ID) = rho;
+    Udata(iDof,iCell,IU) = rho*(u_a + du);
+    Udata(iDof,iCell,IV) = rho*(v_a + dv);
+    //Udata(iDof,iCell,IE) = pow(rho,gamma0)/(gamma0-1.0) +
+    Udata(iDof,iCell,IE) = rho*T/(gamma0-1.0) +
       0.5*rho*(u_a + du)*(u_a + du) +
       0.5*rho*(v_a + dv)*(v_a + dv) ;
 
@@ -1764,18 +1718,16 @@ public:
       vortex_y = fmod(vortex_y, ymax-ymin);
     }
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -1797,11 +1749,11 @@ public:
     real_t T = T_a - (gamma0-1)*beta*beta/(8*gamma0*M_PI*M_PI)*exp(1.0-r*r);
     real_t rho = rho_a*pow(T/T_a,1.0/(gamma0-1));
     
-    Udata(ii,jj,kk,ID) = rho;
-    Udata(ii,jj,kk,IU) = rho*(u_a + du);
-    Udata(ii,jj,kk,IV) = rho*(v_a + dv);
-    Udata(ii,jj,kk,IW) = 0.0;
-    Udata(ii,jj,kk,IE) = rho*T/(gamma0-1.0) +
+    Udata(iDof,iCell,ID) = rho;
+    Udata(iDof,iCell,IU) = rho*(u_a + du);
+    Udata(iDof,iCell,IV) = rho*(v_a + dv);
+    Udata(iDof,iCell,IW) = 0.0;
+    Udata(iDof,iCell,IE) = rho*T/(gamma0-1.0) +
       0.5*rho*(u_a + du)*(u_a + du) +
       0.5*rho*(v_a + dv)*(v_a + dv) ;    
     
