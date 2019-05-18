@@ -10,7 +10,7 @@
 #include "sdm/SDMBaseFunctor.h"
 
 #include "sdm/SDM_Geometry.h"
-#include "sdm/sdm_shared.h" // for DofMap
+#include "sdm/sdm_shared.h"
 
 namespace sdm {
 
@@ -21,79 +21,39 @@ namespace sdm {
  * A parallel functor to reset either a Solution point / Flux point
  * data arrary.
  */
-template<int dim, int N>
-class SDM_Erase_Functor : public SDMBaseFunctor<dim,N> {
+class SDM_Erase_Functor {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   SDM_Erase_Functor(HydroParams         params,
-		    SDM_Geometry<dim,N> sdm_geom,
 		    DataArray           Udata) :
-    SDMBaseFunctor<dim,N>(params,sdm_geom),
     Udata(Udata)
   {
-    iisize = Udata.extent(0);
-    jjsize = Udata.extent(1);
-    kksize = dim==3 ? Udata.extent(2) : 1;
   };
 
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
-                    SDM_Geometry<dim,N> sdm_geom,
 		    DataArray           Udata)
   {
+    // nbIter = nbDofs_per_cell * nbCells
     int64_t nbIter = Udata.extent(0) * Udata.extent(1);
-    if (dim==3)
-      nbIter *= Udata.extent(2);
 
-    SDM_Erase_Functor functor(params, sdm_geom, Udata);
+    SDM_Erase_Functor functor(params, Udata);
     Kokkos::parallel_for("SDM_Erase_Functor", nbIter, functor);
   }
 
-  /*
-   * 2D version.
-   */
-  //! functor for 2d 
-  template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  void operator()(const int64_t index) const
   {
 
-    // global dofs index
-    int ii,jj;
-    index2coord(index,ii,jj,iisize,jjsize);
-    
-    Udata(ii,jj,ID) = 0.0;
-    Udata(ii,jj,IP) = 0.0;
-    Udata(ii,jj,IU) = 0.0;
-    Udata(ii,jj,IV) = 0.0;
-    
-  } // end operator () - 2d
+    int iDof, iCell;
+    index_to_iDof_iCell(index,Udata.extent(0),iDof,iCell);
 
-  /*
-   * 3D version.
-   */
-  //! functor for 3d 
-  template<int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
-  {
-
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,iisize,jjsize,kksize);
-
-    Udata(ii,jj,kk,ID) = 0.0;
-    Udata(ii,jj,kk,IP) = 0.0;
-    Udata(ii,jj,kk,IU) = 0.0;
-    Udata(ii,jj,kk,IV) = 0.0;
-    Udata(ii,jj,kk,IW) = 0.0;
+    for (unsigned int ivar=0; ivar<Udata.extent(2); ++ivar)
+      Udata(iDof,iCell,ivar) = 0.0;
     
-  } // end operator () - 3d
+  } // end operator ()
   
   DataArray Udata;
-  int       iisize, jjsize, kksize;
 
 }; // SDM_Erase_Functor
 
@@ -233,7 +193,6 @@ template<int dim, int N>
 class SDM_Update_RK_Functor : public SDMBaseFunctor<dim,N> {
   
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
 
   using coefs_t = Kokkos::Array<real_t,3>;
@@ -287,18 +246,16 @@ public:
     const real_t c1   = coefs[1];
     const real_t c2dt = coefs[2]*dt;
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
 
     HydroState tmp;
     
@@ -306,29 +263,29 @@ public:
        i >= ghostWidth and i < isize-ghostWidth ) {
 
       tmp[ID] =
-        c0   * U_0 (ii,jj,ID) +
-        c1   * U_1 (ii,jj,ID) +
-        c2dt * U_2 (ii,jj,ID) ;
+        c0   * U_0 (iDof,iCell,ID) +
+        c1   * U_1 (iDof,iCell,ID) +
+        c2dt * U_2 (iDof,iCell,ID) ;
       
       tmp[IE] =
-        c0   * U_0 (ii,jj,IE) +
-        c1   * U_1 (ii,jj,IE) +
-        c2dt * U_2 (ii,jj,IE) ;
+        c0   * U_0 (iDof,iCell,IE) +
+        c1   * U_1 (iDof,iCell,IE) +
+        c2dt * U_2 (iDof,iCell,IE) ;
       
       tmp[IU] =
-        c0   * U_0 (ii,jj,IU) +
-        c1   * U_1 (ii,jj,IU) +
-        c2dt * U_2 (ii,jj,IU) ;
+        c0   * U_0 (iDof,iCell,IU) +
+        c1   * U_1 (iDof,iCell,IU) +
+        c2dt * U_2 (iDof,iCell,IU) ;
       
       tmp[IV] =
-        c0   * U_0 (ii,jj,IV) +
-        c1   * U_1 (ii,jj,IV) +
-        c2dt * U_2 (ii,jj,IV) ;
+        c0   * U_0 (iDof,iCell,IV) +
+        c1   * U_1 (iDof,iCell,IV) +
+        c2dt * U_2 (iDof,iCell,IV) ;
       
-      Uout(ii,jj,ID) = tmp[ID];
-      Uout(ii,jj,IE) = tmp[IE];
-      Uout(ii,jj,IU) = tmp[IU];
-      Uout(ii,jj,IV) = tmp[IV];
+      Uout(iDof,iCell,ID) = tmp[ID];
+      Uout(iDof,iCell,IE) = tmp[IE];
+      Uout(iDof,iCell,IU) = tmp[IU];
+      Uout(iDof,iCell,IV) = tmp[IV];
 	  
     } // end if guard
     
@@ -343,18 +300,16 @@ public:
     const real_t c1   = coefs[1];
     const real_t c2dt = coefs[2]*dt;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
-    
-    // local cell index
-    int i,j,k;
-    
-    // Dof index for flux
-    int idx,idy,idz;
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    // cell coord
+    int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
+
+    // Dof coord
+    int idx,idy,idz;
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     HydroState tmp;
 
@@ -363,35 +318,35 @@ public:
        i >= ghostWidth and i < isize-ghostWidth ) {
       
       tmp[ID] =
-        c0   * U_0 (ii,jj,kk,ID) +
-        c1   * U_1 (ii,jj,kk,ID) +
-        c2dt * U_2 (ii,jj,kk,ID) ;
+        c0   * U_0 (iDof,iCell,ID) +
+        c1   * U_1 (iDof,iCell,ID) +
+        c2dt * U_2 (iDof,iCell,ID) ;
       
       tmp[IE] =
-        c0   * U_0 (ii,jj,kk,IE) +
-        c1   * U_1 (ii,jj,kk,IE) +
-        c2dt * U_2 (ii,jj,kk,IE) ;
+        c0   * U_0 (iDof,iCell,IE) +
+        c1   * U_1 (iDof,iCell,IE) +
+        c2dt * U_2 (iDof,iCell,IE) ;
       
       tmp[IU] =
-        c0   * U_0 (ii,jj,kk,IU) +
-        c1   * U_1 (ii,jj,kk,IU) +
-        c2dt * U_2 (ii,jj,kk,IU) ;
+        c0   * U_0 (iDof,iCell,IU) +
+        c1   * U_1 (iDof,iCell,IU) +
+        c2dt * U_2 (iDof,iCell,IU) ;
       
       tmp[IV] =
-        c0   * U_0 (ii,jj,kk,IV) +
-        c1   * U_1 (ii,jj,kk,IV) +
-        c2dt * U_2 (ii,jj,kk,IV) ;
+        c0   * U_0 (iDof,iCell,IV) +
+        c1   * U_1 (iDof,iCell,IV) +
+        c2dt * U_2 (iDof,iCell,IV) ;
       
       tmp[IW] =
-        c0   * U_0 (ii,jj,kk,IW) +
-        c1   * U_1 (ii,jj,kk,IW) +
-        c2dt * U_2 (ii,jj,kk,IW) ;
+        c0   * U_0 (iDof,iCell,IW) +
+        c1   * U_1 (iDof,iCell,IW) +
+        c2dt * U_2 (iDof,iCell,IW) ;
       
-      Uout(ii,jj,kk,ID) = tmp[ID];
-      Uout(ii,jj,kk,IE) = tmp[IE];
-      Uout(ii,jj,kk,IU) = tmp[IU];
-      Uout(ii,jj,kk,IV) = tmp[IV];
-      Uout(ii,jj,kk,IW) = tmp[IW];
+      Uout(iDof,iCell,ID) = tmp[ID];
+      Uout(iDof,iCell,IE) = tmp[IE];
+      Uout(iDof,iCell,IU) = tmp[IU];
+      Uout(iDof,iCell,IV) = tmp[IV];
+      Uout(iDof,iCell,IW) = tmp[IW];
       
     } // end if guard
     
