@@ -209,7 +209,6 @@ template<int N>
 class ComputeDt_Functor_2d : public SDMBaseFunctor<2,N> {
 
 public:
-  using typename SDMBaseFunctor<2,N>::DataArray;
   using typename SDMBaseFunctor<2,N>::HydroState;
   //using typename ppkMHD::EulerEquations<2>;  
   
@@ -270,18 +269,16 @@ public:
     const real_t dx = this->params.dx/N;
     const real_t dy = this->params.dy/N;
 
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
 
     if(j >= ghostWidth and j < jsize - ghostWidth and
        i >= ghostWidth and i < isize - ghostWidth) {
@@ -292,10 +289,10 @@ public:
       real_t vx, vy;
 
       // get local conservative variable
-      uLoc[ID] = Udata(ii,jj, ID);
-      uLoc[IE] = Udata(ii,jj, IE);
-      uLoc[IU] = Udata(ii,jj, IU);
-      uLoc[IV] = Udata(ii,jj, IV);
+      uLoc[ID] = Udata(iDof,iCell, ID);
+      uLoc[IE] = Udata(iDof,iCell, IE);
+      uLoc[IU] = Udata(iDof,iCell, IU);
+      uLoc[IV] = Udata(iDof,iCell, IV);
 
       // get primitive variables in current cell
       euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
@@ -340,7 +337,6 @@ template<int N>
 class ComputeDt_Functor_3d : public SDMBaseFunctor<3,N> {
 
 public:
-  using typename SDMBaseFunctor<3,N>::DataArray;
   using typename SDMBaseFunctor<3,N>::HydroState;
   //using typename ppkMHD::EulerEquations<3>;  
   
@@ -404,18 +400,16 @@ public:
     const real_t dy = this->params.dy/N;
     const real_t dz = this->params.dz/N;
     
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     if(k >= ghostWidth and k < ksize - ghostWidth and
        j >= ghostWidth and j < jsize - ghostWidth and
@@ -427,11 +421,11 @@ public:
       real_t vx, vy, vz;
       
       // get local conservative variable
-      uLoc[ID] = Udata(ii,jj,kk, ID);
-      uLoc[IE] = Udata(ii,jj,kk, IE);
-      uLoc[IU] = Udata(ii,jj,kk, IU);
-      uLoc[IV] = Udata(ii,jj,kk, IV);
-      uLoc[IW] = Udata(ii,jj,kk, IW);
+      uLoc[ID] = Udata(iDof,iCell, ID);
+      uLoc[IE] = Udata(iDof,iCell, IE);
+      uLoc[IU] = Udata(iDof,iCell, IU);
+      uLoc[IV] = Udata(iDof,iCell, IV);
+      uLoc[IW] = Udata(iDof,iCell, IW);
       
       // get primitive variables in current cell
       euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
