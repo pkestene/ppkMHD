@@ -520,25 +520,25 @@ void write_cells_connectivity(std::ostream& outFile,
 /**
  * Write VTK unstructured grid cells data - 2D.
  */
-void write_cells_data(std::ostream& outFile,
-		      DataArray2d::HostMirror Uhost,
-		      HydroParams& params,
-		      ConfigMap& configMap,
-		      const std::map<int, std::string>& variables_names,
-		      uint64_t& offsetBytes,
-                      int N);
+void write_cells_data_2d(std::ostream& outFile,
+                         sdm::DataArrayHost Uhost,
+                         HydroParams& params,
+                         ConfigMap& configMap,
+                         const std::map<int, std::string>& variables_names,
+                         uint64_t& offsetBytes,
+                         int N);
 
 
 /**
  * Write VTK unstructured grid cells data - 3D.
  */
-void write_cells_data(std::ostream& outFile,
-		      DataArray3d::HostMirror Uhost,
-		      HydroParams& params,
-		      ConfigMap& configMap,
-		      const std::map<int, std::string>& variables_names,
-		      uint64_t& offsetBytes,
-                      int N);
+void write_cells_data_3d(std::ostream& outFile,
+                         sdm::DataArrayHost Uhost,
+                         HydroParams& params,
+                         ConfigMap& configMap,
+                         const std::map<int, std::string>& variables_names,
+                         uint64_t& offsetBytes,
+                         int N);
 
 
 // ================================================================
@@ -548,7 +548,7 @@ void write_cells_data(std::ostream& outFile,
  */
 template<int N>
 void write_appended_binary_data(std::ostream& outFile,
-				DataArray2d::HostMirror Uhost,
+				sdm::DataArrayHost Uhost,
 				sdm::SDM_Geometry<2,N> sdm_geom,
 				HydroParams& params,
 				ConfigMap& configMap,
@@ -559,6 +559,9 @@ void write_appended_binary_data(std::ostream& outFile,
   
   const int nx = params.nx;
   const int ny = params.ny;
+
+  const int isize = params.isize;
+  //const int jsize = params.jsize;
 
   const real_t xmin = params.xmin;
   const real_t ymin = params.ymin;
@@ -746,8 +749,8 @@ void write_appended_binary_data(std::ostream& outFile,
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
 	      
-	      real_t data = Uhost(idx+(gw+i)*N,
-                                  idy+(gw+j)*N, 
+	      real_t data = Uhost(idx+idy*N,
+                                  (gw+i)+(gw+j)*isize, 
                                   iVar);
 	      cells_data.push_back(data);
 	      
@@ -778,7 +781,7 @@ void write_appended_binary_data(std::ostream& outFile,
  */
 template<int N>
 void write_appended_binary_data(std::ostream& outFile,
-				DataArray3d::HostMirror Uhost,
+				sdm::DataArrayHost Uhost,
 				sdm::SDM_Geometry<3,N> sdm_geom,
 				HydroParams& params,
 				ConfigMap& configMap,
@@ -788,6 +791,9 @@ void write_appended_binary_data(std::ostream& outFile,
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
+
+  const int isize = params.isize;
+  const int jsize = params.jsize;
 
   const real_t xmin = params.xmin;
   const real_t ymin = params.ymin;
@@ -1001,17 +1007,16 @@ void write_appended_binary_data(std::ostream& outFile,
 	      for (int idy=0; idy<N; ++idy) {
 		for (int idx=0; idx<N; ++idx) {
 		  
-		  real_t data = Uhost(idx+(gw+i)*N,
-                                      idy+(gw+j)*N,
-                                      idz+(gw+k)*N, 
+		  real_t data = Uhost(idx+idy*N+idz*N*N,
+                                      (gw+i)+(gw+j)*isize+(gw+k)*isize*jsize, 
                                       iVar);
-
+                  
 		  cells_data.push_back(data);
 		  
 		} // for idx
 	      } // for idy
 	    } // for idz
-	  
+            
 	  } // for i
 	} // for j
       } // for k
@@ -1064,8 +1069,8 @@ void write_pvtu_header(std::string headerFilename,
  * \param[in,out] Uhost host data temporary array before saving to file
  */
 template<int N>
-void save_VTK_SDM(DataArray2d             Udata,
-		  DataArray2d::HostMirror Uhost,
+void save_VTK_SDM(sdm::DataArray     Udata,
+		  sdm::DataArrayHost Uhost,
 		  HydroParams& params,
 		  ConfigMap& configMap,
 		  sdm::SDM_Geometry<2,N> sdm_geom,
@@ -1162,7 +1167,7 @@ void save_VTK_SDM(DataArray2d             Udata,
 
   write_cells_connectivity<N>(outFile,sdm_geom,params,configMap,offsetBytes);
 
-  write_cells_data(outFile,Uhost,params,configMap,variables_names,offsetBytes,N);
+  write_cells_data_2d(outFile,Uhost,params,configMap,variables_names,offsetBytes,N);
   
   outFile << " </Piece>\n";
   
@@ -1191,8 +1196,8 @@ void save_VTK_SDM(DataArray2d             Udata,
  * \param[in,out] Uhost host data temporary array before saving to file
  */
 template<int N>
-void save_VTK_SDM(DataArray3d             Udata,
-		  DataArray3d::HostMirror Uhost,
+void save_VTK_SDM(sdm::DataArray     Udata,
+		  sdm::DataArrayHost Uhost,
 		  HydroParams& params,
 		  ConfigMap& configMap,
 		  sdm::SDM_Geometry<3,N> sdm_geom,
@@ -1290,7 +1295,7 @@ void save_VTK_SDM(DataArray3d             Udata,
   
   write_cells_connectivity<N>(outFile,sdm_geom,params,configMap,offsetBytes);
   
-  write_cells_data(outFile,Uhost,params,configMap,variables_names,offsetBytes,N);
+  write_cells_data_3d(outFile,Uhost,params,configMap,variables_names,offsetBytes,N);
   
   outFile << " </Piece>\n";
   

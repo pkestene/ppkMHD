@@ -7,13 +7,13 @@ namespace ppkMHD { namespace io {
 
 // ==========================================================
 // ==========================================================
-void write_cells_data(std::ostream& outFile,
-		      DataArray2d::HostMirror Uhost,
-		      HydroParams& params,
-		      ConfigMap& configMap,
-		      const std::map<int, std::string>& variables_names,
-		      uint64_t& offsetBytes,
-                      int N)
+void write_cells_data_2d(std::ostream& outFile,
+                         sdm::DataArrayHost Uhost,
+                         HydroParams& params,
+                         ConfigMap& configMap,
+                         const std::map<int, std::string>& variables_names,
+                         uint64_t& offsetBytes,
+                         int N)
 {
   
   const int nx = params.nx;
@@ -79,17 +79,17 @@ void write_cells_data(std::ostream& outFile,
   
   outFile << "  </CellData>\n";
   
-} // write_cells_data - 2D
+} // write_cells_data_2d
 
 // ==========================================================
 // ==========================================================
-void write_cells_data(std::ostream& outFile,
-		      DataArray3d::HostMirror Uhost,
-		      HydroParams& params,
-		      ConfigMap& configMap,
-		      const std::map<int, std::string>& variables_names,
-		      uint64_t& offsetBytes,
-                      int N)
+void write_cells_data_3d(std::ostream& outFile,
+                         sdm::DataArrayHost Uhost,
+                         HydroParams& params,
+                         ConfigMap& configMap,
+                         const std::map<int, std::string>& variables_names,
+                         uint64_t& offsetBytes,
+                         int N)
 {
 
   const int nx = params.nx;
@@ -160,7 +160,7 @@ void write_cells_data(std::ostream& outFile,
   
   outFile << "  </CellData>\n";
   
-} // write_cells_data - 3d
+} // write_cells_data_3d
 
 } // namespace io
 

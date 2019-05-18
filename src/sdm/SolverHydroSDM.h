@@ -12,6 +12,7 @@
 #include <algorithm>
 
 // shared
+#include "sdm_shared.h"
 #include "shared/SolverBase.h"
 #include "shared/HydroParams.h"
 #include "shared/kokkos_shared.h"
@@ -127,16 +128,6 @@ class SolverHydroSDM : public ppkMHD::SolverBase
 
 public:
 
-  //! Decide at compile-time which data array to use for 2d or 3d
-  using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
-
-  //! Data array typedef for host memory space
-  using DataArrayHost = typename std::conditional<dim==2,DataArray2dHost,DataArray3dHost>::type;
-
-  //! unmanaged view
-  using DataArrayUnmanaged = typename std::conditional<dim==2,DataArray2dUM,DataArray3dUM>::type;
-
-
   //! a type to store some coefficients needed to perform Runge-Kutta integration
   using coefs_t = Kokkos::Array<real_t,3>;
 
@@ -203,6 +194,10 @@ public:
    * Override base class method to initialize IO writer object
    */
   void init_io();
+
+  //! io writer
+  std::shared_ptr<ppkMHD::io::IO_ReadWrite_SDM<dim,N> >  m_io_reader_writer_sdm;
+
 
   //! SDM config
   SDM_Geometry<dim,N> sdm_geom;
@@ -466,34 +461,34 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    */
   if (dim==2) {
 
-    U     = DataArray("U", iisize, jjsize, nbvar);
+    U     = DataArray("U", nb_dof_per_cell, nbCells, nbvar);
     Uhost = Kokkos::create_mirror(U);
-    Uaux  = DataArray("Uaux",iisize, jjsize, nbvar);
+    Uaux  = DataArray("Uaux", nb_dof_per_cell, nbCells, nbvar);
     
-    Fluxes = DataArray("Fluxes", isize*(N+1), jjsize, nbvar);
+    Fluxes = DataArray("Fluxes", N*(N+1), nbCells, nbvar);
 
-    total_mem_size += iisize*jjsize*nbvar * sizeof(real_t); // U
-    total_mem_size += iisize*jjsize*nbvar * sizeof(real_t); // Uaux
-    total_mem_size += isize*(N+1)*jjsize*nbvar * sizeof(real_t); // Fluxes
-
-    FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, nbvar);
-    FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), nbvar);
+    total_mem_size += nb_dof_per_cell*nbCells*nbvar*sizeof(real_t); // U
+    total_mem_size += nb_dof_per_cell*nbCells*nbvar*sizeof(real_t); // Uaux
+    total_mem_size += N*(N+1)*nbCells*nbvar*sizeof(real_t); // Fluxes
+    
+    //FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, nbvar);
+    //FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), nbvar);
 
   } else if (dim==3) {
 
-    U     = DataArray("U", iisize, jjsize, kksize, nbvar);
+    U     = DataArray("U", nb_dof_per_cell, nbCells, nbvar);
     Uhost = Kokkos::create_mirror(U);
-    Uaux  = DataArray("Uaux",iisize, jjsize, kksize, nbvar);
+    Uaux  = DataArray("Uaux", nb_dof_per_cell, nbCells, nbvar);
     
-    Fluxes = DataArray("Fluxes", isize*(N+1), jjsize, kksize, nbvar);
+    Fluxes = DataArray("Fluxes", N*N*(N+1), nbCells, nbvar);
+    
+    total_mem_size += nb_dof_per_cell*nbCells*nbvar * sizeof(real_t); // U
+    total_mem_size += nb_dof_per_cell*nbCells*nbvar * sizeof(real_t); // Uaux
+    total_mem_size += N*N*(N+1)*nbCells*nbvar * sizeof(real_t); // Fluxes
 
-    total_mem_size += iisize*jjsize*kksize*nbvar      * sizeof(real_t); // U
-    total_mem_size += iisize*jjsize*kksize*nbvar      * sizeof(real_t); // Uaux
-    total_mem_size += isize*(N+1)*jjsize*kksize*nbvar * sizeof(real_t); // Fluxes
-
-    FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, kksize, nbvar);
-    FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), kksize, nbvar);
-    FluxesDir[IZ] = DataArrayUnmanaged(Fluxes.data(), iisize, jjsize, ksize*(N+1), nbvar);
+    //FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, kksize, nbvar);
+    //FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), kksize, nbvar);
+    //FluxesDir[IZ] = DataArrayUnmanaged(Fluxes.data(), iisize, jjsize, ksize*(N+1), nbvar);
 
   }
 
@@ -798,7 +793,7 @@ void SolverHydroSDM<dim,N>::init_io()
 {
   
   // install a new IO_ReadWrite sdm-specific
-  m_io_reader_writer =
+  m_io_reader_writer_sdm =
     std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(params,
 							  configMap,
 							  m_variables_names,
@@ -1976,8 +1971,9 @@ void SolverHydroSDM<dim,N>::save_solution_impl()
 
   timers[TIMER_IO]->start();
 
-  save_data(U,  Uhost, m_times_saved, m_t);
-  
+  //save_data(U,  Uhost, m_times_saved, m_t);
+  m_io_reader_writer_sdm->save_data_sdm(U,  Uhost, m_times_saved, m_t, "");
+
   timers[TIMER_IO]->stop();
     
 } // SolverHydroSDM::save_solution_impl()

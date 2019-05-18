@@ -12,6 +12,7 @@
 #include "shared/real_type.h"
 #include "shared/kokkos_shared.h"
 
+#include "sdm/sdm_shared.h"
 #include "sdm/SDM_Geometry.h"
 //#include "sdm/SolverHydroSDM.h"
 #include "sdm/HydroInitFunctors.h"
@@ -39,9 +40,9 @@ template<int dim,
 	 int N>
 bool test_lagrange_functor()
 {
-
-  using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
-  using DataArrayHost = typename DataArray::HostMirror;
+  
+  //using DataArray = sdm::DataArray;
+  //using DataArrayHost = sdm::DataArrayHost;
 
   int myRank = 0;
 #ifdef USE_MPI
@@ -82,21 +83,21 @@ bool test_lagrange_functor()
 
   // create solver
   //sdm::SolverHydroSDM<dim,N> solver(params, configMap);
-  DataArray U = dim==2 ? 
-    DataArray("U", isize*N, jsize*N, params.nbvar) :
-    DataArray("U", isize*N, jsize*N, ksize*N, params.nbvar);
+  sdm::DataArray U = dim==2 ? 
+    sdm::DataArray("U", N*N,   isize*jsize,       params.nbvar) :
+    sdm::DataArray("U", N*N*N, isize*jsize*ksize, params.nbvar);
     
-  DataArrayHost UHost = Kokkos::create_mirror(U);
+  sdm::DataArrayHost UHost = Kokkos::create_mirror(U);
 
-  DataArray U2 = dim==2 ? 
-    DataArray("U2", isize*N, jsize*N, params.nbvar) :
-    DataArray("U2", isize*N, jsize*N, ksize*N, params.nbvar);
+  sdm::DataArray U2 = dim==2 ? 
+    sdm::DataArray("U2", N*N,   isize*jsize,       params.nbvar) :
+    sdm::DataArray("U2", N*N*N, isize*jsize*ksize, params.nbvar);
   
-  DataArray Fluxes = dim==2 ?
-    DataArray("Fluxes", isize*N, jsize*(N+1), params.nbvar) :
-    DataArray("Fluxes", isize*N, jsize*(N+1), ksize*N, params.nbvar);
+  sdm::DataArray Fluxes = dim==2 ?
+    sdm::DataArray("Fluxes",   N*(N+1), isize*jsize,       params.nbvar) :
+    sdm::DataArray("Fluxes", N*N*(N+1), isize*jsize*ksize, params.nbvar);
   
-  DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
+  sdm::DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
   
   std::map<int, std::string> m_variables_names;
   m_variables_names.clear();
@@ -125,11 +126,11 @@ bool test_lagrange_functor()
     Kokkos::deep_copy(U2,U);
 
     // save initial condition
-    io_writer->save_data_impl(U,
-                              UHost,
-                              0,
-                              0.0,
-                              "");
+    io_writer->save_data_sdm(U,
+                             UHost,
+                             0,
+                             0.0,
+                             "");
     
   }
   
@@ -141,10 +142,10 @@ bool test_lagrange_functor()
                                                             U,
                                                             Fluxes);
 
-    io_writer-> template save_flux<IY>(Fluxes,
-				       FluxHost,
-				       0,
-				       0.0);
+    // io_writer-> template save_flux<IY>(Fluxes,
+    //     			       FluxHost,
+    //     			       0,
+    //     			       0.0);
 
   }
 
@@ -200,10 +201,10 @@ bool test_lagrange_functor()
                                                          sdm_geom,
                                                          U);
   
-    io_writer->save_data_impl(U,
-                              UHost,
-                              1,
-                              1.0,
+    io_writer->save_data_sdm(U,
+                             UHost,
+                             1,
+                             1.0,
                               "");
     
   }

@@ -28,14 +28,11 @@ template<int dim, int N>
 class IO_ReadWrite_SDM : public IO_ReadWrite {
 
 public:
-  // alias to DataArray2d or DataArray3d
-  using DataArray     = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
-  using DataArrayHost = typename DataArray::HostMirror;
   
   IO_ReadWrite_SDM(HydroParams& params,
-		ConfigMap& configMap,
-		std::map<int, std::string>& variables_names,
-		sdm::SDM_Geometry<dim,N> sdm_geom) :
+                   ConfigMap& configMap,
+                   std::map<int, std::string>& variables_names,
+                   sdm::SDM_Geometry<dim,N> sdm_geom) :
     IO_ReadWrite(params, configMap, variables_names),
     sdm_geom(sdm_geom) { };
 
@@ -48,12 +45,12 @@ public:
   //! this using allow to override base class method without any warning
   using IO_ReadWrite::save_data_impl;
 
-  //! public interface to save data (override base class).
-  void save_data_impl(DataArray     Udata,
-		      DataArrayHost Uhost,
-		      int iStep,
-		      real_t time,
-		      std::string debug_name)
+  //! public interface to save data
+  void save_data_sdm(sdm::DataArray     Udata,
+                     sdm::DataArrayHost Uhost,
+                     int iStep,
+                     real_t time,
+                     std::string debug_name)
   {
     
     if (vtk_enabled) {
@@ -87,8 +84,8 @@ public:
 
   //! public interface to save flux data.
   template<int dir>
-  void save_flux(DataArray     Udata,
-		 DataArrayHost Uhost,
+  void save_flux(sdm::DataArray     Udata,
+		 sdm::DataArrayHost Uhost,
 		 int iStep,
 		 real_t time,
 		 std::string debug_name = "")

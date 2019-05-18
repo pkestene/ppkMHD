@@ -35,7 +35,6 @@ template<int dim, int N, int dir>
 class Interpolate_At_FluxPoints_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   using typename SDMBaseFunctor<dim,N>::flux_values_t;  
   
@@ -76,25 +75,20 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
-    // global index
-    int ii,jj;
-    if (dir == IX)
-      index2coord(index,ii,jj,isize*(N+1),jsize*N);
-    else
-      index2coord(index,ii,jj,isize*N,jsize*(N+1));
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*(N+1),iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to flux Dof
-    global2local_flux<dir>(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord_flux<dir>(iDof,N,idx,idy);
 
     // input
     solution_values_t sol;
@@ -111,7 +105,7 @@ public:
         // get solution values vector along X direction
         for (int idf=0; idf<N; ++idf) {
           
-          sol[idf] = UdataSol(idf+i*N,  jj, ivar);
+          sol[idf] = UdataSol(idf+N*idy,  iCell, ivar);
           
         }
 	
@@ -124,7 +118,7 @@ public:
         }
         
         // copy back interpolated value
-        UdataFlux(ii, jj, ivar) = flux;
+        UdataFlux(iDof, iCell, ivar) = flux;
 	  
       } // end for ivar
 	
@@ -139,7 +133,7 @@ public:
         // get solution values vector along Y direction
         for (int idf=0; idf<N; ++idf) {
           
-          sol[idf] = UdataSol(ii, idf+j*N, ivar);
+          sol[idf] = UdataSol(idx+N*idf, iCell, ivar);
 	  
         }
 	
@@ -152,7 +146,7 @@ public:
         }
         
         // copy back interpolated value
-        UdataFlux(ii, jj, ivar) = flux;
+        UdataFlux(iDof, iCell, ivar) = flux;
           
       } // end for ivar
 	
@@ -173,28 +167,20 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     
     const int nbvar = this->params.nbvar;
 
-    // global index
-    int ii,jj,kk;
-    if (dir == IX)
-      index2coord(index,ii,jj,kk,isize*(N+1),jsize*N,ksize*N);
-    else if (dir == IY)
-      index2coord(index,ii,jj,kk,isize*N,jsize*(N+1),ksize*N);
-    else
-      index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*(N+1));
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*(N+1),iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to flux Dof
-    global2local_flux<dir>(ii,jj, kk,
-                           i,j,k, idx,idy, idz, N);
+    iDof_to_coord_flux<dir>(iDof,N,idx,idy,idz);
 
     // input
     solution_values_t sol;
@@ -211,7 +197,7 @@ public:
         // get solution values vector along X direction
         for (int idf=0; idf<N; ++idf) {
           
-          sol[idf] = UdataSol(idf+i*N, jj,kk, ivar);
+          sol[idf] = UdataSol(idf+N*idy+N*N*idz, iCell, ivar);
 	  
         }
 	
@@ -226,7 +212,7 @@ public:
         // copy back interpolated value
         for (int idx=0; idx<N+1; ++idx) {
           
-          UdataFlux(ii,jj,kk, ivar) = flux;
+          UdataFlux(iDof, iCell, ivar) = flux;
 	  
         }
 	
@@ -243,7 +229,7 @@ public:
         // get solution values vector along Y direction
         for (int idf=0; idf<N; ++idf) {
           
-          sol[idf] = UdataSol(ii, idf+j*N, kk, ivar);
+          sol[idf] = UdataSol(idx+N*idf+N*N*idz, iCell, ivar);
 	  
         }
 	
@@ -256,7 +242,7 @@ public:
         }
 	
         // copy back interpolated value
-        UdataFlux(ii,jj,kk, ivar) = flux;
+        UdataFlux(iDof, iCell, ivar) = flux;
 	
       } // end for ivar
       
@@ -271,7 +257,7 @@ public:
         // get solution values vector along Y direction
         for (int idf=0; idf<N; ++idf) {
           
-          sol[idf] = UdataSol(ii,jj,idf+k*N, ivar);
+          sol[idf] = UdataSol(idx+N*idy+N*N*idf, iCell, ivar);
 	  
         }
 	
@@ -284,7 +270,7 @@ public:
         }
 	
         // copy back interpolated value
-        UdataFlux(ii,jj,kk, ivar) = flux;
+        UdataFlux(iDof, iCell, ivar) = flux;
 	
       } // end for ivar
       
@@ -323,7 +309,6 @@ template<int dim, int N, int dir,
 class Interpolate_At_SolutionPoints_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   using typename SDMBaseFunctor<dim,N>::flux_values_t;
   
@@ -364,7 +349,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
@@ -373,18 +358,16 @@ public:
     if (dir == IY)
       rescale = 1.0/this->params.dy;
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    iDof_to_coord(iDof,N,idx,idy);
 
     // ouptut
     real_t sol;
@@ -401,7 +384,7 @@ public:
         // get values at flux point along X direction
         for (int id=0; id<N+1; ++id) {
           
-          flux[id] = UdataFlux(id+i*(N+1), jj, ivar);
+          flux[id] = UdataFlux(id+(N+1)*idy, iCell, ivar);
 	  
         }
 	
@@ -416,11 +399,11 @@ public:
         // copy back interpolated value
         if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
             itype==INTERPOLATE_SOLUTION_NEGATIVE)
-          UdataSol(ii, jj, ivar) -= sol;
+          UdataSol(iDof, iCell, ivar) -= sol;
         else if (itype==INTERPOLATE_SOLUTION_REGULAR)
-          UdataSol(ii, jj, ivar) = sol;
+          UdataSol(iDof, iCell, ivar) = sol;
         else
-          UdataSol(ii, jj, ivar) += sol;
+          UdataSol(iDof, iCell, ivar) += sol;
 	
       } // end for ivar
 	
@@ -435,7 +418,7 @@ public:
         // get values at flux point along Y direction
         for (int id=0; id<N+1; ++id) {
           
-          flux[id] = UdataFlux(ii, id+j*(N+1), ivar);
+          flux[id] = UdataFlux(idx+N*id, iCell, ivar);
 	  
         }
 	
@@ -450,11 +433,11 @@ public:
         // copy back interpolated value
         if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
             itype==INTERPOLATE_SOLUTION_NEGATIVE)
-          UdataSol(ii, jj, ivar) -= sol;
+          UdataSol(iDof, iCell, ivar) -= sol;
         else if (itype==INTERPOLATE_SOLUTION_REGULAR)
-          UdataSol(ii, jj, ivar) = sol;
+          UdataSol(iDof, iCell, ivar) = sol;
         else
-          UdataSol(ii, jj, ivar) += sol;
+          UdataSol(iDof, iCell, ivar) += sol;
 	
       } // end for ivar
 	
@@ -475,7 +458,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
 
     const int nbvar = this->params.nbvar;
 
@@ -486,18 +469,16 @@ public:
     if (dir == IZ)
       rescale = 1.0/this->params.dz;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
+    // Dof coord
     int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     // ouptut
     real_t sol;
@@ -514,7 +495,7 @@ public:
         // get values at flux point along X direction
         for (int id=0; id<N+1; ++id) {
           
-          flux[id] = UdataFlux(id+i*(N+1), jj, kk, ivar);
+          flux[id] = UdataFlux(id+(N+1)*idy+N*(N+1)*idz, iCell, ivar);
 	  
         }
 	
@@ -529,11 +510,11 @@ public:
         // copy back interpolated value
         if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
             itype==INTERPOLATE_SOLUTION_NEGATIVE)
-          UdataSol(ii,jj,kk, ivar) -= sol;
+          UdataSol(iDof, iCell, ivar) -= sol;
         else if (itype==INTERPOLATE_SOLUTION_REGULAR)
-          UdataSol(ii,jj,kk, ivar) = sol;
+          UdataSol(iDof, iCell, ivar) = sol;
         else
-          UdataSol(ii,jj,kk, ivar) += sol;
+          UdataSol(iDof, iCell, ivar) += sol;
 	
       } // end for ivar	  
 
@@ -548,7 +529,7 @@ public:
         // get values at flux point along Y direction
         for (int id=0; id<N+1; ++id) {
           
-          flux[id] = UdataFlux(ii,id+j*(N+1),kk, ivar);
+          flux[id] = UdataFlux(idx+N*id+N*(N+1)*idz, iCell, ivar);
 	  
         }
 	
@@ -563,11 +544,11 @@ public:
         // copy back interpolated value
         if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
             itype==INTERPOLATE_SOLUTION_NEGATIVE)
-          UdataSol(ii,jj,kk, ivar) -= sol;
+          UdataSol(iDof,iCell, ivar) -= sol;
         else if (itype==INTERPOLATE_SOLUTION_REGULAR)
-          UdataSol(ii,jj,kk, ivar) = sol;
+          UdataSol(iDof,iCell, ivar) = sol;
         else
-          UdataSol(ii,jj,kk, ivar) += sol;
+          UdataSol(iDof,iCell, ivar) += sol;
 	
       } // end for ivar
       
@@ -582,7 +563,7 @@ public:
         // get values at flux point along Y direction
         for (int id=0; id<N+1; ++id) {
           
-          flux[id] = UdataFlux(ii,jj,idz+k*(N+1), ivar);
+          flux[id] = UdataFlux(idx+N*idy+N*N*id, iCell, ivar);
 	  
         }
 	
@@ -597,11 +578,11 @@ public:
         // copy back interpolated value
         if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
             itype==INTERPOLATE_SOLUTION_NEGATIVE)
-          UdataSol(ii,jj,kk, ivar) -= sol;
+          UdataSol(iDof,iCell, ivar) -= sol;
         else if (itype==INTERPOLATE_SOLUTION_REGULAR)
-          UdataSol(ii,jj,kk, ivar) = sol;
+          UdataSol(iDof,iCell, ivar) = sol;
         else
-          UdataSol(ii,jj,kk, ivar) += sol;
+          UdataSol(iDof,iCell, ivar) += sol;
 	
       } // end for ivar
 

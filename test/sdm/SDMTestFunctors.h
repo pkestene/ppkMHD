@@ -30,7 +30,6 @@ template<int dim, int N, int data_type_test, int compare>
 class InitTestFunctor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
 
   InitTestFunctor(HydroParams         params,
 		  SDM_Geometry<dim,N> sdm_geom,
@@ -95,7 +94,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -114,17 +113,16 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
-    int i = ii/N;
-    int j = jj/N;
+    // cell coord
+    int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index
-    int idx = ii-i*N;
-    int idy = jj-j*N;
+    // Dof index for flux
+    int idx,idy;
+    iDof_to_coord(iDof,N,idx,idy);
 
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -134,15 +132,15 @@ public:
     y += this->sdm_geom.solution_pts_1d(idy) * dy;
     
     if (compare == 1) {
-      Udata(ii, jj, ID) -= f0(x,y,0.0);
-      Udata(ii, jj, IP) -= f1(x,y,0.0);
-      Udata(ii, jj, IU) -= f2(x,y,0.0);
-      Udata(ii, jj, IV) -= f3(x,y,0.0);
+      Udata(iDof, iCell, ID) -= f0(x,y,0.0);
+      Udata(iDof, iCell, IP) -= f1(x,y,0.0);
+      Udata(iDof, iCell, IU) -= f2(x,y,0.0);
+      Udata(iDof, iCell, IV) -= f3(x,y,0.0);
     } else {
-      Udata(ii, jj, ID) = f0(x,y,0.0);
-      Udata(ii, jj, IP) = f1(x,y,0.0);
-      Udata(ii, jj, IU) = f2(x,y,0.0);
-      Udata(ii, jj, IV) = f3(x,y,0.0);
+      Udata(iDof, iCell, ID) = f0(x,y,0.0);
+      Udata(iDof, iCell, IP) = f1(x,y,0.0);
+      Udata(iDof, iCell, IU) = f2(x,y,0.0);
+      Udata(iDof, iCell, IV) = f3(x,y,0.0);
     }
     
   } // end operator () - 2d
@@ -158,7 +156,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -183,19 +181,16 @@ public:
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
-    int i = ii/N;
-    int j = jj/N;
-    int k = kk/N;
+    // cell coord
+    int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index
-    int idx = ii-i*N;
-    int idy = jj-j*N;
-    int idz = kk-k*N;
+    // Dof coord
+    int idx,idy,idz;
+    iDof_to_coord(iDof,N,idx,idy,idz);
 
     // lower left corner
     real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
@@ -207,17 +202,17 @@ public:
     z += this->sdm_geom.solution_pts_1d(idz) * dz;
     
     if (compare == 1) {
-      Udata(ii, jj, kk, ID) -= f0(x,y,z);
-      Udata(ii, jj, kk, IP) -= f1(x,y,z);
-      Udata(ii, jj, kk, IU) -= f2(x,y,z);
-      Udata(ii, jj, kk, IV) -= f3(x,y,z);
-      Udata(ii, jj, kk, IW) -= f4(x,y,z);
+      Udata(iDof, iCell, ID) -= f0(x,y,z);
+      Udata(iDof, iCell, IP) -= f1(x,y,z);
+      Udata(iDof, iCell, IU) -= f2(x,y,z);
+      Udata(iDof, iCell, IV) -= f3(x,y,z);
+      Udata(iDof, iCell, IW) -= f4(x,y,z);
     } else {
-      Udata(ii, jj, kk, ID) = f0(x,y,z);
-      Udata(ii, jj, kk, IP) = f1(x,y,z);
-      Udata(ii, jj, kk, IU) = f2(x,y,z);
-      Udata(ii, jj, kk, IV) = f3(x,y,z);
-      Udata(ii, jj, kk, IW) = f4(x,y,z);
+      Udata(iDof, iCell, ID) = f0(x,y,z);
+      Udata(iDof, iCell, IP) = f1(x,y,z);
+      Udata(iDof, iCell, IU) = f2(x,y,z);
+      Udata(iDof, iCell, IV) = f3(x,y,z);
+      Udata(iDof, iCell, IW) = f4(x,y,z);
     }
     
   } // end operator () - 3d

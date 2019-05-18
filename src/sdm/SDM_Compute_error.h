@@ -35,7 +35,6 @@ template<int N, int norm>
 class Compute_Error_Functor_2d : public SDMBaseFunctor<2,N> {
 
 public:
-  using typename SDMBaseFunctor<2,N>::DataArray;
   using typename SDMBaseFunctor<2,N>::HydroState;
 
   /**
@@ -71,8 +70,8 @@ public:
   //! dummy trick
   static double apply(HydroParams       params,
                       SDM_Geometry<3,N> sdm_geom,
-                      DataArray3d       Udata1,
-                      DataArray3d       Udata2,
+                      DataArray         Udata1,
+                      DataArray         Udata2,
                       int               varId)
   {
     return -1.0;
@@ -102,25 +101,23 @@ public:
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
 
-    // global index
-    int ii,jj;
-    index2coord(index,ii,jj,isize*N,jsize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
-    int idx,idy;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj, i,j,idx,idy, N);
+    // Dof coord
+    //int idx,idy;
+    //iDof_to_coord(iDof,N,idx,idy);
 
     if(j >= ghostWidth and j < jsize - ghostWidth and
        i >= ghostWidth and i < isize - ghostWidth) {
       
       // get local conservative variable
-      real_t tmp1 = Udata1(ii,jj,varId);
-      real_t tmp2 = Udata2(ii,jj,varId);
+      real_t tmp1 = Udata1(iDof,iCell,varId);
+      real_t tmp2 = Udata2(iDof,iCell,varId);
       
       if (norm == NORM_L1) {
         sum += fabs(tmp1-tmp2);
@@ -164,7 +161,6 @@ template<int N, int norm>
 class Compute_Error_Functor_3d : public SDMBaseFunctor<3,N> {
 
 public:
-  using typename SDMBaseFunctor<3,N>::DataArray;
   using typename SDMBaseFunctor<3,N>::HydroState;
   
   /**
@@ -200,8 +196,8 @@ public:
   //! dummy trick
   static double apply(HydroParams       params,
                       SDM_Geometry<2,N> sdm_geom,
-                      DataArray2d       Udata1,
-                      DataArray2d       Udata2,
+                      DataArray         Udata1,
+                      DataArray         Udata2,
                       int               varId)
   {
     return -1.0;
@@ -232,26 +228,24 @@ public:
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
 
-    // global index
-    int ii,jj,kk;
-    index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*N);
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*N,iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
-    // Dof index for flux
-    int idx,idy,idz;
-
-    // mapping thread to solution Dof
-    global2local(ii,jj,kk, i,j,k,idx,idy,idz, N);
+    // Dof coord
+    //int idx,idy,idz;
+    //iDof_to_coord(iDof,N,idx,idy,idz);
 
     if(k >= ghostWidth and k < ksize - ghostWidth and
        j >= ghostWidth and j < jsize - ghostWidth and
        i >= ghostWidth and i < isize - ghostWidth) {
       
       // get local conservative variable
-      real_t tmp1 = Udata1(ii,jj,kk,varId);
-      real_t tmp2 = Udata2(ii,jj,kk,varId);
+      real_t tmp1 = Udata1(iDof,iCell,varId);
+      real_t tmp2 = Udata2(iDof,iCell,varId);
       
       if (norm == NORM_L1) {
         sum += fabs(tmp1-tmp2);

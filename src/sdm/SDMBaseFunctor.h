@@ -7,6 +7,7 @@
 #include "shared/HydroParams.h"
 #include "shared/HydroState.h"
 
+#include "sdm_shared.h"
 #include "sdm/SDM_Geometry.h"
 
 namespace sdm {
@@ -21,10 +22,7 @@ class SDMBaseFunctor
   
 public:
   //! Decide at compile-time which HydroState to use
-  using HydroState = typename std::conditional<dim==2,HydroState2d,HydroState3d>::type;
-  
-  //! Decide at compile-time which data array to use
-  using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  using HydroState = typename std::conditional<dim==2,HydroState2d,HydroState3d>::type;  
 
   using solution_values_t = Kokkos::Array<real_t, N>;
   using flux_values_t     = Kokkos::Array<real_t, N+1>;
