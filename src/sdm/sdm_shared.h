@@ -6,15 +6,20 @@
 
 namespace sdm {
 
-  //! Main data structure
-  using DataArray = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device>;
+//! Main data structure
+using DataArray = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device>;
 
-  //! Data array typedef for host memory space
+//! Data array typedef for host memory space
   using DataArrayHost = DataArray::HostMirror;
 
-  //! unmanaged view
-  using DataArrayUnmanaged = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+//! unmanaged view
+using DataArrayUnmanaged = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
+//! data structure for cell average data
+using DataArrayAv2d = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device>;
+
+//! data structure for cell average data
+using DataArrayAv3d = Kokkos::View<real_t****, Kokkos::LayoutLeft, Device>;
 
 /**
  * Utility to convert a global index to iDof,iCell according to

@@ -24,20 +24,23 @@ namespace sdm {
  * and store the result in Uaverage.
  *
  * The space average is performed using a Gauss-Chebyshev quadrature.
+ *
+ * Watchout data layout:
+ * Udata sizes : nbDofsPerCell, nbCells, nbVar
+ * Uaverage sizes : isize, jsize, nbVar
  */
 template<int dim, int N>
 class Average_Conservative_Variables_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
-  
-  static constexpr auto dofMap = DofMap<dim,N>;
+  using DataArrayAv = 
+    typename std::conditional<dim==2,DataArrayAv2d,DataArrayAv3d>::type;  
 
   Average_Conservative_Variables_Functor(HydroParams         params,
 					 SDM_Geometry<dim,N> sdm_geom,
 					 DataArray           Udata,
-					 DataArray           Uaverage) :
+					 DataArrayAv         Uaverage) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Udata(Udata),
     Uaverage(Uaverage)
@@ -47,8 +50,9 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
-                    DataArray           Uaverage)
+                    DataArrayAv         Uaverage)
   {
+    // we are mapping the total number of cells
     int64_t nbCells = dim==2 ? 
       params.isize * params.jsize :
       params.isize * params.jsize * params.ksize;
@@ -66,16 +70,16 @@ public:
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& iCell) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // retrieve cell coord
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+    iCell_to_coord(iCell,isize,i,j);
 
     // for each variables
     for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -92,8 +96,10 @@ public:
       	for (int idx=0; idx<N; ++idx) {
 	  real_t x = this->sdm_geom.solution_pts_1d(idx);
 	  real_t wx = sqrt(x-x*x);
-	  
-	  tmp += Udata(i,j, dofMap(idx,idy,0,ivar)) * wx * wy;
+
+          int iDof = idx + N*idy; 
+
+	  tmp += Udata(iDof,iCell, ivar) * wx * wy;
 	  
 	} // for idx
       } // for idy
@@ -119,7 +125,7 @@ public:
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& iCell) const
   {
 
     const int isize = this->params.isize;
@@ -128,9 +134,9 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // cell coord
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
     // for each variables
     for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -152,7 +158,9 @@ public:
 	    real_t x = this->sdm_geom.solution_pts_1d(idx);
 	    real_t wx = sqrt(x-x*x);
 	    
-	    tmp += Udata(i,j,k, dofMap(idx,idy,idz,ivar)) * wx * wy * wz;
+            int iDof = idx + N*idy + N*N*idz; 
+	    
+            tmp += Udata(iDof,iCell, ivar) * wx * wy * wz;
 	  
 	  } // for idx
 	} // for idy
@@ -171,8 +179,8 @@ public:
     
   } // operator () - 3d
   
-  DataArray Udata;
-  DataArray Uaverage;
+  DataArray   Udata;
+  DataArrayAv Uaverage;
 
 }; // class Average_Conservative_Variables_Functor
 
@@ -192,16 +200,17 @@ enum stencil_minmax_t {
  * over simple stencil and store the result in Umin, Umax.
  *
  * Remember that Uaverage,Umin,Umax is sized with nbvar per cell.
+ * So Watchout data layout:
+ * Uaverage, Umin, Umax sizes : isize, jsize, nbVar
  */
 template<int dim, int N>
 class MinMax_Conservative_Variables_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
+  using DataArrayAv = 
+    typename std::conditional<dim==2,DataArrayAv2d,DataArrayAv3d>::type;  
   
-  static constexpr auto dofMap = DofMap<dim,N>;
-
   /**
    * \param[in]  params contains hydrodynamics parameters
    * \param[in]  sdm_geom contains parameters to init base class functor
@@ -211,9 +220,9 @@ public:
    */
   MinMax_Conservative_Variables_Functor(HydroParams         params,
 					SDM_Geometry<dim,N> sdm_geom,
-					DataArray           Uaverage,
-					DataArray           Umin,
-					DataArray           Umax,
+					DataArrayAv         Uaverage,
+					DataArrayAv         Umin,
+					DataArrayAv         Umax,
 					int                 corner_included=0) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Uaverage(Uaverage),
@@ -225,12 +234,16 @@ public:
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
-                    DataArray           Uaverage,
-                    DataArray           Umin,
-                    DataArray           Umax,
-                    int                 corner_included,
-                    int                 nbCells)
+                    DataArrayAv         Uaverage,
+                    DataArrayAv         Umin,
+                    DataArrayAv         Umax,
+                    int                 corner_included)
   {
+    // we are mapping the total number of cells
+    int64_t nbCells = dim==2 ? 
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     MinMax_Conservative_Variables_Functor functor(params, sdm_geom, 
                                                   Uaverage, Umin, Umax,
                                                   corner_included);
@@ -261,16 +274,16 @@ public:
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& iCell) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // retrieve cell coord
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+    iCell_to_coord(iCell,isize,i,j);
 
     // for each variables
     for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -279,6 +292,7 @@ public:
       real_t minval = Uaverage(i,j,ivar);
       real_t maxval = minval;
       real_t tmp;
+      
       // read stencil values
 
       tmp = i > 0     ? Uaverage(i-1,j,ivar) : Uaverage(i,j,ivar);
@@ -313,7 +327,7 @@ public:
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& iCell) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
@@ -321,9 +335,9 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // cell coord
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
     // for each variables
     for (int ivar = 0; ivar<nbvar; ++ivar) {
@@ -366,10 +380,10 @@ public:
     
   } // operator () - 3d
 
-  DataArray Uaverage;
-  DataArray Umin;
-  DataArray Umax;
-  int       corner_included;
+  DataArrayAv Uaverage;
+  DataArrayAv Umin;
+  DataArrayAv Umax;
+  int         corner_included;
   
 }; // class MinMax_Conservative_Variables_Functor
 
@@ -389,13 +403,13 @@ template<int dim, int N, int dir>
 class Average_Gradient_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
+  using DataArrayAv = 
+    typename std::conditional<dim==2,DataArrayAv2d,DataArrayAv3d>::type;
+
   using typename SDMBaseFunctor<dim,N>::HydroState;
 
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   
-  static constexpr auto dofMap = DofMap<dim,N>;
-
   Average_Gradient_Functor(HydroParams         params,
 			   SDM_Geometry<dim,N> sdm_geom,
 			   DataArray           Udata,
@@ -428,16 +442,16 @@ public:
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& iCell) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // cell coord
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+    iCell_to_coord(iCell,isize,i,j);
 
     if (dir == IX) {
       
@@ -460,7 +474,7 @@ public:
 	  // read a line
 	  for (int idx=0; idx<N; ++idx) {
 
-	    sol[idx] = Udata(i,j,dofMap(idx,idy,0,ivar));
+	    sol[idx] = Udata(idx+N*idy,iCell,ivar);
 	    
 	  }
 
@@ -516,7 +530,7 @@ public:
 	  // read a line
 	  for (int idy=0; idy<N; ++idy) {
 
-	    sol[idy] = Udata(i,j,dofMap(idx,idy,0,ivar));
+	    sol[idy] = Udata(idx+N*idy,iCell,ivar);
 	    
 	  }
 
@@ -561,7 +575,7 @@ public:
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& iCell) const
   {
 
     const int isize = this->params.isize;
@@ -570,9 +584,9 @@ public:
 
     const int nbvar = this->params.nbvar;
 
-    // local cell index
+    // cell coord
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
 
     if (dir == IX) {
       
@@ -600,7 +614,7 @@ public:
 	    
 	    // read a line-vector
 	    for (int idx=0; idx<N; ++idx)
-	      sol[idx] = Udata(i,j,k,dofMap(idx,idy,idz,ivar));
+	      sol[idx] = Udata(idx+N*idy+N*N*idz,iCell,ivar);
 	      
 	    // compute gradient component at each dof of this line
 	    for (int idx=0; idx<N; ++idx) {
@@ -660,7 +674,7 @@ public:
 	    
 	    // read a line-vector
 	    for (int idy=0; idy<N; ++idy)
-	      sol[idy] = Udata(i,j,k,dofMap(idx,idy,idz,ivar));
+	      sol[idy] = Udata(idx+N*idy+N*N*idz,iCell,ivar);
 	      
 	    // compute gradient component at each dof of this line
 	    for (int idy=0; idy<N; ++idy) {
@@ -721,7 +735,7 @@ public:
 	    
 	    // read a line-vector
 	    for (int idz=0; idz<N; ++idz)
-	      sol[idz] = Udata(i,j,k,dofMap(idx,idy,idz,ivar));
+	      sol[idz] = Udata(idx+N*idy+N*N*idz,iCell,ivar);
 	      
 	    // compute gradient component at each dof of this line
 	    for (int idz=0; idz<N; ++idz) {
@@ -758,8 +772,8 @@ public:
 
   } // operator () - 3d
   
-  DataArray Udata;
-  DataArray Uaverage;
+  DataArray   Udata;
+  DataArrayAv Uaverage;
 
 }; // class Average_Gradient_Functor
 
@@ -782,21 +796,20 @@ template<int dim, int N>
 class Apply_limiter_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
+  using DataArrayAv = 
+    typename std::conditional<dim==2,DataArrayAv2d,DataArrayAv3d>::type;
 
   //using typename SDMBaseFunctor<dim,N>::solution_values_t;
-  
-  static constexpr auto dofMap = DofMap<dim,N>;
 
   Apply_limiter_Functor(HydroParams         params,
 			SDM_Geometry<dim,N> sdm_geom,
 			ppkMHD::EulerEquations<dim> euler,
 			DataArray           Udata,
-			DataArray           Uaverage,
-			DataArray           Ugradx,
-			DataArray           Ugrady,
-			DataArray           Ugradz,
+			DataArrayAv         Uaverage,
+			DataArrayAv         Ugradx,
+			DataArrayAv         Ugrady,
+			DataArrayAv         Ugradz,
 			const real_t        Mdx2) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     euler(euler),
@@ -813,13 +826,17 @@ public:
                     SDM_Geometry<dim,N> sdm_geom,
                     ppkMHD::EulerEquations<dim> euler,
                     DataArray           Udata,
-                    DataArray           Uaverage,
-                    DataArray           Ugradx,
-                    DataArray           Ugrady,
-                    DataArray           Ugradz,
-                    const real_t        Mdx2,
-                    int                 nbCells)
+                    DataArrayAv         Uaverage,
+                    DataArrayAv         Ugradx,
+                    DataArrayAv         Ugrady,
+                    DataArrayAv         Ugradz,
+                    const real_t        Mdx2)
   {
+    // we are mapping the total number of cells
+    int64_t nbCells = dim==2 ? 
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     Apply_limiter_Functor functor(params, sdm_geom, euler, 
                                   Udata, Uaverage,
                                   Ugradx, Ugrady, Ugradz, Mdx2);
@@ -857,7 +874,7 @@ public:
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& iCell) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
@@ -879,9 +896,9 @@ public:
     // Needs explanation here !!!
     const real_t dx = 1.0; //this->params.dx;
     
-    // local cell index
+    // cell coord
     int i,j;
-    index2coord(index,i,j,isize,jsize);
+    iCell_to_coord(iCell,isize,i,j);
 
     if (i==0 or i==isize-1 or
 	j==0 or j==jsize-1 )
@@ -960,7 +977,7 @@ public:
 	    
     	    real_t rx = this->sdm_geom.solution_pts_1d(idx) - 0.5;
 	    
-    	    Udata(i,j,dofMap(idx,idy,0,ivar)) = Uave[ivar] +
+    	    Udata(idx+N*idy,iCell,ivar) = Uave[ivar] +
     	      rx*DuX_new[ivar] +
     	      ry*DuY_new[ivar];
 	    
@@ -982,7 +999,7 @@ public:
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& iCell) const
   {
 
     const int isize = this->params.isize;
@@ -1011,10 +1028,10 @@ public:
     // Needs explanation here !!!
     const real_t dx = 1.0; //this->params.dx;
 
-    // local cell index
+    // cell coord
     int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
-
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
+ 
     if (i==0 or i==isize-1 or
 	j==0 or j==jsize-1 or
 	k==0 or k==ksize-1 )
@@ -1111,7 +1128,7 @@ public:
 	      
 	      real_t rx = this->sdm_geom.solution_pts_1d(idx) - 0.5;
 	      
-	      Udata(i,j,k,dofMap(idx,idy,idz,ivar)) = Uave[ivar] +
+	      Udata(idx+N*idy+N*N*idz,iCell,ivar) = Uave[ivar] +
 		rx*DuX_new[ivar] +
 		ry*DuY_new[ivar] +
 		rz*DuZ_new[ivar];
@@ -1129,12 +1146,12 @@ public:
   } // operator () - 3d
   
   ppkMHD::EulerEquations<dim> euler;
-  DataArray Udata;
-  DataArray Uaverage;
-  DataArray Ugradx;
-  DataArray Ugrady;
-  DataArray Ugradz;
-  real_t    Mdx2;
+  DataArray   Udata;
+  DataArrayAv Uaverage;
+  DataArrayAv Ugradx;
+  DataArrayAv Ugrady;
+  DataArrayAv Ugradz;
+  real_t      Mdx2;
   
 }; // class Apply_limiter_Functor
 
