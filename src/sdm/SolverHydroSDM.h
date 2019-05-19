@@ -127,6 +127,9 @@ class SolverHydroSDM : public ppkMHD::SolverBase
 {
 
 public:
+  //! cell-average data array type
+  using DataArrayAv =
+    typename std::conditional<dim==2,DataArrayAv2d,DataArrayAv3d>::type;
 
   //! a type to store some coefficients needed to perform Runge-Kutta integration
   using coefs_t = Kokkos::Array<real_t,3>;
@@ -163,13 +166,13 @@ public:
    * limiter specific arrays:
    * - Uaverage : average conservative value, one per cell
    */
-  DataArray     Uaverage; /*! used if limiting is enabled, size = nbCells */
-  //DataArray     Umin;     /*! used if limiting is enabled */
-  //DataArray     Umax;     /*! used if limiting is enabled */
+  DataArrayAv   Uaverage; /*! used if limiting is enabled, size = nbCells */
+  //DataArrayAv   Umin;     /*! used if limiting is enabled */
+  //DataArrayAv   Umax;     /*! used if limiting is enabled */
 
-  DataArray     Ugradx; /*! used if limiting is enabled, cell-averaged gradient, x component */
-  DataArray     Ugrady; /*! used if limiting is enabled, cell-averaged gradient, y component */
-  DataArray     Ugradz; /*! used if limiting is enabled, cell-averaged gradient, z component */
+  DataArrayAv   Ugradx; /*! used if limiting is enabled, cell-averaged gradient, x component */
+  DataArrayAv   Ugrady; /*! used if limiting is enabled, cell-averaged gradient, y component */
+  DataArrayAv   Ugradz; /*! used if limiting is enabled, cell-averaged gradient, z component */
 
   /*
    * viscous terms specific array
@@ -421,10 +424,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   // set number of cells in base class
   m_nCells = nbCells;
 
-  const int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
-  //const int nb_dof = params.nbvar * nb_dof_per_cell;
+  const int nbDofCell = dim==2 ? N*N : N*N*N;
+  //const int nb_dof = params.nbvar * nbDofCell;
 
-  m_nDofsPerCell = nb_dof_per_cell;
+  m_nDofsPerCell = nbDofCell;
   
   // useful for allocating Fluxes, for conservative variables at flux points
   // int nb_dof_flux = dim==2 ? 
@@ -461,29 +464,29 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    */
   if (dim==2) {
 
-    U     = DataArray("U", nb_dof_per_cell, nbCells, nbvar);
+    U     = DataArray("U", nbDofCell, nbCells, nbvar);
     Uhost = Kokkos::create_mirror(U);
-    Uaux  = DataArray("Uaux", nb_dof_per_cell, nbCells, nbvar);
+    Uaux  = DataArray("Uaux", nbDofCell, nbCells, nbvar);
     
     Fluxes = DataArray("Fluxes", N*(N+1), nbCells, nbvar);
 
-    total_mem_size += nb_dof_per_cell*nbCells*nbvar*sizeof(real_t); // U
-    total_mem_size += nb_dof_per_cell*nbCells*nbvar*sizeof(real_t); // Uaux
-    total_mem_size += N*(N+1)*nbCells*nbvar*sizeof(real_t); // Fluxes
+    total_mem_size += nbDofCell*nbCells*nbvar*sizeof(real_t); // U
+    total_mem_size += nbDofCell*nbCells*nbvar*sizeof(real_t); // Uaux
+    total_mem_size += N*(N+1)  *nbCells*nbvar*sizeof(real_t); // Fluxes
     
     //FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, nbvar);
     //FluxesDir[IY] = DataArrayUnmanaged(Fluxes.data(), iisize, jsize*(N+1), nbvar);
 
   } else if (dim==3) {
 
-    U     = DataArray("U", nb_dof_per_cell, nbCells, nbvar);
+    U     = DataArray("U", nbDofCell, nbCells, nbvar);
     Uhost = Kokkos::create_mirror(U);
-    Uaux  = DataArray("Uaux", nb_dof_per_cell, nbCells, nbvar);
+    Uaux  = DataArray("Uaux", nbDofCell, nbCells, nbvar);
     
     Fluxes = DataArray("Fluxes", N*N*(N+1), nbCells, nbvar);
     
-    total_mem_size += nb_dof_per_cell*nbCells*nbvar * sizeof(real_t); // U
-    total_mem_size += nb_dof_per_cell*nbCells*nbvar * sizeof(real_t); // Uaux
+    total_mem_size += nbDofCell*nbCells*nbvar * sizeof(real_t); // U
+    total_mem_size += nbDofCell*nbCells*nbvar * sizeof(real_t); // Uaux
     total_mem_size += N*N*(N+1)*nbCells*nbvar * sizeof(real_t); // Fluxes
 
     //FluxesDir[IX] = DataArrayUnmanaged(Fluxes.data(), isize*(N+1), jjsize, kksize, nbvar);
@@ -511,41 +514,22 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   
   if (ssprk2_enabled) {
 
-    if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",iisize, jjsize, nbvar);
-      total_mem_size += iisize*jjsize*nbvar * sizeof(real_t);
-    } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",iisize, jjsize, kksize, nbvar);
-      total_mem_size += iisize*jjsize*kksize*nbvar * sizeof(real_t);
-    }
+    U_RK1 = DataArray("U_RK1",nbDofCell,nbCells, nbvar);
+    total_mem_size += nbDofCell*nbCells*nbvar * 1 * sizeof(real_t);
     
   } else if (ssprk3_enabled) {
 
-    if (dim == 2) {
-      U_RK1 = DataArray("U_RK1",iisize, jjsize, nbvar);
-      U_RK2 = DataArray("U_RK2",iisize, jjsize, nbvar);
-      total_mem_size += iisize*jjsize*nbvar * 2 * sizeof(real_t);
-    } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1",iisize, jjsize, kksize, nbvar);
-      U_RK2 = DataArray("U_RK2",iisize, jjsize, kksize, nbvar);
-      total_mem_size += iisize*jjsize*kksize*nbvar * 2 * sizeof(real_t);
-    }
+    U_RK1 = DataArray("U_RK1",nbDofCell,nbCells, nbvar);
+    U_RK2 = DataArray("U_RK2",nbDofCell,nbCells, nbvar);
+    total_mem_size += nbDofCell*nbCells*nbvar * 2 * sizeof(real_t);
     
   } else if (ssprk54_enabled) {
-
-    if (dim == 2) {
-      U_RK1 = DataArray("U_RK1", iisize, jjsize, nbvar);
-      U_RK2 = DataArray("U_RK2", iisize, jjsize, nbvar);
-      U_RK3 = DataArray("U_RK3", iisize, jjsize, nbvar);
-      U_RK4 = DataArray("U_RK4", iisize, jjsize, nbvar);
-      total_mem_size += iisize*jjsize*nbvar * 4 * sizeof(real_t);
-    } else if (dim == 3) {
-      U_RK1 = DataArray("U_RK1", iisize, jjsize, kksize, nbvar);
-      U_RK2 = DataArray("U_RK2", iisize, jjsize, kksize, nbvar);
-      U_RK3 = DataArray("U_RK3", iisize, jjsize, kksize, nbvar);
-      U_RK4 = DataArray("U_RK4", iisize, jjsize, kksize, nbvar);
-      total_mem_size += iisize*jjsize*kksize*nbvar * 4 * sizeof(real_t);
-    }
+    
+    U_RK1 = DataArray("U_RK1", nbDofCell, nbCells, nbvar);
+    U_RK2 = DataArray("U_RK2", nbDofCell, nbCells, nbvar);
+    U_RK3 = DataArray("U_RK3", nbDofCell, nbCells, nbvar);
+    U_RK4 = DataArray("U_RK4", nbDofCell, nbCells, nbvar);
+    total_mem_size += nbDofCell*nbCells*nbvar * 4 * sizeof(real_t);
     
   }
 
@@ -566,14 +550,14 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     
     // memory allocation to store velocity gradients at solution points
     if (dim==2) {
-      Ugradx_v   = DataArray("Ugradx_v"    ,iisize,jjsize,dim);
-      Ugrady_v   = DataArray("Ugrady_v"    ,iisize,jjsize,dim);
-      total_mem_size += iisize*jjsize*dim * 2 * sizeof(real_t);
+      Ugradx_v   = DataArray("Ugradx_v"    ,nbDofCell,nbCells,dim);
+      Ugrady_v   = DataArray("Ugrady_v"    ,nbDofCell,nbCells,dim);
+      total_mem_size += nbDofCell*nbCells*dim * 2 * sizeof(real_t);
     } else if (dim==3) {
-      Ugradx_v   = DataArray("Ugradx_v"    ,iisize,jjsize,kksize,dim);
-      Ugrady_v   = DataArray("Ugrady_v"    ,iisize,jjsize,kksize,dim);
-      Ugradz_v   = DataArray("Ugradz_v"    ,iisize,jjsize,kksize,dim);
-      total_mem_size += iisize*jjsize*kksize*dim * 3 * sizeof(real_t);
+      Ugradx_v   = DataArray("Ugradx_v"    ,nbDofCell,nbCells,dim);
+      Ugrady_v   = DataArray("Ugrady_v"    ,nbDofCell,nbCells,dim);
+      Ugradz_v   = DataArray("Ugradz_v"    ,nbDofCell,nbCells,dim);
+      total_mem_size += nbDofCell*nbCells*dim * 3 * sizeof(real_t);
     }
 
     // number of flux points, as used to address array FUgrad
@@ -586,9 +570,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
     // memory allocation for FUgrad
     if (dim==2)
-      FUgrad = DataArray("FUgrad", isize*(N+1), jjsize, nb_components_FUgrad);
+      FUgrad = DataArray("FUgrad",   N*(N+1), nbCells, nb_components_FUgrad);
     else
-      FUgrad = DataArray("FUgrad", isize*(N+1), jjsize, kksize, nb_components_FUgrad);
+      FUgrad = DataArray("FUgrad", N*N*(N+1), nbCells, nb_components_FUgrad);
     
   }
   
@@ -604,13 +588,13 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     
     // memory allocation to store cell-averaged gradient components
     if (dim==2) {
-      Ugradx   = DataArray("Ugradx"    ,isize,jsize,nbvar);
-      Ugrady   = DataArray("Ugrady"    ,isize,jsize,nbvar);
+      Ugradx   = DataArrayAv("Ugradx"    ,isize,jsize,nbvar);
+      Ugrady   = DataArrayAv("Ugrady"    ,isize,jsize,nbvar);
       total_mem_size += isize*jsize*nbvar * 2 * sizeof(real_t);
     } else if (dim==3) {
-      Ugradx   = DataArray("Ugradx"    ,isize,jsize,ksize,nbvar);
-      Ugrady   = DataArray("Ugrady"    ,isize,jsize,ksize,nbvar);
-      Ugradz   = DataArray("Ugradz"    ,isize,jsize,ksize,nbvar);
+      Ugradx   = DataArrayAv("Ugradx"    ,isize,jsize,ksize,nbvar);
+      Ugrady   = DataArrayAv("Ugrady"    ,isize,jsize,ksize,nbvar);
+      Ugradz   = DataArrayAv("Ugradz"    ,isize,jsize,ksize,nbvar);
       total_mem_size += isize*jsize*ksize*nbvar * 3 * sizeof(real_t);
     }
 
@@ -628,10 +612,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (positivity_enabled or limiter_enabled) {
 
     if (dim==2) {
-      Uaverage = DataArray("Uaverage",isize,jsize,nbvar);
+      Uaverage = DataArrayAv("Uaverage",isize,jsize,nbvar);
       total_mem_size += isize*jsize*nbvar * 1 * sizeof(real_t);
     } else if (dim==3) {
-      Uaverage = DataArray("Uaverage",isize,jsize,ksize,nbvar);
+      Uaverage = DataArrayAv("Uaverage",isize,jsize,ksize,nbvar);
       total_mem_size += isize*jsize*ksize*nbvar * 1 * sizeof(real_t);
     }
     
@@ -977,8 +961,7 @@ void SolverHydroSDM<dim,N>::apply_positivity_preserving(DataArray Udata)
     Apply_positivity_Functor_v2<dim,N>::apply(params,
                                               sdm_geom,
                                               Udata,
-                                              Uaverage,
-                                              nbCells);
+                                              Uaverage);
   }
   
 } // SolverHydroSDM<dim,N>::apply_positivity_preserving
@@ -1037,8 +1020,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
                                         Ugradx,
                                         Ugrady,
                                         Ugradz,
-                                        Mdx2,
-                                        nbCells);
+                                        Mdx2);
     
   } // end limiter_enabled
   
@@ -1539,7 +1521,7 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::erase(DataArray data)
 {
 
-  SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data);
+  SDM_Erase_Functor::apply(params, data);
   
 } // SolverHydroSDM<dim,N>::erase
 
@@ -1553,7 +1535,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
 
   UNUSED(mhd_enabled);
   
-  MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata);
+  //MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata);
    
 } // SolverHydroSDM<dim,N>::make_boundary_sdm
 
@@ -1574,7 +1556,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_wedge(DataArray   Udata,
     nbIter = ghostWidth * max_size * max_size;
   }
 
-  MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId>::apply(params, sdm_geom, wparams, Udata, nbIter);
+  //MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId>::apply(params, sdm_geom, wparams, Udata, nbIter);
     
 } // SolverHydroSDM<dim,N>::make_boundary_sdm_wedge
 
@@ -1595,7 +1577,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_jet(DataArray   Udata,
     nbIter = ghostWidth * max_size * max_size;
   }
 
-  MakeBoundariesFunctor_SDM_Jet<dim,N,faceId>::apply(params, sdm_geom, jparams, Udata, nbIter);
+  //MakeBoundariesFunctor_SDM_Jet<dim,N,faceId>::apply(params, sdm_geom, jparams, Udata, nbIter);
   
 } // SolverHydroSDM<dim,N>::make_boundary_sdm_jet
 
