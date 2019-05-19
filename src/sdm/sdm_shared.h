@@ -10,7 +10,7 @@ namespace sdm {
 using DataArray = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device>;
 
 //! Data array typedef for host memory space
-  using DataArrayHost = DataArray::HostMirror;
+using DataArrayHost = DataArray::HostMirror;
 
 //! unmanaged view
 using DataArrayUnmanaged = Kokkos::View<real_t***, Kokkos::LayoutLeft, Device, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
