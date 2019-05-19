@@ -73,7 +73,7 @@ public:
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& iCell) const
   {
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
@@ -130,7 +130,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
 
     const int nbvar = this->params.nbvar;
 
@@ -413,7 +413,7 @@ public:
   Average_Gradient_Functor(HydroParams         params,
 			   SDM_Geometry<dim,N> sdm_geom,
 			   DataArray           Udata,
-			   DataArray           Uaverage) :
+			   DataArrayAv         Uaverage) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Udata(Udata),
     Uaverage(Uaverage)
@@ -423,7 +423,7 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
-                    DataArray           Uaverage)
+                    DataArrayAv         Uaverage)
   {
     int64_t nbCells = dim==2 ? 
       params.isize * params.jsize :
@@ -445,7 +445,7 @@ public:
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& iCell) const
   {
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
 
     const int nbvar = this->params.nbvar;
 
@@ -580,7 +580,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
 
     const int nbvar = this->params.nbvar;
 

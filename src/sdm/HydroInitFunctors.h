@@ -67,7 +67,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -153,7 +153,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -287,7 +287,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -366,7 +366,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -496,7 +496,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -624,7 +624,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -812,7 +812,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -905,7 +905,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -1052,7 +1052,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -1133,7 +1133,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -1270,7 +1270,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -1342,7 +1342,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -1472,7 +1472,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
         
      int iDof, iCell;
     index_to_iDof_iCell(index,N*N,iDof,iCell);
@@ -1503,7 +1503,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     
     int iDof, iCell;
     index_to_iDof_iCell(index,N*N*N,iDof,iCell);
@@ -1568,7 +1568,7 @@ public:
   {
 
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
@@ -1665,7 +1665,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ksize = this->params.ksize;
+    //const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
     
 #ifdef USE_MPI
