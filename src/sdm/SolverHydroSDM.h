@@ -191,7 +191,7 @@ public:
   DataArray Fluxes;
 
   //! array of unmanaged views for flux computations
-  DataArrayUnmanaged FluxesDir[dim];
+  //DataArrayUnmanaged FluxesDir[dim];
 
   /*
    * Override base class method to initialize IO writer object
@@ -1045,18 +1045,18 @@ void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray 
   Interpolate_At_FluxPoints_Functor<dim,N,dir>::apply(params,
                                                       sdm_geom,
                                                       Udata,
-                                                      FluxesDir[dir]);
+                                                      Fluxes);
   
   // 2. inplace computation of fluxes along direction <dir> at flux points
   ComputeFluxAtFluxPoints_Functor<dim,N,dir>::apply(params,
                                                     sdm_geom,
                                                     euler,
-                                                    FluxesDir[dir]);
+                                                    Fluxes);
   
   // 3. compute derivative and accumulate in Udata_fdiv
   Interpolate_At_SolutionPoints_Functor<dim,N,dir>::apply(params,
                                                           sdm_geom,
-                                                          FluxesDir[dir],
+                                                          Fluxes,
                                                           Udata_fdiv);
   
 } // SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir
