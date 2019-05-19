@@ -30,11 +30,11 @@
 #include "sdm/SDM_Dt_Functor.h"
 
 #include "sdm/SDM_Interpolate_Functors.h"
-#include "sdm/SDM_Interpolate_viscous_Functors.h"
+//#include "sdm/SDM_Interpolate_viscous_Functors.h"
 
 #include "sdm/SDM_Flux_Functors.h"
-#include "sdm/SDM_Viscous_Flux_Functors.h"
-#include "sdm/SDM_Flux_with_Limiter_Functors.h"
+//#include "sdm/SDM_Viscous_Flux_Functors.h"
+//#include "sdm/SDM_Flux_with_Limiter_Functors.h" // no used
 
 #include "sdm/SDM_Run_Functors.h"
 #include "sdm/SDM_Boundaries_Functors.h"
@@ -1070,88 +1070,88 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
 								      real_t dt)
 {
 
-  if (dim==2 and dir==IZ)
-    return;
+  // if (dim==2 and dir==IZ)
+  //   return;
 
-  // here we assume velocity gradients have already been computed
-  // i.e. calls to compute_velocity_gradients have been made, that is Ugradx_v, Ugrady_v, Ugradz_v
-  // are populated
+  // // here we assume velocity gradients have already been computed
+  // // i.e. calls to compute_velocity_gradients have been made, that is Ugradx_v, Ugrady_v, Ugradz_v
+  // // are populated
   
-  // 1. interpolate all velocity components from solution to
-  //    flux points in the given direction
-  //    this will fill components IGU, IGV, IGW of FUgrad
-  Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
-                                                            sdm_geom,
-                                                            Udata,
-                                                            FUgrad,
-                                                            nbCells);
+  // // 1. interpolate all velocity components from solution to
+  // //    flux points in the given direction
+  // //    this will fill components IGU, IGV, IGW of FUgrad
+  // Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
+  //                                                           sdm_geom,
+  //                                                           Udata,
+  //                                                           FUgrad,
+  //                                                           nbCells);
   
-  // 2. average velocity at cell borders
-  Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
-                                                              sdm_geom,
-                                                              FUgrad,
-                                                              nbCells);
+  // // 2. average velocity at cell borders
+  // Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
+  //                                                             sdm_geom,
+  //                                                             FUgrad,
+  //                                                             nbCells);
   
-  // 3.1. interpolate velocity gradients-x from solution points to flux points
-  Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IX>
-    ::apply(params, sdm_geom,
-            Ugradx_v, FUgrad, nbCells);
+  // // 3.1. interpolate velocity gradients-x from solution points to flux points
+  // Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IX>
+  //   ::apply(params, sdm_geom,
+  //           Ugradx_v, FUgrad, nbCells);
   
-  // 3.2. interpolate velocity gradients-y from solution points to flux points
-  Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IY>
-    ::apply(params, sdm_geom,
-            Ugrady_v, FUgrad, nbCells);
+  // // 3.2. interpolate velocity gradients-y from solution points to flux points
+  // Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IY>
+  //   ::apply(params, sdm_geom,
+  //           Ugrady_v, FUgrad, nbCells);
   
-  // 3.3. interpolate velocity gradients-z from solution points to flux points
-  if (dim==3) {
-    Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IZ>
-      ::apply(params, sdm_geom,
-              Ugradz_v, FUgrad, nbCells);
-  }
+  // // 3.3. interpolate velocity gradients-z from solution points to flux points
+  // if (dim==3) {
+  //   Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IZ>
+  //     ::apply(params, sdm_geom,
+  //             Ugradz_v, FUgrad, nbCells);
+  // }
   
-  // 4. average velocity gradients at cell border
-  {
-    int nvar_to_average = dim*dim;
-    var_index_t var_index;
-    if (dim==2) {
-      var_index[0] = (int) VarIndexGrad2d::IGUX;
-      var_index[1] = (int) VarIndexGrad2d::IGVX;
+  // // 4. average velocity gradients at cell border
+  // {
+  //   int nvar_to_average = dim*dim;
+  //   var_index_t var_index;
+  //   if (dim==2) {
+  //     var_index[0] = (int) VarIndexGrad2d::IGUX;
+  //     var_index[1] = (int) VarIndexGrad2d::IGVX;
       
-      var_index[2] = (int) VarIndexGrad2d::IGUY;
-      var_index[3] = (int) VarIndexGrad2d::IGVY;
-    } else {
-      var_index[0] = (int) VarIndexGrad3d::IGUX;
-      var_index[1] = (int) VarIndexGrad3d::IGVX;
-      var_index[2] = (int) VarIndexGrad3d::IGWX;
+  //     var_index[2] = (int) VarIndexGrad2d::IGUY;
+  //     var_index[3] = (int) VarIndexGrad2d::IGVY;
+  //   } else {
+  //     var_index[0] = (int) VarIndexGrad3d::IGUX;
+  //     var_index[1] = (int) VarIndexGrad3d::IGVX;
+  //     var_index[2] = (int) VarIndexGrad3d::IGWX;
       
-      var_index[3] = (int) VarIndexGrad3d::IGUY;
-      var_index[4] = (int) VarIndexGrad3d::IGVY;
-      var_index[5] = (int) VarIndexGrad3d::IGWY;
+  //     var_index[3] = (int) VarIndexGrad3d::IGUY;
+  //     var_index[4] = (int) VarIndexGrad3d::IGVY;
+  //     var_index[5] = (int) VarIndexGrad3d::IGWY;
       
-      var_index[6] = (int) VarIndexGrad3d::IGUZ;
-      var_index[7] = (int) VarIndexGrad3d::IGVZ;
-      var_index[8] = (int) VarIndexGrad3d::IGWZ;
-    }
+  //     var_index[6] = (int) VarIndexGrad3d::IGUZ;
+  //     var_index[7] = (int) VarIndexGrad3d::IGVZ;
+  //     var_index[8] = (int) VarIndexGrad3d::IGWZ;
+  //   }
     
-    Average_component_at_cell_borders_Functor<dim,N,dir> functor(params,
-                                                                 sdm_geom, 
-                                                                 FUgrad,
-								 nvar_to_average,
-                                                                 var_index);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+  //   Average_component_at_cell_borders_Functor<dim,N,dir> functor(params,
+  //                                                                sdm_geom, 
+  //                                                                FUgrad,
+  //       							 nvar_to_average,
+  //                                                                var_index);
+  //   Kokkos::parallel_for(nbCells, functor);
+  // }
   
-  // 5.1 Now one can compute viscous fluxes at flux points
-  {
-    ComputeViscousFluxAtFluxPoints_Functor<dim,N,dir> functor(params, sdm_geom, euler, FUgrad, Fluxes);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+  // // 5.1 Now one can compute viscous fluxes at flux points
+  // {
+  //   ComputeViscousFluxAtFluxPoints_Functor<dim,N,dir> functor(params, sdm_geom, euler, FUgrad, Fluxes);
+  //   Kokkos::parallel_for(nbCells, functor);
+  // }
   
-  // 5.2 Finally compute derivative and accumulate (with negative sign) in Udata_fdiv
-  {
-    Interpolate_At_SolutionPoints_Functor<dim,N,dir,INTERPOLATE_DERIVATIVE_NEGATIVE> functor(params, sdm_geom, FUgrad, Udata_fdiv);
-    Kokkos::parallel_for(nbCells, functor);
-  }
+  // // 5.2 Finally compute derivative and accumulate (with negative sign) in Udata_fdiv
+  // {
+  //   Interpolate_At_SolutionPoints_Functor<dim,N,dir,INTERPOLATE_DERIVATIVE_NEGATIVE> functor(params, sdm_geom, FUgrad, Udata_fdiv);
+  //   Kokkos::parallel_for(nbCells, functor);
+  // }
   
 } // SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir
 
@@ -1162,33 +1162,33 @@ template<int dir>
 void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArray Ugrad)
 {
 
-  if (dim==2 and dir==IZ)
-    return;
+  // if (dim==2 and dir==IZ)
+  //   return;
   
-  // Please note that Fluxes is used as an intermediate data array,
-  // containing data at flux points
+  // // Please note that Fluxes is used as an intermediate data array,
+  // // containing data at flux points
   
-  //
-  // VELOCITY GRADIENTS in direction <dir>
-  //
+  // //
+  // // VELOCITY GRADIENTS in direction <dir>
+  // //
   
-  // 1. interpolate velocity from solution points to flux points
-  Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
-                                                            sdm_geom,
-                                                            Udata,
-                                                            Fluxes,
-                                                            nbCells);
+  // // 1. interpolate velocity from solution points to flux points
+  // Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
+  //                                                           sdm_geom,
+  //                                                           Udata,
+  //                                                           Fluxes,
+  //                                                           nbCells);
 
-  // 2. average velocity at cell borders
-  Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
-                                                              sdm_geom,
-                                                              Fluxes,
-                                                              nbCells);
+  // // 2. average velocity at cell borders
+  // Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
+  //                                                             sdm_geom,
+  //                                                             Fluxes,
+  //                                                             nbCells);
   
-  // 3. compute derivative along direction <dir> at solution points
-  //    using derivative of Lagrange polynomial
-  Interp_grad_velocity_at_SolutionPoints_Functor<dim,N,dir>
-    ::apply(params, sdm_geom, Fluxes, Ugrad, nbCells);
+  // // 3. compute derivative along direction <dir> at solution points
+  // //    using derivative of Lagrange polynomial
+  // Interp_grad_velocity_at_SolutionPoints_Functor<dim,N,dir>
+  //   ::apply(params, sdm_geom, Fluxes, Ugrad, nbCells);
   
 } // SolverHydroSDM<dim,N>::compute_velocity_gradients
   
@@ -1550,6 +1550,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_wedge(DataArray   Udata,
   const int ghostWidth=params.ghostWidth;
   int max_size = std::max(params.isize,params.jsize);
   int nbIter = ghostWidth * max_size;
+  UNUSED(nbIter);
 
   if (dim==3) {
     max_size = std::max(max_size,params.ksize);
@@ -1571,6 +1572,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_jet(DataArray   Udata,
   const int ghostWidth=params.ghostWidth;
   int max_size = std::max(params.isize,params.jsize);
   int nbIter = ghostWidth * max_size;
+  UNUSED(nbIter);
 
   if (dim==3) {
     max_size = std::max(max_size,params.ksize);
