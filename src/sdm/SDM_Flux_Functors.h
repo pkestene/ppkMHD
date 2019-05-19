@@ -34,7 +34,6 @@ template<int dim, int N, int dir>
 class ComputeFluxAtFluxPoints_Functor : public SDMBaseFunctor<dim,N> {
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
   
   ComputeFluxAtFluxPoints_Functor(HydroParams                 params,
@@ -76,21 +75,20 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
   {
-    // global index
-    int ii,jj;
-    if (dir == IX)
-      index2coord(index,ii,jj,isize*(N+1),jsize*N);
-    else
-      index2coord(index,ii,jj,isize*N,jsize*(N+1));
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*(N+1),iDof,iCell);
 
-    // local cell index
+    // cell coord
     int i,j;
+    iCell_to_coord(iCell,isize,i,j);
 
-    // Dof index for flux
+    // Flux Dof coord
     int idx,idy;
+    iDof_to_coord_flux<dir>(iDof,N,idx,idy);
 
-    // mapping thread to solution Dof
-    global2local_flux<dir>(ii,jj, i,j,idx,idy, N);
+    // offset to neighbour cell +1 in each direction
+    const int di = 1;
+    const int dj = isize;
 
     // state variable for conservative variables, and flux
     HydroState q = {}, flux = {};
@@ -110,7 +108,7 @@ public:
         // retrieve state conservative variables
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          q[ivar] = UdataFlux(ii,jj,ivar);
+          q[ivar] = UdataFlux(iDof,iCell,ivar);
           
         }
         
@@ -123,7 +121,7 @@ public:
         // copy back interpolated value
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          UdataFlux(ii,jj,ivar) = flux[ivar];
+          UdataFlux(iDof,iCell,ivar) = flux[ivar];
 	  
         } // end for ivar
 	  
@@ -149,8 +147,13 @@ public:
 	  
 	  // when idx == 0, get right and left state
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    qL[ivar] = UdataFlux(ii-1,jj,ivar);
-	    qR[ivar] = UdataFlux(ii  ,jj,ivar);
+            // watchout flux_x sizes are (N+1,N) !
+            // iDof = idx+(N+1)*idy
+            // iDof idx : 0 <--> N
+            // iCell = i + isize * j
+            // iCell i  : i <--> i-1
+            qL[ivar] = UdataFlux(iDof+N,iCell-di,ivar);
+	    qR[ivar] = UdataFlux(iDof  ,iCell   ,ivar);
 	  }
 	  
 	  // convert to primitive
@@ -161,9 +164,14 @@ public:
 	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy back result in current cell and in neighbor
-	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    UdataFlux(ii-1,jj,ivar) = flux[ivar];
-	    UdataFlux(ii  ,jj,ivar) = flux[ivar];
+	  for (int ivar = 0; ivar<nbvar; ++ivar) {
+            // watchout flux_x sizes are (N+1,N) !
+            // iDof = idx+(N+1)*idy
+	    // iDof idx : 0 <--> N
+            // iCell = i + isize * j
+            // iCell i  : i <--> i-1
+	    UdataFlux(iDof+N,iCell-di,ivar) = flux[ivar];
+	    UdataFlux(iDof  ,iCell   ,ivar) = flux[ivar];
 	  }
 	  	  
 	} // end if idx==0
@@ -183,7 +191,7 @@ public:
         // for each variables
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          q[ivar] = UdataFlux(ii,jj,ivar);
+          q[ivar] = UdataFlux(iDof,iCell,ivar);
           
         }
         
@@ -196,7 +204,7 @@ public:
         // copy back interpolated value
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          UdataFlux(ii,jj,ivar) = flux[ivar];
+          UdataFlux(iDof,iCell,ivar) = flux[ivar];
 	  
         } // end for ivar
 	
@@ -222,8 +230,13 @@ public:
 	  
 	  // when idy == 0, get right and left state
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {  
-	    qL[ivar] = UdataFlux(ii,jj-1,ivar);
-	    qR[ivar] = UdataFlux(ii,jj  ,ivar);
+            // watchout flux_y sizes are (N,N+1) !
+            // iDof = idx+N*idy
+	    // iDof idy : 0 <--> N
+            // iCell = i + isize * j
+            // iCell j  : j <--> j-1
+	    qL[ivar] = UdataFlux(iDof+N*N,iCell-dj,ivar);
+	    qR[ivar] = UdataFlux(iDof    ,iCell   ,ivar);
 	  }
 	  
 	  // convert to primitive : q -> w
@@ -236,15 +249,20 @@ public:
 	  ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
 	  // copy back results in current cell as well as in neighbor
-	  UdataFlux(ii,jj  ,ID) = flux[ID];
-	  UdataFlux(ii,jj  ,IE) = flux[IE];
-	  UdataFlux(ii,jj  ,IU) = flux[IV]; // swap again
-	  UdataFlux(ii,jj  ,IV) = flux[IU]; // swap again
+	  UdataFlux(iDof,iCell,ID) = flux[ID];
+	  UdataFlux(iDof,iCell,IE) = flux[IE];
+	  UdataFlux(iDof,iCell,IU) = flux[IV]; // swap again
+	  UdataFlux(iDof,iCell,IV) = flux[IU]; // swap again
 
-	  UdataFlux(ii,jj-1,ID) = flux[ID];
-	  UdataFlux(ii,jj-1,IE) = flux[IE];
-	  UdataFlux(ii,jj-1,IU) = flux[IV]; // swap again
-	  UdataFlux(ii,jj-1,IV) = flux[IU]; // swap again
+          // watchout flux_y sizes are (N,N+1) !
+          // iDof = idx+N*idy
+          // iDof idy : 0 <--> N
+          // iCell = i + isize * j
+          // iCell j  : j <--> j-1
+	  UdataFlux(iDof+N*N,iCell-dj,ID) = flux[ID];
+	  UdataFlux(iDof+N*N,iCell-dj,IE) = flux[IE];
+	  UdataFlux(iDof+N*N,iCell-dj,IU) = flux[IV]; // swap again
+	  UdataFlux(iDof+N*N,iCell-dj,IV) = flux[IU]; // swap again
 	  
 	} // end if idy==0
 
@@ -266,24 +284,21 @@ public:
   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
   {
 
-    // global index
-    int ii,jj,kk;
-    if (dir == IX)
-      index2coord(index,ii,jj,kk,isize*(N+1),jsize*N,ksize*N);
-    else if (dir == IY)
-      index2coord(index,ii,jj,kk,isize*N,jsize*(N+1),ksize*N);
-    else
-      index2coord(index,ii,jj,kk,isize*N,jsize*N,ksize*(N+1));
-    
-    // local cell index
-    int i,j,k;
-    
-    // Dof index for flux
-    int idx,idy,idz;
+    int iDof, iCell;
+    index_to_iDof_iCell(index,N*N*(N+1),iDof,iCell);
 
-    // mapping thread to solution Dof
-    global2local_flux<dir>(ii,jj, kk,
-                           i,j,k, idx,idy, idz, N);
+    // cell coord
+    int i,j,k;
+    iCell_to_coord(iCell,isize,jsize,i,j,k);
+
+    // Dof coord
+    int idx,idy,idz;
+    iDof_to_coord_flux<dir>(iDof,N,idx,idy,idz);
+
+    // offset to neighbour cell +1 in each direction
+    const int di = 1;
+    const int dj = isize;
+    const int dk = isize*jsize;
 
     // state variable for conservative variables, and flux
     HydroState q = {}, flux = {};
@@ -303,7 +318,7 @@ public:
         // retrieve state conservative variables
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          q[ivar] = UdataFlux(ii,jj,kk,ivar);
+          q[ivar] = UdataFlux(iDof,iCell,ivar);
 	  
         }
         
@@ -316,7 +331,7 @@ public:
         // copy back interpolated value
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          UdataFlux(ii,jj,kk,ivar) = flux[ivar];
+          UdataFlux(iDof,iCell,ivar) = flux[ivar];
 	  
         } // end for ivar
 	
@@ -341,8 +356,13 @@ public:
 	  
           // when idx == 0, get right and left state
           for (int ivar = 0; ivar<nbvar; ++ivar) {  
-            qL[ivar] = UdataFlux(ii-1,jj,kk,ivar);
-            qR[ivar] = UdataFlux(ii  ,jj,kk,ivar);
+            // watchout flux_x sizes are (N+1,N,N) !
+            // iDof = idx + (N+1)*idy + (N+1)*N*idz
+            // iDof idx : 0 <--> N
+            // iCell = i+isize*j+isize*jsize*k 
+            // iCell i  : i <--> i-1
+            qL[ivar] = UdataFlux(iDof+N,iCell-di,ivar);
+            qR[ivar] = UdataFlux(iDof  ,iCell   ,ivar);
           }
 	  
           // convert to primitive
@@ -354,8 +374,13 @@ public:
 	  
           // copy flux
           for (int ivar = 0; ivar<nbvar; ++ivar) {  
-            UdataFlux(ii-1,jj,kk,ivar) = flux[ivar];
-            UdataFlux(ii  ,jj,kk,ivar) = flux[ivar];
+            // watchout flux_x sizes are (N+1,N,N) !
+            // iDof = idx + (N+1)*idy + (N+1)*N*idz
+            // iDof idx : 0 <--> N
+            // iCell = i+isize*j+isize*jsize*k 
+            // iCell i  : i <--> i-1
+            UdataFlux(iDof+N,iCell-di,ivar) = flux[ivar];
+            UdataFlux(iDof  ,iCell   ,ivar) = flux[ivar];
           }
 	  
         } // end for idx==0
@@ -375,7 +400,7 @@ public:
         // retrieve state conservative variables
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          q[ivar] = UdataFlux(ii,jj,kk,ivar);
+          q[ivar] = UdataFlux(iDof,iCell,ivar);
 	  
         }
         
@@ -388,7 +413,7 @@ public:
         // copy back interpolated value
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          UdataFlux(ii,jj,kk,ivar) = flux[ivar];
+          UdataFlux(iDof,iCell,ivar) = flux[ivar];
 	  
         } // end for ivar
 	
@@ -413,8 +438,13 @@ public:
 	  
           // when idy == 0, get right and left state
           for (int ivar = 0; ivar<nbvar; ++ivar) {  
-            qL[ivar] = UdataFlux(ii,jj-1,kk,ivar);
-            qR[ivar] = UdataFlux(ii,jj  ,kk,ivar);
+            // watchout flux_y sizes are (N,N+1,N) !
+            // iDof = idx + N*idy + N*(N+1)*idz
+            // iDof idy : 0 <--> N
+            // iCell = i + isize*j + isize*jsize*k
+            // iCell j  : j <--> j-1
+            qL[ivar] = UdataFlux(iDof+N*N,iCell-dj,ivar);
+            qR[ivar] = UdataFlux(iDof    ,iCell   ,ivar);
           }
 	  
           // convert to primitive
@@ -427,17 +457,22 @@ public:
           ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
           // copy back results in current and neighbor cells
-          UdataFlux(ii,jj-1,kk,ID) = flux[ID];
-          UdataFlux(ii,jj-1,kk,IE) = flux[IE];
-          UdataFlux(ii,jj-1,kk,IU) = flux[IV]; // swap again
-          UdataFlux(ii,jj-1,kk,IV) = flux[IU]; // swap again
-          UdataFlux(ii,jj-1,kk,IW) = flux[IW];
+          // watchout flux_y sizes are (N,N+1,N) !
+          // iDof = idx + N*idy + N*(N+1)*idz
+          // iDof idy : 0 <--> N
+          // iCell = i + isize*j + isize*jsize*k
+          // iCell j  : j <--> j-1
+          UdataFlux(iDof+N*N,iCell-dj,ID) = flux[ID];
+          UdataFlux(iDof+N*N,iCell-dj,IE) = flux[IE];
+          UdataFlux(iDof+N*N,iCell-dj,IU) = flux[IV]; // swap again
+          UdataFlux(iDof+N*N,iCell-dj,IV) = flux[IU]; // swap again
+          UdataFlux(iDof+N*N,iCell-dj,IW) = flux[IW];
           
-          UdataFlux(ii,jj  ,kk,ID) = flux[ID];
-          UdataFlux(ii,jj  ,kk,IE) = flux[IE];
-          UdataFlux(ii,jj  ,kk,IU) = flux[IV]; // swap again
-          UdataFlux(ii,jj  ,kk,IV) = flux[IU]; // swap again
-          UdataFlux(ii,jj  ,kk,IW) = flux[IW];
+          UdataFlux(iDof    ,iCell   ,ID) = flux[ID];
+          UdataFlux(iDof    ,iCell   ,IE) = flux[IE];
+          UdataFlux(iDof    ,iCell   ,IU) = flux[IV]; // swap again
+          UdataFlux(iDof    ,iCell   ,IV) = flux[IU]; // swap again
+          UdataFlux(iDof    ,iCell   ,IW) = flux[IW];
 	  
         } // end if idy==0
 
@@ -456,7 +491,7 @@ public:
         // retrieve state conservative variables
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          q[ivar] = UdataFlux(ii,jj,kk,ivar);
+          q[ivar] = UdataFlux(iDof,iCell,ivar);
 	  
         }
         
@@ -469,7 +504,7 @@ public:
         // copy back interpolated value
         for (int ivar = 0; ivar<nbvar; ++ivar) {
           
-          UdataFlux(ii,jj,kk,ivar) = flux[ivar];
+          UdataFlux(iDof,iCell,ivar) = flux[ivar];
 	  
         } // end for ivar
 	
@@ -494,8 +529,13 @@ public:
 	  
           // when idz == 0, get right and left state
           for (int ivar = 0; ivar<nbvar; ++ivar) {  
-            qL[ivar] = UdataFlux(ii,jj,kk-1,ivar);
-            qR[ivar] = UdataFlux(ii,jj,kk  ,ivar);
+            // watchout flux_z sizes are (N,N,N+1) !
+            // iDof = idx + N*idy + N*N*idz
+            // iDof idz : 0 <--> N
+            // iCell = i + isize*j + isize*jsize*k
+            // iCell k  : k <--> k-1
+            qL[ivar] = UdataFlux(iDof+N*N*N,iCell-dk,ivar);
+            qR[ivar] = UdataFlux(iDof      ,iCell   ,ivar);
           }
 	  
           // convert to primitive
@@ -508,17 +548,22 @@ public:
           ppkMHD::riemann_hydro(wL,wR,qgdnv,flux,this->params);
 	  
           // copy back results in current and neighbor cells
-          UdataFlux(ii,jj,kk-1,ID) = flux[ID];
-          UdataFlux(ii,jj,kk-1,IE) = flux[IE];
-          UdataFlux(ii,jj,kk-1,IU) = flux[IW]; // swap again
-          UdataFlux(ii,jj,kk-1,IV) = flux[IV];
-          UdataFlux(ii,jj,kk-1,IW) = flux[IU]; // swap again
+          // watchout flux_z sizes are (N,N,N+1) !
+          // iDof = idx + N*idy + N*N*idz
+          // iDof idz : 0 <--> N
+          // iCell = i + isize*j + isize*jsize*k
+          // iCell k  : k <--> k-1
+          UdataFlux(iDof+N*N*N,iCell-dk,ID) = flux[ID];
+          UdataFlux(iDof+N*N*N,iCell-dk,IE) = flux[IE];
+          UdataFlux(iDof+N*N*N,iCell-dk,IU) = flux[IW]; // swap again
+          UdataFlux(iDof+N*N*N,iCell-dk,IV) = flux[IV];
+          UdataFlux(iDof+N*N*N,iCell-dk,IW) = flux[IU]; // swap again
 	  
-          UdataFlux(ii,jj,kk  ,ID) = flux[ID];
-          UdataFlux(ii,jj,kk  ,IE) = flux[IE];
-          UdataFlux(ii,jj,kk  ,IU) = flux[IW]; // swap again
-          UdataFlux(ii,jj,kk  ,IV) = flux[IV];
-          UdataFlux(ii,jj,kk  ,IW) = flux[IU]; // swap again
+          UdataFlux(iDof      ,iCell   ,ID) = flux[ID];
+          UdataFlux(iDof      ,iCell   ,IE) = flux[IE];
+          UdataFlux(iDof      ,iCell   ,IU) = flux[IW]; // swap again
+          UdataFlux(iDof      ,iCell   ,IV) = flux[IV];
+          UdataFlux(iDof      ,iCell   ,IW) = flux[IU]; // swap again
 	  
         } // end if idz==0
         
