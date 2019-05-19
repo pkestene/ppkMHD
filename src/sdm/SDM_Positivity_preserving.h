@@ -987,7 +987,7 @@ public:
   {
     
     const int isize = this->params.isize;
-    const int jsize = this->params.jsize;
+    //const int jsize = this->params.jsize;
     
     //const int nbvar = this->params.nbvar;
 
