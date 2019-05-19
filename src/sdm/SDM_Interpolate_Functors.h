@@ -210,12 +210,8 @@ public:
         }
 	
         // copy back interpolated value
-        for (int idx=0; idx<N+1; ++idx) {
-          
-          UdataFlux(iDof, iCell, ivar) = flux;
+        UdataFlux(iDof, iCell, ivar) = flux;
 	  
-        }
-	
       } // end for ivar
             
     } // end for dir IX
@@ -383,7 +379,8 @@ public:
         
         // get values at flux point along X direction
         for (int id=0; id<N+1; ++id) {
-          
+
+          // idof = idx + (N+1)*idy
           flux[id] = UdataFlux(id+(N+1)*idy, iCell, ivar);
 	  
         }
@@ -418,6 +415,7 @@ public:
         // get values at flux point along Y direction
         for (int id=0; id<N+1; ++id) {
           
+          // idof = idx + N*idy
           flux[id] = UdataFlux(idx+N*id, iCell, ivar);
 	  
         }
