@@ -103,6 +103,8 @@ public:
       j = iCell / ghostWidth;
       i = iCell - j*ghostWidth;
 
+      iCell = i + isize * j;
+
       if(j >= jmin and j <= jmax    and
 	 i >= 0    and i <ghostWidth) {
         
@@ -135,7 +137,9 @@ public:
             iCell0 = i0 + isize*j;
             iDof0 = iDof;
 
-            //printf("XMIN %d %d - %d %d ---- %d %d | %d %d -- %d %d\n",i,j,idx,idy,iDof,iDof0,iCell,iCell0,i0,j);
+            if (i==0 and j==3 and iVar==0)
+              printf("XMIN %d %d - %d %d ---- %d %d | %d %d -- %d %d || %d\n",
+                     i,j,idx,idy,iDof,iDof0,iCell,iCell0,i0,j,i+isize*j);
 
 
             Udata(iDof,iCell,iVar) = Udata(iDof0,iCell0,iVar);
@@ -157,6 +161,8 @@ public:
       j = iCell / ghostWidth;
       i = iCell - j*ghostWidth;
       i += (nx+ghostWidth);
+
+      iCell = i + isize * j;
 
       if(j >= jmin          and j <= jmax             and
 	 i >= nx+ghostWidth and i <= nx+2*ghostWidth-1) {
@@ -206,6 +212,8 @@ public:
       // compute global
       i = iCell / ghostWidth;
       j = iCell - i*ghostWidth;
+      
+      iCell = i + isize * j;
 
       if(i >= imin and i <= imax    and
 	 j >= 0    and j <ghostWidth) {
@@ -256,6 +264,8 @@ public:
       i = iCell / ghostWidth;
       j = iCell - i*ghostWidth;
       j += (ny+ghostWidth);
+
+      iCell = i + isize * j;
 
       if(i >= imin          and i <= imax              and
 	 j >= ny+ghostWidth and j <= ny+2*ghostWidth-1) {
@@ -351,6 +361,8 @@ public:
       j = (iCell - k*ghostWidth*jsize) / ghostWidth;
       i = iCell - j*ghostWidth - k*ghostWidth*jsize;
 
+      iCell = i + isize * j + isize*jsize * k;
+
       boundary_type = this->params.boundary_type_xmin;
       
       if(k >= kmin and k <= kmax and
@@ -403,6 +415,8 @@ public:
 
       i += (nx+ghostWidth);
       
+      iCell = i + isize * j + isize*jsize * k;
+
       boundary_type = this->params.boundary_type_xmax;
       
       if(k >= kmin          and k <= kmax and
@@ -452,6 +466,8 @@ public:
       k = iCell / (isize*ghostWidth);
       j = (iCell - k*isize*ghostWidth) / isize;
       i = iCell - j*isize - k*isize*ghostWidth;
+
+      iCell = i + isize * j + isize*jsize * k;
 
       boundary_type = this->params.boundary_type_ymin;
       
@@ -506,6 +522,8 @@ public:
 
       j += (ny+ghostWidth);
 
+      iCell = i + isize * j + isize*jsize * k;
+
       boundary_type = this->params.boundary_type_ymax;
       
       if(k >= kmin           and k <= kmax              and
@@ -555,6 +573,8 @@ public:
       k = iCell / (isize*jsize);
       j = (iCell - k*isize*jsize) / isize;
       i = iCell - j*isize - k*isize*jsize;
+
+      iCell = i + isize * j + isize*jsize * k;
 
       boundary_type = this->params.boundary_type_zmin;
       
@@ -609,6 +629,8 @@ public:
 
       k += (nz+ghostWidth);
 
+      iCell = i + isize * j + isize*jsize * k;
+      
       boundary_type = this->params.boundary_type_zmax;
       
       if(k >= nz+ghostWidth and k <= nz+2*ghostWidth-1 and
