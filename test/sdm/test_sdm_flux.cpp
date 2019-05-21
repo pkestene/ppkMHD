@@ -31,8 +31,6 @@ template<int dim, int N>
 class TestFluxFunctor : public SDMBaseFunctor<dim,N> {
   
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-
   using HydroState = typename ppkMHD::EulerEquations<dim>::HydroState;
 
   using eq = typename ppkMHD::EulerEquations<dim>;
