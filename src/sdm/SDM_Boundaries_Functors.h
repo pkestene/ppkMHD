@@ -137,11 +137,6 @@ public:
             iCell0 = i0 + isize*j;
             iDof0 = iDof;
 
-            if (i==0 and j==3 and iVar==0)
-              printf("XMIN %d %d - %d %d ---- %d %d | %d %d -- %d %d || %d\n",
-                     i,j,idx,idy,iDof,iDof0,iCell,iCell0,i0,j,i+isize*j);
-
-
             Udata(iDof,iCell,iVar) = Udata(iDof0,iCell0,iVar);
             
           }
@@ -630,7 +625,7 @@ public:
       k += (nz+ghostWidth);
 
       iCell = i + isize * j + isize*jsize * k;
-      
+
       boundary_type = this->params.boundary_type_zmax;
       
       if(k >= nz+ghostWidth and k <= nz+2*ghostWidth-1 and
