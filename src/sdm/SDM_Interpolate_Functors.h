@@ -369,7 +369,7 @@ public:
     real_t sol;
     
     // input
-    flux_values_t flux;
+    flux_values_t flux = {};
     
     // loop over cell DoF's
     if (dir == IX) {
@@ -482,7 +482,7 @@ public:
     real_t sol;
 
     // input
-    flux_values_t flux;
+    flux_values_t flux = {};
     
     // loop over cell DoF's
     if (dir == IX) {
