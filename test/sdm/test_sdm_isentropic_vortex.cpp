@@ -355,16 +355,13 @@ int main(int argc, char *argv[])
 
   using namespace ppkMHD;
   
-#ifdef CUDA
-  // Initialize Host mirror device
-  Kokkos::HostSpace::execution_space::initialize(1);
-  const unsigned device_count = Kokkos::Cuda::detect_device_count();
-
-  // Use the last device:
-  Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice(device_count-1) );
-#else
   Kokkos::initialize(argc, argv);
+#ifdef CUDA
+  int cudaDeviceId;
+  cudaGetDevice(&cudaDeviceId);
+  std::cout << "running on GPU #" << cudaDeviceId << "\n";
 #endif
+
 
   {
     std::cout << "##########################\n";
@@ -453,12 +450,7 @@ int main(int argc, char *argv[])
   }
 
   
-#ifdef CUDA
-  Kokkos::Cuda::finalize();
-  Kokkos::HostSpace::execution_space::finalize();
-#else
   Kokkos::finalize();
-#endif
   
   return EXIT_SUCCESS;
 
