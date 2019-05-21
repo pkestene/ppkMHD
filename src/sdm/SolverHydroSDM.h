@@ -1535,7 +1535,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
 
   UNUSED(mhd_enabled);
   
-  //MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata);
+  MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata);
    
 } // SolverHydroSDM<dim,N>::make_boundary_sdm
 
