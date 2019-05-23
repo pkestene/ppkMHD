@@ -131,8 +131,8 @@ public:
     real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 
     x += this->sdm_geom.solution_pts_1d(idx) * dx;
-    y += this->sdm_geom.solution_pts_1d(idy) * dy;
-    
+    y += this->sdm_geom.solution_pts_1d(idy) * dy;    
+
     if (compare == 1) {
       Udata(ii, jj, ID) -= f0(x,y,0.0);
       Udata(ii, jj, IP) -= f1(x,y,0.0);
@@ -144,7 +144,7 @@ public:
       Udata(ii, jj, IU) = f2(x,y,0.0);
       Udata(ii, jj, IV) = f3(x,y,0.0);
     }
-    
+
   } // end operator () - 2d
 
   /*
