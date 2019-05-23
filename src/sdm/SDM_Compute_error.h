@@ -126,11 +126,11 @@ public:
         sum += fabs(tmp1-tmp2);
       } else {
         sum += (tmp1-tmp2)*(tmp1-tmp2);
-      }	  
+      }
       
     } // end guard - ghostcells
 
-  } // end operator () - 2d  
+  } // end operator () - 2d
   
   // "Join" intermediate results from different threads.
   // This should normally implement the same reduction
@@ -148,7 +148,7 @@ public:
   DataArray Udata2;
   int varId;
 
-}; // class Compute_Error_Functor
+}; // class Compute_Error_Functor_2d
 
 /*************************************************/
 /*************************************************/
@@ -159,6 +159,7 @@ public:
  * \tparam N is the SDM scheme order (nb of point per direction per cell)
  * \tparam norm should take value in NORM_L1 / NORM_L2
  *
+ * 3d version.
  */
 template<int N, int norm>
 class Compute_Error_Functor_3d : public SDMBaseFunctor<3,N> {
@@ -171,7 +172,7 @@ public:
    * \param[in] varId identify which variable to reduce (ID, IE, IU, ...)
    */
   Compute_Error_Functor_3d(HydroParams         params,
-                           SDM_Geometry<3,N> sdm_geom,
+                           SDM_Geometry<3,N>   sdm_geom,
                            DataArray           Udata1,
                            DataArray           Udata2,
                            int                 varId) :

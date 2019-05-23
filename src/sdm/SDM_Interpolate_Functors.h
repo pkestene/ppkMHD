@@ -21,9 +21,9 @@ namespace sdm {
 /*************************************************/
 /**
  * This functor takes as an input variables
- * at solution points (UdataSol)and perform interpolation at 
+ * at solution points (UdataSol) and perform interpolation at 
  * flux points (UdataFlux).
- * It used Kokkos range execution policy, with a number of iterations
+ * It uses Kokkos range execution policy, with a number of iterations
  * mapping outputs, i.e. the flux Dof locations.
  * 
  * It is essentially a wrapper arround interpolation method sol2flux_vector.
@@ -37,7 +37,7 @@ class Interpolate_At_FluxPoints_Functor : public SDMBaseFunctor<dim,N> {
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
-  using typename SDMBaseFunctor<dim,N>::flux_values_t;  
+  using typename SDMBaseFunctor<dim,N>::flux_values_t;
   
   Interpolate_At_FluxPoints_Functor(HydroParams         params,
 				    SDM_Geometry<dim,N> sdm_geom,
