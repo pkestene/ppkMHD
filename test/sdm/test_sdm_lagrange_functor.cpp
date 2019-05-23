@@ -186,7 +186,7 @@ bool test_lagrange_functor()
                                                              U2,
                                                              ivar);
       printf("L1 error for variable %d : %e\n",ivar,error_L1);
-
+      error_accum += error_L1;
     }
 
   }
