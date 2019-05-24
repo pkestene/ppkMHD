@@ -833,7 +833,7 @@ void SolverHydroSDM<dim,N>::next_iteration_impl()
   if (myRank==0) {
     if (m_iteration % params.nlog == 0) {
       //printf("time step=%7d (dt=% 10.8f t=% 10.8f)\n",m_iteration,m_dt, m_t);
-      printf("time step=%7d (dt=% 10.8g t=% 10.8f)\n",m_iteration,m_dt, m_t);
+      printf("time   step=%7d (dt=% 10.8g t=% 10.8f)\n",m_iteration,m_dt, m_t);
     }
   }
   
@@ -841,9 +841,7 @@ void SolverHydroSDM<dim,N>::next_iteration_impl()
   if (params.enableOutput) {
     if ( should_save_solution() ) {
       
-      std::cout << "Output results at time t=" << m_t
-		<< " step " << m_iteration
-		<< " dt=" << m_dt << std::endl;
+      printf("Output step=%7d (dt=% 10.8g t=% 10.8f)\n",m_iteration,m_dt, m_t);
       
       save_solution();
       
