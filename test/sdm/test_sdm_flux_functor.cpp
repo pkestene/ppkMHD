@@ -84,11 +84,9 @@ void test_flux_functors()
   // init data
   {
 
-    sdm::InitTestFluxFunctor<dim,N,0> functor(solver.params,
-					      solver.sdm_geom,
-					      solver.U);
-    Kokkos::parallel_for(nbCells, functor);
-
+    sdm::InitTestFluxFunctor<dim,N,0>::apply(solver.params,
+                                             solver.sdm_geom,
+                                             solver.U);
       
     solver.save_solution();
 

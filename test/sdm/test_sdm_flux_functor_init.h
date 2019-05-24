@@ -32,6 +32,19 @@ public:
 		      DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
   
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata)
+  {
+    int64_t nbCells = (dim==2) ? 
+      params.isize * params.jsize:
+      params.isize * params.jsize * params.ksize;
+    
+    InitTestFluxFunctor functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for("IniTestFluxFunctor", nbCells, functor);
+  }
+
   KOKKOS_INLINE_FUNCTION
   real_t rho(real_t x, real_t y, real_t z=0.0) const
   {
