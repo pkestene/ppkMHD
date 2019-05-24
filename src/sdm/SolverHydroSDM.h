@@ -1248,7 +1248,7 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata,
   // translated into Udata = 1.0*Udata + 0.0*Udata - dt * Udata_fdiv 
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, Udata, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, Udata, Udata_fdiv, coefs, dt);
   }
   
 } // SolverHydroSDM::time_int_forward_euler
@@ -1288,7 +1288,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
   // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
   }
 
   // ================================================================
@@ -1300,7 +1300,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
 
   {
     coefs_t coefs= {0.5, 0.5, -0.5};    
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK1, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK1, Udata_fdiv, coefs, dt);
   }
   
 } // SolverHydroSDM::time_int_ssprk2
@@ -1342,7 +1342,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
   // perform : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
   }
 
   // ==============================================================
@@ -1353,7 +1353,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
   {
     coefs_t coefs = {0.75, 0.25, -0.25};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt);
   }
   
   // ================================================================
@@ -1364,7 +1364,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
   compute_fluxes_divergence(U_RK2, Udata_fdiv, dt);
   {
     coefs_t coefs = {1.0/3, 2.0/3, -2.0/3};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK2, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK2, Udata_fdiv, coefs, dt);
   }
 
 } // SolverHydroSDM::time_int_ssprk3
@@ -1426,7 +1426,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[0][0],
 			   rk54_coef[0][1],
 			   rk54_coef[0][2]};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
   }
 
   // ===============================================
@@ -1442,7 +1442,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[1][0],
 			   rk54_coef[1][1],
 			   rk54_coef[1][2]};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt);
   }
 
   // ===============================================
@@ -1458,7 +1458,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[2][0],
 			   rk54_coef[2][1],
 			   rk54_coef[2][2]};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK3, Udata, U_RK2, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK3, Udata, U_RK2, Udata_fdiv, coefs, dt);
   }
   
   // ===============================================
@@ -1474,7 +1474,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[3][0],
 			   rk54_coef[3][1],
 			   rk54_coef[3][2]};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK4, Udata, U_RK3, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK4, Udata, U_RK3, Udata_fdiv, coefs, dt);
   }
 
   // ===============================================
@@ -1484,7 +1484,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[4][0],
 			   rk54_coef[4][1],
 			   rk54_coef[4][2]};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, U_RK2, U_RK3, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, U_RK2, U_RK3, Udata_fdiv, coefs, dt);
   }
 
   
@@ -1497,7 +1497,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     const coefs_t coefs = {rk54_coef[5][0],
 			   rk54_coef[5][1],
 			   rk54_coef[5][2]};
-    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK4, Udata_fdiv, coefs, dt, nbCells);
+    SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK4, Udata_fdiv, coefs, dt);
   }
 
   //std::cout << "SSP-RK54 is currently partially implemented\n";

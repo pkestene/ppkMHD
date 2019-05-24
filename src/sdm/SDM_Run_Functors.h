@@ -471,12 +471,15 @@ public:
                     DataArray           U_1,
                     DataArray           U_2,
                     coefs_t             coefs,
-                    real_t              dt,
-                    int                 nbCells)
+                    real_t              dt)
   {
-    SDM_Update_RK_Functor functor(params, sdm_geom, 
+    int64_t nbCells = (dim==2) ? 
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
+    SDM_Update_RK_Functor functor(params, sdm_geom,
                                   Uout, U_0, U_1, U_2, coefs, dt);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("SDM_Update_RK_Functor",nbCells, functor);
   }
 
     //! functor for 2d
