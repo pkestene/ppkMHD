@@ -80,12 +80,15 @@ public:
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           UdataSol,
                     DataArray           UdataFlux,
-                    DataArray           Uaverage,
-                    int                 nbCells)
+                    DataArray           Uaverage)
   {
+    int64_t nbCells = dim == 2 ?
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+    
     Apply_positivity_Functor functor(params, sdm_geom, 
                                      UdataSol, UdataFlux, Uaverage);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("Apply_positivity_Functor", nbCells, functor);
   }
 
   // =========================================================
@@ -889,12 +892,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           UdataSol,
-                    DataArray           Uaverage,
-                    int                 nbCells)
+                    DataArray           Uaverage)
   {
+    int64_t nbCells = dim == 2 ?
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+    
     Apply_positivity_Functor_v2 functor(params, sdm_geom, 
                                         UdataSol, Uaverage);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("Apply_positivity_Functor_v2", nbCells, functor);
   }
 
   // =========================================================

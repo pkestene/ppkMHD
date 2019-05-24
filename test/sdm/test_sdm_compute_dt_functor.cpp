@@ -29,10 +29,6 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
   // create equation system object
   ppkMHD::EulerEquations<dim> euler;
   
-  int nbCells = dim==2 ?
-    solver.params.isize * solver.params.jsize :
-    solver.params.isize * solver.params.jsize * solver.params.ksize;
-  
   real_t invDt = 0.0;
 
   // alias to the computational functor, dimension dependend
@@ -43,8 +39,7 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
   invDt = ComputeDtFunctor::apply(solver.params,
                                   solver.sdm_geom,
                                   euler,
-                                  solver.U,
-                                  nbCells);  
+                                  solver.U);  
   
   real_t dt = solver.params.settings.cfl/invDt;
   printf("dt = %f (invDt = %f)\n", dt,invDt);

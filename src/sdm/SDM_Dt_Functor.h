@@ -229,9 +229,10 @@ public:
   static real_t apply(HydroParams               params,
                       SDM_Geometry<2,N>         sdm_geom,
                       ppkMHD::EulerEquations<2> euler,
-                      DataArray                 Udata,
-                      int                       nbCells)
+                      DataArray                 Udata)
   {
+    int64_t nbCells = params.isize * params.jsize;
+
     real_t invDt = 0;
     ComputeDt_Functor_2d<N> functor(params, sdm_geom, euler, Udata);
     Kokkos::parallel_reduce(nbCells, functor, invDt);
@@ -361,9 +362,10 @@ public:
   static real_t apply(HydroParams               params,
                       SDM_Geometry<3,N>         sdm_geom,
                       ppkMHD::EulerEquations<3> euler,
-                      DataArray                 Udata,
-                      int                       nbCells)
+                      DataArray                 Udata)
   {
+    int64_t nbCells = params.isize * params.jsize * params.ksize;
+
     real_t invDt = 0;
     ComputeDt_Functor_3d<N> functor(params, sdm_geom, euler, Udata);
     Kokkos::parallel_reduce(nbCells, functor, invDt);

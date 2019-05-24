@@ -203,7 +203,7 @@ public:
   {
     SDM_Update_Functor functor(params, sdm_geom, 
                                Udata, mdUdt, dt);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("SDM_Update_Functor", nbCells, functor);
   }
 
   //! functor for 2d 
@@ -321,7 +321,7 @@ public:
   {
     SDM_Update_sspRK2_Functor functor(params, sdm_geom, 
                                       Udata, URK, mdUdt, dt);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("SDM_Update_sspRK2_Functor", nbCells, functor);
   }
 
   //! functor for 2d

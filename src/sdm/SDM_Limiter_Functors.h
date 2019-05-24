@@ -47,12 +47,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
-                    DataArray           Uaverage,
-                    int                 nbCells)
+                    DataArray           Uaverage)
   {
-    Average_Conservative_Variables_Functor functor(params, sdm_geom, 
+    int64_t nbCells = dim == 2 ?
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+    
+    Average_Conservative_Variables_Functor functor(params, sdm_geom,
                                                    Udata, Uaverage);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("Average_Conservative_Variables_Functor", nbCells, functor);
   }
 
   // ================================================
@@ -225,13 +228,16 @@ public:
                     DataArray           Uaverage,
                     DataArray           Umin,
                     DataArray           Umax,
-                    int                 corner_included,
-                    int                 nbCells)
+                    int                 corner_included)
   {
+    int64_t nbCells = dim == 2 ?
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     MinMax_Conservative_Variables_Functor functor(params, sdm_geom, 
                                                   Uaverage, Umin, Umax,
                                                   corner_included);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("MinMax_Conservative_Variables_Functor", nbCells, functor);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -406,12 +412,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata,
-                    DataArray           Uaverage,
-                    int                 nbCells)
+                    DataArray           Uaverage)
   {
+    int64_t nbCells = dim == 2 ?
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     Average_Gradient_Functor functor(params, sdm_geom, 
                                      Udata, Uaverage);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("Average_Gradient_Functor", nbCells, functor);
   }
 
   // ================================================
@@ -811,13 +820,16 @@ public:
                     DataArray           Ugradx,
                     DataArray           Ugrady,
                     DataArray           Ugradz,
-                    const real_t        Mdx2,
-                    int                 nbCells)
+                    const real_t        Mdx2)
   {
+    int64_t nbCells = dim == 2 ?
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+
     Apply_limiter_Functor functor(params, sdm_geom, euler, 
                                   Udata, Uaverage,
                                   Ugradx, Ugrady, Ugradz, Mdx2);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("Apply_limiter_Functor", nbCells, functor);
   }
 
   /**

@@ -808,7 +808,7 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   			      ComputeDt_Functor_3d<N>>::type;
   
   // call device functor
-  invDt = ComputeDtFunctor::apply(params, sdm_geom, euler, Udata, nbCells);
+  invDt = ComputeDtFunctor::apply(params, sdm_geom, euler, Udata);
     
   dt = params.settings.cfl/invDt;
 
@@ -926,8 +926,7 @@ void SolverHydroSDM<dim,N>::apply_pre_step_computation(DataArray Udata)
     Average_Conservative_Variables_Functor<dim,N>::apply(params,
                                                          sdm_geom,
                                                          Udata,
-                                                         Uaverage,
-                                                         nbCells);
+                                                         Uaverage);
     
   } // end limiter_enabled or positivity_enabled true
 
@@ -943,8 +942,7 @@ void SolverHydroSDM<dim,N>::apply_positivity_preserving(DataArray Udata)
     Apply_positivity_Functor_v2<dim,N>::apply(params,
                                               sdm_geom,
                                               Udata,
-                                              Uaverage,
-                                              nbCells);
+                                              Uaverage);
   }
   
 } // SolverHydroSDM<dim,N>::apply_positivity_preserving
@@ -964,8 +962,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
   //                                                       Uaverage,
   //                                                       Umin,
   //                                                       Umax,
-  //                                                       0,
-  //                                                       nbCells);
+  //                                                       0);
   // }
   
   if (limiter_enabled) {
@@ -975,21 +972,18 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
     Average_Gradient_Functor<dim,N,IX>::apply(params,
                                               sdm_geom,
                                               Udata,
-                                              Ugradx,
-                                              nbCells);
+                                              Ugradx);
 
     Average_Gradient_Functor<dim,N,IY>::apply(params,
                                               sdm_geom,
                                               Udata,
-                                              Ugrady,
-                                              nbCells);
+                                              Ugrady);
     
     if (dim == 3) {
       Average_Gradient_Functor<dim,N,IZ>::apply(params,
                                                 sdm_geom,
                                                 Udata,
-                                                Ugradz,
-                                                nbCells);
+                                                Ugradz);
     }
 
     // retrieve parameter M_TVB (used in the modified minmod routine)
@@ -1006,8 +1000,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
                                         Ugradx,
                                         Ugrady,
                                         Ugradz,
-                                        Mdx2,
-                                        nbCells);
+                                        Mdx2);
     
   } // end limiter_enabled
   
@@ -1070,30 +1063,25 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
   Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
                                                             sdm_geom,
                                                             Udata,
-                                                            FUgrad,
-                                                            nbCells);
+                                                            FUgrad);
   
   // 2. average velocity at cell borders
   Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
                                                               sdm_geom,
-                                                              FUgrad,
-                                                              nbCells);
+                                                              FUgrad);
   
   // 3.1. interpolate velocity gradients-x from solution points to flux points
   Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IX>
-    ::apply(params, sdm_geom,
-            Ugradx_v, FUgrad, nbCells);
+    ::apply(params, sdm_geom, Ugradx_v, FUgrad);
   
   // 3.2. interpolate velocity gradients-y from solution points to flux points
   Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IY>
-    ::apply(params, sdm_geom,
-            Ugrady_v, FUgrad, nbCells);
+    ::apply(params, sdm_geom, Ugrady_v, FUgrad);
   
   // 3.3. interpolate velocity gradients-z from solution points to flux points
   if (dim==3) {
     Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IZ>
-      ::apply(params, sdm_geom,
-              Ugradz_v, FUgrad, nbCells);
+      ::apply(params, sdm_geom, Ugradz_v, FUgrad);
   }
   
   // 4. average velocity gradients at cell border
@@ -1163,19 +1151,17 @@ void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArra
   Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
                                                             sdm_geom,
                                                             Udata,
-                                                            Fluxes,
-                                                            nbCells);
+                                                            Fluxes);
 
   // 2. average velocity at cell borders
   Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
                                                               sdm_geom,
-                                                              Fluxes,
-                                                              nbCells);
+                                                              Fluxes);
   
   // 3. compute derivative along direction <dir> at solution points
   //    using derivative of Lagrange polynomial
   Interp_grad_velocity_at_SolutionPoints_Functor<dim,N,dir>
-    ::apply(params, sdm_geom, Fluxes, Ugrad, nbCells);
+    ::apply(params, sdm_geom, Fluxes, Ugrad);
   
 } // SolverHydroSDM<dim,N>::compute_velocity_gradients
   
