@@ -49,12 +49,15 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     ppkMHD::EulerEquations<dim> euler,
-                    DataArray           UdataFlux,
-                    int                 nbCells)
+                    DataArray           UdataFlux)
   {
+    int64_t nbCells = (dim==2) ? 
+      params.isize * params.jsize :
+      params.isize * params.jsize * params.ksize;
+    
     ComputeFluxAtFluxPoints_Functor functor(params, sdm_geom, 
                                             euler, UdataFlux);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("ComputeFluxAtFluxPoints_Functor", nbCells, functor);
   }
 
   // ================================================
