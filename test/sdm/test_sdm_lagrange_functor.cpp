@@ -7,14 +7,16 @@
 #include <cstdlib>
 #include <iostream>
 #include <array>
+#include <memory> // for std::unique_ptr / std::shared_ptr
 
 #include "shared/real_type.h"
 #include "shared/kokkos_shared.h"
 
 #include "sdm/SDM_Geometry.h"
-#include "sdm/SolverHydroSDM.h"
+//#include "sdm/SolverHydroSDM.h"
 #include "sdm/HydroInitFunctors.h"
 #include "sdm/SDM_Interpolate_Functors.h"
+#include "sdm/SDM_Compute_error.h"
 
 #include "SDMTestFunctors.h"
 
@@ -35,7 +37,7 @@
  */
 template<int dim,
 	 int N>
-void test_lagrange_functor()
+bool test_lagrange_functor()
 {
 
   using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
@@ -68,51 +70,83 @@ void test_lagrange_functor()
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
+  int isize = params.isize;
+  int jsize = params.jsize;
+  int ksize = params.ksize;
+
+  int64_t nbCells = dim == 2 ?
+    isize*jsize : 
+    isize*jsize*ksize;
+
+  // SDM config
+  sdm::SDM_Geometry<dim,N> sdm_geom;
+  sdm_geom.init(0);
+  sdm_geom.init_lagrange_1d();
+
   // create solver
-  sdm::SolverHydroSDM<dim,N> solver(params, configMap);
+  //sdm::SolverHydroSDM<dim,N> solver(params, configMap);
+  DataArray U = dim==2 ? 
+    DataArray("U", isize, jsize, N*N*params.nbvar) :
+    DataArray("U", isize, jsize, ksize, N*N*N*params.nbvar);
+    
+  DataArrayHost UHost = Kokkos::create_mirror(U);
 
-  // initialize the IO_ReadWrite object (normally done in
-  // SolverFactory's create method)
-  solver.init_io();
-
-  int nbCells = dim==2 ? params.isize*params.jsize : params.isize*params.jsize*params.ksize;
+  DataArray U2 = dim==2 ? 
+    DataArray("U2", isize, jsize, N*N*params.nbvar) :
+    DataArray("U2", isize, jsize, ksize, N*N*N*params.nbvar);
   
+  DataArray Fluxes = dim==2 ?
+    DataArray("Fluxes", isize, jsize, N*(N+1)*params.nbvar) :
+    DataArray("Fluxes", isize, jsize, ksize, N*(N+1)*N*params.nbvar);
+  
+  DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
+  
+  std::map<int, std::string> m_variables_names;
+  m_variables_names.clear();
+  m_variables_names[ID] = "rho";
+  m_variables_names[IP] = "energy";
+  m_variables_names[IU] = "rho_vx"; // momentum component X
+  m_variables_names[IV] = "rho_vy"; // momentum component Y
+  if (dim==3)
+    m_variables_names[IW] = "rho_vz"; // momentum component Z
+
+  // create an io_writer
+  auto io_writer =
+    std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(params,
+                                                          configMap,
+                                                          m_variables_names,
+                                                          sdm_geom);
+  
+
   // init data
   {
 
-    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,0> functor(solver.params,
-							  solver.sdm_geom,
-							  solver.U);
-    Kokkos::parallel_for(nbCells, functor);
+    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,0>::apply(params,
+							 sdm_geom,
+							 U);
 
-      
-    //solver.save_solution();
+    Kokkos::deep_copy(U2,U);
 
+    // save initial condition
+    io_writer->save_data_impl(U,
+                              UHost,
+                              0,
+                              0.0,
+                              "");
+    
   }
   
   // call the interpolation functors
   {
 
-    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(solver.params,
-							     solver.sdm_geom,
-							     solver.U,
-							     solver.Fluxes);
+    sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(params,
+							     sdm_geom,
+							     U,
+							     Fluxes);
     Kokkos::parallel_for(nbCells, functor);
-  }
 
-  {
-
-    // create an io_writer
-    auto io_writer =
-      std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
-							    solver.configMap,
-							    solver.m_variables_names,
-							    solver.sdm_geom);
-    
-    DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
-
-    io_writer-> template save_flux<IY>(solver.Fluxes,
+    io_writer-> template save_flux<IY>(Fluxes,
 				       FluxHost,
 				       0,
 				       0.0);
@@ -121,28 +155,64 @@ void test_lagrange_functor()
 
   
   {
-
-    sdm::Interpolate_At_SolutionPoints_Functor<dim,N,IY> functor(solver.params,
-								 solver.sdm_geom,
-								 solver.Fluxes,
-								 solver.U);
+    
+    constexpr sdm::Interpolation_type_t interp = sdm::INTERPOLATE_SOLUTION_REGULAR;
+    sdm::Interpolate_At_SolutionPoints_Functor<dim,N,IY,interp> functor(params,
+								 sdm_geom,
+								 Fluxes,
+								 U);
     Kokkos::parallel_for(nbCells, functor);
   }
 
+  // compute L1 error between U and U2
+  double error_accum = 0.0;
+  if (dim==2) {
 
-  // perform difference operator
+    for (int ivar = 0; ivar < params.nbvar; ++ivar) {
+      real_t error_L1 = 
+        sdm::Compute_Error_Functor_2d<N, sdm::NORM_L1>::apply(params,
+                                                              sdm_geom,
+                                                              U,
+                                                              U2,
+                                                              ivar);
+      printf("L1 error for variable %d : %e\n",ivar,error_L1);
+      error_accum += error_L1;
+    }
+
+  } else if (dim==3) {
+  
+    for (int ivar = 0; ivar < params.nbvar; ++ivar) {
+      real_t error_L1 = 
+        sdm::Compute_Error_Functor_3d<N,sdm::NORM_L1>::apply(params,
+                                                             sdm_geom,
+                                                             U,
+                                                             U2,
+                                                             ivar);
+      printf("L1 error for variable %d : %e\n",ivar,error_L1);
+      error_accum += error_L1;
+    }
+
+  }
+
+  // compute difference between original data and after sol2flux / flux2sol
+  // difference should be zero if original data is polynomial of
+  // degree less than N, or just small
   {
 
-    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,1> functor(solver.params,
-							  solver.sdm_geom,
-							  solver.U);
-    Kokkos::parallel_for(nbCells, functor);
+    sdm::InitTestFunctor<dim,N,TEST_DATA_VALUE,1>::apply(params,
+							 sdm_geom,
+							 U);
+
+    io_writer->save_data_impl(U,
+                              UHost,
+                              1,
+                              1.0,
+                              "");
     
   }
-  
-  solver.save_solution();
 
-  
+  return (error_accum < 1e-10);
+
 } // test_lagrange_functor
 
 int main(int argc, char* argv[])
@@ -173,18 +243,21 @@ int main(int argc, char* argv[])
   std::cout << "==== Spectral Difference Lagrange Interpolation test ====\n";
   std::cout << "=========================================================\n";
 
+  bool passed = true;
+
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_lagrange_functor<2,4>();
+    passed *= test_lagrange_functor<2,4>();
 
     // 3d
-    test_lagrange_functor<3,4>();
+    passed *= test_lagrange_functor<3,4>();
 
   }
 
   Kokkos::finalize();
 
-  return EXIT_SUCCESS;
+  // return 0 if all tests passed
+  return (int) !passed;
   
 }

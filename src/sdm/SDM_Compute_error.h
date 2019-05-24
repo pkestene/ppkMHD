@@ -71,6 +71,16 @@ public:
     return error;
   }
 
+  //! dummy trick
+  static double apply(HydroParams       params,
+                      SDM_Geometry<3,N> sdm_geom,
+                      DataArray3d       Udata1,
+                      DataArray3d       Udata2,
+                      int               varId)
+  {
+    return -1.0;
+  }
+  
   // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
   void init (real_t& dst) const
@@ -109,7 +119,7 @@ public:
 	  // get local conservative variable
 	  real_t tmp1 = Udata1(i,j, dofMap(idx,idy,0,varId));
 	  real_t tmp2 = Udata2(i,j, dofMap(idx,idy,0,varId));
-
+          
 	  if (norm == NORM_L1) {
 	    sum += fabs(tmp1-tmp2);
 	  } else {
@@ -190,6 +200,16 @@ public:
                                              Udata1, Udata2, varId);
     Kokkos::parallel_reduce(nbCells, functor, error);
     return error;
+  }
+
+  //! dummy trick
+  static double apply(HydroParams       params,
+                      SDM_Geometry<2,N> sdm_geom,
+                      DataArray2d       Udata1,
+                      DataArray2d       Udata2,
+                      int               varId)
+  {
+    return -1.0;
   }
 
   // Tell each thread how to initialize its reduction result.

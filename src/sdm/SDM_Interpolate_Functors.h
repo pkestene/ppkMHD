@@ -21,8 +21,11 @@ namespace sdm {
 /*************************************************/
 /**
  * This functor takes as an input variables
- * at solution points and perform interpolation at flux points.
- *
+ * at solution points (UdataSol) and perform interpolation at 
+ * flux points (UdataFlux).
+ * It uses Kokkos range execution policy, with a number of iterations
+ * mapping outputs, i.e. the flux Dof locations.
+ * 
  * It is essentially a wrapper arround interpolation method sol2flux_vector.
  *
  * Perform exactly the inverse of Interpolate_At_SolutionPoints_Functor.
@@ -148,7 +151,7 @@ public:
 	  for (int idy=0; idy<N+1; ++idy) {
 	    
 	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idy];
-	    
+
 	  }
 	  
 	} // end for ivar
@@ -310,7 +313,8 @@ enum Interpolation_type_t {
   INTERPOLATE_DERIVATIVE=0,
   INTERPOLATE_SOLUTION=1,
   INTERPOLATE_DERIVATIVE_NEGATIVE=2,
-  INTERPOLATE_SOLUTION_NEGATIVE=3
+  INTERPOLATE_SOLUTION_NEGATIVE=3,
+  INTERPOLATE_SOLUTION_REGULAR=4
 };
 
 /*************************************************/
@@ -318,9 +322,11 @@ enum Interpolation_type_t {
 /*************************************************/
 /**
  * This functor takes as an input variables
- * at flux points and perform interpolation at solution points, and
- * accumulates result in output array (UdataSol).
- *
+ * at flux points (UdataFlux) and perform interpolation at solution
+ * points, and accumulates result in output array (UdataSol).
+ * It used Kokkos range execution policy, with a number of iterations
+ * mapping outputs, i.e. the solution Dof locations.
+  *
  * Its is essentially a wrapper arround interpolation method flux2sol_vector.
  *
  * Perform exactly the inverse of Interpolate_At_FluxPoints_Functor
@@ -403,7 +409,8 @@ public:
 	  
 	  // interpolate at flux points for this given variable
 	  if (itype==INTERPOLATE_SOLUTION or
-	      itype==INTERPOLATE_SOLUTION_NEGATIVE)
+	      itype==INTERPOLATE_SOLUTION_NEGATIVE or
+	      itype==INTERPOLATE_SOLUTION_REGULAR)
 	    this->flux2sol_vector(flux, sol);
 	  else
 	    this->flux2sol_derivative_vector(flux,sol,rescale);
@@ -414,6 +421,8 @@ public:
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) -= sol[idx];
+            else if (itype==INTERPOLATE_SOLUTION_REGULAR)
+              UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[idx];
 	    else
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) += sol[idx];
 	    
@@ -442,7 +451,8 @@ public:
 	  
 	  // interpolate at flux points for this given variable
 	  if (itype==INTERPOLATE_SOLUTION or
-	      itype==INTERPOLATE_SOLUTION_NEGATIVE)
+	      itype==INTERPOLATE_SOLUTION_NEGATIVE or
+	      itype==INTERPOLATE_SOLUTION_REGULAR)
 	    this->flux2sol_vector(flux, sol);
 	  else
 	    this->flux2sol_derivative_vector(flux,sol,rescale);
@@ -453,6 +463,8 @@ public:
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) -= sol[idy];
+            else if (itype==INTERPOLATE_SOLUTION_REGULAR)
+              UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[idy];
 	    else
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) += sol[idy];
 	    
@@ -515,7 +527,8 @@ public:
 	  
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION or
-		itype==INTERPOLATE_SOLUTION_NEGATIVE)
+		itype==INTERPOLATE_SOLUTION_NEGATIVE or
+                itype==INTERPOLATE_SOLUTION_REGULAR)
 	      this->flux2sol_vector(flux, sol);
 	    else
 	      this->flux2sol_derivative_vector(flux,sol,rescale);
@@ -526,7 +539,9 @@ public:
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) -= sol[idx];
-	    else
+            else if (itype==INTERPOLATE_SOLUTION_REGULAR)
+              UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idx];
+            else
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idx];
 	    
 	    }
@@ -556,7 +571,8 @@ public:
 	    
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION or
-		itype==INTERPOLATE_SOLUTION_NEGATIVE)
+		itype==INTERPOLATE_SOLUTION_NEGATIVE or
+                itype==INTERPOLATE_SOLUTION_REGULAR)
 	      this->flux2sol_vector(flux, sol);
 	    else
 	      this->flux2sol_derivative_vector(flux,sol,rescale);
@@ -567,6 +583,8 @@ public:
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) -= sol[idy];
+            else if (itype==INTERPOLATE_SOLUTION_REGULAR)
+              UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idy];
 	    else
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idy];
 
@@ -597,7 +615,8 @@ public:
 	    
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION or
-		itype==INTERPOLATE_SOLUTION_NEGATIVE)
+		itype==INTERPOLATE_SOLUTION_NEGATIVE or
+                itype==INTERPOLATE_SOLUTION_REGULAR)
 	      this->flux2sol_vector(flux, sol);
 	    else
 	      this->flux2sol_derivative_vector(flux,sol,rescale);
@@ -608,6 +627,8 @@ public:
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) -= sol[idz];
+            else if (itype==INTERPOLATE_SOLUTION_REGULAR)
+              UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idz];
 	    else
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idz];
 	    

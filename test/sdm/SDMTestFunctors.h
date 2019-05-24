@@ -39,6 +39,19 @@ public:
 		  DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata) {};
 
+  // static method which does it all: create and execute functor
+  static void apply(HydroParams         params,
+                    SDM_Geometry<dim,N> sdm_geom,
+                    DataArray           Udata)
+  {
+    int64_t nbCells = (dim==2) ? 
+      params.isize * params.jsize:
+      params.isize * params.jsize * params.ksize;
+    
+    InitTestFunctor functor(params, sdm_geom, Udata);
+    Kokkos::parallel_for("IniTestFunctor", nbCells, functor);
+  }
+
   KOKKOS_INLINE_FUNCTION
   real_t f0(real_t x, real_t y, real_t z) const
   {
@@ -115,7 +128,7 @@ public:
 	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 
-	x += this->sdm_geom.solution_pts_1d(idx) * dx;
+        x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
 	if (compare == 1) {
