@@ -43,11 +43,14 @@ public:
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
 		    DataArray           Udata,
-		    bool                isFlux,
-		    int                 nbCells)
+		    bool                isFlux)
   {
+    int64_t nbCells = dim == 2 ?
+	params.isize * params.jsize :
+	params.isize * params.jsize * params.ksize;
+
     SDM_Erase_Functor functor(params, sdm_geom, Udata, isFlux);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for("SDM_Erase_Functor", nbCells, functor);
   }
 
   /*

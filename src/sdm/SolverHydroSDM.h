@@ -1510,7 +1510,7 @@ template<int dim, int N>
 void SolverHydroSDM<dim,N>::erase(DataArray data, bool isFlux)
 {
 
-  SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data, isFlux, nbCells);
+  SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data, isFlux);
   
 } // SolverHydroSDM<dim,N>::erase
 
