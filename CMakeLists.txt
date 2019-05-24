@@ -235,6 +235,9 @@ if(${BUILD_CODE})
   
   # pass Kokkos include directories to our target application
   include_directories(${Kokkos_INCLUDE_DIRS_RET})
+
+  # CTest
+  enable_testing()
   
   add_subdirectory(test)
   add_subdirectory(src)
