@@ -4,7 +4,7 @@
 #include "utils/config/ConfigMap.h"
 
 /**
- * isentropic vortex advection test parameters.
+ * Implode test parameters.
  */
 struct ImplodeParams {
 
