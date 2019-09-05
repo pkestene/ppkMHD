@@ -11,5 +11,6 @@
 #include "sdm/init/InitWedgeFunctor.h"
 #include "sdm/init/InitJetFunctor.h"
 #include "sdm/init/InitIsentropicVortexFunctor.h"
+#include "sdm/init/InitShuOsherFunctor.h"
 
 #endif // HYDRO_INIT_FUNCTORS_H_

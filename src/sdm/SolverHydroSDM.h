@@ -327,7 +327,8 @@ public:
   void init_wedge(DataArray Udata);
   void init_jet(DataArray Udata);
   void init_isentropic_vortex(DataArray Udata);
-  
+  void init_shu_osher(DataArray Udata);
+
   void save_solution_impl();
 
   //! debug routine that saves a flux data array (for a given direction)
@@ -645,6 +646,10 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   } else if ( !m_problem_name.compare("isentropic_vortex") ) {
 
     init_isentropic_vortex(U);
+    
+  } else if ( !m_problem_name.compare("shu_osher") ) {
+
+    init_shu_osher(U);
     
   } else {
 
@@ -1948,6 +1953,22 @@ void SolverHydroSDM<dim,N>::init_isentropic_vortex(DataArray Udata)
 
   InitIsentropicVortexFunctor<dim,N>::apply(params, sdm_geom, iparams, Udata);  
 } // init_isentropic_vortex
+
+// =======================================================
+// =======================================================
+/**
+ * Shu-Osher Test-case.
+ *
+ * see https://www.astro.princeton.edu/~jstone/Athena/tests/shu-osher/Shu-Osher.html
+ *
+ */
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::init_shu_osher(DataArray Udata)
+{
+
+  InitShuOsherFunctor<dim,N>::apply(params, sdm_geom, Udata);
+
+} // init_shu_osher
 
 // =======================================================
 // =======================================================
