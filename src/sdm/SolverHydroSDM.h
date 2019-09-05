@@ -318,6 +318,7 @@ public:
 #endif // USE_MPI
   
   // host routines (initialization)
+  void init_sod(DataArray Udata);
   void init_implode(DataArray Udata);
   void init_blast(DataArray Udata);
   void init_four_quadrant(DataArray Udata);
@@ -607,7 +608,11 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   /*
    * initialize hydro array at t=0
    */
-  if ( !m_problem_name.compare("implode") ) {
+    if ( !m_problem_name.compare("sod") ) {
+
+    init_sod(U);
+
+  } else if ( !m_problem_name.compare("implode") ) {
 
     init_implode(U);
 
@@ -1777,6 +1782,22 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
   
 } // SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi
 #endif // USE_MPI
+
+// =======================================================
+// =======================================================
+/**
+ * Sod Test-case, shock tube.
+ *
+ * see https://en.wikipedia.org/wiki/Sod_shock_tube
+ * see plotting script https://github.com/pkestene/sod-shocktube/blob/test-euler-pablo/exactRiemann.py for exact solution
+ */
+template<int dim, int N>
+void SolverHydroSDM<dim,N>::init_sod(DataArray Udata)
+{
+
+  InitSodFunctor<dim,N>::apply(params, sdm_geom, Udata);
+
+} // init_sod
 
 // =======================================================
 // =======================================================
