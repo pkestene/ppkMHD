@@ -1789,7 +1789,8 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
  * Sod Test-case, shock tube.
  *
  * see https://en.wikipedia.org/wiki/Sod_shock_tube
- * see plotting script https://github.com/pkestene/sod-shocktube/blob/test-euler-pablo/exactRiemann.py for exact solution
+ * see plotting script 
+ * https://github.com/pkestene/sod-shocktube/blob/test_ppkMHD_sdm/exactRiemann.py for exact solution
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_sod(DataArray Udata)
