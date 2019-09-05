@@ -1,5 +1,5 @@
-#ifndef SDM_INIT_SOD_FUNCTOR_H_
-#define SDM_INIT_SOD_FUNCTOR_H_
+#ifndef SDM_INIT_WEDGE_FUNCTOR_H_
+#define SDM_INIT_WEDGE_FUNCTOR_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
@@ -12,38 +12,53 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "shared/problems/WedgeParams.h"
+
 namespace sdm {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
+/**
+ * Wedge (double Mach reflection) initial condition functor.
+ *
+ * See http://amroc.sourceforge.net/examples/euler/2d/html/ramp_n.htm
+ *
+ */
 template<int dim, int N>
-class InitSodFunctor : public SDMBaseFunctor<dim,N> {
+class InitWedgeFunctor : public SDMBaseFunctor<dim,N>
+{
   
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   
   static constexpr auto dofMap = DofMap<dim,N>;
   
-  InitSodFunctor(HydroParams         params,
-                 SDM_Geometry<dim,N> sdm_geom,
-                 DataArray           Udata) :
+  InitWedgeFunctor(HydroParams params,
+		   SDM_Geometry<dim,N> sdm_geom,
+		   WedgeParams wparams,
+		   DataArray   Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
-    Udata(Udata) {};
+    wparams(wparams),
+    Udata(Udata)
+  {};
+  
+  ~InitWedgeFunctor() {};
 
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
+                    WedgeParams         wParams,
                     DataArray           Udata)
   {
     int nbCells = dim==2 ? 
       params.isize*params.jsize : 
       params.isize*params.jsize*params.ksize;
-    
-    InitSodFunctor functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for("InitSodFunctor",nbCells, functor);
-  }
 
+    InitWedgeFunctor functor(params, sdm_geom, wParams, Udata);
+    Kokkos::parallel_for("InitWedgeFunctor",nbCells, functor);
+  }
+  
   /*
    * 2D version.
    */
@@ -70,25 +85,19 @@ public:
 
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
-    
-    //const real_t xmax = this->params.xmax;
-    //const real_t ymax = this->params.ymax;
-    
+
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
-    const real_t gamma0 = this->params.settings.gamma0;
+    //const real_t gamma0 = this->params.settings.gamma0;
+
+    const real_t slope_f = this->wparams.slope_f;
+    const real_t x_f     = this->wparams.x_f;
     
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
-
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
-
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-
+    
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
@@ -99,25 +108,26 @@ public:
 
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	
-	bool tmp;
-	  tmp = x < 0.5;
-	
-	if (tmp) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho1;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p1/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+    
+	if ( y > slope_f*(x-x_f) ) {
+    
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = wparams.rho1;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = wparams.e_tot1;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = wparams.rho_u1;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = wparams.rho_v1;
+	  
 	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho2;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p2/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+	  
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = wparams.rho2;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = wparams.e_tot2;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = wparams.rho_u2;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = wparams.rho_v2;
+	  
 	}
-	
+
       } // end for idx
     } // end for idy
-    
+
   } // end operator () - 2d
 
   /*
@@ -152,26 +162,19 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t zmin = this->params.zmin;
 
-    //const real_t xmax = this->params.xmax;
-    //const real_t ymax = this->params.ymax;
-    //const real_t zmax = this->params.zmax;
-
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
-    const real_t gamma0 = this->params.settings.gamma0;
-
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
-
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
+    //const real_t gamma0 = this->params.settings.gamma0;
+    
+    const real_t slope_f = this->wparams.slope_f;
+    const real_t x_f     = this->wparams.x_f;
 
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
-
+    
     // loop over cell DoF's
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
@@ -185,33 +188,36 @@ public:
 	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-	  
-	  bool tmp = x < 0.5;
-	  
-	  if (tmp) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho1;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p1/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+    
+	  if ( y > slope_f*(x-x_f) ) {
+	    
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = wparams.rho1;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = wparams.e_tot1;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = wparams.rho_u1;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = wparams.rho_v1;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = wparams.rho_w1;
+	    
 	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho2;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p2/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+	    
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = wparams.rho2;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = wparams.e_tot2;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = wparams.rho_u2;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = wparams.rho_v2;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = wparams.rho_w2;
+	    
 	  }
-	  
-	} // end for idx
+
+    	} // end for idx
       } // end for idy
     } // end for idz
-    
+
   } // end operator () - 3d
   
-  DataArray     Udata;
-
-}; // InitSodFunctor
+  WedgeParams wparams;
+  DataArray   Udata;
+  
+}; // class InitWedgeFunctor
 
 } // namespace sdm
 
-#endif // SDM_INIT_SOD_FUNCTOR_H_
+# endif // SDM_INIT_WEDGE_FUNCTOR_H_

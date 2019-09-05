@@ -1,5 +1,5 @@
-#ifndef SDM_INIT_SOD_FUNCTOR_H_
-#define SDM_INIT_SOD_FUNCTOR_H_
+#ifndef SDM_INIT_FOUR_QUADRANT_FUNCTOR_H_
+#define SDM_INIT_FOUR_QUADRANT_FUNCTOR_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
@@ -12,39 +12,55 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "shared/problems/initRiemannConfig2d.h"
+
 namespace sdm {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 template<int dim, int N>
-class InitSodFunctor : public SDMBaseFunctor<dim,N> {
-  
+class InitFourQuadrantFunctor : public SDMBaseFunctor<dim,N> {
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
-  
-  static constexpr auto dofMap = DofMap<dim,N>;
-  
-  InitSodFunctor(HydroParams         params,
-                 SDM_Geometry<dim,N> sdm_geom,
-                 DataArray           Udata) :
-    SDMBaseFunctor<dim,N>(params,sdm_geom),
-    Udata(Udata) {};
 
+  static constexpr auto dofMap = DofMap<dim,N>;
+
+  InitFourQuadrantFunctor(HydroParams params,
+			  SDM_Geometry<dim,N> sdm_geom,
+			  DataArray Udata,
+			  HydroState2d U0,
+			  HydroState2d U1,
+			  HydroState2d U2,
+			  HydroState2d U3,
+			  real_t xt,
+			  real_t yt) :
+    SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata),
+    U0(U0), U1(U1), U2(U2), U3(U3), xt(xt), yt(yt)
+  {};
+  
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
-                    DataArray           Udata)
+                    DataArray           Udata,
+                    HydroState2d        U0,
+                    HydroState2d        U1,
+                    HydroState2d        U2,
+                    HydroState2d        U3,
+                    real_t              xt,
+                    real_t              yt)
   {
     int nbCells = dim==2 ? 
       params.isize*params.jsize : 
       params.isize*params.jsize*params.ksize;
     
-    InitSodFunctor functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for("InitSodFunctor",nbCells, functor);
+    InitFourQuadrantFunctor functor(params, sdm_geom, Udata,
+      U0, U1, U2, U3, xt, yt);
+    Kokkos::parallel_for("InitFourQuadrantFunctor",nbCells, functor);
   }
 
-  /*
+ /*
    * 2D version.
    */
   //! functor for 2d 
@@ -70,54 +86,57 @@ public:
 
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
-    
-    //const real_t xmax = this->params.xmax;
-    //const real_t ymax = this->params.ymax;
-    
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
-    const real_t gamma0 = this->params.settings.gamma0;
-    
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
-
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
-
-    // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-
+    
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
 
 	// lower left corner
-	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
-	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
+	real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
+	real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
-	x += this->sdm_geom.solution_pts_1d(idx) * dx;
+	// Dof location in real space
+    	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	
-	bool tmp;
-	  tmp = x < 0.5;
-	
-	if (tmp) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho1;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p1/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+
+	if (x<xt) {
+	  if (y<yt) {
+	    // quarter 2
+	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U2[ID];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U2[IE];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IU)) = U2[IU];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IV)) = U2[IV];
+	  } else {
+	    // quarter 1
+	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U1[ID];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U1[IE];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IU)) = U1[IU];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IV)) = U1[IV];
+	  }
 	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho2;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p2/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+	  if (y<yt) {
+	    // quarter 3
+	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U3[ID];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U3[IE];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IU)) = U3[IU];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IV)) = U3[IV];
+	  } else {
+	    // quarter 0
+	    Udata(i  ,j  , dofMap(idx,idy,0,ID)) = U0[ID];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IE)) = U0[IE];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IU)) = U0[IU];
+	    Udata(i  ,j  , dofMap(idx,idy,0,IV)) = U0[IV];
+	  }
 	}
-	
+
       } // end for idx
     } // end for idy
-    
+
   } // end operator () - 2d
 
   /*
@@ -152,22 +171,10 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t zmin = this->params.zmin;
 
-    //const real_t xmax = this->params.xmax;
-    //const real_t ymax = this->params.ymax;
-    //const real_t zmax = this->params.zmax;
-
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
-    const real_t gamma0 = this->params.settings.gamma0;
-
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
-
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
-
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
@@ -185,33 +192,19 @@ public:
 	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-	  
-	  bool tmp = x < 0.5;
-	  
-	  if (tmp) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho1;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p1/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
-	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho2;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p2/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
-	  }
-	  
+
 	} // end for idx
       } // end for idy
     } // end for idz
     
   } // end operator () - 3d
-  
-  DataArray     Udata;
 
-}; // InitSodFunctor
+  DataArray Udata;
+  HydroState2d U0, U1, U2, U3;
+  real_t xt, yt;
+  
+}; // InitFourQuadrantFunctor
 
 } // namespace sdm
 
-#endif // SDM_INIT_SOD_FUNCTOR_H_
+#endif // SDM_INIT_FOUR_QUADRANT_FUNCTOR_H_

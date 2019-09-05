@@ -1,5 +1,5 @@
-#ifndef SDM_INIT_SOD_FUNCTOR_H_
-#define SDM_INIT_SOD_FUNCTOR_H_
+#ifndef SDM_INIT_BLAST_FUNCTOR_H_
+#define SDM_INIT_BLAST_FUNCTOR_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
@@ -12,39 +12,44 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "shared/problems/BlastParams.h"
+
 namespace sdm {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 template<int dim, int N>
-class InitSodFunctor : public SDMBaseFunctor<dim,N> {
-  
+class InitBlastFunctor : public SDMBaseFunctor<dim,N> {
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
-  
-  static constexpr auto dofMap = DofMap<dim,N>;
-  
-  InitSodFunctor(HydroParams         params,
-                 SDM_Geometry<dim,N> sdm_geom,
-                 DataArray           Udata) :
-    SDMBaseFunctor<dim,N>(params,sdm_geom),
-    Udata(Udata) {};
 
+  static constexpr auto dofMap = DofMap<dim,N>;
+
+  InitBlastFunctor(HydroParams         params,
+		   SDM_Geometry<dim,N> sdm_geom,
+		   BlastParams         bParams,
+		   DataArray           Udata) :
+    SDMBaseFunctor<dim,N>(params,sdm_geom),
+    bParams(bParams),
+    Udata(Udata) {};
+  
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
+                    BlastParams         bparams,
                     DataArray           Udata)
   {
     int nbCells = dim==2 ? 
       params.isize*params.jsize : 
       params.isize*params.jsize*params.ksize;
-    
-    InitSodFunctor functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for("InitSodFunctor",nbCells, functor);
+
+    InitBlastFunctor functor(params, sdm_geom, bparams, Udata);
+    Kokkos::parallel_for("InitBlastFunctor",nbCells, functor);
   }
 
-  /*
+    /*
    * 2D version.
    */
   //! functor for 2d 
@@ -70,49 +75,51 @@ public:
 
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
-    
-    //const real_t xmax = this->params.xmax;
-    //const real_t ymax = this->params.ymax;
-    
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
     const real_t gamma0 = this->params.settings.gamma0;
+
+    // blast problem parameters
+    const real_t blast_radius      = bParams.blast_radius;
+    const real_t radius2           = blast_radius*blast_radius;
+    const real_t blast_center_x    = bParams.blast_center_x;
+    const real_t blast_center_y    = bParams.blast_center_y;
+    const real_t blast_density_in  = bParams.blast_density_in;
+    const real_t blast_density_out = bParams.blast_density_out;
+    const real_t blast_pressure_in = bParams.blast_pressure_in;
+    const real_t blast_pressure_out= bParams.blast_pressure_out;
     
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
-
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
-
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-
+    
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
-
+	
 	// lower left corner
 	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
 
+	// DoF location
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	
-	bool tmp;
-	  tmp = x < 0.5;
-	
-	if (tmp) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho1;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p1/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+
+	real_t d2 = 
+	  (x-blast_center_x)*(x-blast_center_x)+
+	  (y-blast_center_y)*(y-blast_center_y);    
+    
+	if (d2 < radius2) {
+	  Udata(i,j,dofMap(idx,idy,0,ID)) = blast_density_in;
+	  Udata(i,j,dofMap(idx,idy,0,IE)) = blast_pressure_in/(gamma0-1.0);
+	  Udata(i,j,dofMap(idx,idy,0,IU)) = 0.0;
+	  Udata(i,j,dofMap(idx,idy,0,IV)) = 0.0;
 	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho2;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p2/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+	  Udata(i,j,dofMap(idx,idy,0,ID)) = blast_density_out;
+	  Udata(i,j,dofMap(idx,idy,0,IE)) = blast_pressure_out/(gamma0-1.0);
+	  Udata(i,j,dofMap(idx,idy,0,IU)) = 0.0;
+	  Udata(i,j,dofMap(idx,idy,0,IV)) = 0.0;
 	}
 	
       } // end for idx
@@ -152,21 +159,22 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t zmin = this->params.zmin;
 
-    //const real_t xmax = this->params.xmax;
-    //const real_t ymax = this->params.ymax;
-    //const real_t zmax = this->params.zmax;
-
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
     
     const real_t gamma0 = this->params.settings.gamma0;
 
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
-
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
+    // blast problem parameters
+    const real_t blast_radius      = bParams.blast_radius;
+    const real_t radius2           = blast_radius*blast_radius;
+    const real_t blast_center_x    = bParams.blast_center_x;
+    const real_t blast_center_y    = bParams.blast_center_y;
+    const real_t blast_center_z    = bParams.blast_center_z;
+    const real_t blast_density_in  = bParams.blast_density_in;
+    const real_t blast_density_out = bParams.blast_density_out;
+    const real_t blast_pressure_in = bParams.blast_pressure_in;
+    const real_t blast_pressure_out= bParams.blast_pressure_out;
 
     // local cell index
     int i,j,k;
@@ -185,33 +193,41 @@ public:
 	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-	  
-	  bool tmp = x < 0.5;
-	  
-	  if (tmp) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho1;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p1/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+
+	  real_t d2 = 
+	    (x-blast_center_x)*(x-blast_center_x)+
+	    (y-blast_center_y)*(y-blast_center_y)+
+	    (z-blast_center_z)*(z-blast_center_z);    
+    
+	  if (d2 < radius2) {
+
+	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = blast_density_in;
+	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) = blast_pressure_in/(gamma0-1.0);
+	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) = 0.0;
+	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) = 0.0;
+	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = 0.0;
+	    
 	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho2;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p2/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+
+	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = blast_density_out;
+	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) = blast_pressure_out/(gamma0-1.0);
+	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) = 0.0;
+	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) = 0.0;
+	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = 0.0;
+
 	  }
-	  
+		
 	} // end for idx
       } // end for idy
     } // end for idz
     
   } // end operator () - 3d
   
-  DataArray     Udata;
-
-}; // InitSodFunctor
+  BlastParams bParams;
+  DataArray   Udata;
+  
+}; // InitBlastFunctor
 
 } // namespace sdm
 
-#endif // SDM_INIT_SOD_FUNCTOR_H_
+#endif // SDM_INIT_BLAST_FUNCTOR_H_

@@ -1,5 +1,5 @@
-#ifndef SDM_INIT_SOD_FUNCTOR_H_
-#define SDM_INIT_SOD_FUNCTOR_H_
+#ifndef SDM_INIT_IMPLODE_FUNCTOR_H_
+#define SDM_INIT_IMPLODE_FUNCTOR_H_
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
@@ -12,36 +12,41 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include "shared/problems/ImplodeParams.h"
+
 namespace sdm {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 template<int dim, int N>
-class InitSodFunctor : public SDMBaseFunctor<dim,N> {
-  
+class InitImplodeFunctor : public SDMBaseFunctor<dim,N> {
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
   
-  InitSodFunctor(HydroParams         params,
-                 SDM_Geometry<dim,N> sdm_geom,
-                 DataArray           Udata) :
+  InitImplodeFunctor(HydroParams         params,
+		     SDM_Geometry<dim,N> sdm_geom,
+		     ImplodeParams       iparams,
+		     DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
+    iparams(iparams),
     Udata(Udata) {};
 
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
+                    ImplodeParams       iparams,
                     DataArray           Udata)
   {
     int nbCells = dim==2 ? 
       params.isize*params.jsize : 
       params.isize*params.jsize*params.ksize;
     
-    InitSodFunctor functor(params, sdm_geom, Udata);
-    Kokkos::parallel_for("InitSodFunctor",nbCells, functor);
+    InitImplodeFunctor functor(params, sdm_geom, iparams, Udata);
+    Kokkos::parallel_for("InitImplodeFunctor",nbCells, functor);
   }
 
   /*
@@ -71,19 +76,25 @@ public:
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
     
-    //const real_t xmax = this->params.xmax;
+    const real_t xmax = this->params.xmax;
     //const real_t ymax = this->params.ymax;
     
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     
     const real_t gamma0 = this->params.settings.gamma0;
-    
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
 
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
+    // outer parameters
+    const real_t rho_out = this->iparams.rho_out;
+    const real_t p_out   = this->iparams.p_out;
+    const real_t u_out   = this->iparams.u_out;
+    const real_t v_out   = this->iparams.v_out;
+
+    // inner parameters
+    const real_t rho_in  = this->iparams.rho_in;
+    const real_t p_in    = this->iparams.p_in;
+    const real_t u_in    = this->iparams.u_in;
+    const real_t v_in    = this->iparams.v_in;
 
     // local cell index
     int i,j;
@@ -101,18 +112,21 @@ public:
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	
 	bool tmp;
-	  tmp = x < 0.5;
+	if (this->iparams.shape == 1)
+	  tmp = x+y*y > 0.5 && x+y*y < 1.5;
+	else
+	  tmp = x+y > (xmin+xmax)/2. + ymin;
 	
 	if (tmp) {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho1;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p1/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho_out;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p_out/(gamma0-1.0) + 0.5 * rho_out * (u_out*u_out + v_out*v_out);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = u_out;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = v_out;
 	} else {
-	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho2;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p2/(gamma0-1.0);
-	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
-	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
+	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho_in;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p_in/(gamma0-1.0) + 0.5 * rho_in * (u_in*u_in + v_in*v_in);
+	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = u_in;
+	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = v_in;
 	}
 	
       } // end for idx
@@ -152,7 +166,7 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t zmin = this->params.zmin;
 
-    //const real_t xmax = this->params.xmax;
+    const real_t xmax = this->params.xmax;
     //const real_t ymax = this->params.ymax;
     //const real_t zmax = this->params.zmax;
 
@@ -162,11 +176,19 @@ public:
     
     const real_t gamma0 = this->params.settings.gamma0;
 
-    const real_t rho1 = 1.0;
-    const real_t rho2 = 0.125;
+    // outer parameters
+    const real_t rho_out = this->iparams.rho_out;
+    const real_t p_out   = this->iparams.p_out;
+    const real_t u_out   = this->iparams.u_out;
+    const real_t v_out   = this->iparams.v_out;
+    const real_t w_out   = this->iparams.w_out;
 
-    const real_t p1 = 1.0;
-    const real_t p2 = 0.1;
+    // inner parameters
+    const real_t rho_in  = this->iparams.rho_in;
+    const real_t p_in    = this->iparams.p_in;
+    const real_t u_in    = this->iparams.u_in;
+    const real_t v_in    = this->iparams.v_in;
+    const real_t w_in    = this->iparams.w_in;
 
     // local cell index
     int i,j,k;
@@ -186,20 +208,26 @@ public:
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 	  
-	  bool tmp = x < 0.5;
+	  bool tmp;
+	  if (this->iparams.shape == 1)
+	    tmp = x+y+z > 0.5 && x+y+z < 2.5;
+	  else
+	    tmp = x+y+z > (xmin+xmax)/2. + ymin + zmin;
 	  
 	  if (tmp) {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho1;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p1/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho_out;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p_out/(gamma0-1.0) + 0.5 * rho_out *
+	(u_out*u_out + v_out*v_out + w_out*w_out);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = u_out;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = v_out;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = w_out;
 	  } else {
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho2;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p2/(gamma0-1.0);
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
-	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho_in;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p_in/(gamma0-1.0) + 0.5 * rho_in *
+	(u_in*u_in + v_in*v_in + w_in*w_in);
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = u_in;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = v_in;
+	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = w_in;
 	  }
 	  
 	} // end for idx
@@ -208,10 +236,12 @@ public:
     
   } // end operator () - 3d
   
+  ImplodeParams iparams;
   DataArray     Udata;
 
-}; // InitSodFunctor
+}; // InitImplodeFunctor
 
 } // namespace sdm
 
-#endif // SDM_INIT_SOD_FUNCTOR_H_
+#endif // SDM_INIT_IMPLODE_FUNCTOR_H_
+
