@@ -122,4 +122,6 @@ Please visit :
 
 ## See also
 
-[ppkMHD Wiki](https://github.com/pkestene/ppkMHD/wiki)
+* [ppkMHD Wiki](https://github.com/pkestene/ppkMHD/wiki)
+* [Implementing Spectral Difference Methods (SDM) for Compressible Euler flow simulations using performance portable library kokkos](https://www.researchgate.net/publication/326400645_Implementing_Spectral_Difference_Methods_SDM_for_Compressible_Euler_flow_simulations_using_performance_portable_library_kokkos)
+* [Implementing Spectral Difference Methods (SDM) for Compressible Euler flow simulations using performance portable library kokkos (astrosim 2018)](https://www.researchgate.net/publication/328175816_Implementing_Spectral_Difference_Methods_SDM_for_Compressible_Euler_flow_simulations_using_performance_portable_library_kokkos)
