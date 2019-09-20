@@ -120,16 +120,6 @@ Please visit :
 * [editor configuration for using ccls](https://github.com/MaskRay/ccls/wiki/Editor-Configuration)
 * [project setup for using ccls](https://github.com/MaskRay/ccls/wiki/Project-Setup)
 
-## Build Documentation
+## See also
 
-A Sphinx/html documentation will (hopefully) soon be populated.
-
-To build it:
-
-``` shell
-mkdir build
-cd build
-cmake .. -DBUILD_CODE:BOOL=OFF -DBUILD_DOC:BOOL=ON -DDOC:STRING=html
-```
-
-Building documentation requires to have python3 with up-to-date breathe extension.
+[ppkMHD Wiki](https://github.com/pkestene/ppkMHD/wiki)
