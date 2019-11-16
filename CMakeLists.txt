@@ -1,5 +1,5 @@
 # set minimal version the one requested by kokkos
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.10)
 
 #
 # default local cmake macro repository
@@ -194,7 +194,7 @@ if(${BUILD_CODE})
   # common flags
   #
   
-  if (KOKKOS_ENABLE_CUDA)
+  if (Kokkos_ENABLE_CUDA)
     add_compile_options(-DCUDA)
   endif()
   
@@ -260,13 +260,13 @@ if (USE_MPI)
 else(USE_MPI)
   message("  MPI not enabled")
 endif(USE_MPI)
-if (USE_CUDA)
-  message("  CUDA Compiler      : ${CMAKE_CUDA_COMPILER}")
-  message("  CUDA Compiler exec : ${CUDA_NVCC_EXECUTABLE}")
-  message("  CUDA Compile flags : ${CUDA_NVCC_FLAGS}")
-else(USE_CUDA)
-  message("  CUDA not enabled")
-endif(USE_CUDA)
+message("  Kokkos OpenMP enabled : ${Kokkos_ENABLE_OPENMP}")
+message("  Kokkos CUDA   enabled : ${Kokkos_ENABLE_CUDA}")
+message("  Kokkos CUDA   Lambda  : ${Kokkos_ENABLE_CUDA_LAMBDA}")
+if (Kokkos_ENABLE_CUDA)
+  message("  Kokkos CUDA   flags   : ${KOKKOS_CUDA_OPTIONS}")
+endif(Kokkos_ENABLE_CUDA)
+message("  Kokkos HWLOC  enabled : ${Kokkos_ENABLE_HWLOC}")
 if (HDF5_FOUND)
   message("  HDF5 found version    : ${HDF5_VERSION}")
   message("  HDF5 definitions      : ${HDF5_DEFINITIONS}")
@@ -283,6 +283,6 @@ endif(PNETCDF_FOUND)
 message("SDM      enabled : ${USE_SDM}")
 message("MOOD     enabled : ${USE_MOOD}")
 message("DOUBLE precision : ${USE_DOUBLE}")
-message("HWLOC    enabled : ${KOKKOS_ENABLE_HWLOC}")
+message("HWLOC    enabled : ${Kokkos_ENABLE_HWLOC}")
 
 message("")
