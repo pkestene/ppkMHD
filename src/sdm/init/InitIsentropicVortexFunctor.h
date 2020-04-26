@@ -54,7 +54,7 @@ public:
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index) const
+  void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
   {
 
     const int isize = this->params.isize;
@@ -149,7 +149,7 @@ public:
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
   {
 
     const int isize = this->params.isize;

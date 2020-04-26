@@ -64,7 +64,7 @@ namespace sdm {
 //   //! functor for 2d - CFL constraint
 //   template<int dim_ = dim>
 //   KOKKOS_INLINE_FUNCTION
-//   void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index,
+//   void operator()(const typename std::enable_if<dim_==2, int>::type& index,
 // 		  real_t &invDt) const
 //   {
 //     const int isize = this->params.isize;
@@ -122,7 +122,7 @@ namespace sdm {
 //   //! functor for 3d 
 //   template<int dim_ = dim>
 //   KOKKOS_INLINE_FUNCTION
-//   void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index,
+//   void operator()(const typename std::enable_if<dim_==3, int>::type& index,
 // 		  real_t &invDt) const
 //   {
 
