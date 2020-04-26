@@ -1,3 +1,5 @@
+![C/C++ CI](https://github.com/pkestene/ppkMHD/workflows/C/C++%20CI/badge.svg)
+
 # ppkMHD
 
 ## What is it ?
