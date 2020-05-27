@@ -35,7 +35,7 @@ public:
   void operator()(const int& i) const
   {
 
-    for (int icoef = 0; icoef < monomialMap.dimension_0(); ++icoef) {
+    for (int icoef = 0; icoef < monomialMap.extent(0); ++icoef) {
       results(icoef, 0) = monomialMap(icoef,0);
       results(icoef, 1) = monomialMap(icoef,1);
       results(icoef, 2) = monomialMap(icoef,2);

@@ -64,7 +64,7 @@ public:
   //! functor for 2d 
   template<unsigned int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& i)  const
+  void operator()(const typename std::enable_if<dim_==2, int>::type& i)  const
   {
 #ifndef CUDA
     printf("2D functor\n");
@@ -74,7 +74,7 @@ public:
   //! functor for 3d 
   template<unsigned int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& i) const
+  void operator()(const typename std::enable_if<dim_==3, int>::type& i) const
   {
 #ifndef CUDA
     printf("3D functor\n");

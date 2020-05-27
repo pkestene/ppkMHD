@@ -162,9 +162,9 @@ public:
     // we will obtain the least-square polynomial solution.
     coefs_t coefs;
     coefs[0] = this->test_function_2d_(0,0);
-    for (int ii=0; ii<geomPI.dimension_0(); ++ii) {
+    for (int ii=0; ii<geomPI.extent(0); ++ii) {
       real_t tmp = 0;
-      for (int ik=0; ik<geomPI.dimension_1(); ++ik) {
+      for (int ik=0; ik<geomPI.extent(1); ++ik) {
     	tmp += geomPI(ii,ik) * rhs[ik];
       }
       coefs[ii+1] = tmp;

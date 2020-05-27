@@ -80,9 +80,9 @@ public:
    */
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void computePrimitives(const typename Kokkos::Impl::enable_if<dim_==2, HydroState>::type& u,
+  void computePrimitives(const typename std::enable_if<dim_==2, HydroState>::type& u,
 			 real_t* c,
-			 typename Kokkos::Impl::enable_if<dim_==2, HydroState>::type& q) const
+			 typename std::enable_if<dim_==2, HydroState>::type& q) const
   {
     real_t gamma0 = params.settings.gamma0;
     real_t smallr = params.settings.smallr;
@@ -117,9 +117,9 @@ public:
    */
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void computePrimitives(const typename Kokkos::Impl::enable_if<dim_==3, HydroState>::type& u,
+  void computePrimitives(const typename std::enable_if<dim_==3, HydroState>::type& u,
 			 real_t* c,
-			 typename Kokkos::Impl::enable_if<dim_==3, HydroState>::type& q) const
+			 typename std::enable_if<dim_==3, HydroState>::type& q) const
   {
     real_t gamma0 = params.settings.gamma0;
     real_t smallr = params.settings.smallr;
@@ -157,7 +157,7 @@ public:
    */
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  int isValid(const typename Kokkos::Impl::enable_if<dim_==2, HydroState>::type& u) const
+  int isValid(const typename std::enable_if<dim_==2, HydroState>::type& u) const
   {
 
     int isValid_ = 1;
@@ -189,7 +189,7 @@ public:
    */
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  int isValid(const typename Kokkos::Impl::enable_if<dim_==3, HydroState>::type& u) const
+  int isValid(const typename std::enable_if<dim_==3, HydroState>::type& u) const
   {
 
     int isValid_ = 1;

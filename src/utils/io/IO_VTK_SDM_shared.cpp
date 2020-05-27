@@ -95,7 +95,7 @@ void write_pvtu_header(std::string headerFilename,
 		       int nbvar,
 		       const std::map<int, std::string>& varNames,
 		       int iStep,
-		       bool is_flux_data_array = false)
+		       bool is_flux_data_array /*= false */)
 {
   // file handler
   std::fstream outHeader;

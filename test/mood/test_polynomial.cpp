@@ -29,7 +29,7 @@ real_t polynomial_eval(real_t x, real_t y,
   real_t result = 0;
   
   // span monomial orders
-  for (int i = 0; i<coefs.dimension_0(); ++i) {
+  for (int i = 0; i<coefs.extent(0); ++i) {
     int e[2] = {monomMap(i,0),
 		monomMap(i,1)};
     result += coefs[i] * pow(x,e[0]) * pow(y,e[1]);
@@ -46,7 +46,7 @@ real_t polynomial_eval(real_t x, real_t y, real_t z,
   real_t result = 0;
   
   // span monomial orders
-  for (int i = 0; i<coefs.dimension_0(); ++i) {
+  for (int i = 0; i<coefs.extent(0); ++i) {
     int e[3] = {monomMap(i,0),
 		monomMap(i,1),
 		monomMap(i,2)};
@@ -86,7 +86,7 @@ public:
 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& i) const
+  void operator()(const typename std::enable_if<dim_==2, int>::type& i) const
   {
 
     coefs_t coefs;
@@ -99,7 +99,7 @@ public:
 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& i) const
+  void operator()(const typename std::enable_if<dim_==3, int>::type& i) const
   {
 
     coefs_t coefs;

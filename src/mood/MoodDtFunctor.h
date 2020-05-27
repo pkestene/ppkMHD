@@ -55,7 +55,7 @@ namespace mood {
 //   template<int dim_ = dim>
 //   KOKKOS_INLINE_FUNCTION
 //   void operator()(const typename
-// 		  Kokkos::Impl::enable_if<dim_==2, int>::type& index,
+// 		  std::enable_if<dim_==2, int>::type& index,
 // 		  real_t &invDt) const
 //   {
 //     const int isize = this->params.isize;
@@ -97,7 +97,7 @@ namespace mood {
 //   template<int dim_ = dim>
 //   KOKKOS_INLINE_FUNCTION
 //   void operator()(const typename
-// 		  Kokkos::Impl::enable_if<dim_==3, int>::type& index,
+// 		  std::enable_if<dim_==3, int>::type& index,
 // 		  real_t &invDt) const
 //   {
 //     const int isize = this->params.isize;

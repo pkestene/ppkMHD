@@ -81,7 +81,7 @@ public:
   //! functor for 2d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==2, int>::type& index)  const
+  void operator()(const typename std::enable_if<dim_==2, int>::type& index)  const
   {
 
     const int isize = this->params.isize;
@@ -118,9 +118,9 @@ public:
 	// retrieve reconstruction polynomial coefficients in current cell
 	coefs_t coefs_c;
 	coefs_c[0] = Udata(i,j,ivar);
-	for (int icoef=0; icoef<mat_pi.dimension_0(); ++icoef) {
+	for (int icoef=0; icoef<mat_pi.extent(0); ++icoef) {
 	  real_t tmp = 0;
-	  for (int ik=0; ik<mat_pi.dimension_1(); ++ik) {
+	  for (int ik=0; ik<mat_pi.extent(1); ++ik) {
 	    tmp += mat_pi(icoef,ik) * rhs[ik];
 	  }
 	  coefs_c[icoef+1] = tmp;
@@ -139,7 +139,7 @@ public:
   //! functor for 3d 
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename Kokkos::Impl::enable_if<dim_==3, int>::type& index) const
+  void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
@@ -179,9 +179,9 @@ public:
 	// retrieve reconstruction polynomial coefficients in current cell
 	coefs_t coefs_c;
 	coefs_c[0] = Udata(i,j,k,ivar);
-	for (int icoef=0; icoef<mat_pi.dimension_0(); ++icoef) {
+	for (int icoef=0; icoef<mat_pi.extent(0); ++icoef) {
 	  real_t tmp = 0;
-	  for (int ik=0; ik<mat_pi.dimension_1(); ++ik) {
+	  for (int ik=0; ik<mat_pi.extent(1); ++ik) {
 	    tmp += mat_pi(icoef,ik) * rhs[ik];
 	  }
 	  coefs_c[icoef+1] = tmp;

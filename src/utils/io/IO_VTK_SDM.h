@@ -1168,14 +1168,14 @@ void write_appended_binary_data(std::ostream& outFile,
  * rather than cells.
  *
  */
-void write_pvtu_header(std::string headerFilename,
-		       std::string outputPrefix,
-		       HydroParams& params,
-		       ConfigMap& configMap,
-		       int nbvar,
-		       const std::map<int, std::string>& varNames,
-		       int iStep,
-		       bool is_flux_data_array = false);
+// void write_pvtu_header(std::string headerFilename,
+// 		       std::string outputPrefix,
+// 		       HydroParams& params,
+// 		       ConfigMap& configMap,
+// 		       int nbvar,
+// 		       const std::map<int, std::string>& varNames,
+// 		       int iStep,
+// 		       bool is_flux_data_array = false);
 #endif // USE_MPI
 
 // ================================================================

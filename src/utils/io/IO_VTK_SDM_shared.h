@@ -26,6 +26,16 @@ void write_vtk_metadata(std::ostream& outFile,
  */
 void write_vtu_footer(std::ostream& outFile);
 
+void write_pvtu_header(std::string headerFilename,
+		       std::string outputPrefix,
+		       HydroParams& params,
+		       ConfigMap& configMap,
+		       int nbvar,
+		       const std::map<int, std::string>& varNames,
+		       int iStep,
+		       bool is_flux_data_array = false);
+
+
 } // namespace io
 
 } // namespace ppkMHD
