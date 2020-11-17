@@ -1,4 +1,4 @@
-![C/C++ CI](https://github.com/pkestene/ppkMHD/workflows/C/C++%20CI/badge.svg)
+[![DOI](https://zenodo.org/badge/209853926.svg)](https://zenodo.org/badge/latestdoi/209853926) ![C/C++ CI](https://github.com/pkestene/ppkMHD/workflows/C/C++%20CI/badge.svg)
 
 # ppkMHD
 
