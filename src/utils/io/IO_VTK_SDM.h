@@ -18,6 +18,9 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+#include <iostream>
+#include <fstream>
+
 #include "utils/io/IO_VTK_SDM_shared.h"
 
 namespace ppkMHD { namespace io {
