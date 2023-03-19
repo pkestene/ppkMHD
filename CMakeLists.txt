@@ -307,8 +307,8 @@ if (PNETCDF_FOUND)
   message("  PNETCDF_LIBRARIES            = ${PNETCDF_LIBRARIES}")
 endif(PNETCDF_FOUND)
 
-message("SDM      enabled : ${USE_SDM}")
-message("MOOD     enabled : ${USE_MOOD}")
-message("DOUBLE precision : ${USE_DOUBLE}")
+message("SDM      enabled : ${PPKMHD_USE_SDM}")
+message("MOOD     enabled : ${PPKMHD_USE_MOOD}")
+message("DOUBLE precision : ${PPKMHD_USE_DOUBLE}")
 
 message("")
