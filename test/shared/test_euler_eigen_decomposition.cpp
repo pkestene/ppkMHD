@@ -24,14 +24,13 @@ void test()
   std::cout << "===========\n";
   std::cout << "=====" << dim << "D" << "====\n";
   std::cout << "===========\n";
-  
-  
+
   ppkMHD::EulerEquations<dim> eq;
 
   using HydroState = typename ppkMHD::EulerEquations<dim>::HydroState;
 
   real_t gamma0 = 1.4;
-  
+
   // conservative variable
   HydroState q;
   q[ID] = 2.3;
@@ -40,8 +39,8 @@ void test()
   q[IV] = -0.2;
   if (dim == 3)
     q[IW] = 1.0;
-  
-  
+
+
   // primitive variables
   HydroState w;
   eq.convert_to_primitive(q,w,gamma0);
@@ -68,7 +67,7 @@ void test()
   if (dim == 3)
     cons_out[IW] = cons_in[IW];
 
-  
+
   // computation done in place
   eq.template cons_to_charac<dir>(cons_out, q, c, gamma0);
 
@@ -79,7 +78,7 @@ void test()
   charac[IV] = cons_out[IV];
   if (dim == 3)
     charac[IW] = cons_out[IW];
-  
+
   eq.template charac_to_cons<dir>(cons_out, q, c, gamma0);
 
   std::cout << "===============================\n";
@@ -91,7 +90,7 @@ void test()
   std::cout << cons_in[IV] << " " << charac[IV] << " " << cons_out[IV] << " " << fabs(cons_in[IV]-cons_out[IV]) << "\n";
   if (dim == 3)
     std::cout << cons_in[IW] << " " << charac[IW] << " " << cons_out[IW] << " " << fabs(cons_in[IW]-cons_out[IW]) << "\n";
-    
+
 } // test
 
 int main(int argc, char* argv[])
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -132,5 +131,5 @@ int main(int argc, char* argv[])
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
+
 }

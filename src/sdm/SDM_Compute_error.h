@@ -37,7 +37,7 @@ class Compute_Error_Functor_2d : public SDMBaseFunctor<2,N> {
 public:
   using typename SDMBaseFunctor<2,N>::DataArray;
   using typename SDMBaseFunctor<2,N>::HydroState;
-  
+
   //! intra-cell degrees of freedom mapping at solution points
   static constexpr auto dofMap = DofMap<2,N>;
 
@@ -80,14 +80,14 @@ public:
   {
     return -1.0;
   }
-  
+
   // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
   void init (real_t& dst) const
   {
     // The identity under '+' is zero.
     // Kokkos does not come with a portable way to access
-    // floating-point Inf and NaN. 
+    // floating-point Inf and NaN.
     dst = 0.0;
   } // init
 
@@ -119,27 +119,32 @@ public:
 	  // get local conservative variable
 	  real_t tmp1 = Udata1(i,j, dofMap(idx,idy,0,varId));
 	  real_t tmp2 = Udata2(i,j, dofMap(idx,idy,0,varId));
-          
+
 	  if (norm == NORM_L1) {
 	    sum += fabs(tmp1-tmp2);
 	  } else {
 	    sum += (tmp1-tmp2)*(tmp1-tmp2);
 	  }
-	  
+
 	} // end for idx
       } // end for idy
-      
+
     } // end guard - ghostcells
 
   } // end operator () - 2d
-  
+
   // "Join" intermediate results from different threads.
   // This should normally implement the same reduction
   // operation as operator() above. Note that both input
   // arguments MUST be declared volatile.
   KOKKOS_INLINE_FUNCTION
+#if KOKKOS_VERSION_MAJOR > 3
+  void join (real_t& dst,
+	     const real_t& src) const
+#else
   void join (volatile real_t& dst,
 	     const volatile real_t& src) const
+#endif
   {
     // + reduce
     dst += src;
@@ -168,7 +173,7 @@ class Compute_Error_Functor_3d : public SDMBaseFunctor<3,N> {
 public:
   using typename SDMBaseFunctor<3,N>::DataArray;
   using typename SDMBaseFunctor<3,N>::HydroState;
-  
+
   //! intra-cell degrees of freedom mapping at solution points
   static constexpr auto dofMap = DofMap<3,N>;
 
@@ -218,7 +223,7 @@ public:
   {
     // The identity under '+' is zero.
     // Kokkos does not come with a portable way to access
-    // floating-point Inf and NaN. 
+    // floating-point Inf and NaN.
     dst = 0.0;
   } // init
 
@@ -249,32 +254,37 @@ public:
       for (int idz=0; idz<N; ++idz) {
         for (int idy=0; idy<N; ++idy) {
           for (int idx=0; idx<N; ++idx) {
-            
+
             // get local conservative variable
             real_t tmp1 = Udata1(i,j,k, dofMap(idx,idy,idz,varId));
             real_t tmp2 = Udata2(i,j,k, dofMap(idx,idy,idz,varId));
-            
+
             if (norm == NORM_L1) {
               sum += fabs(tmp1-tmp2);
             } else {
               sum += (tmp1-tmp2)*(tmp1-tmp2);
             }
-	  
+
           } // end for idx
         } // end for idy
       } // end for idz
-      
+
     } // end guard - ghostcells
 
   } // end operator () - 3d
-  
+
   // "Join" intermediate results from different threads.
   // This should normally implement the same reduction
   // operation as operator() above. Note that both input
   // arguments MUST be declared volatile.
   KOKKOS_INLINE_FUNCTION
+#if KOKKOS_VERSION_MAJOR > 3
+  void join (real_t& dst,
+	     const real_t& src) const
+#else
   void join (volatile real_t& dst,
 	     const volatile real_t& src) const
+#endif
   {
     // + reduce
     dst += src;

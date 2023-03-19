@@ -4,7 +4,7 @@
 #ifndef SOLVER_HYDRO_SDM_H_
 #define SOLVER_HYDRO_SDM_H_
 
-#include <string> 
+#include <string>
 #include <cstdio>
 #include <cstdbool>
 #include <sstream>
@@ -62,16 +62,16 @@ namespace sdm {
  *
  * The total number of solution points per cells is N^2 in 2D, and N^3 in 3D.
  * We use row-major format to enumerate DoF (degrees of freedom) inside cell,
- * i.e. we will define a mapping  
+ * i.e. we will define a mapping
  * for example in 2D:
  *    index = DofMap(i,j,iv) computed as i+N*j+N*N*iv
  * DofMap returns index where one can find the variable iv (e.g. for density
  * just use ID) of the (i,j) Dof inside a given cell. the pair i,j identifies
  * a unique Dof among the N^2 Dof in 2D.
- * 
+ *
  * Time integration is configurable through parameter file. Allowed
  * possiblities are foward_euler, ssprk2, ssprk3 or ssprk54.
- * 
+ *
  * Shock capturing with limiters is a delicate subject.
  * It is disabled by default, but can be enable through parameter
  * limiter_enabled.
@@ -81,16 +81,16 @@ namespace sdm {
  * and Navier-Stokes Equations on Unstructured Meshes", AIAA 2006-304
  * http://aero-comlab.stanford.edu/Papers/may.aiaa.06-0304.pdf
  * May/Jameson limiting procedure consists in:
- * 1. for each cell, compute reference state as average HydroState 
+ * 1. for each cell, compute reference state as average HydroState
  *    (stored in Uaverage)
  * 2. for each cell, compute Umin, Umax as min max HydroState in a neighborhood
- * 3. for each cell, evaluate is the high-order cell-border reconstruction 
- *    must be demoted to linear reconstruction. If any of the 
+ * 3. for each cell, evaluate is the high-order cell-border reconstruction
+ *    must be demoted to linear reconstruction. If any of the
  *    K=number_of_faces x N reconstructed state violates the TVD criterium,
  *    all the faces reconstruction will be demoted to linear reconstruction.
  *
  * We finaly implement the original idea published in Cockburn and Shu,
- * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V: 
+ * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V:
  * MultiDimensinal systems", Journal of Computational Physics, 141, 199-224 (1998).
  *
  * 1. compute cell-average of conservative variables, as well as cell-average gradient
@@ -100,11 +100,11 @@ namespace sdm {
  *    b. backward difference of cell-averaged value (current and neighbor cell)
  *    c. forward  difference of cell-averaged value (current and neighbor cell)
  * 3. (optional) project these 3 vectors in the local characteristics space
- *    (eigenspace of the local flux Jacobian matrix); 
- * 4. for each component, perform a TVB-modified minmod limiting of the 3 values 
+ *    (eigenspace of the local flux Jacobian matrix);
+ * 4. for each component, perform a TVB-modified minmod limiting of the 3 values
  *    to detect if dofs must be modified to a 1st order polynomial approximation
  * 5. if limiting detection, was positive actually perform the 1st order modification
- *    in current cell (with optionally a back-projection in the real space from 
+ *    in current cell (with optionally a back-projection in the real space from
  *    the eigenspace).
  *
  * To enabled the limiting procedure to project data into the characteristics space,
@@ -112,7 +112,7 @@ namespace sdm {
  * limiter_characteristics_enabled=true
  * in the sdm section of the ini parameter file.
  *
- * If viscous terms computation is enabled, we need 
+ * If viscous terms computation is enabled, we need
  * - Ugrax_v, Ugrady_v (and Ugradz_v) allocated;
  *   these arrays are used to store velocity gradients at soluton points.
  * - FUgrad allocated;
@@ -138,7 +138,7 @@ public:
 
   static constexpr int get_dim() {return dim;};
   static constexpr int get_N()   {return N;};
-  
+
   SolverHydroSDM(HydroParams& params, ConfigMap& configMap);
   virtual ~SolverHydroSDM();
 
@@ -182,14 +182,14 @@ public:
   DataArray     Ugradz_v; /* velocity gradient-z, used and allocated only if viscous terms enabled */
 
   DataArray     FUgrad; /* velocity and velocity gradient at flux points */
-  
+
   //! Runge-Kutta temporary array (will be allocated only if necessary)
   DataArray     U_RK1, U_RK2, U_RK3, U_RK4;
 
   //! fluxes : intermediate array containing fluxes, used in
   //! compute_fluxes_divergence_per_dir
   DataArray Fluxes;
-  
+
   /*
    * Override base class method to initialize IO writer object
    */
@@ -197,7 +197,7 @@ public:
 
   //! SDM config
   SDM_Geometry<dim,N> sdm_geom;
-    
+
   //! system of equations
   ppkMHD::EulerEquations<dim> euler;
 
@@ -207,7 +207,7 @@ public:
 
   //! initialize sdm (geometric terms matrix)
   void init_sdm_geometry();
-    
+
   //! compute time step inside an MPI process, at shared memory level.
   double compute_dt_local();
 
@@ -216,27 +216,27 @@ public:
 
   //! numerical scheme
   void time_integration(real_t dt);
-  
+
   //! wrapper to tha actual time integation scheme
-  void time_integration_impl(DataArray Udata, 
-			     DataArray Udata_fdiv, 
+  void time_integration_impl(DataArray Udata,
+			     DataArray Udata_fdiv,
 			     real_t dt);
 
   //! all computation that must be done before all others
   void apply_pre_step_computation(DataArray Udata);
-  
+
   //! apply positivity preserving procedure
   void apply_positivity_preserving(DataArray Udata);
-  
+
   //! apply limiting procedure
   void apply_limiting(DataArray Udata);
-  
+
   //! compute invicid hydro flux divergence per direction
   //! this routine is designed to be called from inside compute_fluxes_divergence
   //! \tparam dir identifies direction (IX, IY or IZ)
   template<int dir>
-  void compute_invicid_fluxes_divergence_per_dir(DataArray Udata, 
-						 DataArray Udata_fdiv, 
+  void compute_invicid_fluxes_divergence_per_dir(DataArray Udata,
+						 DataArray Udata_fdiv,
 						 real_t    dt);
 
   //! compute viscous hydro flux divergence per direction
@@ -244,7 +244,7 @@ public:
   //! \tparam dir identifies direction (IX, IY or IZ)
   template<int dir>
   void compute_viscous_fluxes_divergence_per_dir(DataArray Udata,
-						 DataArray Udata_fdiv, 
+						 DataArray Udata_fdiv,
 						 real_t    dt);
 
   //! compute velocity gradients at solution points and store them
@@ -257,35 +257,35 @@ public:
   //! \param[out] Ugrad (velocity gradient in direction dir, at solution points)
   template<int dir>
   void compute_velocity_gradients(DataArray Udata, DataArray Ugrad);
-  
+
   //! compute flux divergence, the main term to perform the actual update
   //! in one of the Runge-Kutta methods.
   //! Udata is used in input (one of Runge-Kutta sub-step data)
   //! Udata_fdiv is used in,out as an accumulator
   //! so that the actual update will be U_{n+1}=U_{n}-dt*Udata_fdiv
   //! this operator is used in every Runge Kutta time intergrator
-  void compute_fluxes_divergence(DataArray Udata, 
-				 DataArray Udata_fdiv, 
+  void compute_fluxes_divergence(DataArray Udata,
+				 DataArray Udata_fdiv,
 				 real_t    dt);
 
   //! time integration using forward Euler method
-  void time_int_forward_euler(DataArray Udata, 
-			      DataArray Udata_fdiv, 
+  void time_int_forward_euler(DataArray Udata,
+			      DataArray Udata_fdiv,
 			      real_t dt);
 
   //! time integration using SSP RK2
-  void time_int_ssprk2(DataArray Udata, 
-		       DataArray Udata_fdiv, 
+  void time_int_ssprk2(DataArray Udata,
+		       DataArray Udata_fdiv,
 		       real_t dt);
-  
+
   //! time integration using SSP RK3
-  void time_int_ssprk3(DataArray Udata, 
-		       DataArray Udata_fdiv, 
+  void time_int_ssprk3(DataArray Udata,
+		       DataArray Udata_fdiv,
 		       real_t dt);
 
   //! time integration using SSP RK4
-  void time_int_ssprk54(DataArray Udata, 
-			DataArray Udata_fdiv, 
+  void time_int_ssprk54(DataArray Udata,
+			DataArray Udata_fdiv,
 			real_t dt);
 
   //! erase a solution data array
@@ -316,7 +316,7 @@ public:
   //! here we call boundaries condition for mpi execution
   void make_boundaries_sdm_mpi(DataArray Udata, bool mhd_enabled);
 #endif // USE_MPI
-  
+
   // host routines (initialization)
   void init_sod(DataArray Udata);
   void init_implode(DataArray Udata);
@@ -334,7 +334,7 @@ public:
   //! debug routine that saves a flux data array (for a given direction)
   // template <int dir>
   // void save_flux();
-  
+
   //! time integration
   bool forward_euler_enabled;
   bool ssprk2_enabled;
@@ -348,7 +348,7 @@ public:
   //! limiter (for shock capturing features)
   bool limiter_enabled;
   bool limiter_characteristics_enabled;
-  
+
   //! positivity preserving (density + pressure)
   bool positivity_enabled;
 
@@ -357,7 +357,7 @@ public:
 
   //! thermal diffusivity terms : kappa * rho * cp * gradient(T)
   bool thermal_diffusivity_terms_enabled;
-  
+
   int isize, jsize, ksize, nbCells;
 
 }; // class SolverHydroSDM
@@ -377,7 +377,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 				      ConfigMap& configMap) :
   SolverBase(params, configMap),
   U(), Uhost(), Uaux(),
-  Fluxes(), 
+  Fluxes(),
   sdm_geom(),
   forward_euler_enabled(true),
   ssprk2_enabled(false),
@@ -399,17 +399,17 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   if (dim==3)
     nbCells = params.isize*params.jsize*params.ksize;
-  
+
   m_nCells = nbCells;
 
   int nb_dof_per_cell = dim==2 ? N*N : N*N*N;
   int nb_dof = params.nbvar * nb_dof_per_cell;
 
   m_nDofsPerCell = nb_dof_per_cell;
-  
+
   // useful for allocating Fluxes, for conservative variables at flux points
   int nb_dof_flux = dim==2 ? (N+1)*N*params.nbvar : (N+1)*N*N*params.nbvar;
-  
+
   long long int total_mem_size = 0;
 
   // clear variables_names map -- hydro only, for now (MHD later)
@@ -421,13 +421,13 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
   if (dim==3)
     m_variables_names[IW] = "rho_vz"; // momentum component Z
 
-  
+
   /*
    * Viscous terms computations.
    *
    */
   viscous_terms_enabled = (params.settings.mu > 0);
-  
+
   /*
    * Thermal diffusivity terms computations.
    *
@@ -442,19 +442,19 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     U     = DataArray("U", isize, jsize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
     Uaux  = DataArray("Uaux",isize, jsize, nb_dof);
-    
+
     Fluxes = DataArray("Fluxes", isize, jsize, nb_dof_flux);
 
     total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // U
     total_mem_size += isize*jsize*nb_dof      * sizeof(real_t); // Uaux
     total_mem_size += isize*jsize*nb_dof_flux * sizeof(real_t); // Fluxes
-    
+
   } else if (dim==3) {
 
     U     = DataArray("U", isize, jsize, ksize, nb_dof);
     Uhost = Kokkos::create_mirror(U);
     Uaux  = DataArray("Uaux",isize, jsize, ksize, nb_dof);
-    
+
     Fluxes = DataArray("Fluxes", isize, jsize, ksize, nb_dof_flux);
 
     total_mem_size += isize*jsize*ksize*nb_dof      * sizeof(real_t); // U
@@ -468,7 +468,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    * (solution + flux points locations)
    */
   init_sdm_geometry();
-    
+
   /*
    * Time integration
    */
@@ -479,7 +479,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   // rescale dt to make time order "match" space order ?
   rescale_dt_enabled    = configMap.getBool("sdm", "rescale_dt_enabled", false);
-  
+
   if (ssprk2_enabled) {
 
     if (dim == 2) {
@@ -489,7 +489,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       U_RK1 = DataArray("U_RK1",isize, jsize, ksize, nb_dof);
       total_mem_size += isize*jsize*ksize*nb_dof * sizeof(real_t);
     }
-    
+
   } else if (ssprk3_enabled) {
 
     if (dim == 2) {
@@ -501,7 +501,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       U_RK2 = DataArray("U_RK2",isize, jsize, ksize, nb_dof);
       total_mem_size += isize*jsize*ksize*nb_dof * 2 * sizeof(real_t);
     }
-    
+
   } else if (ssprk54_enabled) {
 
     if (dim == 2) {
@@ -517,7 +517,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       U_RK4 = DataArray("U_RK4",isize, jsize, ksize, nb_dof);
       total_mem_size += isize*jsize*ksize*nb_dof * 4 * sizeof(real_t);
     }
-    
+
   }
 
   /*
@@ -534,7 +534,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     // at solution points
     if (thermal_diffusivity_terms_enabled)
       nb_components += nb_solutions_pts;
-    
+
     // memory allocation to store velocity gradients at solution points
     if (dim==2) {
       Ugradx_v   = DataArray("Ugradx_v"    ,isize,jsize,nb_components);
@@ -558,9 +558,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       FUgrad = DataArray("FUgrad", isize, jsize,        nb_flux_pts*nb_components_FUgrad);
     else
       FUgrad = DataArray("FUgrad", isize, jsize, ksize, nb_flux_pts*nb_components_FUgrad);
-    
+
   }
-  
+
   /*
    * limiter
    */
@@ -570,7 +570,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    * Ugradx / Ugrady / Ugradz memory allocation
    */
   if (limiter_enabled) {
-    
+
     // memory allocation to store cell-averaged gradient components
     if (dim==2) {
       Ugradx   = DataArray("Ugradx"    ,isize,jsize,params.nbvar);
@@ -584,9 +584,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     }
 
   }
-  
+
   limiter_characteristics_enabled = configMap.getBool("sdm", "limiter_characteristics_enabled", false);
-    
+
   /*
    * Data arrary Uaverage is used in both positivity preserving and
    * limiter
@@ -603,9 +603,9 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
       Uaverage = DataArray("Uaverage",isize,jsize,ksize,params.nbvar);
       total_mem_size += isize*jsize*ksize*params.nbvar * 1 * sizeof(real_t);
     }
-    
+
   }
-  
+
   /*
    * initialize hydro array at t=0
    */
@@ -627,7 +627,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
 
   } else if ( !m_problem_name.compare("kelvin-helmholtz") or
    	      !m_problem_name.compare("kelvin_helmholtz")) {
-    
+
     init_kelvin_helmholtz(U);
 
   } else if ( !m_problem_name.compare("gresho-vortex") or
@@ -636,21 +636,21 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     init_gresho_vortex(U);
 
   } else if ( !m_problem_name.compare("wedge") ) {
-    
+
     init_wedge(U);
-    
+
   } else if ( !m_problem_name.compare("jet") ) {
-    
+
     init_jet(U);
-    
+
   } else if ( !m_problem_name.compare("isentropic_vortex") ) {
 
     init_isentropic_vortex(U);
-    
+
   } else if ( !m_problem_name.compare("shu_osher") ) {
 
     init_shu_osher(U);
-    
+
   } else {
 
     std::cout << "Problem : " << m_problem_name
@@ -667,7 +667,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
    */
 #ifdef USE_MPI
   const int gw = params.ghostWidth;
-    
+
   if (params.dimType == TWO_D) {
 
     Kokkos::resize(borderBufSend_xmin_2d,    gw, jsize, nb_dof);
@@ -691,7 +691,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     Kokkos::resize(borderBufSend_ymax_3d, isize,    gw, ksize, nb_dof);
     Kokkos::resize(borderBufSend_zmin_3d, isize, jsize,    gw, nb_dof);
     Kokkos::resize(borderBufSend_zmax_3d, isize, jsize,    gw, nb_dof);
-    
+
     Kokkos::resize(borderBufRecv_xmin_3d,    gw, jsize, ksize, nb_dof);
     Kokkos::resize(borderBufRecv_xmax_3d,    gw, jsize, ksize, nb_dof);
     Kokkos::resize(borderBufRecv_ymin_3d, isize,    gw, ksize, nb_dof);
@@ -702,7 +702,7 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     total_mem_size += gw    * jsize * ksize * nb_dof * 4 * sizeof(real_t);
     total_mem_size += isize * gw    * ksize * nb_dof * 4 * sizeof(real_t);
     total_mem_size += isize * jsize * gw    * nb_dof * 4 * sizeof(real_t);
-    
+
   }
 #endif // USE_MPI
 
@@ -722,20 +722,20 @@ SolverHydroSDM<dim,N>::SolverHydroSDM(HydroParams& params,
     std::cout << "SSPRK3        : " << ssprk3_enabled << "\n";
     std::cout << "SSPRK54       : " << ssprk54_enabled << "\n";
     std::cout << "##########################" << "\n";
-    
+
     // print parameters on screen
     params.print();
     std::cout << "##########################" << "\n";
-    std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n"; 
+    std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n";
     std::cout << "##########################" << "\n";
   }
-  
+
   // initialize time step
   compute_dt();
 
   // initialize boundaries
   make_boundaries(U);
-  
+
 } // SolverHydroSDM::SolverHydroSDM
 
 // =======================================================
@@ -760,7 +760,7 @@ std::string SolverHydroSDM<dim,N>::get_name() const
       << dim << "," << N << ">";
 
   return buf.str();
-  
+
 } // SolverHydroSDM<dim,N>::get_name
 
 // =======================================================
@@ -768,14 +768,14 @@ std::string SolverHydroSDM<dim,N>::get_name() const
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_io()
 {
-  
+
   // install a new IO_ReadWrite sdm-specific
   m_io_reader_writer =
     std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(params,
 							  configMap,
 							  m_variables_names,
 							  sdm_geom);
-  
+
 } // SolverHydroSDM<dim,N>::init_io
 
 // =======================================================
@@ -787,7 +787,7 @@ void SolverHydroSDM<dim,N>::init_sdm_geometry()
   // TODO
   sdm_geom.init(0);
   sdm_geom.init_lagrange_1d();
-  
+
 } // SolverHydroSDM<dim,N>::init_sdm_geometry
 
 // =======================================================
@@ -809,23 +809,23 @@ double SolverHydroSDM<dim,N>::compute_dt_local()
   real_t dt;
   real_t invDt = ZERO_F;
   DataArray Udata;
-  
+
   Udata = U;
-  
+
   using ComputeDtFunctor =
     typename std::conditional<dim==2,
   			      ComputeDt_Functor_2d<N>,
   			      ComputeDt_Functor_3d<N>>::type;
-  
+
   // call device functor
   invDt = ComputeDtFunctor::apply(params, sdm_geom, euler, Udata);
-    
+
   dt = params.settings.cfl/invDt;
 
   // rescale dt to match the space order N+1
   if (rescale_dt_enabled and N >= 2 and (ssprk3_enabled or ssprk54_enabled))
     dt = pow(dt, (N+1.0)/3.0);
-  
+
   return dt;
 
 } // SolverHydroSDM::compute_dt_local
@@ -846,26 +846,26 @@ void SolverHydroSDM<dim,N>::next_iteration_impl()
       printf("time   step=%7d (dt=% 10.8g t=% 10.8f)\n",m_iteration,m_dt, m_t);
     }
   }
-  
+
   // output
   if (params.enableOutput) {
     if ( should_save_solution() ) {
-      
+
       printf("Output step=%7d (dt=% 10.8g t=% 10.8f)\n",m_iteration,m_dt, m_t);
-      
+
       save_solution();
-      
+
     } // end output
   } // end enable output
-  
+
   // compute new dt
   timers[TIMER_DT]->start();
   compute_dt();
   timers[TIMER_DT]->stop();
-  
+
   // perform one step integration
   time_integration(m_dt);
-  
+
 } // SolverHydroSDM::next_iteration_impl
 
 // =======================================================
@@ -876,9 +876,9 @@ void SolverHydroSDM<dim,N>::next_iteration_impl()
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::time_integration(real_t dt)
 {
-  
+
   time_integration_impl(U , Uaux, dt);
-  
+
 } // SolverHydroSDM::time_integration
 
 // =======================================================
@@ -887,39 +887,39 @@ void SolverHydroSDM<dim,N>::time_integration(real_t dt)
 // Actual CPU computation of SDM scheme
 // ///////////////////////////////////////////
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_integration_impl(DataArray Udata, 
+void SolverHydroSDM<dim,N>::time_integration_impl(DataArray Udata,
 						  DataArray Udata_fdiv,
 						  real_t dt)
 {
-  
+
   // fill ghost cell in Udata
   timers[TIMER_BOUNDARIES]->start();
   make_boundaries(Udata);
   timers[TIMER_BOUNDARIES]->stop();
-      
+
   // start main computation
   timers[TIMER_NUM_SCHEME]->start();
 
   if (ssprk2_enabled) {
-    
+
     time_int_ssprk2(Udata, Udata_fdiv, dt);
 
   } else if (ssprk3_enabled) {
-    
+
     time_int_ssprk3(Udata, Udata_fdiv, dt);
-    
+
   } else if (ssprk54_enabled) {
-    
+
     time_int_ssprk54(Udata, Udata_fdiv, dt);
-    
+
   } else {
-    
+
     time_int_forward_euler(Udata, Udata_fdiv, dt);
-    
+
   }
-  
+
   timers[TIMER_NUM_SCHEME]->stop();
-  
+
 } // SolverHydroSDM::time_integration_impl
 
 // =======================================================
@@ -929,7 +929,7 @@ void SolverHydroSDM<dim,N>::apply_pre_step_computation(DataArray Udata)
 {
 
   // if limiter or positivity preserving are enabled,
-  // we first compute Uaverage (cell volume averaged conservative variables) 
+  // we first compute Uaverage (cell volume averaged conservative variables)
   if (limiter_enabled or positivity_enabled) {
 
     // compute Uaverage
@@ -937,7 +937,7 @@ void SolverHydroSDM<dim,N>::apply_pre_step_computation(DataArray Udata)
                                                          sdm_geom,
                                                          Udata,
                                                          Uaverage);
-    
+
   } // end limiter_enabled or positivity_enabled true
 
 } // SolverHydroSDM<dim,N>::apply_pre_step_computation
@@ -954,7 +954,7 @@ void SolverHydroSDM<dim,N>::apply_positivity_preserving(DataArray Udata)
                                               Udata,
                                               Uaverage);
   }
-  
+
 } // SolverHydroSDM<dim,N>::apply_positivity_preserving
 
 // =======================================================
@@ -962,7 +962,7 @@ void SolverHydroSDM<dim,N>::apply_positivity_preserving(DataArray Udata)
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
 {
-  
+
   // if limiter is enabled we need to access cell neighborhood for min/max
   // cell average values
   // if (limiter_enabled) {
@@ -974,7 +974,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
   //                                                       Umax,
   //                                                       0);
   // }
-  
+
   if (limiter_enabled) {
 
     // we assume here that Uaverage has been computed in routine apply_pre_step_computation
@@ -988,7 +988,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
                                               sdm_geom,
                                               Udata,
                                               Ugrady);
-    
+
     if (dim == 3) {
       Average_Gradient_Functor<dim,N,IZ>::apply(params,
                                                 sdm_geom,
@@ -1001,7 +1001,7 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
     //const real_t dx = this->params.dx;
     //const real_t Mdx2 = M_TVB * dx * dx;
     const real_t Mdx2 = M_TVB;
-    
+
     Apply_limiter_Functor<dim,N>::apply(params,
                                         sdm_geom,
                                         euler,
@@ -1011,44 +1011,44 @@ void SolverHydroSDM<dim,N>::apply_limiting(DataArray Udata)
                                         Ugrady,
                                         Ugradz,
                                         Mdx2);
-    
+
   } // end limiter_enabled
-  
+
 } // SolverHydroSDM<dim,N>::apply_limiting
 
 // =======================================================
 // =======================================================
 template<int dim, int N>
 template<int dir>
-void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray Udata, 
+void SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir(DataArray Udata,
 								      DataArray Udata_fdiv,
 								      real_t dt)
 {
 
   // erase fluxes
   erase(Fluxes, true);
-  
+
   if (dim==2 and dir==IZ)
     return;
-  
+
   // 1. interpolate conservative variables from solution points to flux points
   Interpolate_At_FluxPoints_Functor<dim,N,dir>::apply(params,
                                                       sdm_geom,
                                                       Udata,
                                                       Fluxes);
-  
+
   // 2. inplace computation of fluxes along direction <dir> at flux points
   ComputeFluxAtFluxPoints_Functor<dim,N,dir>::apply(params,
                                                     sdm_geom,
                                                     euler,
                                                     Fluxes);
-  
+
   // 3. compute derivative and accumulate in Udata_fdiv
   Interpolate_At_SolutionPoints_Functor<dim,N,dir>::apply(params,
                                                           sdm_geom,
                                                           Fluxes,
                                                           Udata_fdiv);
-  
+
 } // SolverHydroSDM<dim,N>::compute_invicid_fluxes_divergence_per_dir
 
 // =======================================================
@@ -1066,7 +1066,7 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
   // here we assume velocity gradients have already been computed
   // i.e. calls to compute_velocity_gradients have been made, that is Ugradx_v, Ugrady_v, Ugradz_v
   // are populated
-  
+
   // 1. interpolate all velocity components from solution to
   //    flux points in the given direction
   //    this will fill components IGU, IGV, IGW of FUgrad
@@ -1074,26 +1074,26 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
                                                             sdm_geom,
                                                             Udata,
                                                             FUgrad);
-  
+
   // 2. average velocity at cell borders
   Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
                                                               sdm_geom,
                                                               FUgrad);
-  
+
   // 3.1. interpolate velocity gradients-x from solution points to flux points
   Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IX>
     ::apply(params, sdm_geom, Ugradx_v, FUgrad);
-  
+
   // 3.2. interpolate velocity gradients-y from solution points to flux points
   Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IY>
     ::apply(params, sdm_geom, Ugrady_v, FUgrad);
-  
+
   // 3.3. interpolate velocity gradients-z from solution points to flux points
   if (dim==3) {
     Interpolate_velocity_gradients_Sol2Flux_Functor<dim,N,dir,IZ>
       ::apply(params, sdm_geom, Ugradz_v, FUgrad);
   }
-  
+
   // 4. average velocity gradients at cell border
   {
     int nvar_to_average = dim*dim;
@@ -1101,43 +1101,43 @@ void SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir(DataArray 
     if (dim==2) {
       var_index[0] = (int) VarIndexGrad2d::IGUX;
       var_index[1] = (int) VarIndexGrad2d::IGVX;
-      
+
       var_index[2] = (int) VarIndexGrad2d::IGUY;
       var_index[3] = (int) VarIndexGrad2d::IGVY;
     } else {
       var_index[0] = (int) VarIndexGrad3d::IGUX;
       var_index[1] = (int) VarIndexGrad3d::IGVX;
       var_index[2] = (int) VarIndexGrad3d::IGWX;
-      
+
       var_index[3] = (int) VarIndexGrad3d::IGUY;
       var_index[4] = (int) VarIndexGrad3d::IGVY;
       var_index[5] = (int) VarIndexGrad3d::IGWY;
-      
+
       var_index[6] = (int) VarIndexGrad3d::IGUZ;
       var_index[7] = (int) VarIndexGrad3d::IGVZ;
       var_index[8] = (int) VarIndexGrad3d::IGWZ;
     }
-    
+
     Average_component_at_cell_borders_Functor<dim,N,dir> functor(params,
-                                                                 sdm_geom, 
+                                                                 sdm_geom,
                                                                  FUgrad,
 								 nvar_to_average,
                                                                  var_index);
     Kokkos::parallel_for(nbCells, functor);
   }
-  
+
   // 5.1 Now one can compute viscous fluxes at flux points
   {
     ComputeViscousFluxAtFluxPoints_Functor<dim,N,dir> functor(params, sdm_geom, euler, FUgrad, Fluxes);
     Kokkos::parallel_for(nbCells, functor);
   }
-  
+
   // 5.2 Finally compute derivative and accumulate (with negative sign) in Udata_fdiv
   {
     Interpolate_At_SolutionPoints_Functor<dim,N,dir,INTERPOLATE_DERIVATIVE_NEGATIVE> functor(params, sdm_geom, FUgrad, Udata_fdiv);
     Kokkos::parallel_for(nbCells, functor);
   }
-  
+
 } // SolverHydroSDM<dim,N>::compute_viscous_fluxes_divergence_per_dir
 
 // =======================================================
@@ -1149,14 +1149,14 @@ void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArra
 
   if (dim==2 and dir==IZ)
     return;
-  
+
   // Please note that Fluxes is used as an intermediate data array,
   // containing data at flux points
-  
+
   //
   // VELOCITY GRADIENTS in direction <dir>
   //
-  
+
   // 1. interpolate velocity from solution points to flux points
   Interpolate_velocities_Sol2Flux_Functor<dim,N,dir>::apply(params,
                                                             sdm_geom,
@@ -1167,14 +1167,14 @@ void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArra
   Average_component_at_cell_borders_Functor<dim,N,dir>::apply(params,
                                                               sdm_geom,
                                                               Fluxes);
-  
+
   // 3. compute derivative along direction <dir> at solution points
   //    using derivative of Lagrange polynomial
   Interp_grad_velocity_at_SolutionPoints_Functor<dim,N,dir>
     ::apply(params, sdm_geom, Fluxes, Ugrad);
-  
+
 } // SolverHydroSDM<dim,N>::compute_velocity_gradients
-  
+
 // =======================================================
 // =======================================================
 // //////////////////////////////////////////////////////////
@@ -1186,7 +1186,7 @@ void SolverHydroSDM<dim,N>::compute_velocity_gradients(DataArray Udata, DataArra
 // the actual update will be U_{n+1}=U_{n}-dt*Udata_fdiv
 // //////////////////////////////////////////////////////////
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata, 
+void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 						      DataArray Udata_fdiv,
 						      real_t dt)
 {
@@ -1201,13 +1201,13 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 
   // erase Udata_fdiv
   erase(Udata_fdiv);
-  
+
   apply_pre_step_computation(Udata);
-  
+
   apply_limiting(Udata);
-  
+
   apply_positivity_preserving(Udata);
-  
+
   compute_invicid_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
   compute_invicid_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
   compute_invicid_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
@@ -1216,12 +1216,12 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
     compute_velocity_gradients<IX>(Udata, Ugradx_v); // results are stored in Ugradx_v
     compute_velocity_gradients<IY>(Udata, Ugrady_v); // results are stored in Ugrady_v
     compute_velocity_gradients<IZ>(Udata, Ugradz_v); // results are stored in Ugradz_v
-    
+
     compute_viscous_fluxes_divergence_per_dir<IX>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IY>(Udata, Udata_fdiv, dt);
     compute_viscous_fluxes_divergence_per_dir<IZ>(Udata, Udata_fdiv, dt);
   }
-  
+
 } // SolverHydroSDM<dim,N>::compute_fluxes_divergence
 
 // =======================================================
@@ -1230,21 +1230,21 @@ void SolverHydroSDM<dim,N>::compute_fluxes_divergence(DataArray Udata,
 // Forward Euler time integration
 // ///////////////////////////////////////////
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata, 
+void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata,
 						   DataArray Udata_fdiv,
 						   real_t dt)
 {
-    
+
   // evaluate flux divergence
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
-  
+
   // perform actual time update in place in Udata: U_{n+1} = U_{n} - dt * Udata_fdiv
-  // translated into Udata = 1.0*Udata + 0.0*Udata - dt * Udata_fdiv 
+  // translated into Udata = 1.0*Udata + 0.0*Udata - dt * Udata_fdiv
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
     SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, Udata, Udata_fdiv, coefs, dt);
   }
-  
+
 } // SolverHydroSDM::time_int_forward_euler
 
 // =======================================================
@@ -1269,8 +1269,8 @@ void SolverHydroSDM<dim,N>::time_int_forward_euler(DataArray Udata,
  * where Dt_FE is the forward Euler Dt
  */
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata, 
-					    DataArray Udata_fdiv, 
+void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
+					    DataArray Udata_fdiv,
 					    real_t dt)
 {
 
@@ -1278,7 +1278,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
   // first step : U_RK1 = U_n + dt * fluxes(U_n)
   // ==============================================
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
-    
+
   // perform actual time update : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
@@ -1293,10 +1293,10 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
 
   {
-    coefs_t coefs= {0.5, 0.5, -0.5};    
+    coefs_t coefs= {0.5, 0.5, -0.5};
     SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, Udata, U_RK1, Udata_fdiv, coefs, dt);
   }
-  
+
 } // SolverHydroSDM::time_int_ssprk2
 
 // =======================================================
@@ -1323,8 +1323,8 @@ void SolverHydroSDM<dim,N>::time_int_ssprk2(DataArray Udata,
  * where Dt_FE is the forward Euler Dt
  */
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata, 
-					    DataArray Udata_fdiv, 
+void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
+					    DataArray Udata_fdiv,
 					    real_t dt)
 {
 
@@ -1332,8 +1332,8 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
   // first stage : U_RK1 = U_n - dt * div_fluxes(U_n)
   // ===============================================
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
-  
-  // perform : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv 
+
+  // perform : U_RK1 = 1.0 * U_{n} + 0.0 * U_{n} - dt * Udata_fdiv
   {
     coefs_t coefs = {1.0, 0.0, -1.0};
     SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK1, Udata, Udata, Udata_fdiv, coefs, dt);
@@ -1349,7 +1349,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
     coefs_t coefs = {0.75, 0.25, -0.25};
     SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK2, Udata, U_RK1, Udata_fdiv, coefs, dt);
   }
-  
+
   // ================================================================
   // third stage :
   // U_{n+1} = 1/3 * U_n + 2/3 * U_RK2 - 2/3 * dt * div_fluxes(U_RK2)
@@ -1381,7 +1381,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
  *
  * see also article "On High Order Strong Stability Preserving Runge–Kutta and Multi Step Time Discretizations", S. Gottlieb, Journal of Scientific Computing, 25(1-2):105-128 · October 2005:
  * https://www.researchgate.net/publication/220395406_On_High_Order_Strong_Stability_Preserving_Runge-Kutta_and_Multi_Step_Time_Discretizations
- * 
+ *
  * Additional note:
  * It has been proved that no 4th order RK, 4 stages SSP-RK scheme
  * exists with positive coefficients (Goettlib and Shu, Total variation
@@ -1390,8 +1390,8 @@ void SolverHydroSDM<dim,N>::time_int_ssprk3(DataArray Udata,
  * requires a flux operator backward in time stable.
  */
 template<int dim, int N>
-void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata, 
-					     DataArray Udata_fdiv, 
+void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
+					     DataArray Udata_fdiv,
 					     real_t dt)
 {
 
@@ -1407,15 +1407,15 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
       {0.517231671970585, 0.096059710526147, -0.063692468666290}, /*stage51*/
       {1.0,               0.386708617503269, -0.226007483236906}  /*stage52*/
     };
-  
+
   // ===============================================
   // stage 1:
   // perform : U_RK1 = rk_54[0][0] * U_{n} +
   //                   rk_54[0][1] * U_{n} +
-  //                   rk_54[0][2] * dt * Udata_fdiv 
+  //                   rk_54[0][2] * dt * Udata_fdiv
   // ===============================================
   compute_fluxes_divergence(Udata, Udata_fdiv, dt);
-  
+
   {
     const coefs_t coefs = {rk54_coef[0][0],
 			   rk54_coef[0][1],
@@ -1427,11 +1427,11 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
   // stage 2:
   // perform : U_RK2 = rk_54[1][0] * U_{n} +
   //                   rk_54[1][1] * U_RK1 +
-  //                   rk_54[1][2] * dt * Udata_fdiv 
+  //                   rk_54[1][2] * dt * Udata_fdiv
   // ===============================================
   make_boundaries(U_RK1);
   compute_fluxes_divergence(U_RK1, Udata_fdiv, dt);
-  
+
   {
     const coefs_t coefs = {rk54_coef[1][0],
 			   rk54_coef[1][1],
@@ -1443,27 +1443,27 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
   // stage 3:
   // perform : U_RK3 = rk_54[2][0] * U_{n} +
   //                   rk_54[2][1] * U_RK2 +
-  //                   rk_54[2][2] * dt * Udata_fdiv 
+  //                   rk_54[2][2] * dt * Udata_fdiv
   // ===============================================
   make_boundaries(U_RK2);
   compute_fluxes_divergence(U_RK2, Udata_fdiv, dt);
-  
+
   {
     const coefs_t coefs = {rk54_coef[2][0],
 			   rk54_coef[2][1],
 			   rk54_coef[2][2]};
     SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, U_RK3, Udata, U_RK2, Udata_fdiv, coefs, dt);
   }
-  
+
   // ===============================================
   // stage 4:
   // perform : U_RK4 = rk_54[3][0] * U_{n} +
   //                   rk_54[3][1] * U_RK3 +
-  //                   rk_54[3][2] * dt * Udata_fdiv 
+  //                   rk_54[3][2] * dt * Udata_fdiv
   // ===============================================
   make_boundaries(U_RK3);
   compute_fluxes_divergence(U_RK3, Udata_fdiv, dt);
-  
+
   {
     const coefs_t coefs = {rk54_coef[3][0],
 			   rk54_coef[3][1],
@@ -1481,7 +1481,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
     SDM_Update_RK_Functor<dim,N>::apply(params, sdm_geom, Udata, U_RK2, U_RK3, Udata_fdiv, coefs, dt);
   }
 
-  
+
   // ===============================================
   // stage 5.2:
   // ===============================================
@@ -1495,7 +1495,7 @@ void SolverHydroSDM<dim,N>::time_int_ssprk54(DataArray Udata,
   }
 
   //std::cout << "SSP-RK54 is currently partially implemented\n";
-  
+
 } // SolverHydroSDM::time_int_ssprk54
 
 // =======================================================
@@ -1505,7 +1505,7 @@ void SolverHydroSDM<dim,N>::erase(DataArray data, bool isFlux)
 {
 
   SDM_Erase_Functor<dim,N>::apply(params, sdm_geom, data, isFlux);
-  
+
 } // SolverHydroSDM<dim,N>::erase
 
 // =======================================================
@@ -1517,7 +1517,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
 {
 
   UNUSED(mhd_enabled);
-  
+
   const int ghostWidth=params.ghostWidth;
   int max_size = std::max(params.isize,params.jsize);
   int nbIter = ghostWidth * max_size;
@@ -1528,7 +1528,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm(DataArray   Udata,
   }
 
   MakeBoundariesFunctor_SDM<dim,N,faceId>::apply(params, sdm_geom, Udata, nbIter);
-   
+
 } // SolverHydroSDM<dim,N>::make_boundary_sdm
 
 // =======================================================
@@ -1549,7 +1549,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_wedge(DataArray   Udata,
   }
 
   MakeBoundariesFunctor_SDM_Wedge<dim,N,faceId>::apply(params, sdm_geom, wparams, Udata, nbIter);
-    
+
 } // SolverHydroSDM<dim,N>::make_boundary_sdm_wedge
 
 // =======================================================
@@ -1570,7 +1570,7 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_jet(DataArray   Udata,
   }
 
   MakeBoundariesFunctor_SDM_Jet<dim,N,faceId>::apply(params, sdm_geom, jparams, Udata, nbIter);
-  
+
 } // SolverHydroSDM<dim,N>::make_boundary_sdm_jet
 
 // =======================================================
@@ -1582,11 +1582,11 @@ void SolverHydroSDM<dim,N>::make_boundary_sdm_jet(DataArray   Udata,
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::make_boundaries(DataArray Udata)
 {
-  
+
   bool mhd_enabled = false;
 
 #ifdef USE_MPI
-  
+
   make_boundaries_sdm_mpi(Udata, mhd_enabled);
 
 #else
@@ -1594,7 +1594,7 @@ void SolverHydroSDM<dim,N>::make_boundaries(DataArray Udata)
   make_boundaries_sdm_serial(Udata, mhd_enabled);
 
 #endif // USE_MPI
-  
+
 } // SolverHydroSDM::make_boundaries
 
 // =======================================================
@@ -1612,7 +1612,7 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
   if (dim==2 and !m_problem_name.compare("wedge")) {
 
     WedgeParams wparams(configMap, m_t);
-    
+
     make_boundary_sdm_wedge<FACE_XMIN>(Udata, wparams);
     make_boundary_sdm_wedge<FACE_XMAX>(Udata, wparams);
     make_boundary_sdm_wedge<FACE_YMIN>(Udata, wparams);
@@ -1621,7 +1621,7 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
   } else if (!m_problem_name.compare("jet")) {
 
     JetParams jparams(configMap);
-    
+
     make_boundary_sdm_jet<FACE_XMIN>(Udata, jparams);
     make_boundary_sdm_jet<FACE_XMAX>(Udata, jparams);
     make_boundary_sdm_jet<FACE_YMIN>(Udata, jparams);
@@ -1631,27 +1631,27 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_serial(DataArray Udata,
       make_boundary_sdm_jet<FACE_ZMIN>(Udata, jparams);
       make_boundary_sdm_jet<FACE_ZMAX>(Udata, jparams);
     }
-    
+
   } else {
 
     /*
      * General case
      */
-    
+
     make_boundary_sdm<FACE_XMIN>(Udata, mhd_enabled);
     make_boundary_sdm<FACE_XMAX>(Udata, mhd_enabled);
     make_boundary_sdm<FACE_YMIN>(Udata, mhd_enabled);
     make_boundary_sdm<FACE_YMAX>(Udata, mhd_enabled);
-    
+
     if (dim==3) {
-      
+
       make_boundary_sdm<FACE_ZMIN>(Udata, mhd_enabled);
       make_boundary_sdm<FACE_ZMAX>(Udata, mhd_enabled);
-      
+
     }
 
   }
-    
+
 } // SolverHydroSDM<dim,N>::make_boundaries_sdm_serial
 
 #ifdef USE_MPI
@@ -1663,7 +1663,7 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
 {
 
   using namespace hydroSimu;
-  
+
   // for each direction:
   // 1. copy boundary to MPI buffer
   // 2. send/recv buffer
@@ -1676,45 +1676,45 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
     // ======
     copy_boundaries(Udata,XDIR);
     transfert_boundaries_2d(XDIR);
-    
+
     if (params.neighborsBC[X_MIN] == BC_COPY ||
 	params.neighborsBC[X_MIN] == BC_PERIODIC) {
       copy_boundaries_back(Udata, XMIN);
     } else {
       make_boundary_sdm<FACE_XMIN>(Udata, mhd_enabled);
     }
-    
+
     if (params.neighborsBC[X_MAX] == BC_COPY ||
 	params.neighborsBC[X_MAX] == BC_PERIODIC) {
       copy_boundaries_back(Udata, XMAX);
     } else {
       make_boundary_sdm<FACE_XMAX>(Udata, mhd_enabled);
     }
-    
+
     params.communicator->synchronize();
-    
+
     // ======
     // YDIR
     // ======
     copy_boundaries(Udata,YDIR);
     transfert_boundaries_2d(YDIR);
-    
+
     if (params.neighborsBC[Y_MIN] == BC_COPY ||
 	params.neighborsBC[Y_MIN] == BC_PERIODIC) {
       copy_boundaries_back(Udata, YMIN);
     } else {
       make_boundary_sdm<FACE_YMIN>(Udata, mhd_enabled);
     }
-    
+
     if (params.neighborsBC[Y_MAX] == BC_COPY ||
 	params.neighborsBC[Y_MAX] == BC_PERIODIC) {
       copy_boundaries_back(Udata, YMAX);
     } else {
       make_boundary_sdm<FACE_YMAX>(Udata, mhd_enabled);
     }
-    
+
     params.communicator->synchronize();
-  
+
   } else {
 
     // ======
@@ -1722,69 +1722,69 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
     // ======
     copy_boundaries(Udata,XDIR);
     transfert_boundaries_3d(XDIR);
-    
+
     if (params.neighborsBC[X_MIN] == BC_COPY ||
 	params.neighborsBC[X_MIN] == BC_PERIODIC) {
       copy_boundaries_back(Udata, XMIN);
     } else {
       make_boundary_sdm<FACE_XMIN>(Udata, mhd_enabled);
     }
-    
+
     if (params.neighborsBC[X_MAX] == BC_COPY ||
 	params.neighborsBC[X_MAX] == BC_PERIODIC) {
       copy_boundaries_back(Udata, XMAX);
     } else {
       make_boundary_sdm<FACE_XMAX>(Udata, mhd_enabled);
     }
-    
+
     params.communicator->synchronize();
-    
+
     // ======
     // YDIR
     // ======
     copy_boundaries(Udata,YDIR);
     transfert_boundaries_3d(YDIR);
-    
+
     if (params.neighborsBC[Y_MIN] == BC_COPY ||
 	params.neighborsBC[Y_MIN] == BC_PERIODIC) {
       copy_boundaries_back(Udata, YMIN);
     } else {
       make_boundary_sdm<FACE_YMIN>(Udata, mhd_enabled);
     }
-    
+
     if (params.neighborsBC[Y_MAX] == BC_COPY ||
 	params.neighborsBC[Y_MAX] == BC_PERIODIC) {
       copy_boundaries_back(Udata, YMAX);
     } else {
       make_boundary_sdm<FACE_YMAX>(Udata, mhd_enabled);
     }
-    
+
     params.communicator->synchronize();
-    
+
     // ======
     // ZDIR
     // ======
     copy_boundaries(Udata,ZDIR);
     transfert_boundaries_3d(ZDIR);
-    
+
     if (params.neighborsBC[Z_MIN] == BC_COPY ||
 	params.neighborsBC[Z_MIN] == BC_PERIODIC) {
       copy_boundaries_back(Udata, ZMIN);
     } else {
       make_boundary_sdm<FACE_ZMIN>(Udata, mhd_enabled);
     }
-    
+
     if (params.neighborsBC[Z_MAX] == BC_COPY ||
 	params.neighborsBC[Z_MAX] == BC_PERIODIC) {
       copy_boundaries_back(Udata, ZMAX);
     } else {
       make_boundary_sdm<FACE_ZMAX>(Udata, mhd_enabled);
     }
-    
+
     params.communicator->synchronize();
-    
+
   } // end 3d
-  
+
 } // SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi
 #endif // USE_MPI
 
@@ -1794,7 +1794,7 @@ void SolverHydroSDM<dim,N>::make_boundaries_sdm_mpi(DataArray Udata,
  * Sod Test-case, shock tube.
  *
  * see https://en.wikipedia.org/wiki/Sod_shock_tube
- * see plotting script 
+ * see plotting script
  * https://github.com/pkestene/sod-shocktube/blob/test_ppkMHD_sdm/exactRiemann.py for exact solution
  */
 template<int dim, int N>
@@ -1831,7 +1831,7 @@ void SolverHydroSDM<dim,N>::init_blast(DataArray Udata)
 {
 
   BlastParams blastParams = BlastParams(configMap);
-  
+
   InitBlastFunctor<dim,N>::apply(params, sdm_geom, blastParams, Udata);
 
 } // SolverHydroSDM::init_blast
@@ -1852,27 +1852,27 @@ void SolverHydroSDM<dim,N>::init_four_quadrant(DataArray Udata)
   int configNumber = configMap.getInteger("riemann2d","config_number",0);
   real_t xt = configMap.getFloat("riemann2d","x",0.8);
   real_t yt = configMap.getFloat("riemann2d","y",0.8);
-    
+
   HydroState2d U0, U1, U2, U3;
   ppkMHD::getRiemannConfig2d(configNumber, U0, U1, U2, U3);
-  
+
   ppkMHD::primToCons_2D(U0, params.settings.gamma0);
   ppkMHD::primToCons_2D(U1, params.settings.gamma0);
   ppkMHD::primToCons_2D(U2, params.settings.gamma0);
   ppkMHD::primToCons_2D(U3, params.settings.gamma0);
-  
+
   InitFourQuadrantFunctor<dim,N>::apply(params, sdm_geom,
                                         Udata,
                                         U0, U1, U2, U3,
                                         xt, yt);
-    
+
 } // SolverHydroSDM::init_four_quadrant
 
 // =======================================================
 // =======================================================
 /**
  * Hydrodynamical Kelvin-Helmholtz instability test.
- * 
+ *
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
@@ -1891,14 +1891,14 @@ void SolverHydroSDM<dim,N>::init_kelvin_helmholtz(DataArray Udata)
 // =======================================================
 /**
  * Hydrodynamical Gresho Vortex test.
- * 
+ *
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_gresho_vortex(DataArray Udata)
 {
-  
+
   GreshoParams gvParams = GreshoParams(configMap);
-  
+
   InitGreshoVortexFunctor<dim,N>::apply(params,
                                         sdm_geom,
                                         gvParams,
@@ -1909,33 +1909,33 @@ void SolverHydroSDM<dim,N>::init_gresho_vortex(DataArray Udata)
 // =======================================================
 // =======================================================
 /**
- * 
- * 
+ *
+ *
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_wedge(DataArray Udata)
 {
 
   WedgeParams wparams(configMap, 0.0);
-  
+
   InitWedgeFunctor<dim,N>::apply(params, sdm_geom, wparams, Udata);
-  
+
 } // init_wedge
 
 // =======================================================
 // =======================================================
 /**
- * 
- * 
+ *
+ *
  */
 template<int dim, int N>
 void SolverHydroSDM<dim,N>::init_jet(DataArray Udata)
 {
-  
+
   JetParams jparams(configMap);
-  
+
   InitJetFunctor<dim,N>::apply(params, sdm_geom, jparams, Udata);
-  
+
 } // init_jet
 
 // =======================================================
@@ -1951,7 +1951,7 @@ void SolverHydroSDM<dim,N>::init_isentropic_vortex(DataArray Udata)
 
   IsentropicVortexParams iparams(configMap);
 
-  InitIsentropicVortexFunctor<dim,N>::apply(params, sdm_geom, iparams, Udata);  
+  InitIsentropicVortexFunctor<dim,N>::apply(params, sdm_geom, iparams, Udata);
 } // init_isentropic_vortex
 
 // =======================================================
@@ -1979,9 +1979,9 @@ void SolverHydroSDM<dim,N>::save_solution_impl()
   timers[TIMER_IO]->start();
 
   save_data(U,  Uhost, m_times_saved, m_t);
-  
+
   timers[TIMER_IO]->stop();
-    
+
 } // SolverHydroSDM::save_solution_impl()
 
 } // namespace sdm

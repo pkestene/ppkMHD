@@ -37,7 +37,7 @@ public:
 			   ImplodeParams iparams,
                DataArray2d Udata) :
     MHDBaseFunctor2D(params), iparams(iparams), Udata(Udata)  {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
                     ImplodeParams iparams,
@@ -55,7 +55,7 @@ public:
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
@@ -72,15 +72,15 @@ public:
     const real_t ymin = params.ymin;
     const real_t dx = params.dx;
     const real_t dy = params.dy;
-    
+
     const real_t gamma0 = params.settings.gamma0;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-    
+
     // outer parameters
     const real_t rho_out = this->iparams.rho_out;
     const real_t p_out = this->iparams.p_out;
@@ -98,16 +98,16 @@ public:
     const real_t By_in = this->iparams.By_in;
 
     const int shape = this->iparams.shape;
-    
+
     bool tmp;
     if (shape == 1)
       tmp = x+y > 0.5 && x+y < 2.5;
     else
       tmp = x+y > (xmin+xmax)/2. + ymin;
-    
+
     if (tmp) {
       Udata(i,j , ID)  = rho_out;
-      Udata(i,j , IP)  = p_out/(gamma0-1.0) + 
+      Udata(i,j , IP)  = p_out/(gamma0-1.0) +
         0.5 * rho_out * (u_out*u_out + v_out*v_out) +
         0.5 * (Bx_out*Bx_out + By_out*By_out);
       Udata(i,j , IU)  = u_out;
@@ -118,8 +118,8 @@ public:
       Udata(i,j , IBZ) = 0.0;
     } else {
       Udata(i,j , ID)  = rho_in;
-      Udata(i,j , IP)  = p_in/(gamma0-1.0) + 
-        0.5 * rho_in * (u_in*u_in + v_in*v_in) + 
+      Udata(i,j , IP)  = p_in/(gamma0-1.0) +
+        0.5 * rho_in * (u_in*u_in + v_in*v_in) +
         0.5 * (Bx_in*Bx_in + By_in*By_in);
       Udata(i,j , IU)  = u_in;
       Udata(i,j , IV)  = v_in;
@@ -128,7 +128,7 @@ public:
       Udata(i,j , IBY) = By_in;
       Udata(i,j , IBZ) = 0.0;
     }
-    
+
   } // end operator ()
 
   ImplodeParams iparams;
@@ -146,7 +146,7 @@ public:
 			 BlastParams bParams,
 			 DataArray2d Udata) :
     MHDBaseFunctor2D(params), bParams(bParams), Udata(Udata)  {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
 		    BlastParams bParams,
@@ -164,7 +164,7 @@ public:
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
@@ -181,7 +181,7 @@ public:
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
-    
+
     const real_t gamma0 = params.settings.gamma0;
 
     // blast problem parameters
@@ -193,18 +193,18 @@ public:
     const real_t blast_density_out = bParams.blast_density_out;
     const real_t blast_pressure_in = bParams.blast_pressure_in;
     const real_t blast_pressure_out= bParams.blast_pressure_out;
-  
+
 
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
-    real_t d2 = 
+    real_t d2 =
       (x-blast_center_x)*(x-blast_center_x)+
-      (y-blast_center_y)*(y-blast_center_y);    
-    
+      (y-blast_center_y)*(y-blast_center_y);
+
     if (d2 < radius2) {
       Udata(i,j , ID) = blast_density_in;
       Udata(i,j , IU) = 0.0;
@@ -230,12 +230,12 @@ public:
 	       SQR(Udata(i,j , IB)) +
 	       SQR(Udata(i,j , IC)) );
     }
-    
+
   } // end operator ()
-  
+
   BlastParams bParams;
   DataArray2d Udata;
-  
+
 }; // InitBlastFunctor2D_MHD
 
 /*************************************************/
@@ -249,13 +249,13 @@ private:
     INIT_ENERGY = 1
   };
 
-  
+
 public:
   InitOrszagTangFunctor2D(HydroParams params,
 			  OrszagTangParams otParams,
                           DataArray2d Udata) :
     MHDBaseFunctor2D(params), otParams(otParams), Udata(Udata)  {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
                     OrszagTangParams otParams,
@@ -269,7 +269,7 @@ public:
 
     functor.phase = INIT_ENERGY;
     Kokkos::parallel_for(nbCells, functor);
-    
+
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -286,11 +286,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   void init_all_var_but_energy(const int index) const
   {
-    
+
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
@@ -304,12 +304,12 @@ public:
 
     const double xmin = params.xmin;
     const double ymin = params.ymin;
-        
+
     const double dx = params.dx;
     const double dy = params.dy;
-    
+
     const real_t gamma0 = params.settings.gamma0;
-    
+
     const double TwoPi = 4.0*asin(1.0);
     const double B0    = 1.0/sqrt(2.0*TwoPi);
     const double p0    = gamma0/(2.0*TwoPi);
@@ -318,32 +318,32 @@ public:
 
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     double xPos = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     double yPos = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-    
+
     if(j < jsize  &&
        i < isize ) {
 
       // density
       Udata(i,j,ID) = d0;
-      
+
       // rho*vx
       Udata(i,j,IU)  = static_cast<real_t>(-d0*v0*sin(yPos*TwoPi));
-      
+
       // rho*vy
       Udata(i,j,IV)  = static_cast<real_t>( d0*v0*sin(xPos*TwoPi));
-      
+
       // rho*vz
       Udata(i,j,IW) =  ZERO_F;
-      
+
       // bx, by, bz
       Udata(i,j, IBX) = -B0*sin(    yPos*TwoPi);
       Udata(i,j, IBY) =  B0*sin(2.0*xPos*TwoPi);
       Udata(i,j, IBZ) =  0.0;
 
     }
-    
+
   } // init_all_var_but_energy
 
   KOKKOS_INLINE_FUNCTION
@@ -353,15 +353,15 @@ public:
     const int isize = params.isize;
     const int jsize = params.jsize;
     //const int ghostWidth = params.ghostWidth;
-    
+
     //const double xmin = params.xmin;
     //const double ymin = params.ymin;
-    
+
     //const double dx = params.dx;
     //const double dy = params.dy;
-    
+
     const real_t gamma0 = params.settings.gamma0;
-    
+
     const double TwoPi = 4.0*asin(1.0);
     //const double B0    = 1.0/sqrt(2.0*TwoPi);
     const double p0    = gamma0/(2.0*TwoPi);
@@ -370,33 +370,33 @@ public:
 
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     //double xPos = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     //double yPos = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-        
+
     if (i<isize-1 and j<jsize-1) {
       Udata(i,j,IP)  = p0 / (gamma0-1.0) +
 	0.5 * ( SQR(Udata(i,j,IU)) / Udata(i,j,ID) +
 		SQR(Udata(i,j,IV)) / Udata(i,j,ID) +
-		0.25*SQR(Udata(i,j,IBX) + Udata(i+1,j,IBX)) + 
+		0.25*SQR(Udata(i,j,IBX) + Udata(i+1,j,IBX)) +
 		0.25*SQR(Udata(i,j,IBY) + Udata(i,j+1,IBY)) );
     }
-    
+
   } // init_energy
-  
+
   OrszagTangParams otParams;
   DataArray2d Udata;
   PhaseType   phase;
-  
+
 }; // InitOrszagTangFunctor2D
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 class InitKelvinHelmholtzFunctor2D_MHD : public MHDBaseFunctor2D {
-  
+
 private:
-  
+
 public:
   InitKelvinHelmholtzFunctor2D_MHD(HydroParams params,
 				   KHParams    khParams,
@@ -405,7 +405,7 @@ public:
     khParams(khParams),
     Udata(Udata),
     rand_pool(khParams.seed) {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
 		    KHParams    khParams,
@@ -413,17 +413,17 @@ public:
 		    int         nbCells)
   {
     InitKelvinHelmholtzFunctor2D_MHD functor(params, khParams, Udata);
-    Kokkos::parallel_for(nbCells, functor);    
+    Kokkos::parallel_for(nbCells, functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
   {
-    
+
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
@@ -441,7 +441,7 @@ public:
     const real_t ymax = params.ymax;
     const real_t dx = params.dx;
     const real_t dy = params.dy;
-    
+
     const real_t gamma0 = params.settings.gamma0;
 
     const real_t d_in  = khParams.d_in;
@@ -450,36 +450,36 @@ public:
     const real_t vflow_out = khParams.vflow_out;
     const real_t ampl      = khParams.amplitude;
     const real_t pressure  = khParams.pressure;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
     // normalized coordinates in [0,1]
     //real_t xn = (x-xmin)/(xmax-xmin);
     real_t yn = (y-ymin)/(ymax-ymin);
-    
+
     if (khParams.p_rand) {
-      
+
       // get random number state
       rand_type rand_gen = rand_pool.get_state();
 
       real_t d, u, v;
-      
+
       if ( yn < 0.25 or yn > 0.75) {
-	
+
 	d = d_out;
 	u = vflow_out;
 	v = 0.0;
-	
+
       } else {
-	
+
 	d = d_in;
 	u = vflow_in;
 	v = 0.0;
-	
+
       }
 
       u += ampl * (rand_gen.drand() - 0.5);
@@ -504,7 +504,7 @@ public:
 
       // free random number
       rand_pool.free_state(rand_gen);
-      
+
     } else if (khParams.p_sine_rob) {
 
       const int    n     = khParams.mode;
@@ -517,7 +517,7 @@ public:
       const double v1 = vflow_in;
       const double v2 = vflow_out;
 
-      const double ramp = 
+      const double ramp =
 	1.0 / ( 1.0 + exp( 2*(y-y1)/delta ) ) +
 	1.0 / ( 1.0 + exp( 2*(y2-y)/delta ) );
 
@@ -528,7 +528,7 @@ public:
       const real_t bx = 0.5;
       const real_t by = 0.0;
       const real_t bz = 0.0;
-      
+
       Udata(i,j,ID) = d;
       Udata(i,j,IU) = d * u;
       Udata(i,j,IV) = d * v;
@@ -541,9 +541,9 @@ public:
 	pressure / (gamma0-1.0) +
 	0.5*d*(u*u + v*v) +
 	0.5*(bx*bx + by*by + bz*bz);
-      
+
     } else if (khParams.p_sine) {
-      
+
       const int    n     = khParams.mode;
       const real_t w0    = khParams.w0;
       //const real_t delta = khParams.delta;
@@ -557,7 +557,7 @@ public:
       const real_t bx = 0.5;
       const real_t by = 0.0;
       const real_t bz = 0.0;
-      
+
       Udata(i,j,ID) = d;
       Udata(i,j,IU) = d * u;
       Udata(i,j,IV) = d * v;
@@ -570,7 +570,7 @@ public:
 	pressure / (gamma0-1.0) +
 	0.5*d*(u*u + v*v) +
 	0.5*(bx*bx + by*by + bz*bz);
-      
+
     }
 
   } // end operator ()
@@ -592,7 +592,7 @@ public:
  * - Balsara and Spicer, 1999, JCP, 149, 270.
  * - G. Toth, "The div(B)=0 constraint in shock-capturing MHD codes",
  *   JCP, 161, 605 (2000)
- * 
+ *
  * Initial conditions are taken from Toth's paper.
  *
  */
@@ -603,7 +603,7 @@ public:
 			 RotorParams rParams,
 			 DataArray2d Udata) :
     MHDBaseFunctor2D(params), rParams(rParams), Udata(Udata)  {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
 		    RotorParams rParams,
@@ -613,15 +613,15 @@ public:
     InitRotorFunctor2D_MHD functor(params, rParams, Udata);
     Kokkos::parallel_for(nbCells, functor);
   }
-  
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
   {
-    
+
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
@@ -640,7 +640,7 @@ public:
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
-    
+
     const real_t gamma0 = params.settings.gamma0;
 
     // rotor problem parameters
@@ -655,10 +655,10 @@ public:
 
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-    
+
     real_t r = SQRT( (x-xCenter)*(x-xCenter) +
 		     (y-yCenter)*(y-yCenter) );
     real_t f_r = (r1-r)/(r1-r0);
@@ -681,18 +681,18 @@ public:
     Udata(i,j,IA) = b0; //5.0/SQRT(FourPi);
     Udata(i,j,IB) = 0.0;
     Udata(i,j,IC) = 0.0;
-    Udata(i,j,IP) = p0/(gamma0-1.0) + 
-      0.5*( Udata(i,j,IU)*Udata(i,j,IU) + 
+    Udata(i,j,IP) = p0/(gamma0-1.0) +
+      0.5*( Udata(i,j,IU)*Udata(i,j,IU) +
 	    Udata(i,j,IV)*Udata(i,j,IV) +
 	    Udata(i,j,IW)*Udata(i,j,IW) ) / Udata(i,j,ID) +
       0.5*( Udata(i,j,IA)*Udata(i,j,IA) );
-    
-    
+
+
   } // end operator ()
-  
+
   RotorParams rParams;
   DataArray2d Udata;
-  
+
 }; // InitRotorFunctor2D_MHD
 
 /*************************************************/
@@ -700,15 +700,15 @@ public:
 /*************************************************/
 /**
  * The 2D/3D MHD field loop advection problem.
- * 
+ *
  * Parameters that can be set in the ini file :
  * - radius       : radius of field loop
  * - amplitude    : amplitude of vector potential (and therefore B in loop)
  * - vflow        : flow velocity
  * - densityRatio : density ratio in loop.  Enables density advection and
  *                  thermal conduction tests.
- * The flow is automatically set to run along the diagonal. 
- * - direction : integer 
+ * The flow is automatically set to run along the diagonal.
+ * - direction : integer
  *   direction 0 -> field loop in x-y plane (cylinder in 3D)
  *   direction 1 -> field loop in y-z plane (cylinder in 3D)
  *   direction 2 -> field loop in z-x plane (cylinder in 3D)
@@ -728,7 +728,7 @@ private:
     DO_INIT_CONDITION,
     DO_INIT_ENERGY
   };
-  
+
 public:
 
   struct TagComputeVectorPotential {};
@@ -745,7 +745,7 @@ public:
   {
     Az = DataArrayScalar("Az", params.isize, params.jsize);
   };
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
 		    FieldLoopParams flParams,
@@ -764,7 +764,7 @@ public:
     Kokkos::parallel_for(nbCells, functor);
 
   } // apply
-  
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
   {
@@ -776,15 +776,15 @@ public:
       do_init_energy(index);
     }
   }
-  
+
   KOKKOS_INLINE_FUNCTION
   void compute_vector_potential(const int& index) const
   {
-    
+
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
     const int nx = params.nx;
     const int ny = params.ny;
 
@@ -808,23 +808,23 @@ public:
 
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-    
+
     real_t r = sqrt(x*x+y*y);
     if ( r < radius ) {
       Az(i,j) = amplitude * ( radius - r );
     } else {
       Az(i,j) = 0.0;
     }
-    
+
   } // compute_vector_potential
 
   KOKKOS_INLINE_FUNCTION
   void do_init_condition(const int& index) const
   {
-    
+
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
@@ -832,7 +832,7 @@ public:
     const int nx = params.nx;
     const int ny = params.ny;
     const int nz = params.nz;
-   
+
 #ifdef USE_MPI
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
@@ -840,13 +840,13 @@ public:
     const int i_mpi = 0;
     const int j_mpi = 0;
 #endif
-    
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
 
     const real_t dx = params.dx;
     const real_t dy = params.dy;
-    
+
     //const real_t gamma0 = params.settings.gamma0;
 
     // field loop problem parameters
@@ -854,14 +854,14 @@ public:
     const real_t density_in= flParams.density_in;
     const real_t vflow     = flParams.vflow;
     //const real_t amp       = flParams.amp;
-    
+
     const real_t cos_theta = 2.0/sqrt(5.0);
     const real_t sin_theta = sqrt(1-cos_theta*cos_theta);
 
 
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     if (i>=ghostWidth and i<isize-ghostWidth and
 	j>=ghostWidth and j<jsize-ghostWidth) {
 
@@ -870,13 +870,13 @@ public:
 
       real_t diag = sqrt(1.0*(nx*nx + ny*ny + nz*nz));
       real_t r    = sqrt(x*x+y*y);
-      
+
       // density
       if (r < radius)
 	Udata(i,j,ID) = density_in;
       else
 	Udata(i,j,ID) = 1.0;
-      
+
       // rho*vx
       //Udata(i,j,IU) = Udata(i,j,ID)*vflow*nx/diag;
       Udata(i,j,IU) = Udata(i,j,ID)*vflow*cos_theta;
@@ -884,53 +884,53 @@ public:
       // rho*vy
       //Udata(i,j,IV) = Udata(i,j,ID)*vflow*ny/diag;
       Udata(i,j,IV) = Udata(i,j,ID)*vflow*sin_theta;
-      
+
       // rho*vz
       Udata(i,j,IW) = Udata(i,j,ID)*vflow*nz/diag; //ZERO_F;
-      
+
       // bx
       Udata(i,j,IA) =   (Az(i  ,j+1) - Az(i,j))/dy; // + amp*(drand48()-0.5);
-      
+
       // by
       Udata(i,j,IB) = - (Az(i+1,j  ) - Az(i,j))/dx; // + amp*(drand48()-0.5);
-      
+
       // bz
       Udata(i,j,IC) = ZERO_F;
-      
+
     }
 
   } // do_init_condition
-  
+
   KOKKOS_INLINE_FUNCTION
   void do_init_energy(const int& index) const
   {
-    
+
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
-    
+
     const real_t gamma0 = params.settings.gamma0;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     if (i>=ghostWidth and i<isize-ghostWidth and
 	j>=ghostWidth and j<jsize-ghostWidth )
       {
-	
+
 	// total energy
 	if (params.settings.cIso>0) {
 	  Udata(i,j,IP) = ZERO_F;
 	} else {
-	  Udata(i,j,IP) = 1.0f/(gamma0-1.0) + 
-	    0.5 * ( 0.25*SQR(Udata(i,j,IA) + Udata(i+1,j,IA)) + 
+	  Udata(i,j,IP) = 1.0f/(gamma0-1.0) +
+	    0.5 * ( 0.25*SQR(Udata(i,j,IA) + Udata(i+1,j,IA)) +
 		    0.25*SQR(Udata(i,j,IB) + Udata(i,j+1,IB)) ) +
-	    0.5 * ( Udata(i,j,IU) * Udata(i,j,IU) + 
+	    0.5 * ( Udata(i,j,IU) * Udata(i,j,IU) +
 		    Udata(i,j,IV) * Udata(i,j,IV) )/Udata(i,j,ID);
 	}
-      
+
       }
-    
+
   } // end do_init_energy
 
   FieldLoopParams flParams;
@@ -940,16 +940,16 @@ public:
   DataArrayScalar Az;
 
   PhaseType       phase ;
-  
+
 }; // InitFieldLoopFunctor2D_MHD
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 class InitWaveFunctor2D_MHD : public MHDBaseFunctor2D {
-  
+
 public:
-  
+
   InitWaveFunctor2D_MHD(HydroParams params,
 			WaveParams wParams,
 			DataArray2d Udata) :
@@ -957,25 +957,25 @@ public:
     wParams(wParams),
     Udata(Udata)
   {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams params,
 		    WaveParams wParams,
 		    DataArray2d Udata,
 		    int         nbCells)
   {
-    
+
     InitWaveFunctor2D_MHD functor(params, wParams, Udata);
-    
+
     Kokkos::parallel_for(nbCells, functor);
-    
+
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const
   {
   } // end operator ()
-		
+
   WaveParams wParams;
   DataArray2d Udata;
 
