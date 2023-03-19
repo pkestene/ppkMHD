@@ -11,8 +11,8 @@ target_link_libraries(ConfigMapTest
   ppkMHD::config)
 
 ##############################################
-if(USE_MPI)
-  
+if(PPKMHD_USE_MPI)
+
   configure_file(test_mpi.ini test_mpi.ini COPYONLY)
 
   add_executable(ConfigMapTest_mpi
@@ -22,5 +22,5 @@ if(USE_MPI)
     PRIVATE
     ppkMHD::config
     ppkMHD::mpiUtils)
-  
-endif(USE_MPI)
+
+endif(PPKMHD_USE_MPI)

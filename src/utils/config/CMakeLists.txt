@@ -11,11 +11,11 @@ target_include_directories(config
   PUBLIC
   ${CMAKE_SOURCE_DIR}/src
   ${CMAKE_SOURCE_DIR}/src/utils
-  ${CMAKE_CURRENT_SOURCE_DIR}/inih ) 
+  ${CMAKE_CURRENT_SOURCE_DIR}/inih )
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(config PUBLIC MPI::MPI_CXX)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 #Add an alias so that library can be used inside the build tree
 add_library(ppkMHD::config ALIAS config)

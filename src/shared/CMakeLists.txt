@@ -43,11 +43,11 @@ target_link_libraries(shared
   ppkMHD::config
   ppkMHD::io
   )
-if(USE_MPI)
+if(PPKMHD_USE_MPI)
   target_link_libraries(shared
   PUBLIC
   ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif()
 
 #Add an alias so that library can be used inside the build tree
 add_library(ppkMHD::shared ALIAS shared)
@@ -70,11 +70,11 @@ target_link_libraries(solver_factory
   PUBLIC
   kokkos
   )
-if(USE_MPI)
+if(PPKMHD_USE_MPI)
   target_link_libraries(solver_factory
   PUBLIC
   ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif()
 
 #Add an alias so that library can be used inside the build tree
 add_library(ppkMHD::solver_factory ALIAS solver_factory)

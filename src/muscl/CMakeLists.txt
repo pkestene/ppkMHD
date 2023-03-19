@@ -31,9 +31,9 @@ target_link_libraries(muscl
   kokkos
   )
 
-if(USE_MPI)
+if(PPKMHD_USE_MPI)
   target_link_libraries(muscl PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 #Add an alias so that library can be used inside the build tree
 add_library(ppkMHD::muscl ALIAS muscl)

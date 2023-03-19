@@ -8,7 +8,7 @@ macro(MPI_TEST_ADD_EXEC test_name)
     )
   target_link_libraries(${EXE_NAME}
     PRIVATE
-    ppkMHD::monitoring 
+    ppkMHD::monitoring
     ppkMHD::mpiUtils)
 endmacro(MPI_TEST_ADD_EXEC)
 
@@ -24,7 +24,7 @@ MPI_TEST_ADD_EXEC(testMpiTopology_2D)
 
 # if VTK is activated and found
 # build this test
-if(USE_VTK)
+if(PPKMHD_USE_VTK)
 
   if (VTK_FOUND)
     MPI_TEST_ADD_EXEC(testVtkXMLPImageDataWriter)
@@ -32,10 +32,10 @@ if(USE_VTK)
       set_target_properties(testVtkXMLPImageDataWriter PROPERTIES
 	COMPILE_FLAGS "-DHAVE_VTK6")
     endif()
-    
+
     target_include_directories(testVtkXMLPImageDataWriter PUBLIC ${VTK_INCLUDE_DIRS})
-    
+
     target_link_libraries(testVtkXMLPImageDataWriter ${VTK_LIBRARIES})
   endif(VTK_FOUND)
-  
-endif(USE_VTK)
+
+endif(PPKMHD_USE_VTK)

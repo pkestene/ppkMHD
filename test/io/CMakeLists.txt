@@ -18,54 +18,54 @@ target_sources(test_io_vtk
 #   )
 target_link_libraries(test_io_vtk
   PUBLIC
-  kokkos 
-  ppkMHD::shared 
-  ppkMHD::config 
-  ppkMHD::monitoring 
+  kokkos
+  ppkMHD::shared
+  ppkMHD::config
+  ppkMHD::monitoring
   ppkMHD::io)
 
-if(USE_MPI)
+if(PPKMHD_USE_MPI)
   target_link_libraries(test_io_vtk
     PUBLIC
     ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 ###############################
 # HDF5 test
 ###############################
-if(USE_HDF5)
+if(PPKMHD_USE_HDF5)
   add_executable(test_io_hdf5
     test_io_hdf5.cpp
     #${BACKWARD_ENABLE}
     )
-  
+
   target_link_libraries(test_io_hdf5
     PUBLIC
-    kokkos 
-    ppkMHD::shared 
-    ppkMHD::config 
-    ppkMHD::monitoring 
-    ppkMHD::io 
+    kokkos
+    ppkMHD::shared
+    ppkMHD::config
+    ppkMHD::monitoring
+    ppkMHD::io
     ${HDF5_LIBRARIES})
-  
-  if(USE_MPI)
+
+  if(PPKMHD_USE_MPI)
     target_link_libraries(test_io_hdf5
       PUBLIC
       ppkMHD::mpiUtils)
-  endif(USE_MPI)
+  endif(PPKMHD_USE_MPI)
 
   #add_backward(test_io_hdf5)
-  
-endif(USE_HDF5)
 
-if(USE_MPI)
-  if(USE_PNETCDF)
+endif(PPKMHD_USE_HDF5)
+
+if(PPKMHD_USE_MPI)
+  if(PPKMHD_USE_PNETCDF)
 
     add_executable(test_io_pnetcdf
       test_io_pnetcdf.cpp
       #${BACKWARD_ENABLE}
       )
-    
+
     target_link_libraries(test_io_pnetcdf
       PUBLIC
       kokkos
@@ -75,8 +75,8 @@ if(USE_MPI)
       ppkMHD::io
       ppkMHD::mpiUtils
       ${PNETCDF_LIBRARIES})
-    
+
     #add_backward(test_io_pnetcdf)
-    
-  endif(USE_PNETCDF)
-endif(USE_MPI)
+
+  endif(PPKMHD_USE_PNETCDF)
+endif(PPKMHD_USE_MPI)

@@ -35,22 +35,22 @@ add_executable(test_sdm_io "")
 target_sources(test_sdm_io
   PUBLIC
   test_sdm_io.cpp)
-target_link_libraries(test_sdm_io 
-  PUBLIC 
+target_link_libraries(test_sdm_io
+  PUBLIC
   ppkMHD::sdm
   ppkMHD::config
-  ppkMHD::io 
+  ppkMHD::io
   ppkMHD::shared
   ppkMHD::monitoring
   kokkos
   hwloc
   dl)
 
-if (USE_MPI)
-  target_link_libraries(test_sdm_io 
-    PUBLIC 
+if (PPKMHD_USE_MPI)
+  target_link_libraries(test_sdm_io
+    PUBLIC
     ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 
 # copy input parameter files for testing SDM IO
@@ -59,11 +59,11 @@ configure_file(test_sdm_io_3D.ini test_sdm_io_3D.ini COPYONLY)
 
 ##############################################
 add_executable(test_sdm_flux "")
-target_sources(test_sdm_flux 
+target_sources(test_sdm_flux
   PUBLIC
   test_sdm_flux.cpp)
-target_link_libraries(test_sdm_flux 
-  PUBLIC 
+target_link_libraries(test_sdm_flux
+  PUBLIC
   ppkMHD::sdm
   ppkMHD::config
   ppkMHD::io
@@ -71,27 +71,27 @@ target_link_libraries(test_sdm_flux
   ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_flux PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 ##############################################
 add_executable(test_sdm_lagrange_functor "")
 target_sources(test_sdm_lagrange_functor
   PUBLIC
   test_sdm_lagrange_functor.cpp)
-target_link_libraries(test_sdm_lagrange_functor 
+target_link_libraries(test_sdm_lagrange_functor
   PUBLIC
   ppkMHD::sdm
   ppkMHD::config
   ppkMHD::io
-  ppkMHD::shared 
+  ppkMHD::shared
   ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_lagrange_functor PUBLIC mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 add_test(NAME sdm_lagrange_functor COMMAND test_sdm_lagrange_functor)
 
@@ -108,9 +108,9 @@ target_link_libraries(test_sdm_flux_functor
   ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_flux_functor PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 # copy input parameter files for testing SDM IO
 configure_file(test_sdm_flux_functor_2D.ini test_sdm_flux_functor_2D.ini COPYONLY)
@@ -127,12 +127,12 @@ target_link_libraries(test_sdm_gradient_velocity
   ppkMHD::config
   ppkMHD::io
   ppkMHD::shared
-  ppkMHD::monitoring 
+  ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_gradient_velocity PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 # copy input parameter files
 configure_file(test_sdm_gradient_velocity_2D.ini test_sdm_gradient_velocity_2D.ini COPYONLY)
@@ -140,8 +140,8 @@ configure_file(test_sdm_gradient_velocity_3D.ini test_sdm_gradient_velocity_3D.i
 
 # copy a paraview state file just for eye cross-checking the 2d results of gradient
 # computations
-configure_file(test_sdm_gradient_velocity.pvsm test_sdm_gradient_velocity.pvsm COPYONLY) 
-  
+configure_file(test_sdm_gradient_velocity.pvsm test_sdm_gradient_velocity.pvsm COPYONLY)
+
 ##############################################
 add_executable(test_sdm_compute_dt_functor "")
 target_sources(test_sdm_compute_dt_functor
@@ -150,15 +150,15 @@ target_sources(test_sdm_compute_dt_functor
 target_link_libraries(test_sdm_compute_dt_functor
   PUBLIC
   ppkMHD::sdm
-  ppkMHD::config 
+  ppkMHD::config
   ppkMHD::io
   ppkMHD::shared
   ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_compute_dt_functor PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 add_test(NAME sdm_compute_dt_functor COMMAND test_sdm_compute_dt_functor)
 
@@ -167,7 +167,7 @@ add_executable(test_sdm_chebyshev_quadrature "")
 target_sources(test_sdm_chebyshev_quadrature
   PUBLIC
   test_sdm_chebyshev_quadrature.cpp)
-target_link_libraries(test_sdm_chebyshev_quadrature 
+target_link_libraries(test_sdm_chebyshev_quadrature
   PUBLIC
   ppkMHD::sdm
   kokkos hwloc dl)
@@ -177,24 +177,24 @@ add_executable(test_sdm_isentropic_vortex "")
 target_sources(test_sdm_isentropic_vortex
   PUBLIC
   test_sdm_isentropic_vortex.cpp)
-target_link_libraries(test_sdm_isentropic_vortex 
+target_link_libraries(test_sdm_isentropic_vortex
   PUBLIC
   ppkMHD::sdm
-  ppkMHD::solver_factory 
-  ppkMHD::config 
+  ppkMHD::solver_factory
+  ppkMHD::config
   kokkos
-  ppkMHD::muscl 
+  ppkMHD::muscl
   ppkMHD::io
   ppkMHD::shared
   ppkMHD::monitoring
   kokkos hwloc dl)
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_isentropic_vortex PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 ##############################################
 add_executable(test_sdm_average_functor "")
-target_sources(test_sdm_average_functor 
+target_sources(test_sdm_average_functor
   PUBLIC
   test_sdm_average_functor.cpp)
 target_link_libraries(test_sdm_average_functor
@@ -206,9 +206,9 @@ target_link_libraries(test_sdm_average_functor
   ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_average_functor PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)
 
 # copy input parameter files for testing SDM Limiter test
 configure_file(test_sdm_limiter_2D.ini test_sdm_limiter_2D.ini COPYONLY)
@@ -216,18 +216,18 @@ configure_file(test_sdm_limiter_3D.ini test_sdm_limiter_3D.ini COPYONLY)
 
 ##############################################
 add_executable(test_sdm_lsq_gradient "")
-target_sources(test_sdm_lsq_gradient 
+target_sources(test_sdm_lsq_gradient
   PUBLIC
   test_sdm_lsq_gradient.cpp)
-target_link_libraries(test_sdm_lsq_gradient 
+target_link_libraries(test_sdm_lsq_gradient
   PUBLIC
   ppkMHD::sdm
   ppkMHD::config
   ppkMHD::io
-  ppkMHD::shared 
+  ppkMHD::shared
   ppkMHD::monitoring
   kokkos hwloc dl)
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(test_sdm_lsq_gradient PUBLIC ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif(PPKMHD_USE_MPI)

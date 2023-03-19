@@ -8,20 +8,20 @@ add_subdirectory(shared)
 add_subdirectory(muscl)
 
 # Hydro solver using high order MOOD solver
-if(USE_MOOD)
+if(PPKMHD_USE_MOOD)
   add_subdirectory(mood)
-endif(USE_MOOD)
+endif()
 
 # Hydro solver using high order MOOD solver
-if(USE_SDM)
+if(PPKMHD_USE_SDM)
   add_subdirectory(sdm)
-endif(USE_SDM)
+endif()
 
 # include header for main application
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 if (PAPI_FOUND)
   include_directories(${PAPI_INCLUDE_DIR})
-endif(PAPI_FOUND)
+endif()
 
 #
 # ppkMHD executable
@@ -53,22 +53,22 @@ target_link_libraries(${PROJECT_NAME}
 
 #add_backward(${PROJECT_NAME})
 
-if (USE_SDM)
+if (PPKMHD_USE_SDM)
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ppkMHD::sdm)
 endif()
 
-if (USE_MOOD)
+if (PPKMHD_USE_MOOD)
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    ppkMHD::mood 
+    ppkMHD::mood
     ${LAPACKE_LIBRARIES}
     ${OpenBLAS_LIB})
-endif(USE_MOOD)
+endif()
 
-if (USE_MPI)
+if (PPKMHD_USE_MPI)
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ppkMHD::mpiUtils)
-endif(USE_MPI)
+endif()
