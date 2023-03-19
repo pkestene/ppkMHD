@@ -3,6 +3,8 @@
 
 #include "utils/config/ConfigMap.h"
 
+namespace ppkMHD {
+
 /**
  * disk problem parameters.
  */
@@ -13,7 +15,7 @@ struct DiskParams {
 
   //! disk inner radius (where eos is isothermal)
   real_t radius_inner;
-  
+
   //! disk center location
   real_t xc;
   real_t yc;
@@ -28,9 +30,9 @@ struct DiskParams {
   //! radial distance (after the end of the disk) where density drops by
   //! a factor of contrast_density
   real_t contrast_width;
-  
+
   real_t ref_sound_speed;
-  
+
   DiskParams(ConfigMap& configMap)
   {
 
@@ -41,7 +43,7 @@ struct DiskParams {
     double xmax = configMap.getFloat("mesh", "xmax", 0.5);
     double ymax = configMap.getFloat("mesh", "ymax", 0.5);
     double zmax = configMap.getFloat("mesh", "zmax", 0.5);
-    
+
     radius        = configMap.getFloat("disk","radius", (xmax-xmin) * 0.125);
     radius_inner  = configMap.getFloat("disk","radius_inner", radius/10);
     xc = configMap.getFloat("disk","xc", (xmin+xmax)/2);
@@ -52,7 +54,7 @@ struct DiskParams {
     contrast_density = configMap.getFloat("disk","contrast_density",100.0);
     contrast_width   = configMap.getFloat("disk","contrast_width",0.01);
     ref_sound_speed  = configMap.getFloat("disk","ref_sound_speed", 0.2);
-    
+
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -68,9 +70,11 @@ struct DiskParams {
     }
 
     return csound;
-    
+
   } // radial_speed_of_sound
-  
+
 }; // struct DiskParams
+
+} // namespace ppkMHD
 
 #endif // DISK_PARAMS_H_

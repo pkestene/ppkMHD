@@ -12,6 +12,7 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -19,35 +20,35 @@ namespace sdm {
 /*************************************************/
 template<int dim, int N>
 class InitShuOsherFunctor : public SDMBaseFunctor<dim,N> {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
-  
+
   InitShuOsherFunctor(HydroParams         params,
                       SDM_Geometry<dim,N> sdm_geom,
                       DataArray           Udata) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Udata(Udata) {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
-    
+
     InitShuOsherFunctor functor(params, sdm_geom, Udata);
     Kokkos::parallel_for("InitShuOsherFunctor",nbCells, functor);
   }
-  
+
   /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -56,7 +57,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -70,21 +71,21 @@ public:
 
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
-    
+
     //const real_t xmax = this->params.xmax;
     //const real_t ymax = this->params.ymax;
-    
+
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
-    
+
     const real_t rho1 = 27.0/7;
     //const real_t rho2 = (1.0+sin(5*x)/5);
-    
+
     const real_t p1 = 31.0/3;
     const real_t p2 = 1.0;
-    
+
     const real_t v1 = 4*sqrt(35.0)/9;
     const real_t v2 = 0;
 
@@ -102,7 +103,7 @@ public:
 
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	
+
         // ! rho2 depends on x
         const real_t rho2 = (1.0+sin(5*x)/5);
 
@@ -119,16 +120,16 @@ public:
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = rho2 * v2;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
 	}
-	
+
       } // end for idx
     } // end for idy
-    
+
   } // end operator () - 2d
 
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -138,7 +139,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -164,7 +165,7 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     const real_t rho1 = 27.0/7;
@@ -172,7 +173,7 @@ public:
 
     const real_t p1 = 31.0/3;
     const real_t p2 = 1.0;
-    
+
     const real_t v1 = 4*sqrt(35.0)/9;
     const real_t v2 = 0;
 
@@ -184,7 +185,7 @@ public:
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // lower left corner
 	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -198,7 +199,7 @@ public:
           const real_t rho2 = (1.0+sin(5*x)/5);
 
 	  bool tmp = x < -4.0;
-	  
+
 	  if (tmp) {
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p1/(gamma0-1.0) + 0.5*rho1*v1*v1;
@@ -212,17 +213,18 @@ public:
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
 	  }
-	  
+
 	} // end for idx
       } // end for idy
     } // end for idz
-    
+
   } // end operator () - 3d
-  
+
   DataArray     Udata;
 
 }; // InitShuOsherFunctor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_INIT_SHU_OSHER_FUNCTOR_H_

@@ -1,5 +1,5 @@
 /**
- * This executable is used to test sdm::SDM_Geometry class, 
+ * This executable is used to test sdm::SDM_Geometry class,
  * more specific Lagrange interpolation.
  */
 
@@ -28,6 +28,7 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
 
 /*
  *
@@ -60,7 +61,7 @@ bool test_lagrange_functor()
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
   }
-  
+
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
@@ -76,7 +77,7 @@ bool test_lagrange_functor()
   int ksize = params.ksize;
 
   int64_t nbCells = dim == 2 ?
-    isize*jsize : 
+    isize*jsize :
     isize*jsize*ksize;
 
   // SDM config
@@ -86,22 +87,22 @@ bool test_lagrange_functor()
 
   // create solver
   //sdm::SolverHydroSDM<dim,N> solver(params, configMap);
-  DataArray U = dim==2 ? 
+  DataArray U = dim==2 ?
     DataArray("U", isize, jsize, N*N*params.nbvar) :
     DataArray("U", isize, jsize, ksize, N*N*N*params.nbvar);
-    
+
   DataArrayHost UHost = Kokkos::create_mirror(U);
 
-  DataArray U2 = dim==2 ? 
+  DataArray U2 = dim==2 ?
     DataArray("U2", isize, jsize, N*N*params.nbvar) :
     DataArray("U2", isize, jsize, ksize, N*N*N*params.nbvar);
-  
+
   DataArray Fluxes = dim==2 ?
     DataArray("Fluxes", isize, jsize, N*(N+1)*params.nbvar) :
     DataArray("Fluxes", isize, jsize, ksize, N*(N+1)*N*params.nbvar);
-  
+
   DataArrayHost FluxHost = Kokkos::create_mirror(Fluxes);
-  
+
   std::map<int, std::string> m_variables_names;
   m_variables_names.clear();
   m_variables_names[ID] = "rho";
@@ -117,7 +118,7 @@ bool test_lagrange_functor()
                                                           configMap,
                                                           m_variables_names,
                                                           sdm_geom);
-  
+
 
   // init data
   {
@@ -134,9 +135,9 @@ bool test_lagrange_functor()
                               0,
                               0.0,
                               "");
-    
+
   }
-  
+
   // call the interpolation functors
   {
 
@@ -153,9 +154,9 @@ bool test_lagrange_functor()
 
   }
 
-  
+
   {
-    
+
     constexpr sdm::Interpolation_type_t interp = sdm::INTERPOLATE_SOLUTION_REGULAR;
     sdm::Interpolate_At_SolutionPoints_Functor<dim,N,IY,interp> functor(params,
 								 sdm_geom,
@@ -169,7 +170,7 @@ bool test_lagrange_functor()
   if (dim==2) {
 
     for (int ivar = 0; ivar < params.nbvar; ++ivar) {
-      real_t error_L1 = 
+      real_t error_L1 =
         sdm::Compute_Error_Functor_2d<N, sdm::NORM_L1>::apply(params,
                                                               sdm_geom,
                                                               U,
@@ -180,9 +181,9 @@ bool test_lagrange_functor()
     }
 
   } else if (dim==3) {
-  
+
     for (int ivar = 0; ivar < params.nbvar; ++ivar) {
-      real_t error_L1 = 
+      real_t error_L1 =
         sdm::Compute_Error_Functor_3d<N,sdm::NORM_L1>::apply(params,
                                                              sdm_geom,
                                                              U,
@@ -208,12 +209,14 @@ bool test_lagrange_functor()
                               1,
                               1.0,
                               "");
-    
+
   }
 
   return (error_accum < 1e-10);
 
 } // test_lagrange_functor
+
+} // namespace ppkMHD
 
 int main(int argc, char* argv[])
 {
@@ -224,7 +227,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -248,10 +251,10 @@ int main(int argc, char* argv[])
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    passed *= test_lagrange_functor<2,4>();
+    passed *= ppkMHD::test_lagrange_functor<2,4>();
 
     // 3d
-    passed *= test_lagrange_functor<3,4>();
+    passed *= ppkMHD::test_lagrange_functor<3,4>();
 
   }
 
@@ -259,5 +262,5 @@ int main(int argc, char* argv[])
 
   // return 0 if all tests passed
   return (int) !passed;
-  
+
 }

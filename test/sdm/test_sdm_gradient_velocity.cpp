@@ -26,6 +26,7 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
 
 /*
  *
@@ -40,7 +41,7 @@ void test_gradient_velocity_functors()
 
   using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
   using DataArrayHost = typename DataArray::HostMirror;
-  
+
   int myRank = 0;
 #ifdef USE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
@@ -58,7 +59,7 @@ void test_gradient_velocity_functors()
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
   }
-  
+
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
@@ -68,7 +69,7 @@ void test_gradient_velocity_functors()
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
@@ -79,7 +80,7 @@ void test_gradient_velocity_functors()
   int nbCells = dim==2 ?
     params.isize*params.jsize :
     params.isize*params.jsize*params.ksize;
-  
+
   // init data
   {
 
@@ -89,7 +90,7 @@ void test_gradient_velocity_functors()
 	      solver.U);
     Kokkos::parallel_for(nbCells, functor);
 
-      
+
     solver.save_solution();
 
   }
@@ -110,7 +111,7 @@ void test_gradient_velocity_functors()
       var_names_gradx[(int)VarIndexGrad3d::IGV] = "gradx_v";
       var_names_gradx[(int)VarIndexGrad3d::IGW] = "gradx_w";
     }
-    
+
     // create an io_writer
     auto io_writer =
       std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
@@ -120,7 +121,7 @@ void test_gradient_velocity_functors()
 
     // actual computation
     solver.template compute_velocity_gradients<IX>(solver.U, solver.Ugradx_v);
-    
+
     DataArrayHost Ugradx_Host = Kokkos::create_mirror(solver.Ugradx_v);
     io_writer->save_data_impl(solver.Ugradx_v,
 			      Ugradx_Host,
@@ -128,7 +129,7 @@ void test_gradient_velocity_functors()
 			      0.0,
 			      "Ugradx_v");
   }
-  
+
   //
   // velocity gradient Y
   //
@@ -143,7 +144,7 @@ void test_gradient_velocity_functors()
       var_names_grady[(int)VarIndexGrad3d::IGV] = "grady_v";
       var_names_grady[(int)VarIndexGrad3d::IGW] = "grady_w";
     }
-    
+
     // create an io_writer
     auto io_writer =
       std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
@@ -153,7 +154,7 @@ void test_gradient_velocity_functors()
 
     // actual computation
     solver.template compute_velocity_gradients<IY>(solver.U, solver.Ugrady_v);
-    
+
     DataArrayHost Ugrady_Host = Kokkos::create_mirror(solver.Ugrady_v);
     io_writer->save_data_impl(solver.Ugrady_v,
 			      Ugrady_Host,
@@ -161,7 +162,7 @@ void test_gradient_velocity_functors()
 			      0.0,
 			      "Ugrady_v");
   }
-  
+
   //
   // velocity gradient Z
   //
@@ -176,7 +177,7 @@ void test_gradient_velocity_functors()
       var_names_gradz[(int)VarIndexGrad3d::IGV] = "gradz_v";
       var_names_gradz[(int)VarIndexGrad3d::IGW] = "gradz_w";
     }
-    
+
     // create an io_writer
     auto io_writer =
       std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
@@ -186,17 +187,18 @@ void test_gradient_velocity_functors()
 
     // actual computation
     solver.template compute_velocity_gradients<IZ>(solver.U, solver.Ugradz_v);
-    
+
     DataArrayHost Ugradz_Host = Kokkos::create_mirror(solver.Ugradz_v);
     io_writer->save_data_impl(solver.Ugradz_v,
 			      Ugradz_Host,
 			      0,
 			      0.0,
-			      "Ugradz_v"); 
+			      "Ugradz_v");
   }
-  
+
 
 } // test_gradient_velocity_functors
+} // namespace ppkMHD
 
 /*************************************************/
 /*************************************************/
@@ -210,7 +212,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -233,15 +235,15 @@ int main(int argc, char* argv[])
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_gradient_velocity_functors<2,4>();
+    ppkMHD::test_gradient_velocity_functors<2,4>();
 
     // 3d
-    test_gradient_velocity_functors<3,4>();
+    ppkMHD::test_gradient_velocity_functors<3,4>();
 
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
+
 }

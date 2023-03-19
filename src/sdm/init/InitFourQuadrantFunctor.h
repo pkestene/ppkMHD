@@ -14,6 +14,7 @@
 
 #include "shared/problems/initRiemannConfig2d.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -39,7 +40,7 @@ public:
     SDMBaseFunctor<dim,N>(params,sdm_geom), Udata(Udata),
     U0(U0), U1(U1), U2(U2), U3(U3), xt(xt), yt(yt)
   {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
@@ -51,10 +52,10 @@ public:
                     real_t              xt,
                     real_t              yt)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
-    
+
     InitFourQuadrantFunctor functor(params, sdm_geom, Udata,
       U0, U1, U2, U3, xt, yt);
     Kokkos::parallel_for("InitFourQuadrantFunctor",nbCells, functor);
@@ -63,7 +64,7 @@ public:
  /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -72,7 +73,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -88,10 +89,10 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
@@ -142,7 +143,7 @@ public:
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -152,7 +153,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -174,7 +175,7 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
-    
+
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
@@ -183,7 +184,7 @@ public:
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // lower left corner
 	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -196,15 +197,16 @@ public:
 	} // end for idx
       } // end for idy
     } // end for idz
-    
+
   } // end operator () - 3d
 
   DataArray Udata;
   HydroState2d U0, U1, U2, U3;
   real_t xt, yt;
-  
+
 }; // InitFourQuadrantFunctor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_INIT_FOUR_QUADRANT_FUNCTOR_H_

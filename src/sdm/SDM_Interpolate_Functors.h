@@ -14,6 +14,7 @@
 
 #include "shared/EulerEquations.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -21,11 +22,11 @@ namespace sdm {
 /*************************************************/
 /**
  * This functor takes as an input variables
- * at solution points (UdataSol) and perform interpolation at 
+ * at solution points (UdataSol) and perform interpolation at
  * flux points (UdataFlux).
  * It uses Kokkos range execution policy, with a number of iterations
  * mapping outputs, i.e. the flux Dof locations.
- * 
+ *
  * It is essentially a wrapper arround interpolation method sol2flux_vector.
  *
  * Perform exactly the inverse of Interpolate_At_SolutionPoints_Functor.
@@ -38,10 +39,10 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   using typename SDMBaseFunctor<dim,N>::flux_values_t;
-  
+
   static constexpr auto dofMapS = DofMap<dim,N>;
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
-  
+
   Interpolate_At_FluxPoints_Functor(HydroParams         params,
 				    SDM_Geometry<dim,N> sdm_geom,
 				    DataArray           UdataSol,
@@ -57,21 +58,21 @@ public:
                     DataArray           UdataSol,
                     DataArray           UdataFlux)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
 
-    Interpolate_At_FluxPoints_Functor functor(params, sdm_geom, 
+    Interpolate_At_FluxPoints_Functor functor(params, sdm_geom,
                                               UdataSol, UdataFlux);
     Kokkos::parallel_for("Interpolate_At_FluxPoints_Functor", nbCells, functor);
   }
-  
+
   // =========================================================
   /*
    * 2D version.
    */
   // =========================================================
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -88,7 +89,7 @@ public:
 
     solution_values_t sol;
     flux_values_t     flux;
-    
+
     // loop over cell DoF's
     if (dir == IX) {
 
@@ -96,14 +97,14 @@ public:
 
 	// for each variables
 	for (int ivar = 0; ivar<nbvar; ++ivar) {
-	
+
 	  // get solution values vector along X direction
 	  for (int idx=0; idx<N; ++idx) {
-	  
+
 	    sol[idx] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
 
 	  }
-	  
+
 	  // interpolate at flux points for this given variable
 	  this->sol2flux_vector(sol, flux);
 
@@ -112,16 +113,16 @@ public:
 	    for (int idf=0; idf<N+1; ++idf)
 	      flux[idf] = fmax(flux[idf], this->params.settings.smallr);
 	  }
-	  
+
 	  // copy back interpolated value
 	  for (int idx=0; idx<N+1; ++idx) {
-	    
+
 	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idx];
-	    
+
 	  } // end for idx
-	  
+
 	} // end for ivar
-	
+
       } // end for idy
 
     } // end for dir IX
@@ -133,17 +134,17 @@ public:
 
 	// for each variables
 	for (int ivar = 0; ivar<nbvar; ++ivar) {
-	
+
 	  // get solution values vector along Y direction
 	  for (int idy=0; idy<N; ++idy) {
-	  
+
 	    sol[idy] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
-	    
+
 	  }
-	  
+
 	  // interpolate at flux points for this given variable
 	  this->sol2flux_vector(sol, flux);
-	  
+
 	  // positivity preserving for density
 	  if (ivar==ID) {
 	    for (int idf=0; idf<N+1; ++idf)
@@ -152,17 +153,17 @@ public:
 
 	  // copy back interpolated value
 	  for (int idy=0; idy<N+1; ++idy) {
-	    
+
 	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idy];
 
 	  }
-	  
+
 	} // end for ivar
-	
+
       } // end for idx
 
     } // end for dir IY
-    
+
   } // end operator () - 2d
 
   // =========================================================
@@ -170,7 +171,7 @@ public:
    * 3D version.
    */
   // =========================================================
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -188,44 +189,44 @@ public:
 
     solution_values_t sol;
     flux_values_t     flux;
-    
+
     // loop over cell DoF's
     if (dir == IX) {
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
-	  
+
 	  // for each variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
-	    
+
 	    // get solution values vector along X direction
 	    for (int idx=0; idx<N; ++idx) {
-	      
+
 	      sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-	      
+
 	    }
-	    
+
 	    // interpolate at flux points for this given variable
 	    this->sol2flux_vector(sol, flux);
-	    
+
 	    // positivity preserving for density
 	    if (ivar==ID) {
 	      for (int idf=0; idf<N+1; ++idf)
 		flux[idf] = fmax(flux[idf], this->params.settings.smallr);
 	    }
-	    
+
 	    // copy back interpolated value
 	    for (int idx=0; idx<N+1; ++idx) {
-	      
+
 	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idx];
-	      
+
 	    }
-	    
+
 	  } // end for ivar
-	  
+
 	} // end for idy
       } // end for idz
-      
+
     } // end for dir IX
 
     // loop over cell DoF's
@@ -233,35 +234,35 @@ public:
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // for each variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
-	    
+
 	    // get solution values vector along Y direction
 	    for (int idy=0; idy<N; ++idy) {
-	      
+
 	      sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-	    
+
 	    }
-	    
+
 	    // interpolate at flux points for this given variable
 	    this->sol2flux_vector(sol, flux);
-	    
+
 	    // positivity preserving for density
 	    if (ivar==ID) {
 	      for (int idf=0; idf<N+1; ++idf)
 		flux[idf] = fmax(flux[idf], this->params.settings.smallr);
 	    }
-	    
+
 	    // copy back interpolated value
 	    for (int idy=0; idy<N+1; ++idy) {
-	      
+
 	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idy];
-	      
+
 	    }
-	  
+
 	  } // end for ivar
-	
+
 	} // end for idx
       } // end for idz
 
@@ -272,42 +273,42 @@ public:
 
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // for each variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
-	    
+
 	    // get solution values vector along Y direction
 	    for (int idz=0; idz<N; ++idz) {
-	      
+
 	      sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-	    
+
 	    }
-	    
+
 	    // interpolate at flux points for this given variable
 	    this->sol2flux_vector(sol, flux);
-	    
+
 	    // positivity preserving for density
 	    if (ivar==ID) {
 	      for (int idf=0; idf<N+1; ++idf)
 		flux[idf] = fmax(flux[idf], this->params.settings.smallr);
 	    }
-	    
+
 	    // copy back interpolated value
 	    for (int idz=0; idz<N+1; ++idz) {
-	      
+
 	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idz];
-	      
+
 	    }
-	  
+
 	  } // end for ivar
-	
+
 	} // end for idx
       } // end for idz
 
     } // end for dir IZ
 
   } // end operator () - 3d
-  
+
   DataArray UdataSol, UdataFlux;
 
 }; // class Interpolate_At_FluxPoints_Functor
@@ -342,10 +343,10 @@ public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::solution_values_t;
   using typename SDMBaseFunctor<dim,N>::flux_values_t;
-  
+
   static constexpr auto dofMapS = DofMap<dim,N>;
   static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
-  
+
   Interpolate_At_SolutionPoints_Functor(HydroParams         params,
 					SDM_Geometry<dim,N> sdm_geom,
 					DataArray           UdataFlux,
@@ -361,21 +362,21 @@ public:
                     DataArray           UdataFlux,
                     DataArray           UdataSol)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
-    
+
     Interpolate_At_SolutionPoints_Functor functor(params, sdm_geom,
                                                   UdataFlux, UdataSol);
     Kokkos::parallel_for("Interpolate_At_SolutionPoints_Functor",nbCells, functor);
   }
-  
+
   // =========================================================
   /*
    * 2D version.
    */
   // =========================================================
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -390,14 +391,14 @@ public:
     real_t rescale = 1.0/this->params.dx;
     if (dir == IY)
       rescale = 1.0/this->params.dy;
-    
+
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
     solution_values_t sol;
     flux_values_t     flux;
-    
+
     // loop over cell DoF's
     if (dir == IX) {
 
@@ -405,14 +406,14 @@ public:
 
 	// for each variables
 	for (int ivar = 0; ivar<nbvar; ++ivar) {
-	
+
 	  // get values at flux point along X direction
 	  for (int idx=0; idx<N+1; ++idx) {
-	  
+
 	    flux[idx] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar));
-	    
+
 	  }
-	  
+
 	  // interpolate at flux points for this given variable
 	  if (itype==INTERPOLATE_SOLUTION or
 	      itype==INTERPOLATE_SOLUTION_NEGATIVE or
@@ -420,10 +421,10 @@ public:
 	    this->flux2sol_vector(flux, sol);
 	  else
 	    this->flux2sol_derivative_vector(flux,sol,rescale);
-	  
+
 	  // copy back interpolated value
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) -= sol[idx];
@@ -431,11 +432,11 @@ public:
               UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[idx];
 	    else
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) += sol[idx];
-	    
+
 	  }
-	  
+
 	} // end for ivar
-	
+
       } // end for idy
 
     } // end for dir IX
@@ -447,14 +448,14 @@ public:
 
 	// for each variables
 	for (int ivar = 0; ivar<nbvar; ++ivar) {
-	
+
 	  // get values at flux point along Y direction
 	  for (int idy=0; idy<N+1; ++idy) {
-	  
+
 	    flux[idy] = UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar));
-	    
+
 	  }
-	  
+
 	  // interpolate at flux points for this given variable
 	  if (itype==INTERPOLATE_SOLUTION or
 	      itype==INTERPOLATE_SOLUTION_NEGATIVE or
@@ -462,10 +463,10 @@ public:
 	    this->flux2sol_vector(flux, sol);
 	  else
 	    this->flux2sol_derivative_vector(flux,sol,rescale);
-	  
+
 	  // copy back interpolated value
 	  for (int idy=0; idy<N; ++idy) {
-	    
+
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) -= sol[idy];
@@ -473,15 +474,15 @@ public:
               UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) = sol[idy];
 	    else
 	      UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar)) += sol[idy];
-	    
+
 	  }
-	  
+
 	} // end for ivar
-	
+
       } // end for idx
 
     } // end for dir IY
-    
+
   } // end operator () - 2d
 
   // =========================================================
@@ -489,7 +490,7 @@ public:
    * 3D version.
    */
   // =========================================================
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -514,23 +515,23 @@ public:
 
     solution_values_t sol;
     flux_values_t     flux;
-    
+
     // loop over cell DoF's
     if (dir == IX) {
 
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
-	  
+
 	  // for each variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
-	    
+
 	    // get values at flux point along X direction
 	    for (int idx=0; idx<N+1; ++idx) {
-	      
+
 	      flux[idx] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar));
-	    
+
 	    }
-	  
+
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE or
@@ -538,10 +539,10 @@ public:
 	      this->flux2sol_vector(flux, sol);
 	    else
 	      this->flux2sol_derivative_vector(flux,sol,rescale);
-	    
+
 	    // copy back interpolated value
 	    for (int idx=0; idx<N; ++idx) {
-	    
+
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) -= sol[idx];
@@ -549,11 +550,11 @@ public:
               UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idx];
             else
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idx];
-	    
+
 	    }
-	    
+
 	  } // end for ivar
-	  
+
 	} // end for idy
       } // end for idz
 
@@ -567,14 +568,14 @@ public:
 
 	  // for each variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
-	    
+
 	    // get values at flux point along Y direction
 	    for (int idy=0; idy<N+1; ++idy) {
-	      
+
 	      flux[idy] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar));
-	      
+
 	    }
-	    
+
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE or
@@ -582,10 +583,10 @@ public:
 	      this->flux2sol_vector(flux, sol);
 	    else
 	      this->flux2sol_derivative_vector(flux,sol,rescale);
-	    
+
 	    // copy back interpolated value
 	    for (int idy=0; idy<N; ++idy) {
-	    
+
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) -= sol[idy];
@@ -595,9 +596,9 @@ public:
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idy];
 
 	    }
-	    
+
 	  } // end for ivar
-	  
+
 	} // end for idx
       } // end for idz
 
@@ -611,14 +612,14 @@ public:
 
 	  // for each variables
 	  for (int ivar = 0; ivar<nbvar; ++ivar) {
-	    
+
 	    // get values at flux point along Y direction
 	    for (int idz=0; idz<N+1; ++idz) {
-	      
+
 	      flux[idz] = UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar));
-	      
+
 	    }
-	    
+
 	    // interpolate at flux points for this given variable
 	    if (itype==INTERPOLATE_SOLUTION or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE or
@@ -626,10 +627,10 @@ public:
 	      this->flux2sol_vector(flux, sol);
 	    else
 	      this->flux2sol_derivative_vector(flux,sol,rescale);
-	    
+
 	    // copy back interpolated value
 	    for (int idz=0; idz<N; ++idz) {
-	    
+
 	    if (itype==INTERPOLATE_DERIVATIVE_NEGATIVE or
 		itype==INTERPOLATE_SOLUTION_NEGATIVE)
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) -= sol[idz];
@@ -637,22 +638,23 @@ public:
               UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) = sol[idz];
 	    else
 	      UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar)) += sol[idz];
-	    
+
 	    }
-	    
+
 	  } // end for ivar
-	  
+
 	} // end for idx
       } // end for idy
 
     } // end for dir IZ
 
   } // end operator () - 3d
-  
+
   DataArray UdataFlux, UdataSol;
 
 }; // Interpolate_At_SolutionPoints_Functor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_INTERPOLATE_FUNCTORS_H_

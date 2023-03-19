@@ -12,6 +12,7 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -29,7 +30,7 @@ public:
 
   static constexpr auto dofMap  = DofMap<dim,N>;
   static constexpr auto dofMapF = DofMapFlux<dim,N,IX>;
-  
+
   SDM_Erase_Functor(HydroParams         params,
 		    SDM_Geometry<dim,N> sdm_geom,
 		    DataArray           Udata,
@@ -56,7 +57,7 @@ public:
   /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -68,44 +69,44 @@ public:
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     // loop over cell DoF's
 
     if (isFlux) {
 
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N+1; ++idx) {
-	  
+
 	  Udata(i  ,j  , dofMapF(idx,idy,0,ID)) = 0.0;
 	  Udata(i  ,j  , dofMapF(idx,idy,0,IP)) = 0.0;
 	  Udata(i  ,j  , dofMapF(idx,idy,0,IU)) = 0.0;
 	  Udata(i  ,j  , dofMapF(idx,idy,0,IV)) = 0.0;
-	  
+
 	} // end for idx
       } // end for idy
 
 
     } else {
-      
+
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IP)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0.0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0.0;
-	  
+
 	} // end for idx
       } // end for idy
 
     } // end isFlux
-    
+
   } // end operator () - 2d
 
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -114,7 +115,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
-    
+
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
@@ -122,17 +123,17 @@ public:
     // loop over cell DoF's
 
     if (isFlux) {
-      
+
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N+1; ++idx) {
-	    
+
 	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,ID)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IP)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IU)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IV)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMapF(idx,idy,idz,IW)) = 0.0;
-	    
+
 	  } // end for idx
 	} // end for idy
       } // end for idz
@@ -142,24 +143,24 @@ public:
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IP)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
-	    
+
 	  } // end for idx
 	} // end for idy
       } // end for idz
 
     } // end isFlux
-    
+
   } // end operator () - 3d
-  
+
   DataArray Udata;
   bool      isFlux;
-  
+
 }; // SDM_Erase_Functor
 
 // =======================================================================
@@ -175,11 +176,11 @@ public:
  */
 template<int dim, int N>
 class SDM_Update_Functor : public SDMBaseFunctor<dim,N> {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
 
   SDM_Update_Functor(HydroParams         params,
@@ -201,12 +202,12 @@ public:
                     real_t              dt,
                     int                 nbCells)
   {
-    SDM_Update_Functor functor(params, sdm_geom, 
+    SDM_Update_Functor functor(params, sdm_geom,
                                Udata, mdUdt, dt);
     Kokkos::parallel_for("SDM_Update_Functor", nbCells, functor);
   }
 
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index)  const
@@ -214,18 +215,18 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
     HydroState tmp;
-    
+
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	
+
 	  Udata(i,j,dofMap(idx,idy,0,ID)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,ID));
 	  Udata(i,j,dofMap(idx,idy,0,IE)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,IE));
 	  Udata(i,j,dofMap(idx,idy,0,IU)) -= dt*mdUdt(i,j,dofMap(idx,idy,0,IU));
@@ -233,12 +234,12 @@ public:
 
 	} // for idx
       } // for idy
-	  
+
     } // end if guard
-    
+
   } // end operator ()
-  
-  //! functor for 3d 
+
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index)  const
@@ -247,7 +248,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
@@ -260,7 +261,7 @@ public:
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	
+
 	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,ID));
 	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,IE));
 	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) -= dt*mdUdt(i,j,k,dofMap(idx,idy,idz,IU));
@@ -270,15 +271,15 @@ public:
 	  } // for idx
 	} // for idy
       } // for idz
-      
+
     } // end if guard
-    
+
   } // end operator ()
-  
+
   DataArray Udata;
   DataArray mdUdt;
   real_t    dt;
-  
+
 }; // SDM_Update_Functor
 
 // =======================================================================
@@ -290,11 +291,11 @@ public:
  */
 template<int dim, int N>
 class SDM_Update_sspRK2_Functor : public SDMBaseFunctor<dim,N> {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
 
   SDM_Update_sspRK2_Functor(HydroParams         params,
@@ -309,7 +310,7 @@ public:
     mdUdt(mdUdt),
     dt(dt)
   {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
@@ -319,7 +320,7 @@ public:
                     real_t              dt,
                     int                 nbCells)
   {
-    SDM_Update_sspRK2_Functor functor(params, sdm_geom, 
+    SDM_Update_sspRK2_Functor functor(params, sdm_geom,
                                       Udata, URK, mdUdt, dt);
     Kokkos::parallel_for("SDM_Update_sspRK2_Functor", nbCells, functor);
   }
@@ -332,12 +333,12 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
     HydroState tmp;
-    
+
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
@@ -356,7 +357,7 @@ public:
 	  tmp[IV] = 0.5 * (Udata(i,j,dofMap(idx,idy,0,IV)) +
 			   URK  (i,j,dofMap(idx,idy,0,IV)) -
 			   mdUdt(i,j,dofMap(idx,idy,0,IV))*dt);
-	  
+
 	  Udata(i,j,dofMap(idx,idy,0,ID)) = tmp[ID];
 	  Udata(i,j,dofMap(idx,idy,0,IE)) = tmp[IE];
 	  Udata(i,j,dofMap(idx,idy,0,IU)) = tmp[IU];
@@ -364,12 +365,12 @@ public:
 
 	} // for idx
       } // for idy
-	  
+
     } // end if guard
-    
+
   } // end operator ()
-  
-  //! functor for 3d 
+
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index)  const
@@ -378,7 +379,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
 
@@ -391,7 +392,7 @@ public:
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	
+
 	    tmp[ID] = 0.5 * (Udata(i,j,k,dofMap(idx,idy,idz,ID)) +
 			     URK  (i,j,k,dofMap(idx,idy,idz,ID)) -
 			     mdUdt(i,j,k,dofMap(idx,idy,idz,ID))*dt);
@@ -407,26 +408,26 @@ public:
 	    tmp[IW] = 0.5 * (Udata(i,j,k,dofMap(idx,idy,idz,IW)) +
 			     URK  (i,j,k,dofMap(idx,idy,idz,IW)) -
 			     mdUdt(i,j,k,dofMap(idx,idy,idz,IW))*dt);
-	    
+
 	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = tmp[ID];
 	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) = tmp[IE];
 	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) = tmp[IU];
 	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) = tmp[IV];
 	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = tmp[IW];
-	    
+
 	  } // for idx
 	} // for idy
       } // for idz
-      
+
     } // end if guard
-    
+
   } // end operator ()
-  
+
   DataArray Udata;
   DataArray URK;
   DataArray mdUdt;
   real_t    dt;
-  
+
 }; // SDM_Update_sspRK2_Functor
 
 // =======================================================================
@@ -440,13 +441,13 @@ public:
  */
 template<int dim, int N>
 class SDM_Update_RK_Functor : public SDMBaseFunctor<dim,N> {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
   using typename SDMBaseFunctor<dim,N>::HydroState;
 
   using coefs_t = Kokkos::Array<real_t,3>;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
 
   SDM_Update_RK_Functor(HydroParams         params,
@@ -455,7 +456,7 @@ public:
 			DataArray           U_0,
 			DataArray           U_1,
 			DataArray           U_2,
-			coefs_t             coefs,  
+			coefs_t             coefs,
 			real_t              dt) :
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     Uout(Uout),
@@ -465,7 +466,7 @@ public:
     coefs(coefs),
     dt(dt)
   {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
@@ -476,7 +477,7 @@ public:
                     coefs_t             coefs,
                     real_t              dt)
   {
-    int64_t nbCells = (dim==2) ? 
+    int64_t nbCells = (dim==2) ?
       params.isize * params.jsize :
       params.isize * params.jsize * params.ksize;
 
@@ -497,12 +498,12 @@ public:
     const real_t c0   = coefs[0];
     const real_t c1   = coefs[1];
     const real_t c2dt = coefs[2]*dt;
-    
+
     int i,j;
     index2coord(index,i,j,isize,jsize);
 
     HydroState tmp;
-    
+
     if(j >= ghostWidth && j < jsize-ghostWidth  &&
        i >= ghostWidth && i < isize-ghostWidth ) {
 
@@ -518,7 +519,7 @@ public:
 	    c0   * U_0 (i,j,dofMap(idx,idy,0,IE)) +
 	    c1   * U_1 (i,j,dofMap(idx,idy,0,IE)) +
 	    c2dt * U_2 (i,j,dofMap(idx,idy,0,IE)) ;
-	  
+
 	  tmp[IU] =
 	    c0   * U_0 (i,j,dofMap(idx,idy,0,IU)) +
 	    c1   * U_1 (i,j,dofMap(idx,idy,0,IU)) +
@@ -536,12 +537,12 @@ public:
 
 	} // for idx
       } // for idy
-	  
+
     } // end if guard
-    
+
   } // end operator ()
-  
-  //! functor for 3d 
+
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index)  const
@@ -550,7 +551,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
     const real_t c0   = coefs[0];
     const real_t c1   = coefs[1];
     const real_t c2dt = coefs[2]*dt;
@@ -567,56 +568,56 @@ public:
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	
+
 	    tmp[ID] =
 	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,ID)) +
 	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,ID)) +
 	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,ID)) ;
-	    
+
 	    tmp[IE] =
 	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IE)) +
 	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IE)) +
 	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IE)) ;
-	    
+
 	    tmp[IU] =
 	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IU)) +
 	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IU)) +
 	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IU)) ;
-	    
+
 	    tmp[IV] =
 	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IV)) +
 	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IV)) +
 	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IV)) ;
-	    
+
 	    tmp[IW] =
 	      c0   * U_0 (i,j,k,dofMap(idx,idy,idz,IW)) +
 	      c1   * U_1 (i,j,k,dofMap(idx,idy,idz,IW)) +
 	      c2dt * U_2 (i,j,k,dofMap(idx,idy,idz,IW)) ;
-	    
+
 	    Uout(i,j,k,dofMap(idx,idy,idz,ID)) = tmp[ID];
 	    Uout(i,j,k,dofMap(idx,idy,idz,IE)) = tmp[IE];
 	    Uout(i,j,k,dofMap(idx,idy,idz,IU)) = tmp[IU];
 	    Uout(i,j,k,dofMap(idx,idy,idz,IV)) = tmp[IV];
 	    Uout(i,j,k,dofMap(idx,idy,idz,IW)) = tmp[IW];
-	    
+
 	  } // for idx
 	} // for idy
       } // for idz
-      
+
     } // end if guard
-    
+
   } // end operator ()
-  
+
   DataArray Uout;
   DataArray U_0;
   DataArray U_1;
   DataArray U_2;
   coefs_t   coefs;
   real_t    dt;
-  
+
 }; // SDM_Update_RK_Functor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_RUN_FUNCTORS_H_
-

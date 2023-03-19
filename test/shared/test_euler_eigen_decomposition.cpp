@@ -11,6 +11,8 @@
 #include "shared/kokkos_shared.h"
 #include "shared/EulerEquations.h"
 
+namespace ppkMHD {
+
 /*
  *
  * Main test using scheme order as template parameter.
@@ -25,9 +27,9 @@ void test()
   std::cout << "=====" << dim << "D" << "====\n";
   std::cout << "===========\n";
 
-  ppkMHD::EulerEquations<dim> eq;
+  EulerEquations<dim> eq;
 
-  using HydroState = typename ppkMHD::EulerEquations<dim>::HydroState;
+  using HydroState = typename EulerEquations<dim>::HydroState;
 
   real_t gamma0 = 1.4;
 
@@ -93,6 +95,8 @@ void test()
 
 } // test
 
+} // namespace ppkMHD
+
 int main(int argc, char* argv[])
 {
 
@@ -116,20 +120,18 @@ int main(int argc, char* argv[])
 
     std::cout << msg.str();
     std::cout << "##########################\n";
+
+    // instantiate some tests
+    ppkMHD::test<2,0>();
+    ppkMHD::test<2,1>();
+
+    ppkMHD::test<3,0>();
+    ppkMHD::test<3,1>();
+    ppkMHD::test<3,2>();
   }
-
-
-  // instantiate some tests
-  test<2,0>();
-  test<2,1>();
-
-  test<3,0>();
-  test<3,1>();
-  test<3,2>();
-
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
 
-}
+} // main

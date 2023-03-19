@@ -14,6 +14,7 @@
 
 #include "shared/problems/BlastParams.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -34,15 +35,15 @@ public:
     SDMBaseFunctor<dim,N>(params,sdm_geom),
     bParams(bParams),
     Udata(Udata) {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     BlastParams         bparams,
                     DataArray           Udata)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
 
     InitBlastFunctor functor(params, sdm_geom, bparams, Udata);
@@ -52,7 +53,7 @@ public:
     /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -61,7 +62,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -77,7 +78,7 @@ public:
     const real_t ymin = this->params.ymin;
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     // blast problem parameters
@@ -89,15 +90,15 @@ public:
     const real_t blast_density_out = bParams.blast_density_out;
     const real_t blast_pressure_in = bParams.blast_pressure_in;
     const real_t blast_pressure_out= bParams.blast_pressure_out;
-    
+
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
-	
+
 	// lower left corner
 	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -106,10 +107,10 @@ public:
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
 
-	real_t d2 = 
+	real_t d2 =
 	  (x-blast_center_x)*(x-blast_center_x)+
-	  (y-blast_center_y)*(y-blast_center_y);    
-    
+	  (y-blast_center_y)*(y-blast_center_y);
+
 	if (d2 < radius2) {
 	  Udata(i,j,dofMap(idx,idy,0,ID)) = blast_density_in;
 	  Udata(i,j,dofMap(idx,idy,0,IE)) = blast_pressure_in/(gamma0-1.0);
@@ -121,16 +122,16 @@ public:
 	  Udata(i,j,dofMap(idx,idy,0,IU)) = 0.0;
 	  Udata(i,j,dofMap(idx,idy,0,IV)) = 0.0;
 	}
-	
+
       } // end for idx
     } // end for idy
-    
+
   } // end operator () - 2d
 
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -140,7 +141,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -162,7 +163,7 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     // blast problem parameters
@@ -184,7 +185,7 @@ public:
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // lower left corner
 	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -194,11 +195,11 @@ public:
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
 
-	  real_t d2 = 
+	  real_t d2 =
 	    (x-blast_center_x)*(x-blast_center_x)+
 	    (y-blast_center_y)*(y-blast_center_y)+
-	    (z-blast_center_z)*(z-blast_center_z);    
-    
+	    (z-blast_center_z)*(z-blast_center_z);
+
 	  if (d2 < radius2) {
 
 	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = blast_density_in;
@@ -206,7 +207,7 @@ public:
 	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) = 0.0;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) = 0.0;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = 0.0;
-	    
+
 	  } else {
 
 	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = blast_density_out;
@@ -216,18 +217,19 @@ public:
 	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = 0.0;
 
 	  }
-		
+
 	} // end for idx
       } // end for idy
     } // end for idz
-    
+
   } // end operator () - 3d
-  
+
   BlastParams bParams;
   DataArray   Udata;
-  
+
 }; // InitBlastFunctor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_INIT_BLAST_FUNCTOR_H_

@@ -1,5 +1,5 @@
 /**
- * This executable is used to test sdm::SolverHydroSDM class, 
+ * This executable is used to test sdm::SolverHydroSDM class,
  * more specificly object EulerEquations.
  *
  */
@@ -22,6 +22,7 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -29,16 +30,16 @@ namespace sdm {
 /*************************************************/
 template<int dim, int N>
 class TestFluxFunctor : public SDMBaseFunctor<dim,N> {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
 
   using HydroState = typename ppkMHD::EulerEquations<dim>::HydroState;
 
   using eq = typename ppkMHD::EulerEquations<dim>;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
-  
+
   TestFluxFunctor(HydroParams         params,
 		  SDM_Geometry<dim,N> sdm_geom,
 		  ppkMHD::EulerEquations<dim> euler,
@@ -52,7 +53,7 @@ public:
   /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -60,7 +61,7 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-     
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     // local cell index
@@ -70,7 +71,7 @@ public:
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
-	
+
 	HydroState q, flux;
 	q[ID] = Udata(i  ,j  , dofMap(idx,idy,0,ID));
 	q[IE] = Udata(i  ,j  , dofMap(idx,idy,0,IE));
@@ -81,23 +82,23 @@ public:
 	real_t eken = HALF_F * (q[IU]*q[IU] + q[IV]*q[IV]) / q[ID];
 	real_t e_internal = q[IE] - eken;
 	real_t pressure = (gamma0 - 1.0) * e_internal;
-	
+
 	eq::flux_x(q,pressure,flux);
 
 	Udata(i  ,j  , dofMap(idx,idy,0,ID)) = flux[ID];
 	Udata(i  ,j  , dofMap(idx,idy,0,IE)) = flux[IE];
 	Udata(i  ,j  , dofMap(idx,idy,0,IU)) = flux[IU];
 	Udata(i  ,j  , dofMap(idx,idy,0,IV)) = flux[IV];
-		
+
       } // end for idx
     } // end for idy
-    
+
   } // end operator () - 2d
 
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -107,7 +108,7 @@ public:
   ppkMHD::EulerEquations<dim> euler;
   DataArray Udata;
   DataArray FluxData;
-  
+
 }; // TestFluxFunctor
 
 } // namespace sdm
@@ -140,7 +141,7 @@ void test_sdm_flux(int argc, char* argv[])
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
   }
-  
+
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
@@ -150,29 +151,31 @@ void test_sdm_flux(int argc, char* argv[])
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
   // initialize the IO_Writer object (normally done in
   // SolverFactory's create method)
   solver.init_io();
-  
+
   // init SDM geometry
   sdm::SDM_Geometry<dim,N> sdm_geom;
   sdm_geom.init(0);
   sdm_geom.init_lagrange_1d();
 
   // Euler equations
-  ppkMHD::EulerEquations<dim> euler;
-  
+  EulerEquations<dim> euler;
+
   // create test functor
   sdm::TestFluxFunctor<dim,N> functor(params, sdm_geom, euler, solver.U, solver.Uaux);
   Kokkos::parallel_for(solver.nbCells, functor);
-  
+
   solver.save_solution();
-  
+
 } // test_sdm_io
+
+} // namespace ppkMHD
 
 int main(int argc, char* argv[])
 {
@@ -187,14 +190,14 @@ int main(int argc, char* argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 #endif // USE_MPI
 
-  
+
   Kokkos::initialize(argc, argv);
 
   if (myRank==0) {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -215,21 +218,21 @@ int main(int argc, char* argv[])
     std::cout << "==== Spectral Difference Lagrange Flux test ====\n";
     std::cout << "================================================\n";
   }
-  
-  
+
+
   // testing for multiple values of N in 2 to 6
   {
 
     // 2d
-    test_sdm_flux<2,4>(argc,argv);
+    ppkMHD::test_sdm_flux<2,4>(argc,argv);
 
     // 3d
-    test_sdm_flux<3,4>(argc,argv);
+    ppkMHD::test_sdm_flux<3,4>(argc,argv);
 
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
-}
+
+} // main

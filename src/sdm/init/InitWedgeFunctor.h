@@ -14,6 +14,7 @@
 
 #include "shared/problems/WedgeParams.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -28,12 +29,12 @@ namespace sdm {
 template<int dim, int N>
 class InitWedgeFunctor : public SDMBaseFunctor<dim,N>
 {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
-  
+
   InitWedgeFunctor(HydroParams params,
 		   SDM_Geometry<dim,N> sdm_geom,
 		   WedgeParams wparams,
@@ -42,7 +43,7 @@ public:
     wparams(wparams),
     Udata(Udata)
   {};
-  
+
   ~InitWedgeFunctor() {};
 
   // static method which does it all: create and execute functor
@@ -51,18 +52,18 @@ public:
                     WedgeParams         wParams,
                     DataArray           Udata)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
 
     InitWedgeFunctor functor(params, sdm_geom, wParams, Udata);
     Kokkos::parallel_for("InitWedgeFunctor",nbCells, functor);
   }
-  
+
   /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -71,7 +72,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -88,16 +89,16 @@ public:
 
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
+
     //const real_t gamma0 = this->params.settings.gamma0;
 
     const real_t slope_f = this->wparams.slope_f;
     const real_t x_f     = this->wparams.x_f;
-    
+
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
-    
+
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
@@ -108,21 +109,21 @@ public:
 
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-    
+
 	if ( y > slope_f*(x-x_f) ) {
-    
+
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = wparams.rho1;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = wparams.e_tot1;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = wparams.rho_u1;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = wparams.rho_v1;
-	  
+
 	} else {
-	  
+
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = wparams.rho2;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = wparams.e_tot2;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = wparams.rho_u2;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = wparams.rho_v2;
-	  
+
 	}
 
       } // end for idx
@@ -133,7 +134,7 @@ public:
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -143,7 +144,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -165,21 +166,21 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
-    
+
     //const real_t gamma0 = this->params.settings.gamma0;
-    
+
     const real_t slope_f = this->wparams.slope_f;
     const real_t x_f     = this->wparams.x_f;
 
     // local cell index
     int i,j,k;
     index2coord(index,i,j,k,isize,jsize,ksize);
-    
+
     // loop over cell DoF's
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // lower left corner
 	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -188,23 +189,23 @@ public:
 	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-    
+
 	  if ( y > slope_f*(x-x_f) ) {
-	    
+
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = wparams.rho1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = wparams.e_tot1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = wparams.rho_u1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = wparams.rho_v1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = wparams.rho_w1;
-	    
+
 	  } else {
-	    
+
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = wparams.rho2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = wparams.e_tot2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IU)) = wparams.rho_u2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = wparams.rho_v2;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = wparams.rho_w2;
-	    
+
 	  }
 
     	} // end for idx
@@ -212,12 +213,13 @@ public:
     } // end for idz
 
   } // end operator () - 3d
-  
+
   WedgeParams wparams;
   DataArray   Udata;
-  
+
 }; // class InitWedgeFunctor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 # endif // SDM_INIT_WEDGE_FUNCTOR_H_

@@ -12,6 +12,8 @@
 
 #include "sdm/SDM_Geometry.h"
 
+namespace ppkMHD {
+
 /*
  *
  * Main test using scheme order as template parameter.
@@ -25,21 +27,21 @@ void test_sdm_geom_2d()
   std::cout << "===========\n";
   std::cout << "=====2D====\n";
   std::cout << "===========\n";
-  
+
   // dim is the number of variable in the multivariate polynomial representation
   //int dim=2;
-  
+
   sdm::SDM_Geometry<2,N> sdm_geom;
-  
+
   sdm_geom.init(N);
-  
+
   for (int j=0; j<N; ++j) {
     for (int i=0; i<N; ++i) {
       std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
 		<< "," << sdm_geom.solution_pts_1d_host(j) << ") ";
     }
     std::cout << "\n";
-  }    
+  }
   std::cout << "\n";
 
 } // test_sdm_geom_2d<N>
@@ -51,14 +53,14 @@ void test_sdm_geom_3d()
   std::cout << "===========\n";
   std::cout << "=====3D====\n";
   std::cout << "===========\n";
-  
+
   // dim is the number of variable in the multivariate polynomial representation
   //int dim=3;
-  
+
   sdm::SDM_Geometry<3,N> sdm_geom;
-  
+
   sdm_geom.init(N);
-  
+
   for (int k=0; k<N; ++k) {
     for (int j=0; j<N; ++j) {
       for (int i=0; i<N; ++i) {
@@ -70,8 +72,10 @@ void test_sdm_geom_3d()
     }
     std::cout << "\n\n";
   }
-  
+
 } // test_sdm_geom_3d<N>
+
+} // namespace ppkMHD
 
 int main(int argc, char* argv[])
 {
@@ -82,7 +86,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -95,20 +99,19 @@ int main(int argc, char* argv[])
     Kokkos::print_configuration( msg );
     std::cout << msg.str();
     std::cout << "##########################\n";
+
+    // instantiate some tests
+    ppkMHD::test_sdm_geom_2d<2>();
+    ppkMHD::test_sdm_geom_2d<3>();
+    ppkMHD::test_sdm_geom_2d<4>();
+
+    ppkMHD::test_sdm_geom_3d<2>();
+    ppkMHD::test_sdm_geom_3d<3>();
+    ppkMHD::test_sdm_geom_3d<4>();
   }
-
-
-  // instantiate some tests
-  test_sdm_geom_2d<2>();
-  test_sdm_geom_2d<3>();
-  test_sdm_geom_2d<4>();
-
-  test_sdm_geom_3d<2>();
-  test_sdm_geom_3d<3>();
-  test_sdm_geom_3d<4>();
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
-}
+
+} // main

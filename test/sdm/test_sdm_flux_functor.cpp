@@ -27,6 +27,7 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
 
 /*
  *
@@ -41,7 +42,7 @@ void test_flux_functors()
 
   using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
   using DataArrayHost = typename DataArray::HostMirror;
-  
+
   int myRank = 0;
 #ifdef USE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
@@ -59,7 +60,7 @@ void test_flux_functors()
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
   }
-  
+
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
@@ -69,7 +70,7 @@ void test_flux_functors()
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
@@ -80,29 +81,29 @@ void test_flux_functors()
   int nbCells = dim==2 ?
     params.isize*params.jsize :
     params.isize*params.jsize*params.ksize;
-  
+
   // init data
   {
 
     sdm::InitTestFluxFunctor<dim,N,0>::apply(solver.params,
                                              solver.sdm_geom,
                                              solver.U);
-      
+
     solver.save_solution();
 
   }
 
-  
+
   // create an io_writer
   auto io_writer =
-    std::make_shared<ppkMHD::io::IO_ReadWrite_SDM<dim,N>>(solver.params,
+    std::make_shared<io::IO_ReadWrite_SDM<dim,N>>(solver.params,
 							  solver.configMap,
 							  solver.m_variables_names,
 							  solver.sdm_geom);
-  
+
   DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
 
-  ppkMHD::EulerEquations<dim> euler;
+  EulerEquations<dim> euler;
 
   //
   // Dir X
@@ -110,15 +111,15 @@ void test_flux_functors()
   {
     // interpolate conservative variables from solution points to flux points
     {
-      
+
       sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(solver.params,
 							       solver.sdm_geom,
 							       solver.U,
 							       solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
-      
+
     }
-    
+
     {
       // compute some flux along X direction
       sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
@@ -127,7 +128,7 @@ void test_flux_functors()
 							     solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
     }
-    
+
     /*
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
@@ -137,20 +138,20 @@ void test_flux_functors()
 				       0,
 				       0.0);
   } // end dir X
-  
+
   //
   // Dir Y
   //
-  {  
+  {
     // interpolate conservative variables from solution points to flux points
     {
-      
+
       sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(solver.params,
 							       solver.sdm_geom,
 							       solver.U,
 							       solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
-      
+
     }
 
     {
@@ -161,7 +162,7 @@ void test_flux_functors()
 							     solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
     }
-    
+
     /*
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
@@ -171,22 +172,22 @@ void test_flux_functors()
 				       0,
 				       0.0);
   } // end dir Y
-  
+
   //
   // Dir Z
   //
-  if (dim==3) {  
+  if (dim==3) {
     // interpolate conservative variables from solution points to flux points
     {
-      
+
       sdm::Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(solver.params,
 							       solver.sdm_geom,
 							       solver.U,
 							       solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
-      
+
     }
-    
+
     {
       // compute some flux along X direction
       sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
@@ -195,7 +196,7 @@ void test_flux_functors()
 							     solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
     }
-  
+
     /*
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
@@ -207,6 +208,7 @@ void test_flux_functors()
   } // end dim==3 / dir Z
 
 } // test_flux_functors
+} // namespace ppkMHD
 
 int main(int argc, char* argv[])
 {
@@ -217,7 +219,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -240,15 +242,15 @@ int main(int argc, char* argv[])
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_flux_functors<2,4>();
+    ppkMHD::test_flux_functors<2,4>();
 
     // 3d
-    test_flux_functors<3,4>();
+    ppkMHD::test_flux_functors<3,4>();
 
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
+
 }

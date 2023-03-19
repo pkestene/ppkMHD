@@ -1,5 +1,5 @@
 /**
- * This executable is used to test sdm::SDM_Geometry class, 
+ * This executable is used to test sdm::SDM_Geometry class,
  * more specific Lagrange interpolation.
  *
  * More precicely, given a Lagrange polynomial basis at solution points, we
@@ -15,6 +15,8 @@
 #include "shared/kokkos_shared.h"
 
 #include "sdm/SDM_Geometry.h"
+
+namespace ppkMHD {
 
 //! const polynomial
 real_t f_0(real_t x)
@@ -78,7 +80,7 @@ f_t select_polynomial(int N) {
 
   // default
   return f_3;
-  
+
 }
 
 // select polynomial for non-exact reconstruction
@@ -99,7 +101,7 @@ f_t select_polynomial_non_exact(int N) {
 
   // default
   return f_3;
-  
+
 }
 
 /*
@@ -120,16 +122,16 @@ void test_lagrange()
   // polynomials up to degree N-1; so here we test the exact reconstruction.
   f_t f = select_polynomial(N);
   //f_t f = select_polynomial_non_exact(N);
-  
+
   std::cout << "  Dimension is : " << dim << "\n";
   std::cout << "  Using order  : " << N << "\n";
   std::cout << "  Number of solution points : " << N << "\n";
   std::cout << "  Number of flux     points : " << N+1 << "\n";
-  
+
   sdm::SDM_Geometry<dim,N> sdm_geom;
 
   sdm_geom.init(0);
-  
+
   std::cout << "Solution points:\n";
   for (int j=0; j<N; ++j) {
     for (int i=0; i<N; ++i) {
@@ -138,11 +140,11 @@ void test_lagrange()
     }
     std::cout << "\n";
   }
-  
+
   sdm_geom.init_lagrange_1d();
-  
+
   std::cout << "1D lagrange interpolation solution to flux:\n";
-  
+
   // create values at solution points:
   using DataVal     = Kokkos::View<real_t*,Device>;
   using DataValHost = Kokkos::View<real_t*,Device>::HostMirror;
@@ -151,28 +153,30 @@ void test_lagrange()
 
   for (int i=0; i<N; ++i)
     solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
-  
+
   using LagrangeMatrix     = Kokkos::View<real_t **, Device>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
 
   LagrangeMatrixHost sol2flux_h = Kokkos::create_mirror(sdm_geom.sol2flux);
   Kokkos::deep_copy(sol2flux_h, sdm_geom.sol2flux);
-  
+
   for (int j=0; j<N+1; ++j) {
-    
+
     // compute interpolated value
     real_t val=0;
     for (int k=0; k<N; ++k) {
       val += solution_values_h(k) * sol2flux_h(k,j);
     }
-    
+
     real_t x_j = sdm_geom.flux_pts_1d_host(j);
-    
+
     printf("Interpolated value at %f is %f as compared to exact value %f\n",x_j,val, f(x_j));
-    
+
   }
-  
+
 } // test_lagrange
+
+} // namespace ppkMHD
 
 int main(int argc, char* argv[])
 {
@@ -183,7 +187,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -196,30 +200,30 @@ int main(int argc, char* argv[])
     Kokkos::print_configuration( msg );
     std::cout << msg.str();
     std::cout << "##########################\n";
-  }
 
-  std::cout << "=========================================================\n";
-  std::cout << "==== Spectral Difference Lagrange Interpolation test ====\n";
-  std::cout << "=========================================================\n";
+    std::cout << "=========================================================\n";
+    std::cout << "==== Spectral Difference Lagrange Interpolation test ====\n";
+    std::cout << "=========================================================\n";
 
-  // testing for multiple value of N in 2 to 6
-  {
-    // 2d
-    test_lagrange<2,2>();
-    test_lagrange<2,3>();
-    test_lagrange<2,4>();
-    test_lagrange<2,5>();
-    test_lagrange<2,6>();
+    // testing for multiple value of N in 2 to 6
+    {
+      // 2d
+      ppkMHD::test_lagrange<2,2>();
+      ppkMHD::test_lagrange<2,3>();
+      ppkMHD::test_lagrange<2,4>();
+      ppkMHD::test_lagrange<2,5>();
+      ppkMHD::test_lagrange<2,6>();
 
-    // 3d
-    test_lagrange<3,2>();
-    test_lagrange<3,3>();
-    test_lagrange<3,4>();
+      // 3d
+      ppkMHD::test_lagrange<3,2>();
+      ppkMHD::test_lagrange<3,3>();
+      ppkMHD::test_lagrange<3,4>();
 
+    }
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
-}
+
+} // main

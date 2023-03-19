@@ -34,6 +34,8 @@ enum RK_type {
   SSP_RK3=3
 };
 
+namespace ppkMHD {
+
 using errors_t = std::array<real_t,2>;
 
 /**
@@ -48,7 +50,7 @@ void generate_input_file(int N, int size, int runge_kutta)
 
   std::fstream outFile;
   outFile.open ("test_sdm_isentropic_vortex.ini", std::ios_base::out);
-  
+
   outFile << "[run]\n";
   outFile << "solver_name=Hydro_SDM_2D_degree" << N << "\n";
   outFile << "tEnd=10\n";
@@ -64,7 +66,7 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "xmin=-5.0\n";
   outFile << "xmax=5.0\n";
   outFile << "\n";
-  
+
   outFile << "ymin=-5.0\n";
   outFile << "ymax=5.0\n";
   outFile << "\n";
@@ -76,7 +78,7 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "boundary_type_ymin=3\n";
   outFile << "boundary_type_ymax=3\n";
   outFile << "\n";
-  
+
   outFile << "[hydro]\n";
   outFile << "gamma0=1.666\n";
   outFile << "cfl=0.8\n";
@@ -86,7 +88,7 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "problem=isentropic_vortex\n";
   outFile << "riemann=hllc\n";
   outFile << "\n";
-  
+
   outFile << "[sdm]\n";
   if (runge_kutta == FORWARD_EULER) {
     outFile << "forward_euler=yes\n";
@@ -103,7 +105,7 @@ void generate_input_file(int N, int size, int runge_kutta)
     outFile << "rescale_dt_enabled=yes\n";
   }
   outFile << "\n";
-  
+
   outFile << "[isentropic_vortex]\n";
   outFile << "density_ambient=1.0\n";
   outFile << "temperature_ambient=1.0\n";
@@ -111,13 +113,13 @@ void generate_input_file(int N, int size, int runge_kutta)
   outFile << "vy_ambient=1.0\n";
   outFile << "vz_ambient=1.0\n";
   outFile << "\n";
-  
+
   outFile << "[output]\n";
   outFile << "outputDir=./\n";
   outFile << "outputPrefix=test_isentropic_vortex_2D\n";
   outFile << "outputVtkAscii=false\n";
   outFile << "\n";
-  
+
   outFile << "[other]\n";
   outFile << "implementationVersion=0\n";
   outFile << "\n";
@@ -132,7 +134,7 @@ void generate_input_file(int N, int size, int runge_kutta)
 /**
  * compute both L1 and L2 error between simulation and exact solution.
  *
- * \param[in]  solver is the state of the simulation after a run, 
+ * \param[in]  solver is the state of the simulation after a run,
  *             solution is in solver->U
  *
  * \return an array containing the L1 and L2 errors.
@@ -142,14 +144,14 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
 {
 
   errors_t error;
-  
+
   real_t error_L1 = 0.0;
   real_t error_L2 = 0.0;
-  
+
   int nbCells =
     solver->params.isize *
     solver->params.jsize;
-  
+
   // retrieve exact solution in auxiliary data arrary : solver.Uaux
   {
     solver->configMap.setBool("isentropic_vortex","use_tEnd",true);
@@ -165,7 +167,7 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
 
   // perform the actual error computation
   {
-    error_L1 = 
+    error_L1 =
       sdm::Compute_Error_Functor_2d<N,sdm::NORM_L1>::apply(solver->params,
                                                            solver->sdm_geom,
                                                            solver->U,
@@ -175,7 +177,7 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
   }
 
   {
-    error_L2 = 
+    error_L2 =
       sdm::Compute_Error_Functor_2d<N,sdm::NORM_L2>::apply(solver->params,
                                                            solver->sdm_geom,
                                                            solver->U,
@@ -185,7 +187,7 @@ errors_t compute_error_versus_exact(sdm::SolverHydroSDM<2,N>* solver)
   }
 
   return error;
-  
+
 } // compute_error_versus_exact
 
 // ===============================================================
@@ -205,7 +207,7 @@ errors_t test_isentropic_vortex(int size, int runge_kutta, real_t tEnd)
   std::cout << "###############################\n";
 
   generate_input_file(N,size,runge_kutta);
-  
+
   // read parameter file and initialize parameter
   // parse parameters from input file
   std::string input_file = std::string("test_sdm_isentropic_vortex.ini");
@@ -214,21 +216,21 @@ errors_t test_isentropic_vortex(int size, int runge_kutta, real_t tEnd)
   // manually setting tEnd (default value is 10.0)
   if (tEnd > 0)
     configMap.setFloat("run","tEnd",tEnd);
-  
+
   // test: create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
   // retrieve solver name from settings
   const std::string solver_name = configMap.getString("run", "solver_name", "Unknown");
 
   // initialize workspace memory (U, U2, ...)
   sdm::SolverHydroSDM<2,N>* solver = new sdm::SolverHydroSDM<2,N>(params, configMap);
   solver->init_io();
-  
+
   if (params.nOutput != 0)
     solver->save_solution();
-  
+
   // start computation
   std::cout << "Start computation....\n";
   solver->timers[TIMER_TOTAL]->start();
@@ -246,19 +248,19 @@ errors_t test_isentropic_vortex(int size, int runge_kutta, real_t tEnd)
   // save last time step
   if (params.nOutput != 0)
     solver->save_solution();
-  
+
   printf("final time is %f\n", solver->m_t);
 
   errors_t error = compute_error_versus_exact<N>(solver);
-  
+
   print_solver_monitoring_info(solver);
 
   printf("test isentropic vortex for N=%d, size=%d, error L1=%6.4e, error L2=%6.4e\n",N,size,error[sdm::NORM_L1],error[sdm::NORM_L2]);
-  
+
   delete solver;
 
   return error;
-  
+
 } // test_isentropic_vortex
 
 template<int N>
@@ -294,7 +296,7 @@ void run_test()
     results_L1[i] = error[sdm::NORM_L1];
     results_L2[i] = error[sdm::NORM_L2];
   }
-  
+
   // report results with norm L1
   for (std::size_t i = 0; i<sizes.size(); ++i) {
     if (i==0)
@@ -302,7 +304,7 @@ void run_test()
     else
       printf("order %d, size=%4d, error L1 = %6.4e, order = %5.3f\n",N,sizes[i],results_L1[i],log(results_L1[i-1]/results_L1[i])/log(2.0));
   }
-  
+
   // report results with norm L2
   for (std::size_t i = 0; i<sizes.size(); ++i) {
     if (i==0)
@@ -310,7 +312,7 @@ void run_test()
     else
       printf("order %d, size=%4d, error L2 = %6.4e, order = %5.3f\n",N,sizes[i],results_L2[i],log(results_L2[i-1]/results_L2[i])/log(2.0));
   }
-  
+
 } // run_test
 
 template<int N>
@@ -337,16 +339,17 @@ void run_test_single(int size, real_t tEnd)
   errors_t error = test_isentropic_vortex<N>(size,RK_type,tEnd);
   results_L1 = error[sdm::NORM_L1];
   results_L2 = error[sdm::NORM_L2];
-  
+
   // report results with norm L1
   printf("order %d, size=%4d, error L1 = %6.4e, order = --   \n",N,size,results_L1);
-  
+
   // report results with norm L2
   printf("order %d, size=%4d, error L2 = %6.4e, order = --   \n",N,size,results_L2);
-  
+
 } // run_test_single
 
-  
+} // namespace ppkMHD
+
 // ===============================================================
 // ===============================================================
 // ===============================================================
@@ -354,7 +357,7 @@ int main(int argc, char *argv[])
 {
 
   using namespace ppkMHD;
-  
+
   Kokkos::initialize(argc, argv);
 #ifdef CUDA
   int cudaDeviceId;
@@ -366,7 +369,7 @@ int main(int argc, char *argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -379,7 +382,7 @@ int main(int argc, char *argv[])
     Kokkos::print_configuration( msg );
     std::cout << msg.str();
     std::cout << "##########################\n";
-    
+
   }
 
   // default order to test
@@ -392,27 +395,27 @@ int main(int argc, char *argv[])
       order = tmp;
 
     if (order==2) {
-      
+
       run_test<2>();
-      
+
     } else if (order==3) {
-      
+
       run_test<3>();
-      
+
     } else if (order==4) {
-      
+
       run_test<4>();
-      
+
     } else if (order==5) {
-      
+
       run_test<5>();
-      
+
     } else if (order==6) {
-      
+
       run_test<6>();
 
     }
-    
+
   // save result in a numpy compatible file (for plotting with python / matplotlib)
   // TODO
 
@@ -424,7 +427,7 @@ int main(int argc, char *argv[])
     real_t tEnd=-1.0;
     if (argc>3)
       tEnd = std::atof(argv[3]);
-    
+
     switch(order) {
     case 2:
       run_test_single<2>(size,tEnd);
@@ -445,13 +448,11 @@ int main(int argc, char *argv[])
       std::cout << "invalid parameter (order) !\n";
       break;
     }
-    
+
   }
 
-  
   Kokkos::finalize();
-  
+
   return EXIT_SUCCESS;
 
 } // end main
-

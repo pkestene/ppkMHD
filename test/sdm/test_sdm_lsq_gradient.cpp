@@ -17,6 +17,8 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
+
 //! a test scalar function
 real_t f(real_t x, real_t y, real_t z)
 {
@@ -63,7 +65,7 @@ void test_sdm_lsq_gradient()
   std::cout << "===============================================\n";
   std::cout << "===============================================\n";
   std::cout << "===============================================\n";
-  
+
   sdm::SDM_Geometry<dim,N> sdm_geom;
   sdm_geom.init(0);
 
@@ -72,29 +74,29 @@ void test_sdm_lsq_gradient()
 
   // right hand side
   real_t rhs[dim] = {0};
-  
+
   // center
   real_t xc = 0.5;
   real_t yc = 0.5;
   real_t zc = 0.5;
   UNUSED(zc);
-  
+
   if (dim==2) {
 
     real_t z = 1.0;
-    
+
     for (int j=0; j<N; ++j) {
       real_t y = sdm_geom.solution_pts_1d_host(j);
-      
+
       for (int i=0; i<N; ++i) {
 	real_t x = sdm_geom.solution_pts_1d_host(i);
 
 	real_t dx = x-xc;
 	real_t dy = y-yc;
-	
+
 	//real_t w = 1.0/sqrt( dx*dx + dy*dy );
 	real_t w = 1.0;
-	
+
 	mat[0][0] += w*dx*dx;
 	mat[0][1] += w*dx*dy;
 	mat[1][1] += w*dy*dy;
@@ -102,7 +104,7 @@ void test_sdm_lsq_gradient()
 	real_t df = f(x,y,z);// - f(xc,yc,z);
 	rhs[0] += w*dx*df;
 	rhs[1] += w*dy*df;
-	
+
       } // end i
     } // end j
 
@@ -117,7 +119,7 @@ void test_sdm_lsq_gradient()
 
     printf("df/dx=%f - exact is %f\n",rhs[0]/sdm_geom.sum_dx_square,f_x(xc,yc,z));
     printf("df/dy=%f - exact is %f\n",rhs[1]/sdm_geom.sum_dx_square,f_y(xc,yc,z));
-    
+
   } else {
 
     // compute only diagonal terms
@@ -126,17 +128,17 @@ void test_sdm_lsq_gradient()
 
       for (int j=0; j<N; ++j) {
 	real_t y = sdm_geom.solution_pts_1d_host(j);
-	
+
 	for (int i=0; i<N; ++i) {
 	  real_t x = sdm_geom.solution_pts_1d_host(i);
 
 	  real_t dx = x-xc;
 	  real_t dy = y-yc;
 	  real_t dz = z-zc;
-	  
+
 	  //real_t w = 1.0/sqrt( dx*dx + dy*dy );
 	  real_t w = 1.0;
-	
+
 	  mat[0][0] += w*dx*dx;
 	  mat[1][1] += w*dy*dy;
 	  mat[2][2] += w*dz*dz;
@@ -145,7 +147,7 @@ void test_sdm_lsq_gradient()
 	  rhs[0] += w*dx*df;
 	  rhs[1] += w*dy*df;
 	  rhs[2] += w*dz*df;
-	
+
 	} // end i
       } // end j
     } // end k
@@ -162,8 +164,10 @@ void test_sdm_lsq_gradient()
 
   }
 
-  
+
 } // test_sdm_lsq_gradient
+
+} // namespace ppkMHD
 
 // =====================================================================
 // =====================================================================
@@ -181,14 +185,14 @@ int main(int argc, char* argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 #endif // USE_MPI
 
-  
+
   Kokkos::initialize(argc, argv);
 
   if (myRank==0) {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -211,22 +215,21 @@ int main(int argc, char* argv[])
     std::cout << "==== Least-square gradient estimation ==========\n";
     std::cout << "================================================\n";
   }
-  
-  
+
+
   // testing for multiple values of N between 2 to 6 in 2d and 3d
   {
 
     // 2d
-    test_sdm_lsq_gradient<2,4>();
+    ppkMHD::test_sdm_lsq_gradient<2,4>();
 
     // 3d
-    test_sdm_lsq_gradient<3,4>();
+    ppkMHD::test_sdm_lsq_gradient<3,4>();
 
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
-}
 
+}

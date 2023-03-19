@@ -14,6 +14,7 @@
 
 #include "shared/EulerEquations.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 enum norm_type {
@@ -297,5 +298,6 @@ public:
 }; // class Compute_Error_Functor_3d
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_COMPUTE_ERROR_FUNCTOR_H_

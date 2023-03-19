@@ -5,6 +5,7 @@
 
 #include "utils/config/ConfigMap.h"
 
+namespace ppkMHD {
 
 struct OrszagTangParams {
 
@@ -13,11 +14,13 @@ struct OrszagTangParams {
 
   OrszagTangParams(ConfigMap& configMap)
   {
-    
+
     kt = configMap.getFloat  ("OrszagTang", "kt",  0.0);
-    
+
   }
 
 }; // struct OrszagTangParams
+
+} // namespace ppkMHD
 
 #endif // ORSZAG_TANG_PARAMS_H_

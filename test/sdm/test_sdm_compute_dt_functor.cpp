@@ -23,12 +23,14 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
+
 template< int dim, int N >
 real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
-    
+
   // create equation system object
   ppkMHD::EulerEquations<dim> euler;
-  
+
   real_t invDt = 0.0;
 
   // alias to the computational functor, dimension dependend
@@ -39,13 +41,13 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
   invDt = ComputeDtFunctor::apply(solver.params,
                                   solver.sdm_geom,
                                   euler,
-                                  solver.U);  
-  
+                                  solver.U);
+
   real_t dt = solver.params.settings.cfl/invDt;
   printf("dt = %f (invDt = %f)\n", dt,invDt);
-  
+
   return dt;
-  
+
 } // compute_dt
 
 /*
@@ -76,7 +78,7 @@ int test_compute_dt_functors()
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
   }
-  
+
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
@@ -86,14 +88,14 @@ int test_compute_dt_functors()
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
   // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
   solver.init_io();
-  
+
   // save data just for cross-checking
   solver.save_solution();
 
@@ -107,6 +109,7 @@ int test_compute_dt_functors()
   return status;
 
 } // test_compute_dt_functors
+} // namespace ppkMHD
 
 /*************************************************/
 /*************************************************/
@@ -120,7 +123,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -146,15 +149,15 @@ int main(int argc, char* argv[])
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    status2d = test_compute_dt_functors<2,4>();
+    status2d = ppkMHD::test_compute_dt_functors<2,4>();
 
     // 3d
-    status3d = test_compute_dt_functors<3,4>();
+    status3d = ppkMHD::test_compute_dt_functors<3,4>();
 
   }
 
   Kokkos::finalize();
 
   return status2d+status3d;
-  
+
 }

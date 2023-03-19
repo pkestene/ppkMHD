@@ -3,6 +3,8 @@
 
 #include "utils/config/ConfigMap.h"
 
+namespace ppkMHD {
+
 /**
  * Implode test parameters.
  */
@@ -56,5 +58,7 @@ struct ImplodeParams {
   }
 
 }; // struct ImplodeParams
+
+} // namespace ppkMHD
 
 #endif // IMPLODE_PARAMS_H_

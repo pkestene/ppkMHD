@@ -4,6 +4,8 @@
 #include <math.h>
 #include "utils/config/ConfigMap.h"
 
+namespace ppkMHD {
+
 /**
  * Gravity field due to a point source.
  *
@@ -21,7 +23,7 @@ struct PointSourceGravity {
 
   //! soften parameter
   real_t eps;
-  
+
   PointSourceGravity(ConfigMap& configMap)
   {
     xs = configMap.getFloat("gravity","x",0.0);
@@ -33,7 +35,7 @@ struct PointSourceGravity {
     eps = configMap.getFloat("gravity","soften", 0.01);
   }
 
-  /** 
+  /**
    * Evaluate gravity field components at location P(x,y,z).
    *
    * if \f$ P_s \f$ is point source location, then gravity field at location
@@ -51,14 +53,14 @@ struct PointSourceGravity {
 
     real_t r   = sqrt( (x-xs)*(x-xs) + (y-ys)*(y-ys) + (z-zs)*(z-zs) );
     real_t GM2 = GM/(r*r*r);
-    
+
     gx = GM2 * (xs-x);
     gy = GM2 * (ys-y);
     gz = GM2 * (zs-z);
-    
+
   } // eval_exact
 
-  /** 
+  /**
    * Evaluate gravity field components at location P(x,y,z) with softening
    * to avoid too high gravity field when P is close to source.
    *
@@ -79,13 +81,15 @@ struct PointSourceGravity {
 
     real_t r   = sqrt( (x-xs)*(x-xs) + (y-ys)*(y-ys)  + (z-zs)*(z-zs) + eps*eps);
     real_t GM2 = GM/(r*r*r);
-    
+
     gx = GM2 * (xs-x);
     gy = GM2 * (ys-y);
     gz = GM2 * (zs-z);
-    
+
   } // eval
-  
+
 }; // struct PointSourceGravity
+
+} // namespace ppkMHD
 
 #endif // POINT_SOURCE_GRAVITY_H_

@@ -3,6 +3,8 @@
 
 #include "utils/config/ConfigMap.h"
 
+namespace ppkMHD {
+
 struct WaveParams {
 
   // wave problem parameters
@@ -15,7 +17,7 @@ struct WaveParams {
    * 3 : Contact wave
    */
   int wave_type;
-  
+
   /* right eigenvector */
   real_t rev[7];
 
@@ -35,13 +37,13 @@ struct WaveParams {
     double xmax = configMap.getFloat("mesh", "xmax", 3.0);
     double ymax = configMap.getFloat("mesh", "ymax", 1.5);
     double zmax = configMap.getFloat("mesh", "zmax", 1.5);
-    
+
     double Lx = xmax - xmin;
     double Ly = ymax - ymin;
     double Lz = zmax - zmin;
-    
+
     double gamma0 = configMap.getFloat("hydro", "gamma0", 1.66667);
-    
+
     wave_amplitude   = configMap.getFloat("wave","amplitude", 1.0e-6);
     wave_type   = configMap.getInteger("wave","type", 0);
 
@@ -72,7 +74,7 @@ struct WaveParams {
       wave_V0   = 0.0;
     /* Slow wave */
     } else if (wave_type == 2) {
-      rev[0] = 8.944272e-01; 
+      rev[0] = 8.944272e-01;
       rev[1] = -4.472136e-01;
       rev[2] = -8.432740e-01;
       rev[3] = -2.981424e-01;
@@ -102,9 +104,9 @@ struct WaveParams {
      * */
     d0 = 1.0;
     p0 = 1.0/gamma0;
-    
+
     const double TwoPi = 4.0*asin(1.0);
-    
+
     real_t ang_3 = atan(Lx/Ly);
     sin_a3 = sin(ang_3);
     cos_a3 = cos(ang_3);
@@ -112,17 +114,17 @@ struct WaveParams {
     real_t ang_2 = atan(0.5*(Lx*cos_a3 + Ly*sin_a3)/Lz);
     sin_a2 = sin(ang_2);
     cos_a2 = cos(ang_2);
-    
+
     real_t x1 = Lx*cos_a2*cos_a3;
     real_t x2 = Ly*cos_a2*sin_a3;
     real_t x3 = Lz*sin_a2;
-    
+
     real_t lambda = x1;
     if (ang_3 != 0.0)
       lambda = fmin(lambda,x2);
     if (ang_2 != 0.)
       lambda = fmin(lambda,x3);
-    
+
     // k_parallel
     k_par = TwoPi/lambda;
 
@@ -132,9 +134,11 @@ struct WaveParams {
     bx0 = 1.0;
     by0 = sqrt(2.0);
     bz0 = 0.5;
-    
+
   }
 
 }; // struct WaveParams
+
+} // namespace ppkMHD
 
 #endif // WAVE_PARAMS_H_

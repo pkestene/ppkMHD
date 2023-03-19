@@ -52,6 +52,7 @@
 #include "shared/problems/WedgeParams.h"
 #include "shared/problems/JetParams.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /**
@@ -1985,5 +1986,6 @@ void SolverHydroSDM<dim,N>::save_solution_impl()
 } // SolverHydroSDM::save_solution_impl()
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SOLVER_HYDRO_SDM_H_

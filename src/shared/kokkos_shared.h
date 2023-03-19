@@ -6,6 +6,8 @@
 #include "shared/real_type.h"
 #include "shared/utils.h"
 
+namespace ppkMHD {
+
 using Device = Kokkos::DefaultExecutionSpace;
 
 enum KokkosLayout {
@@ -111,5 +113,7 @@ int coord2index(int i,  int j,  int k,
   return k + Nz*j + Nz*Ny*i; // right layout
 #endif
 }
+
+} // namespace ppkMHD
 
 #endif // KOKKOS_SHARED_H_

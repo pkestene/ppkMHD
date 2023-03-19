@@ -3,7 +3,7 @@
  *
  * Implement ideas from article
  * "On positivity-preserving high order discontinuous Galerkin schemes for
- * compressible Euler equations on rectangular meshes", Xiangxiong Zhang, 
+ * compressible Euler equations on rectangular meshes", Xiangxiong Zhang,
  * Chi-Wang Shu, Journal of Computational Physics Volume 229, Issue 23,
  * 20 November 2010, Pages 8918-8934
  * http://www.sciencedirect.com/science/article/pii/S0021999110004535
@@ -26,23 +26,24 @@
 
 #include "shared/EulerEquations.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 /**
- * This functor implements ideas from Zhang and Shu about 
+ * This functor implements ideas from Zhang and Shu about
  * positivity preserving.
- * It designed to be called right after functor 
+ * It designed to be called right after functor
  * Interpolate_At_FluxPoints_Functor.
  *
- * Its purpose is to modify conservative variable at flux to 
- * ensure positivity. These variables are computed by 
- * Interpolate_At_FluxPoints_Functor using the solution points 
+ * Its purpose is to modify conservative variable at flux to
+ * ensure positivity. These variables are computed by
+ * Interpolate_At_FluxPoints_Functor using the solution points
  * Lagrange basis.
  *
- * Auxiliary variables theta1 and theta2 are defined in Zhang-Shu, 
+ * Auxiliary variables theta1 and theta2 are defined in Zhang-Shu,
  * Journal of Computational Physics, 229 (2010), pages 8918-8934.
  *
  */
@@ -85,8 +86,8 @@ public:
     int64_t nbCells = dim == 2 ?
       params.isize * params.jsize :
       params.isize * params.jsize * params.ksize;
-    
-    Apply_positivity_Functor functor(params, sdm_geom, 
+
+    Apply_positivity_Functor functor(params, sdm_geom,
                                      UdataSol, UdataFlux, Uaverage);
     Kokkos::parallel_for("Apply_positivity_Functor", nbCells, functor);
   }
@@ -96,19 +97,19 @@ public:
    * 2D version.
    */
   // =========================================================
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
   {
-    
+
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    
+
     const int nbvar = this->params.nbvar;
 
     const real_t gamma0 = this->params.settings.gamma0;
-    
+
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
@@ -131,7 +132,7 @@ public:
     const real_t rhou_ave = Uaverage(i,j,IU);
     const real_t rhov_ave = Uaverage(i,j,IV);
     const real_t e_ave    = Uaverage(i,j,IE);
-    
+
     /*
      * enforce density positivity
      */
@@ -147,91 +148,91 @@ public:
     // compute rho_min over the flux points
     for (int idy=0; idy<idy_flux_end; ++idy) {
       for (int idx=0; idx<idx_flux_end; ++idx) {
-	
+
 	const real_t rho = UdataFlux(i,j,dofMapF(idx,idy,0,ID));
 	rho_min = rho_min < rho ? rho_min : rho;
-	
+
       } // end for idx
     } // end for idy
-      
+
     const real_t eps1 = this->params.settings.smallr; // a small density
     const real_t ratio = (rho_ave - eps1)/(rho_ave - rho_min) + 1e-13;
     const real_t theta1 = ratio < 1.0 ? ratio : 1.0;
 
     // check if we need to modify density at solution points and flux points
     if (theta1 < 1.0) {
-      
+
       // vector of values at solution points
       solution_values_t sol;
       flux_values_t     flux;
 
       if (dir == IX) {
-	
+
 	// sweep solution points
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    const real_t rho = UdataSol(i,j,dofMapS(idx,idy,0,ID));
 	    const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 
 	    // modify density at solution point
 	    UdataSol(i,j,dofMapS(idx,idy,0,ID)) = rho_new;
-	    
+
 	    // prepare vector to recompute density at flux points
 	    sol[idx] = rho_new;
-	    
+
 	  } // end for idx
-	  
+
 	  // interpolate density at flux points
 	  this->sol2flux_vector(sol, flux);
-	  
+
 	  // copy back interpolated value in Fluxes data array
 	  for (int idx=0; idx<N+1; ++idx) {
-	    
+
 	    // modify density at flux point
 	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ID)) = flux[idx];
-	    
+
 	  } // end for idx
 	} // end for idy
-	
+
       } else { // dir == IY, we need to swap idx <-> idy
 
 	// sweep solution points
 	for (int idx=0; idx<N; ++idx) {
 	  for (int idy=0; idy<N; ++idy) {
-	    
+
 	    const real_t rho = UdataSol(i,j,dofMapS(idx,idy,0,ID));
 	    const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
-	    
+
 	    UdataSol(i,j,dofMapS(idx,idy,0,ID)) = rho_new;
-	    
+
 	    // prepare vector to recompute density at flux points
 	    sol[idy] = rho_new;
-	    
+
 	  } // end for idy
-	  
+
 	  // interpolate density at flux points
 	  this->sol2flux_vector(sol, flux);
-	  
+
 	  // copy back interpolated value in Fluxes data array
 	  for (int idy=0; idy<N+1; ++idy) {
-	    
+
 	    UdataFlux(i  ,j  , dofMapF(idx,idy,0,ID)) = flux[idy];
-	    
+
 	  } // end for idy
-	} // end for idx	
+	} // end for idx
 
       } // end IY
-      
+
     } // end if theta1
 
-    
+
     /*
      * enforce pressure positivity
      *
      * theta2 is computed as the min value of t over all flux points, where
      * t itself is the solution of a 2nd order equation: a*t^2 + b*t + c = 0
-     * t should be in range [0,1] as it is used as a weight in a convexe 
+     * t should be in range [0,1] as it is used as a weight in a convexe
      * combination.
      */
     real_t theta2 = 1.0;
@@ -241,25 +242,25 @@ public:
     // compute primitive variable of the cell averaged value
     // const real_t pressure_ave = (gamma0-1)*(e_ave-0.5*(rhou_ave*rhou_ave+
     // 						       rhov_ave*rhov_ave)/rho_ave);
-    
+
     // sweep flux points to find minimal theta2
     for (int idy=0; idy<idy_flux_end; ++idy) {
       for (int idx=0; idx<idx_flux_end; ++idx) {
-	
+
 	const real_t E    = UdataFlux(i,j,dofMapF(idx,idy,0,IE));
 	const real_t rhou = UdataFlux(i,j,dofMapF(idx,idy,0,IU));
 	const real_t rhov = UdataFlux(i,j,dofMapF(idx,idy,0,IV));
 	const real_t rho  = UdataFlux(i,j,dofMapF(idx,idy,0,ID));
 	const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+rhov*rhov)/rho);
-	
+
 	if (pressure < 1e-12) {
 	  real_t drho  = rho - rho_ave;
 	  real_t dE    = E   - e_ave;
 	  real_t drhou = rhou-rhou_ave;
 	  real_t drhov = rhov-rhov_ave;
-	  
+
 	  real_t dm2 = drhou*drhou + drhov*drhov;
-	  
+
 	  // solve 2nd order equation in t:
 	  // a_1 t^2 + b_1 t + c_1 = 0
 	  real_t a1 = 2.0*drho*dE - dm2;
@@ -274,7 +275,7 @@ public:
 	  c1 /= a1;
 	  // discrimant
 	  real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	  
+
 	  // possible solutions
 	  real_t t1 = 0.5*(-b1 - D);
 	  real_t t2 = 0.5*(-b1 + D);
@@ -285,7 +286,7 @@ public:
 	    t = t2;
 	  else
 	    ; // Houston, we have a problem
-	  
+
 	  // t should strictly lie in [0,1]
 	  t = t<1.0 ? t : 1.0;
 	  t = t>0.0 ? t : 0.0;
@@ -294,38 +295,38 @@ public:
 	  // In this case we take the cell average value, t=0.
 	  if (fabs(1.0-t) < 1.0e-14)
 	    t = 0.0;
-	  
+
 	  theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	  
+
 	} // end small pressure
-	
+
       } // for idx
     } // for idy
-    
+
     if (theta2 < 1.0) {
-      
+
       // we need to modify the values at solution points:
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  real_t val;
-	  
+
 	  val = UdataSol(i,j,dofMapS(idx,idy,0,ID));
 	  val = theta2 * ( val - rho_ave ) + rho_ave;
 	  UdataSol(i,j,dofMapS(idx,idy,0,ID)) = val;
-	  
+
 	  val = UdataSol(i,j,dofMapS(idx,idy,0,IE));
 	  val = theta2 * ( val - e_ave ) + e_ave;
 	  UdataSol(i,j,dofMapS(idx,idy,0,IE)) = val;
-	  
+
 	  val = UdataSol(i,j,dofMapS(idx,idy,0,IU));
 	  val = theta2 * ( val - rhou_ave ) + rhou_ave;
 	  UdataSol(i,j,dofMapS(idx,idy,0,IU)) = val;
-	  
+
 	  val = UdataSol(i,j,dofMapS(idx,idy,0,IV));
 	  val = theta2 * ( val - rhov_ave ) + rhov_ave;
 	  UdataSol(i,j,dofMapS(idx,idy,0,IV)) = val;
-	  
+
 	} // end for idx
       } // end for idy
 
@@ -336,93 +337,93 @@ public:
 	// vector of values at solution points
 	solution_values_t sol;
 	flux_values_t     flux;
-	
+
 	// loop over cell DoF's
 	if (dir == IX) {
-	  
+
 	  for (int idy=0; idy<N; ++idy) {
-	    
+
 	    // for each variables
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
-	      
+
 	      // get solution values vector along X direction
 	      for (int idx=0; idx<N; ++idx) {
-		
+
 		sol[idx] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
-		
+
 	      }
-	      
+
 	      // interpolate at flux points for this given variable
 	      this->sol2flux_vector(sol, flux);
-	      
+
 	      // positivity preserving for density
 	      if (ivar==ID) {
 		for (int idf=0; idf<N+1; ++idf)
 		  flux[idf] = fmax(flux[idf], this->params.settings.smallr);
 	      }
-	      
+
 	      // copy back interpolated value
 	      for (int idx=0; idx<N+1; ++idx) {
-		
+
 		UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idx];
-		
+
 	      } // end for idx
-	      
+
 	    } // end for ivar
-	    
+
 	  } // end for idy
-	  
+
 	} // end for dir IX
-	
+
 	// loop over cell DoF's
 	if (dir == IY) {
-	  
+
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    // for each variables
 	    for (int ivar = 0; ivar<nbvar; ++ivar) {
-	      
+
 	      // get solution values vector along Y direction
 	      for (int idy=0; idy<N; ++idy) {
-		
+
 		sol[idy] = UdataSol(i  ,j  , dofMapS(idx,idy,0,ivar));
-		
+
 	      }
-	      
+
 	      // interpolate at flux points for this given variable
 	      this->sol2flux_vector(sol, flux);
-	      
+
 	      // positivity preserving for density
 	      if (ivar==ID) {
 		for (int idf=0; idf<N+1; ++idf)
 		  flux[idf] = fmax(flux[idf], this->params.settings.smallr);
 	      }
-	      
+
 	      // copy back interpolated value
 	      for (int idy=0; idy<N+1; ++idy) {
-		
+
 		UdataFlux(i  ,j  , dofMapF(idx,idy,0,ivar)) = flux[idy];
-		
+
 	      }
-	      
+
 	    } // end for ivar
-	    
+
 	  } // end for idx
-	  
+
 	} // end for dir IY
-	
+
       } // end modification at flux points
-      
+
     } // end theta2 < 1
-          
+
   } // end operator() - 2d
-    
+
   // =========================================================
   /*
    * 3D version.
    */
   // =========================================================
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -484,122 +485,122 @@ public:
     for (int idz=0; idz<idz_flux_end; ++idz) {
       for (int idy=0; idy<idy_flux_end; ++idy) {
 	for (int idx=0; idx<idx_flux_end; ++idx) {
-	  
+
 	  const real_t rho = UdataFlux(i,j,k,dofMapF(idx,idy,idz,ID));
 	  rho_min = rho_min < rho ? rho_min : rho;
-	  
+
 	} // end for idx
       } // end for idy
     } // end for idz
-      
+
     const real_t eps1 = this->params.settings.smallr; // a small density
     const real_t ratio = (rho_ave - eps1)/(rho_ave - rho_min) + 1e-13;
     const real_t theta1 = ratio < 1.0 ? ratio : 1.0;
 
     // check if we need to modify density at solution points and flux points
     if (theta1 < 1.0) {
-      
+
       // vector of values at solution points
       solution_values_t sol;
       flux_values_t     flux;
 
       if (dir == IX) {
-	
+
 	// sweep solution points
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idy=0; idy<N; ++idy) {
 
 	    for (int idx=0; idx<N; ++idx) {
-	    
+
 	      const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
 	      const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 
 	      // modify density at solution point
 	      UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
-	      
+
 	      // prepare vector to recompute density at flux points
 	      sol[idx] = rho_new;
-	      
+
 	    } // end for idx
-	  
+
 	    // interpolate density at flux points
 	    this->sol2flux_vector(sol, flux);
-	    
+
 	    // copy back interpolated value in Fluxes data array
 	    for (int idx=0; idx<N+1; ++idx) {
-	      
+
 	      // modify density at flux point
 	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID)) = flux[idx];
-	      
+
 	    } // end for idx
-	    
+
 	  } // end for idy
 	} // end for idz
-	
+
       } else if (dir == IY) { // dir == IY, we need to swap idx <-> idy
 
 	// sweep solution points
 	for (int idz=0; idz<N; ++idz) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    for (int idy=0; idy<N; ++idy) {
-	      
+
 	      const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
 	      const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
-	      
+
 	      UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
-	      
+
 	      // prepare vector to recompute density at flux points
 	      sol[idy] = rho_new;
-	      
+
 	    } // end for idy
-	    
+
 	    // interpolate density at flux points
 	    this->sol2flux_vector(sol, flux);
-	    
+
 	    // copy back interpolated value in Fluxes data array
 	    for (int idy=0; idy<N+1; ++idy) {
-	      
+
 	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID)) = flux[idy];
-	      
+
 	    } // end for idy
-	    
+
 	  } // end for idx
 	} // end for idz
-	
+
       } else { // dir == IZ
 
 	// sweep solution points
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    for (int idz=0; idz<N; ++idz) {
-	      
+
 	      const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
 	      const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
-	      
+
 	      UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
-	      
+
 	      // prepare vector to recompute density at flux points
 	      sol[idz] = rho_new;
-	      
+
 	    } // end for idz
-	    
+
 	    // interpolate density at flux points
 	    this->sol2flux_vector(sol, flux);
-	    
+
 	    // copy back interpolated value in Fluxes data array
 	    for (int idz=0; idz<N+1; ++idz) {
-	      
+
 	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ID)) = flux[idz];
-	      
+
 	    } // end for idz
-	    
+
 	  } // end for idx
 	} // end for idy
-	
+
       } // end dir == IZ
-      
+
     } // end if theta1
 
     /*
@@ -607,7 +608,7 @@ public:
      *
      * theta2 is computed as the min value of t over all flux points, where
      * t itself is the solution of a 2nd order equation: a*t^2 + b*t + c = 0
-     * t should be in range [0,1] as it is used as a weight in a convexe 
+     * t should be in range [0,1] as it is used as a weight in a convexe
      * combination.
      */
     real_t theta2 = 1.0;
@@ -617,12 +618,12 @@ public:
     // compute primitive variable of the cell averaged value
     // const real_t pressure_ave = (gamma0-1)*(e_ave-0.5*(rhou_ave*rhou_ave+
     // 						       rhov_ave*rhov_ave)/rho_ave);
-    
+
     // sweep flux points to find minimal theta2
     for (int idz=0; idz<idz_flux_end; ++idz) {
       for (int idy=0; idy<idy_flux_end; ++idy) {
 	for (int idx=0; idx<idx_flux_end; ++idx) {
-	  
+
 	  const real_t E    = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IE));
 	  const real_t rhou = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IU));
 	  const real_t rhov = UdataFlux(i,j,k, dofMapF(idx,idy,idz,IV));
@@ -631,19 +632,19 @@ public:
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
 						     rhov*rhov+
 						     rhow*rhow)/rho);
-	  
+
 	  if (pressure < 1e-12) {
 	    real_t drho  = rho - rho_ave;
 	    real_t dE    = E   - e_ave;
 	    real_t drhou = rhou-rhou_ave;
 	    real_t drhov = rhov-rhov_ave;
 	    real_t drhow = rhow-rhow_ave;
-	  
+
 	    real_t dm2 =
 	      drhou*drhou +
 	      drhov*drhov +
 	      drhow*drhow;
-	  
+
 	    // solve 2nd order equation in t:
 	    // a_1 t^2 + b_1 t + c_1 = 0
 	    real_t a1 = 2.0*drho*dE - dm2;
@@ -662,7 +663,7 @@ public:
 	  c1 /= a1;
 	  // discrimant
 	  real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	  
+
 	  // possible solutions
 	  real_t t1 = 0.5*(-b1 - D);
 	  real_t t2 = 0.5*(-b1 + D);
@@ -673,7 +674,7 @@ public:
 	    t = t2;
 	  else
 	    ; // Houston, we have a problem
-	  
+
 	  // t should strictly lie in [0,1]
 	  t = t<1.0 ? t : 1.0;
 	  t = t>0.0 ? t : 0.0;
@@ -682,44 +683,44 @@ public:
 	  // In this case we take the cell average value, t=0.
 	  if (fabs(1.0-t) < 1.0e-14)
 	    t = 0.0;
-	  
+
 	  theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	  
+
 	  } // end small pressure
-	  
+
 	} // for idx
       } // for idy
     } // for idz
-    
+
     if (theta2 < 1.0) {
-      
+
       // we need to modify the values at solution points:
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    real_t val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
 	    val = theta2 * ( val - rho_ave ) + rho_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IE));
 	    val = theta2 * ( val - e_ave ) + e_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IE)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IU));
 	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IU)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IV));
 	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IV)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IW));
 	    val = theta2 * ( val - rhow_ave ) + rhow_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IW)) = val;
-	    
+
 	  } // end for idx
 	} // end for idy
       } // end for idz
@@ -731,135 +732,135 @@ public:
 	// vector of values at solution points
 	solution_values_t sol;
 	flux_values_t     flux;
-	
+
 	// loop over cell DoF's
 	if (dir == IX) {
-	  
+
 	  for (int idz=0; idz<N; ++idz) {
 	    for (int idy=0; idy<N; ++idy) {
-	      
+
 	      // for each variables
 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
+
 		// get solution values vector along X direction
 		for (int idx=0; idx<N; ++idx) {
-		  
+
 		  sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-		  
+
 		}
-		
+
 		// interpolate at flux points for this given variable
 		this->sol2flux_vector(sol, flux);
-				
+
 		// copy back interpolated value
 		for (int idx=0; idx<N+1; ++idx) {
-		  
+
 		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idx];
-		  
+
 		} // end for idx
-		
+
 	      } // end for ivar
-	      
+
 	    } // end for idy
 	  } // end for idz
-	  
+
 	} // end for dir IX
-	
+
 	// loop over cell DoF's
 	if (dir == IY) {
-	  
+
 	  for (int idz=0; idz<N; ++idz) {
 	    for (int idx=0; idx<N; ++idx) {
-	      
+
 	      // for each variables
 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
+
 		// get solution values vector along Y direction
 		for (int idy=0; idy<N; ++idy) {
-		  
+
 		  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-		  
+
 		}
-		
+
 		// interpolate at flux points for this given variable
 		this->sol2flux_vector(sol, flux);
-		
+
 		// copy back interpolated value
 		for (int idy=0; idy<N+1; ++idy) {
-		  
+
 		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idy];
-		  
+
 		}
-		
+
 	      } // end for ivar
-	      
+
 	    } // end for idx
 	  } // end for idz
-	  
+
 	} // end for dir IY
-	
+
 	// loop over cell DoF's
 	if (dir == IZ) {
-	  
+
 	  for (int idy=0; idy<N; ++idy) {
 	    for (int idx=0; idx<N; ++idx) {
-	      
+
 	      // for each variables
 	      for (int ivar = 0; ivar<nbvar; ++ivar) {
-		
+
 		// get solution values vector along Z direction
 		for (int idz=0; idz<N; ++idz) {
-		  
+
 		  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ivar));
-		  
+
 		}
-		
+
 		// interpolate at flux points for this given variable
 		this->sol2flux_vector(sol, flux);
-		
+
 		// copy back interpolated value
 		for (int idz=0; idz<N+1; ++idz) {
-		  
+
 		  UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[idz];
-		  
+
 		} // end for idz
-		
+
 	      } // end for ivar
-	      
+
 	    } // end for idx
 	  } // end for idy
-	  
+
 	} // end for dir IZ
 
       } // end modification at flux points
-      
-    } // end theta2 < 1    
-    
+
+    } // end theta2 < 1
+
   } // end operator () - 3d
 
   //! solution data array
   DataArray UdataSol;
   DataArray UdataFlux;
   DataArray Uaverage;
-  
+
 }; // class Apply_positivity_Functor
 
 /*************************************************/
 /*************************************************/
 /*************************************************/
 /**
- * This functor implements ideas from Zhang and Shu about 
+ * This functor implements ideas from Zhang and Shu about
  * positivity preserving.
  *
  * It designed to be called at the begining of a Runge-Kutta
  * sub-step.
  *
- * Its purpose is to modify conservative variable at flux to 
- * ensure positivity. These variables are computed by 
- * Interpolate_At_FluxPoints_Functor using the solution points 
+ * Its purpose is to modify conservative variable at flux to
+ * ensure positivity. These variables are computed by
+ * Interpolate_At_FluxPoints_Functor using the solution points
  * Lagrange basis.
  *
- * Auxiliary variables theta1 and theta2 are defined in Zhang-Shu, 
+ * Auxiliary variables theta1 and theta2 are defined in Zhang-Shu,
  * Journal of Computational Physics, 229 (2010), pages 8918-8934.
  *
  */
@@ -897,8 +898,8 @@ public:
     int64_t nbCells = dim == 2 ?
       params.isize * params.jsize :
       params.isize * params.jsize * params.ksize;
-    
-    Apply_positivity_Functor_v2 functor(params, sdm_geom, 
+
+    Apply_positivity_Functor_v2 functor(params, sdm_geom,
                                         UdataSol, Uaverage);
     Kokkos::parallel_for("Apply_positivity_Functor_v2", nbCells, functor);
   }
@@ -908,19 +909,19 @@ public:
    * 2D version.
    */
   // =========================================================
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
   {
-    
+
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    
+
     //const int nbvar = this->params.nbvar;
 
     const real_t gamma0 = this->params.settings.gamma0;
-    
+
     // local cell index
     int i,j;
     index2coord(index,i,j,isize,jsize);
@@ -930,7 +931,7 @@ public:
     const real_t rhou_ave = Uaverage(i,j,IU);
     const real_t rhov_ave = Uaverage(i,j,IV);
     const real_t e_ave    = Uaverage(i,j,IE);
-    
+
     /*
      * enforce density positivity
      */
@@ -960,7 +961,7 @@ public:
 	const real_t& rho = flux[idx];
 	rho_min = rho_min < rho ? rho_min : rho;
       }
-      
+
     } // end for idy
 
     // do the same along Y axis
@@ -980,7 +981,7 @@ public:
 	const real_t& rho = flux[idy];
 	rho_min = rho_min < rho ? rho_min : rho;
       }
-      
+
     } // end for idx
 
     // we can now compute theta1
@@ -990,32 +991,32 @@ public:
 
     // check if we need to modify density at solution points
     if (theta1 < 1.0) {
-      
+
       // vector of values at solution points
       //solution_values_t sol;
       //flux_values_t     flux;
-	
+
       // sweep solution points
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  const real_t rho = UdataSol(i,j,dofMapS(idx,idy,0,ID));
 	  const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 
 	  // modify density at solution point
 	  UdataSol(i,j,dofMapS(idx,idy,0,ID)) = rho_new;
-	  
+
 	} // end for idx
       } // end for idy
-      
+
     } // end if theta1
-    
+
     /*
      * enforce pressure positivity
      *
      * theta2 is computed as the min value of t over all flux points, where
      * t itself is the solution of a 2nd order equation: a*t^2 + b*t + c = 0
-     * t should be in range [0,1] as it is used as a weight in a convexe 
+     * t should be in range [0,1] as it is used as a weight in a convexe
      * combination.
      */
     {
@@ -1029,7 +1030,7 @@ public:
       flux_values_t     flux_ie;
       flux_values_t     flux_iu;
       flux_values_t     flux_iv;
-            
+
       // interpolate from solution point to flux points and
       // find minimal theta2
 
@@ -1054,21 +1055,21 @@ public:
         this->sol2flux_vector(sol, flux_iv);
 
 	for (int idx=0; idx<N+1; ++idx) {
-	  
+
 	  const real_t E    = flux_ie[idx];
 	  const real_t rhou = flux_iu[idx];
 	  const real_t rhov = flux_iv[idx];
 	  const real_t rho  = flux_id[idx];
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+rhov*rhov)/rho);
-	  
+
 	  if (pressure < 1e-12) {
 	    real_t drho  = rho - rho_ave;
 	    real_t dE    = E   - e_ave;
 	    real_t drhou = rhou-rhou_ave;
 	    real_t drhov = rhov-rhov_ave;
-	    
+
 	    real_t dm2 = drhou*drhou + drhov*drhov;
-	    
+
 	    // solve 2nd order equation in t:
 	    // a_1 t^2 + b_1 t + c_1 = 0
 	    real_t a1 = 2.0*drho*dE - dm2;
@@ -1083,7 +1084,7 @@ public:
 	    c1 /= a1;
 	    // discrimant
 	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	    
+
 	    // possible solutions
 	    real_t t1 = 0.5*(-b1 - D);
 	    real_t t2 = 0.5*(-b1 + D);
@@ -1094,7 +1095,7 @@ public:
 	      t = t2;
 	    else
 	      ; // Houston, we have a problem
-	    
+
 	    // t should strictly lie in [0,1]
 	    t = t<1.0 ? t : 1.0;
 	    t = t>0.0 ? t : 0.0;
@@ -1103,15 +1104,15 @@ public:
 	    // In this case we take the cell average value, t=0.
 	    if (fabs(1.0-t) < 1.0e-14)
 	      t = 0.0;
-	    
+
 	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	    
+
 	  } // end small pressure
-	  
+
 	} // for idx
-	
+
       } // for idy
-    
+
       // along Y-axis
       for (int idx=0; idx<N; ++idx) {
 
@@ -1133,21 +1134,21 @@ public:
         this->sol2flux_vector(sol, flux_iv);
 
 	for (int idy=0; idy<N+1; ++idy) {
-	  
+
 	  const real_t E    = flux_ie[idy];
 	  const real_t rhou = flux_iu[idy];
 	  const real_t rhov = flux_iv[idy];
 	  const real_t rho  = flux_id[idy];
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+rhov*rhov)/rho);
-	  
+
 	  if (pressure < 1e-12) {
 	    real_t drho  = rho - rho_ave;
 	    real_t dE    = E   - e_ave;
 	    real_t drhou = rhou-rhou_ave;
 	    real_t drhov = rhov-rhov_ave;
-	    
+
 	    real_t dm2 = drhou*drhou + drhov*drhov;
-	    
+
 	    // solve 2nd order equation in t:
 	    // a_1 t^2 + b_1 t + c_1 = 0
 	    real_t a1 = 2.0*drho*dE - dm2;
@@ -1162,7 +1163,7 @@ public:
 	    c1 /= a1;
 	    // discrimant
 	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	    
+
 	    // possible solutions
 	    real_t t1 = 0.5*(-b1 - D);
 	    real_t t2 = 0.5*(-b1 + D);
@@ -1173,7 +1174,7 @@ public:
 	      t = t2;
 	    else
 	      ; // Houston, we have a problem
-	    
+
 	    // t should strictly lie in [0,1]
 	    t = t<1.0 ? t : 1.0;
 	    t = t>0.0 ? t : 0.0;
@@ -1182,53 +1183,53 @@ public:
 	    // In this case we take the cell average value, t=0.
 	    if (fabs(1.0-t) < 1.0e-14)
 	      t = 0.0;
-	    
+
 	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	    
+
 	  } // end small pressure
-	  
+
 	} // for idy
-	
+
       } // for idx
-    
+
       if (theta2 < 1.0) {
-	
+
 	// we need to modify the values at solution points:
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    real_t val;
-	    
+
 	    val = UdataSol(i,j,dofMapS(idx,idy,0,ID));
 	    val = theta2 * ( val - rho_ave ) + rho_ave;
 	    UdataSol(i,j,dofMapS(idx,idy,0,ID)) = val;
-	    
+
 	    val = UdataSol(i,j,dofMapS(idx,idy,0,IE));
 	    val = theta2 * ( val - e_ave ) + e_ave;
 	    UdataSol(i,j,dofMapS(idx,idy,0,IE)) = val;
-	    
+
 	    val = UdataSol(i,j,dofMapS(idx,idy,0,IU));
 	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
 	    UdataSol(i,j,dofMapS(idx,idy,0,IU)) = val;
-	    
+
 	    val = UdataSol(i,j,dofMapS(idx,idy,0,IV));
 	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
 	    UdataSol(i,j,dofMapS(idx,idy,0,IV)) = val;
-	    
+
 	  } // end for idx
 	} // end for idy
-      
+
       } // end theta2 < 1
-    }          
+    }
 
   } // end operator() - 2d
-    
+
   // =========================================================
   /*
    * 3D version.
    */
   // =========================================================
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -1272,21 +1273,21 @@ public:
 	// vector of values at solution points
 	solution_values_t sol;
 	flux_values_t     flux;
-	
+
 	for (int idx=0; idx<N; ++idx)
 	  sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
-	
+
 	// interpolate at flux points for this given variable
 	this->sol2flux_vector(sol, flux);
-	
+
 	for (int idx=0; idx<N+1; ++idx) {
 	  const real_t& rho = flux[idx];
 	  rho_min = rho_min < rho ? rho_min : rho;
 	} // end for idx
-	
+
       } // end for idy
     } // end for idz
-      
+
     // compute rho_min over the flux points along Y axis
     for (int idz=0; idz<N; ++idz) {
       for (int idx=0; idx<N; ++idx) {
@@ -1294,21 +1295,21 @@ public:
 	// vector of values at solution points
 	solution_values_t sol;
 	flux_values_t     flux;
-	
+
 	for (int idy=0; idy<N; ++idy)
 	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
-	
+
 	// interpolate at flux points for this given variable
 	this->sol2flux_vector(sol, flux);
-	
+
 	for (int idy=0; idy<N+1; ++idy) {
 	  const real_t& rho = flux[idy];
 	  rho_min = rho_min < rho ? rho_min : rho;
 	} // end for idy
-	
+
       } // end for idx
     } // end for idz
-      
+
     // compute rho_min over the flux points along Z axis
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
@@ -1316,18 +1317,18 @@ public:
 	// vector of values at solution points
 	solution_values_t sol;
 	flux_values_t     flux;
-	
+
 	for (int idz=0; idz<N; ++idz)
 	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
-	
+
 	// interpolate at flux points for this given variable
 	this->sol2flux_vector(sol, flux);
-	
+
 	for (int idz=0; idz<N+1; ++idz) {
 	  const real_t& rho = flux[idz];
 	  rho_min = rho_min < rho ? rho_min : rho;
 	} // end for idz
-	
+
       } // end for idx
     } // end for idy
 
@@ -1338,26 +1339,26 @@ public:
 
     // check if we need to modify density at solution points and flux points
     if (theta1 < 1.0) {
-      
+
       // vector of values at solution points
       //solution_values_t sol;
       //flux_values_t     flux;
-	
+
       // sweep solution points
       for (int idz=0; idz<N; ++idz) {
-	for (int idy=0; idy<N; ++idy) {	  
+	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    const real_t rho = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
 	    const real_t rho_new = theta1 * (rho - rho_ave) + rho_ave;
 
 	    // modify density at solution point
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = rho_new;
-	    	      
+
 	  } // end for idx
 	} // end for idy
       } // end for idz
-      
+
     } // end if theta1
 
     /*
@@ -1365,7 +1366,7 @@ public:
      *
      * theta2 is computed as the min value of t over all flux points, where
      * t itself is the solution of a 2nd order equation: a*t^2 + b*t + c = 0
-     * t should be in range [0,1] as it is used as a weight in a convexe 
+     * t should be in range [0,1] as it is used as a weight in a convexe
      * combination.
      */
     real_t theta2 = 1.0;
@@ -1379,19 +1380,19 @@ public:
     flux_values_t     flux_iu;
     flux_values_t     flux_iv;
     flux_values_t     flux_iw;
-    
+
     // interpolate from solution point to flux points and
     // find minimal theta2
-    
+
     // along X-axis
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 
 	// recompute (interpolate) conservative variables at flux points
-	for (int idx=0; idx<N; ++idx) 
+	for (int idx=0; idx<N; ++idx)
 	  sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
         this->sol2flux_vector(sol, flux_id);
-	
+
 	for (int idx=0; idx<N; ++idx)
 	  sol[idx] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IE));
         this->sol2flux_vector(sol, flux_ie);
@@ -1417,19 +1418,19 @@ public:
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
 						     rhov*rhov+
 						     rhow*rhow)/rho);
-	  
+
 	  if (pressure < 1e-12) {
 	    real_t drho  = rho - rho_ave;
 	    real_t dE    = E   - e_ave;
 	    real_t drhou = rhou-rhou_ave;
 	    real_t drhov = rhov-rhov_ave;
 	    real_t drhow = rhow-rhow_ave;
-	  
+
 	    real_t dm2 =
 	      drhou*drhou +
 	      drhov*drhov +
 	      drhow*drhow;
-	  
+
 	    // solve 2nd order equation in t:
 	    // a_1 t^2 + b_1 t + c_1 = 0
 	    real_t a1 = 2.0*drho*dE - dm2;
@@ -1448,7 +1449,7 @@ public:
 	    c1 /= a1;
 	    // discrimant
 	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	  
+
 	    // possible solutions
 	    real_t t1 = 0.5*(-b1 - D);
 	    real_t t2 = 0.5*(-b1 + D);
@@ -1459,7 +1460,7 @@ public:
 	      t = t2;
 	    else
 	      ; // Houston, we have a problem
-	  
+
 	    // t should strictly lie in [0,1]
 	    t = t<1.0 ? t : 1.0;
 	    t = t>0.0 ? t : 0.0;
@@ -1468,11 +1469,11 @@ public:
 	    // In this case we take the cell average value, t=0.
 	    if (fabs(1.0-t) < 1.0e-14)
 	      t = 0.0;
-	  
+
 	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	  
+
 	  } // end small pressure
-	  
+
 	} // for idx
       } // for idy
     } // for idz
@@ -1482,10 +1483,10 @@ public:
       for (int idx=0; idx<N; ++idx) {
 
 	// recompute (interpolate) conservative variables at flux points
-	for (int idy=0; idy<N; ++idy) 
+	for (int idy=0; idy<N; ++idy)
 	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
         this->sol2flux_vector(sol, flux_id);
-	
+
 	for (int idy=0; idy<N; ++idy)
 	  sol[idy] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IE));
         this->sol2flux_vector(sol, flux_ie);
@@ -1511,19 +1512,19 @@ public:
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
 						     rhov*rhov+
 						     rhow*rhow)/rho);
-	  
+
 	  if (pressure < 1e-12) {
 	    real_t drho  = rho - rho_ave;
 	    real_t dE    = E   - e_ave;
 	    real_t drhou = rhou-rhou_ave;
 	    real_t drhov = rhov-rhov_ave;
 	    real_t drhow = rhow-rhow_ave;
-	  
+
 	    real_t dm2 =
 	      drhou*drhou +
 	      drhov*drhov +
 	      drhow*drhow;
-	  
+
 	    // solve 2nd order equation in t:
 	    // a_1 t^2 + b_1 t + c_1 = 0
 	    real_t a1 = 2.0*drho*dE - dm2;
@@ -1542,7 +1543,7 @@ public:
 	    c1 /= a1;
 	    // discrimant
 	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	  
+
 	    // possible solutions
 	    real_t t1 = 0.5*(-b1 - D);
 	    real_t t2 = 0.5*(-b1 + D);
@@ -1553,7 +1554,7 @@ public:
 	      t = t2;
 	    else
 	      ; // Houston, we have a problem
-	  
+
 	    // t should strictly lie in [0,1]
 	    t = t<1.0 ? t : 1.0;
 	    t = t>0.0 ? t : 0.0;
@@ -1562,11 +1563,11 @@ public:
 	    // In this case we take the cell average value, t=0.
 	    if (fabs(1.0-t) < 1.0e-14)
 	      t = 0.0;
-	  
+
 	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	  
+
 	  } // end small pressure
-	  
+
 	} // for idy
       } // for idx
     } // for idz
@@ -1576,10 +1577,10 @@ public:
       for (int idx=0; idx<N; ++idx) {
 
 	// recompute (interpolate) conservative variables at flux points
-	for (int idz=0; idz<N; ++idz) 
+	for (int idz=0; idz<N; ++idz)
 	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,ID));
         this->sol2flux_vector(sol, flux_id);
-	
+
 	for (int idz=0; idz<N; ++idz)
 	  sol[idz] = UdataSol(i,j,k, dofMapS(idx,idy,idz,IE));
         this->sol2flux_vector(sol, flux_ie);
@@ -1605,19 +1606,19 @@ public:
 	  const real_t pressure = (gamma0-1)*(E-0.5*(rhou*rhou+
 						     rhov*rhov+
 						     rhow*rhow)/rho);
-	  
+
 	  if (pressure < 1e-12) {
 	    real_t drho  = rho - rho_ave;
 	    real_t dE    = E   - e_ave;
 	    real_t drhou = rhou-rhou_ave;
 	    real_t drhov = rhov-rhov_ave;
 	    real_t drhow = rhow-rhow_ave;
-	  
+
 	    real_t dm2 =
 	      drhou*drhou +
 	      drhov*drhov +
 	      drhow*drhow;
-	  
+
 	    // solve 2nd order equation in t:
 	    // a_1 t^2 + b_1 t + c_1 = 0
 	    real_t a1 = 2.0*drho*dE - dm2;
@@ -1636,7 +1637,7 @@ public:
 	    c1 /= a1;
 	    // discrimant
 	    real_t D = sqrt( fabs(b1*b1 - 4.0*c1) );
-	  
+
 	    // possible solutions
 	    real_t t1 = 0.5*(-b1 - D);
 	    real_t t2 = 0.5*(-b1 + D);
@@ -1647,7 +1648,7 @@ public:
 	      t = t2;
 	    else
 	      ; // Houston, we have a problem
-	  
+
 	    // t should strictly lie in [0,1]
 	    t = t<1.0 ? t : 1.0;
 	    t = t>0.0 ? t : 0.0;
@@ -1656,59 +1657,60 @@ public:
 	    // In this case we take the cell average value, t=0.
 	    if (fabs(1.0-t) < 1.0e-14)
 	      t = 0.0;
-	  
+
 	    theta2 = theta2 < t ? theta2 : t; // min(theta2, t);
-	  
+
 	  } // end small pressure
-	  
+
 	} // for idz
       } // for idx
     } // for idy
 
     if (theta2 < 1.0) {
-      
+
       // we need to modify the values at solution points:
       for (int idz=0; idz<N; ++idz) {
 	for (int idy=0; idy<N; ++idy) {
 	  for (int idx=0; idx<N; ++idx) {
-	    
+
 	    real_t val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,ID));
 	    val = theta2 * ( val - rho_ave ) + rho_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,ID)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IE));
 	    val = theta2 * ( val - e_ave ) + e_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IE)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IU));
 	    val = theta2 * ( val - rhou_ave ) + rhou_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IU)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IV));
 	    val = theta2 * ( val - rhov_ave ) + rhov_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IV)) = val;
-	    
+
 	    val = UdataSol(i,j,k,dofMapS(idx,idy,idz,IW));
 	    val = theta2 * ( val - rhow_ave ) + rhow_ave;
 	    UdataSol(i,j,k,dofMapS(idx,idy,idz,IW)) = val;
-	    
+
 	  } // end for idx
 	} // end for idy
       } // end for idz
 
-    } // end theta2 < 1    
-    
+    } // end theta2 < 1
+
   } // end operator () - 3d
 
   //! solution data array
   DataArray UdataSol;
   DataArray UdataFlux;
   DataArray Uaverage;
-  
+
 }; // class Apply_positivity_Functor_v2
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_POSITIVITY_PRESERVING_H_

@@ -22,6 +22,8 @@
 // VTK IO implementation (to be tested)
 #include "utils/io/IO_VTK.h"
 
+namespace ppkMHD {
+
 // ===========================================================
 // ===========================================================
 // create some fake data
@@ -32,13 +34,13 @@ class InitData
 public:
   //! Decide at compile-time which data array type to use
   using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
-  
+
   InitData(HydroParams params, DataArray data) :
     params(params),
     data(data) {};
   ~InitData() {};
 
-  //! functor for 2d 
+  //! functor for 2d
   template<unsigned int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index)  const
@@ -57,7 +59,7 @@ public:
     const int i_mpi = 0;
     const int j_mpi = 0;
 #endif // USE_MPI
-    
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
     const real_t dx = params.dx;
@@ -70,10 +72,10 @@ public:
     real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
 
     data(i,j,ID) = x+y;
-    
+
   }
 
-  //! functor for 3d 
+  //! functor for 3d
   template<unsigned int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index)  const
@@ -96,7 +98,7 @@ public:
     const int j_mpi = 0;
     const int k_mpi = 0;
 #endif // USE_MPI
-    
+
     const real_t xmin = params.xmin;
     const real_t ymin = params.ymin;
     const real_t zmin = params.zmin;
@@ -117,9 +119,75 @@ public:
 
   HydroParams params;
   DataArray data;
-  
+
 }; // class InitData
 
+// ===========================================================
+// ===========================================================
+void run_test_vtk(const std::string input_filename)
+{
+  ConfigMap configMap(input_filename);
+
+  // test: create a HydroParams object
+  HydroParams params = HydroParams();
+  params.setup(configMap);
+
+  std::map<int, std::string> var_names;
+  var_names[ID] = "rho";
+  var_names[IP] = "energy";
+  var_names[IU] = "mx";
+  var_names[IV] = "my";
+  var_names[IW] = "mz";
+
+  // =================
+  // ==== 2D test ====
+  // =================
+  if (params.nz == 1) {
+
+    std::cout << "2D test\n";
+
+    DataArray2d     data("data",params.isize,params.jsize,HYDRO_2D_NBVAR);
+    DataArray2dHost data_host = Kokkos::create_mirror(data);
+
+    // create fake data
+    ppkMHD::InitData<2> functor(params, data);
+    Kokkos::parallel_for(params.isize*params.jsize, functor);
+
+    // save to file
+#ifdef USE_MPI
+    io::save_VTK_2D_mpi(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
+#else
+    io::save_VTK_2D(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
+#endif
+
+  }
+
+  // =================
+  // ==== 3D test ====
+  // =================
+  if (params.nz > 1) {
+
+    std::cout << "3D test\n";
+
+    DataArray3d     data("data",params.isize,params.jsize,params.ksize,HYDRO_3D_NBVAR);
+    DataArray3dHost data_host = Kokkos::create_mirror(data);
+
+    // create fake data
+    ppkMHD::InitData<3> functor(params, data);
+    Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
+
+    // save to file
+#ifdef USE_MPI
+    io::save_VTK_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
+#else
+    io::save_VTK_3D(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
+#endif
+
+  }
+
+} // run_test_vtk
+
+} // namespace ppkMHD
 
 // ===========================================================
 // ===========================================================
@@ -133,19 +201,19 @@ int main(int argc, char* argv[])
 #ifdef USE_MPI
   hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
 #endif // USE_MPI
-  
+
   Kokkos::initialize(argc, argv);
 
   int mpi_rank = 0;
 #ifdef USE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-#endif  
+#endif
 
   if (mpi_rank==0) {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -166,71 +234,13 @@ int main(int argc, char* argv[])
     Kokkos::finalize();
     exit(EXIT_FAILURE);
   }
-  
+
   // read parameter file and initialize parameter
   // parse parameters from input file
   std::string input_file = std::string(argv[1]);
-  ConfigMap configMap(input_file);
-  
-  // test: create a HydroParams object
-  HydroParams params = HydroParams();
-  params.setup(configMap);
-
-  std::map<int, std::string> var_names;
-  var_names[ID] = "rho";
-  var_names[IP] = "energy";
-  var_names[IU] = "mx";
-  var_names[IV] = "my";
-  var_names[IW] = "mz";
-  
-  // =================
-  // ==== 2D test ====
-  // =================
-  if (params.nz == 1) {
-
-    std::cout << "2D test\n";
-    
-    DataArray2d     data("data",params.isize,params.jsize,HYDRO_2D_NBVAR);
-    DataArray2dHost data_host = Kokkos::create_mirror(data);
-
-    // create fake data
-    InitData<2> functor(params, data);
-    Kokkos::parallel_for(params.isize*params.jsize, functor);
-
-    // save to file
-#ifdef USE_MPI
-    io::save_VTK_2D_mpi(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
-#else
-    io::save_VTK_2D(data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, "");
-#endif
-    
-  }
-
-  // =================
-  // ==== 3D test ====
-  // =================
-  if (params.nz > 1) {
-    
-    std::cout << "3D test\n";
-
-    DataArray3d     data("data",params.isize,params.jsize,params.ksize,HYDRO_3D_NBVAR);
-    DataArray3dHost data_host = Kokkos::create_mirror(data);
-
-    // create fake data
-    InitData<3> functor(params, data);
-    Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
-
-    // save to file
-#ifdef USE_MPI
-    io::save_VTK_3D_mpi(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
-#else
-    io::save_VTK_3D(data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, "");
-#endif
-    
-  }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
-}
+
+} // main

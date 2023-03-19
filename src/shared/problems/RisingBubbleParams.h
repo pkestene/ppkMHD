@@ -4,6 +4,8 @@
 #include "utils/config/ConfigMap.h"
 #include "shared/real_type.h"
 
+namespace ppkMHD {
+
 /**
  * Rising bubble test parameters.
  */
@@ -15,10 +17,10 @@ struct RisingBubbleParams {
   real_t din,dout; //density inside / outside
   real_t gx, gy, gz; // uniform initial gravity field
 
-  
+
   RisingBubbleParams(ConfigMap& configMap)
   {
-    
+
     R    = configMap.getFloat("rising_bubble","R", 0.1);
     x0   = configMap.getFloat("rising_bubble","x0", 0.5);
     y0   = configMap.getFloat("rising_bubble","y0", 0.25);
@@ -33,5 +35,7 @@ struct RisingBubbleParams {
   }
 
 }; // struct RisingBubbleParams
+
+} // namespace ppkMHD
 
 #endif // RISING_BUBBLE_PARAMS_H_

@@ -3,7 +3,7 @@
  * mistake in performing a Gauss-Chebyshev quadrature (1st kind) :
  *
  * \f$ \int_{-1}^{1} \frac{f(x)}{\sqrt{1-x^2}} dx \simeq \sum_{i=1}^N \omega_i f(x_i)\f$
- * 
+ *
  * where the Chebyshev nodes in [-1,1] are given by \f$ x_i = \cos(\frac{2i-1}{2N}\pi)\f$ and the weights \f$ \omega_i = \pi/N \f$
  *
  * Here we will transpose this formula in the SDM context where, the Chebyshev
@@ -28,6 +28,7 @@
 
 #include "sdm/SDM_Geometry.h"
 
+namespace ppkMHD {
 
 using f_t = real_t (*)(real_t);
 
@@ -66,7 +67,7 @@ template<int func_type>
 f_t select_function(int i) {
 
   if (func_type == FUNCTION) {
-    
+
     if (i==0)
       return f_0;
     else if (i==1)
@@ -109,7 +110,7 @@ f_t select_function(int i) {
       return pf_7;
     else if (i==8)
       return pf_8;
-    
+
     // default
     return pf_3;
 
@@ -136,23 +137,23 @@ void test_chebyshev_quadrature(int i)
   std::cout << "=========================================================\n";
 
   std::cout << "Using function number " << i << "\n";
-  
-  // function pointer setup 
+
+  // function pointer setup
   // f is the function to integrate
   f_t f = select_function<FUNCTION>(i);
 
   // exact primitive (for error computation)
   f_t pf = select_function<PRIMITIVE>(i);
-  
+
   std::cout << "  Dimension is : " << dim << "\n";
   std::cout << "  Using order  : " << N << "\n";
   std::cout << "  Number of solution points : " << N << "\n";
   std::cout << "  Number of flux     points : " << N+1 << "\n";
-  
+
   sdm::SDM_Geometry<dim,N> sdm_geom;
 
   sdm_geom.init(0);
-  
+
   // std::cout << "Solution poins:\n";
   // for (int j=0; j<N; ++j) {
   //   for (int i=0; i<N; ++i) {
@@ -170,7 +171,7 @@ void test_chebyshev_quadrature(int i)
 
   // weight
   real_t w = M_PI/N;
-  
+
   // eval integral value
   // take care we made the change of variable x -> x'=(x+1)/2
   // so that x' is in [0,1] instead of [-1,1]
@@ -181,11 +182,15 @@ void test_chebyshev_quadrature(int i)
   I_quad *= w;
 
   I_exact = pf(1.0)-pf(0.0);
-  
-  printf("Integrale of f_%d on [0,1] is %f, exact value is %f, error is %f\n",i,I_quad,I_exact,I_quad-I_exact);
-  
-} // test_chebyshev_quadrature
 
+  printf("Integrale of f_%d on [0,1] is %f, exact value is %f, error is %f\n",i,I_quad,I_exact,I_quad-I_exact);
+
+} // test_chebyshev_quadrature
+} // namespace ppkMHD
+
+// ==========================================================================
+// ==========================================================================
+// ==========================================================================
 int main(int argc, char* argv[])
 {
 
@@ -195,7 +200,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -207,7 +212,7 @@ int main(int argc, char* argv[])
     }
 
     Kokkos::print_configuration( msg );
-    
+
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
@@ -219,17 +224,17 @@ int main(int argc, char* argv[])
   // testing for multiple value of N
   {
     // dim = 2
-    test_chebyshev_quadrature<2,2>(3);
-    test_chebyshev_quadrature<2,3>(4);
-    test_chebyshev_quadrature<2,4>(6);
-    test_chebyshev_quadrature<2,5>(6);
-    test_chebyshev_quadrature<2,50>(6);
-    test_chebyshev_quadrature<2,360>(7);
-    test_chebyshev_quadrature<2,36>(8);
+    ppkMHD::test_chebyshev_quadrature<2,2>(3);
+    ppkMHD::test_chebyshev_quadrature<2,3>(4);
+    ppkMHD::test_chebyshev_quadrature<2,4>(6);
+    ppkMHD::test_chebyshev_quadrature<2,5>(6);
+    ppkMHD::test_chebyshev_quadrature<2,50>(6);
+    ppkMHD::test_chebyshev_quadrature<2,360>(7);
+    ppkMHD::test_chebyshev_quadrature<2,36>(8);
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
-}
+
+} // main

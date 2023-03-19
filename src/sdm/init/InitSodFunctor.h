@@ -12,6 +12,7 @@
 #include "sdm/SDM_Geometry.h"
 #include "sdm/sdm_shared.h" // for DofMap
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -19,12 +20,12 @@ namespace sdm {
 /*************************************************/
 template<int dim, int N>
 class InitSodFunctor : public SDMBaseFunctor<dim,N> {
-  
+
 public:
   using typename SDMBaseFunctor<dim,N>::DataArray;
-  
+
   static constexpr auto dofMap = DofMap<dim,N>;
-  
+
   InitSodFunctor(HydroParams         params,
                  SDM_Geometry<dim,N> sdm_geom,
                  DataArray           Udata) :
@@ -36,10 +37,10 @@ public:
                     SDM_Geometry<dim,N> sdm_geom,
                     DataArray           Udata)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
-    
+
     InitSodFunctor functor(params, sdm_geom, Udata);
     Kokkos::parallel_for("InitSodFunctor",nbCells, functor);
   }
@@ -47,7 +48,7 @@ public:
   /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -56,7 +57,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -70,15 +71,15 @@ public:
 
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
-    
+
     //const real_t xmax = this->params.xmax;
     //const real_t ymax = this->params.ymax;
-    
+
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
-    
+
     const real_t rho1 = 1.0;
     const real_t rho2 = 0.125;
 
@@ -99,10 +100,10 @@ public:
 
 	x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	y += this->sdm_geom.solution_pts_1d(idy) * dy;
-	
+
 	bool tmp;
 	  tmp = x < 0.5;
-	
+
 	if (tmp) {
 	  Udata(i  ,j  , dofMap(idx,idy,0,ID)) = rho1;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IE)) = p1/(gamma0-1.0);
@@ -114,16 +115,16 @@ public:
 	  Udata(i  ,j  , dofMap(idx,idy,0,IU)) = 0;
 	  Udata(i  ,j  , dofMap(idx,idy,0,IV)) = 0;
 	}
-	
+
       } // end for idx
     } // end for idy
-    
+
   } // end operator () - 2d
 
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -133,7 +134,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -159,7 +160,7 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     const real_t rho1 = 1.0;
@@ -176,7 +177,7 @@ public:
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // lower left corner
 	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -185,9 +186,9 @@ public:
 	  x += this->sdm_geom.solution_pts_1d(idx) * dx;
 	  y += this->sdm_geom.solution_pts_1d(idy) * dy;
 	  z += this->sdm_geom.solution_pts_1d(idz) * dz;
-	  
+
 	  bool tmp = x < 0.5;
-	  
+
 	  if (tmp) {
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,ID)) = rho1;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IE)) = p1/(gamma0-1.0);
@@ -201,17 +202,18 @@ public:
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IV)) = 0.0;
 	    Udata(i  ,j  ,k  , dofMap(idx,idy,idz,IW)) = 0.0;
 	  }
-	  
+
 	} // end for idx
       } // end for idy
     } // end for idz
-    
+
   } // end operator () - 3d
-  
+
   DataArray     Udata;
 
 }; // InitSodFunctor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_INIT_SOD_FUNCTOR_H_

@@ -14,6 +14,7 @@
 
 #include "shared/EulerEquations.h"
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -102,10 +103,10 @@ namespace sdm {
 // 	  euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
 
 //	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
-// 	  vx = c+FABS(qLoc[IU]);
-// 	  vy = c+FABS(qLoc[IV]);
+// 	  vx = c+fabs(qLoc[IU]);
+// 	  vy = c+fabs(qLoc[IV]);
 
-// 	  invDt = FMAX(invDt, vx/dx + vy/dy);
+// 	  invDt = fmax(invDt, vx/dx + vy/dy);
 
 // 	} // end for idx
 //       } // end for idy
@@ -166,11 +167,11 @@ namespace sdm {
 // 	  euler.convert_to_primitive(uLoc,qLoc,this->params.settings.gamma0);
 
 //	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
-// 	  vx = c+FABS(qLoc[IU]);
-// 	  vy = c+FABS(qLoc[IV]);
-// 	  vz = c+FABS(qLoc[IW]);
+// 	  vx = c+fabs(qLoc[IU]);
+// 	  vy = c+fabs(qLoc[IV]);
+// 	  vz = c+fabs(qLoc[IW]);
 
-// 	  invDt = FMAX(invDt, vx/dx + vy/dy + vz/dz);
+// 	  invDt = fmax(invDt, vx/dx + vy/dy + vz/dz);
 
 // 	  } // end for idx
 // 	} // end for idy
@@ -301,10 +302,10 @@ public:
 
 	  c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
 
-	  vx = c+FABS(qLoc[IU]);
-	  vy = c+FABS(qLoc[IV]);
+	  vx = c+fabs(qLoc[IU]);
+	  vy = c+fabs(qLoc[IV]);
 
-	  invDt = FMAX(invDt, vx/dx + vy/dy);
+	  invDt = fmax(invDt, vx/dx + vy/dy);
 
 	} // end for idx
       } // end for idy
@@ -445,11 +446,11 @@ public:
 
 	    c = euler.compute_speed_of_sound(qLoc,this->params.settings.gamma0);
 
-	    vx = c+FABS(qLoc[IU]);
-	    vy = c+FABS(qLoc[IV]);
-	    vz = c+FABS(qLoc[IW]);
+	    vx = c+fabs(qLoc[IU]);
+	    vy = c+fabs(qLoc[IV]);
+	    vz = c+fabs(qLoc[IW]);
 
-	    invDt = FMAX(invDt, vx/dx + vy/dy + vz/dz);
+	    invDt = fmax(invDt, vx/dx + vy/dy + vz/dz);
 
 	  } // end for idx
 	} // end for idy
@@ -484,5 +485,6 @@ public:
 }; // class ComputeDt_Functor_3d
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_DT_FUNCTOR_H_

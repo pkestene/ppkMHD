@@ -17,6 +17,7 @@
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
 
+namespace ppkMHD {
 namespace sdm {
 
 /*************************************************/
@@ -39,15 +40,15 @@ public:
     Udata(Udata),
     rand_pool(khParams.seed)
   {};
-  
+
   // static method which does it all: create and execute functor
   static void apply(HydroParams         params,
                     SDM_Geometry<dim,N> sdm_geom,
                     KHParams            khParams,
                     DataArray           Udata)
   {
-    int nbCells = dim==2 ? 
-      params.isize*params.jsize : 
+    int nbCells = dim==2 ?
+      params.isize*params.jsize :
       params.isize*params.jsize*params.ksize;
 
     InitKelvinHelmholtzFunctor functor(params, sdm_geom, khParams, Udata);
@@ -57,7 +58,7 @@ public:
   /*
    * 2D version.
    */
-  //! functor for 2d 
+  //! functor for 2d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
@@ -66,7 +67,7 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -77,14 +78,14 @@ public:
 
     const int nx = this->params.nx;
     const int ny = this->params.ny;
-    
+
     const real_t xmin = this->params.xmin;
     const real_t ymin = this->params.ymin;
     //const real_t xmax = this->params.xmax;
     const real_t ymax = this->params.ymax;
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     // Kelvin-Helmholtz problem parameters
@@ -105,7 +106,7 @@ public:
     // loop over cell DoF's
     for (int idy=0; idy<N; ++idy) {
       for (int idx=0; idx<N; ++idx) {
-	
+
 	// lower left corner
 	real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -117,9 +118,9 @@ public:
 	// normalized coordinates in [0,1]
 	//real_t xn = (x-xmin)/(xmax-xmin);
 	real_t yn = (y-ymin)/(ymax-ymin);
-	
+
 	if (khParams.p_rand) {
-	  
+
 	  real_t d, u, v;
 
 	  if ( yn < 0.25 or yn > 0.75) {
@@ -127,26 +128,26 @@ public:
 	    d = d_out;
 	    u = vflow_out;
 	    v = 0.0;
-	    
+
 	  } else {
-	    
+
 	    d = d_in;
 	    u = vflow_in;
 	    v = 0.0;
-	    
+
 	  }
 
 	  u += ampl * (rand_gen.drand() - 0.5);
 	  v += ampl * (rand_gen.drand() - 0.5);
-	  
+
 	  Udata(i,j,dofMap(idx,idy,0,ID)) = d;
 	  Udata(i,j,dofMap(idx,idy,0,IU)) = d * u;
 	  Udata(i,j,dofMap(idx,idy,0,IV)) = d * v;
 	  Udata(i,j,dofMap(idx,idy,0,IE)) =
 	    pressure/(gamma0-1.0) + 0.5*d*(u*u + v*v);
-      
+
 	} else if (khParams.p_sine_rob) {
-	  
+
 	  const int    n     = khParams.mode;
 	  const real_t w0    = khParams.w0;
 	  const real_t delta = khParams.delta;
@@ -156,35 +157,35 @@ public:
 	  const double rho2 = d_out;
 	  const double v1 = vflow_in;
 	  const double v2 = vflow_out;
-	  
-	  const double ramp = 
+
+	  const double ramp =
 	    1.0 / ( 1.0 + exp( 2*(y-y1)/delta ) ) +
 	    1.0 / ( 1.0 + exp( 2*(y2-y)/delta ) );
-	  
+
 	  const real_t d = rho1 + ramp*(rho2-rho1);
 	  const real_t u = v1   + ramp*(v2-v1);
 	  const real_t v = w0 * sin(n*M_PI*x);
-	  
+
 	  Udata(i,j,dofMap(idx,idy,0,ID)) = d;
 	  Udata(i,j,dofMap(idx,idy,0,IU)) = d * u;
 	  Udata(i,j,dofMap(idx,idy,0,IV)) = d * v;
 	  Udata(i,j,dofMap(idx,idy,0,IE)) =
 	    pressure / (gamma0-1.0) + 0.5*d*(u*u + v*v);
-	  
+
 	}
-	
+
       } // end for idx
     } // end for idy
 
     // free random number
     rand_pool.free_state(rand_gen);
-    
+
   } // end operator () - 2d
 
   /*
    * 3D version.
    */
-  //! functor for 3d 
+  //! functor for 3d
   template<int dim_ = dim>
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
@@ -194,7 +195,7 @@ public:
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
     const int ghostWidth = this->params.ghostWidth;
-    
+
 #ifdef USE_MPI
     const int i_mpi = this->params.myMpiPos[IX];
     const int j_mpi = this->params.myMpiPos[IY];
@@ -220,7 +221,7 @@ public:
     const real_t dx = this->params.dx;
     const real_t dy = this->params.dy;
     const real_t dz = this->params.dz;
-    
+
     const real_t gamma0 = this->params.settings.gamma0;
 
     // Kelvin-Helmholtz problem parameters
@@ -237,12 +238,12 @@ public:
 
     // get random number state
     rand_type rand_gen = rand_pool.get_state();
-    
+
     // loop over cell DoF's
     for (int idz=0; idz<N; ++idz) {
       for (int idy=0; idy<N; ++idy) {
 	for (int idx=0; idx<N; ++idx) {
-	  
+
 	  // lower left corner
 	  real_t x = xmin + (i+nx*i_mpi-ghostWidth)*dx;
 	  real_t y = ymin + (j+ny*j_mpi-ghostWidth)*dy;
@@ -256,40 +257,40 @@ public:
 	  //real_t xn = (x-xmin)/(xmax-xmin);
 	  //real_t yn = (y-ymin)/(ymax-ymin);
 	  real_t zn = (z-zmin)/(zmax-zmin);
-	  
+
 	  if (khParams.p_rand) {
-	    
+
 	    real_t d, u, v, w;
-	    
+
 	    if ( zn < 0.25 or zn > 0.75) {
-	      
+
 	      d = d_out;
 	      u = vflow_out;
 	      v = 0.0;
 	      w = 0.0;
-	      
+
 	    } else {
-	      
+
 	      d = d_in;
 	      u = vflow_in;
 	      v = 0.0;
 	      w = 0.0;
-	      
+
 	    }
-	    
+
 	    u += ampl * (rand_gen.drand() - 0.5);
 	    v += ampl * (rand_gen.drand() - 0.5);
 	    w += ampl * (rand_gen.drand() - 0.5);
-	    
+
 	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = d;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) = d * u;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) = d * v;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = d * w;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) =
 	      pressure/(gamma0-1.0) + 0.5*d*(u*u + v*v + w*w);
-	    
+
 	  } else if (khParams.p_sine_rob) {
-	    
+
 	    const int    n     = khParams.mode;
 	    const real_t w0    = khParams.w0;
 	    const real_t delta = khParams.delta;
@@ -302,28 +303,28 @@ public:
 
 	    const double v1x = vflow_in;
 	    const double v2x = vflow_out;
-	    
+
 	    const double v1y = vflow_in/2;
 	    const double v2y = vflow_out/2;
-	    
-	    const double ramp = 
+
+	    const double ramp =
 	      1.0 / ( 1.0 + exp( 2*(z-z1)/delta ) ) +
 	      1.0 / ( 1.0 + exp( 2*(z2-z)/delta ) );
-	    
+
 	    const real_t d = rho1 + ramp*(rho2-rho1);
 	    const real_t u = v1x   + ramp*(v2x-v1x);
 	    const real_t v = v1y   + ramp*(v2y-v1y);
 	    const real_t w = w0 * sin(n*M_PI*x) * sin(n*M_PI*y);
-	    
+
 	    Udata(i,j,k,dofMap(idx,idy,idz,ID)) = d;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IU)) = d * u;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IV)) = d * v;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IW)) = d * w;
 	    Udata(i,j,k,dofMap(idx,idy,idz,IE)) =
 	      pressure / (gamma0-1.0) + 0.5*d*(u*u + v*v + w*w);
-	    
+
 	  }
-	  
+
 	} // end for idx
       } // end for idy
     } // end for idz
@@ -332,10 +333,10 @@ public:
     rand_pool.free_state(rand_gen);
 
   } // end operator () - 3d
-  
+
   KHParams  khParams;
   DataArray Udata;
-  
+
   // random number generator
   Kokkos::Random_XorShift64_Pool<Device> rand_pool;
   typedef typename Kokkos::Random_XorShift64_Pool<Device>::generator_type rand_type;
@@ -343,5 +344,6 @@ public:
 }; // InitKelvinHelmholtzFunctor
 
 } // namespace sdm
+} // namespace ppkMHD
 
 #endif // SDM_INIT_KELVIN_HELMHOLTZ_FUNCTOR_H_

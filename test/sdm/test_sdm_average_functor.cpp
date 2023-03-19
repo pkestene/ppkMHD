@@ -32,17 +32,19 @@
 #include <mpi.h>
 #endif // USE_MPI
 
+namespace ppkMHD {
+
 /**
  * Wrapper routine arround the functor call
  * sdm::Average_Conservative_Variables_Functor
  */
 template< int dim, int N >
 void compute_Uaverage(sdm::SolverHydroSDM<dim,N>& solver) {
-      
+
   int nbCells = dim==2 ?
     solver.params.isize * solver.params.jsize :
     solver.params.isize * solver.params.jsize * solver.params.ksize;
-  
+
   // compute cell average
   {
     sdm::Average_Conservative_Variables_Functor<dim,N>
@@ -50,7 +52,7 @@ void compute_Uaverage(sdm::SolverHydroSDM<dim,N>& solver) {
 	      solver.sdm_geom,
 	      solver.U,
 	      solver.Uaverage);
-  
+
     Kokkos::parallel_for(nbCells, functor);
   }
 
@@ -85,7 +87,7 @@ void compute_Uaverage(sdm::SolverHydroSDM<dim,N>& solver) {
   }
 
   return;
-  
+
 } // compute_Uaverage
 
 /**
@@ -116,7 +118,7 @@ void test_compute_average_functor()
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
   }
-  
+
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
@@ -128,14 +130,14 @@ void test_compute_average_functor()
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
-  
+
   // create solver
   sdm::SolverHydroSDM<dim,N> solver(params, configMap);
 
   // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
   solver.init_io();
-  
+
   // save data just for cross-checking
   solver.save_solution();
 
@@ -169,8 +171,10 @@ void test_compute_average_functor()
     io_writer_average->save_data(solver.Ugradz, data_host, 0, 0.0, "gradz");
   }
 
-  
+
 } // test_compute_dt_functors
+
+} // namespace ppkMHD
 
 /*************************************************/
 /*************************************************/
@@ -184,7 +188,7 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
     if ( Kokkos::hwloc::available() ) {
@@ -202,19 +206,19 @@ int main(int argc, char* argv[])
   std::cout << "==========================================================\n";
   std::cout << "=== Spectral Difference Method : Limiter functors test ===\n";
   std::cout << "==========================================================\n";
-  
+
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    test_compute_average_functor<2,4>();
+    ppkMHD::test_compute_average_functor<2,4>();
 
     // 3d
-    test_compute_average_functor<3,4>();
+    ppkMHD::test_compute_average_functor<3,4>();
 
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
+
 }
