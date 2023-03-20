@@ -1,6 +1,5 @@
 #include "IO_VTK.h"
 
-#include "shared/HydroParams.h"
 #include "utils/config/ConfigMap.h"
 
 #include <fstream>
@@ -46,10 +45,10 @@ void save_VTK_2D(DataArray2d             Udata,
   const int isize = params.isize;
   const int jsize = params.jsize;
   const int nbCells = isize * jsize;
-  
+
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
-  
+
   // local variables
   int i,j,iVar;
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
@@ -63,24 +62,24 @@ void save_VTK_2D(DataArray2d             Udata,
   if (sizeof(real_t) == sizeof(double)) {
     useDouble = true;
   }
-  
+
   // write iStep in string stepNum
   std::ostringstream stepNum;
   stepNum.width(7);
   stepNum.fill('0');
   stepNum << iStep;
-  
+
   // concatenate file prefix + file number + suffix
   std::string filename;
   if ( debug_name.empty() )
     filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vti";
   else
     filename = outputDir + "/" + outputPrefix + "_" + debug_name + "_" + stepNum.str() + ".vti";
-  
-  // open file 
+
+  // open file
   std::fstream outFile;
   outFile.open(filename.c_str(), std::ios_base::out);
-  
+
   // write header
 
   // if writing raw binary data (file does not respect XML standard)
@@ -124,15 +123,15 @@ void save_VTK_2D(DataArray2d             Udata,
       else
 	outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
-      
+
       for (int index=0; index<nbCells; ++index) {
 	//index2coord(index,i,j,isize,jsize);
-	
+
 	// enforce the use of left layout (Ok for CUDA)
 	// but for OpenMP, we will need to transpose
 	j = index / isize;
 	i = index - j*isize;
-	
+
 	if (j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	    i>=imin+ghostWidth and i<=imax-ghostWidth) {
 	  outFile << Uhost(i, j, iVar) << " ";
@@ -142,7 +141,7 @@ void save_VTK_2D(DataArray2d             Udata,
     } // end for iVar
 
     outFile << "    </CellData>\n";
-    
+
     // write footer
     outFile << "  </Piece>\n";
     outFile << "  </ImageData>\n";
@@ -167,7 +166,7 @@ void save_VTK_2D(DataArray2d             Udata,
     outFile << "    </CellData>" << std::endl;
     outFile << "  </Piece>" << std::endl;
     outFile << "  </ImageData>" << std::endl;
-    
+
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
     // write the leading undescore
@@ -190,9 +189,9 @@ void save_VTK_2D(DataArray2d             Udata,
 
   } // end ascii/binary heavy data write
 
-  
+
   outFile.close();
-  
+
 } // end save_VTK_2D
 
 // =======================================================
@@ -234,17 +233,17 @@ void save_VTK_3D(DataArray3d             Udata,
   const int ijsize = isize * jsize;
   const int nbCells = isize * jsize * ksize;
 
-  
+
   const int ghostWidth = params.ghostWidth;
-  
+
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
-  
+
   // local variables
   int i, j, k, iVar;
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
-    
+
   bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
 
   // check scalar data type
@@ -253,30 +252,30 @@ void save_VTK_3D(DataArray3d             Udata,
   if (sizeof(real_t) == sizeof(double)) {
     useDouble = true;
   }
-  
+
   // write iStep in string stepNum
   std::ostringstream stepNum;
   stepNum.width(7);
   stepNum.fill('0');
   stepNum << iStep;
-  
+
   // concatenate file prefix + file number + suffix
   std::string filename;
   if ( debug_name.empty() )
     filename = outputDir + "/" + outputPrefix + "_" + stepNum.str() + ".vti";
   else
     filename = outputDir + "/" + outputPrefix + "_" + debug_name + "_" + stepNum.str() + ".vti";
-  
-  // open file 
+
+  // open file
   std::fstream outFile;
   outFile.open(filename.c_str(), std::ios_base::out);
-  
+
   // write header
 
   // if writing raw binary data (file does not respect XML standard)
   if (outputVtkAscii)
     outFile << "<?xml version=\"1.0\"?>\n";
-  
+
   // write xml data header
   if (isBigEndian()) {
     outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"BigEndian\">\n";
@@ -296,16 +295,16 @@ void save_VTK_3D(DataArray3d             Udata,
   outFile << "  <Piece Extent=\""
 	  << 0 << " " << nx << " "
 	  << 0 << " " << ny << " "
-	  << 0 << " " << nz << " "    
+	  << 0 << " " << nz << " "
 	  << "\">\n";
-  
+
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
 
   if (outputVtkAscii) {
-    
+
     outFile << "    <CellData>\n";
-    
+
     // write data array (ascii), remove ghost cells
     for ( iVar=0; iVar<nbvar; iVar++) {
       outFile << "    <DataArray type=\"";
@@ -314,16 +313,16 @@ void save_VTK_3D(DataArray3d             Udata,
       else
 	outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
-      
+
       for (int index=0; index<nbCells; ++index) {
 	//index2coord(index,i,j,k,isize,jsize,ksize);
-	
+
 	// enforce the use of left layout (Ok for CUDA)
 	// but for OpenMP, we will need to transpose
 	k = index / ijsize;
 	j = (index - k*ijsize) / isize;
 	i = index - j*isize - k*ijsize;
-	
+
 	if (k>=kmin+ghostWidth and k<=kmax-ghostWidth and
 	    j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	    i>=imin+ghostWidth and i<=imax-ghostWidth) {
@@ -359,7 +358,7 @@ void save_VTK_3D(DataArray3d             Udata,
     outFile << "    </CellData>" << std::endl;
     outFile << "  </Piece>" << std::endl;
     outFile << "  </ImageData>" << std::endl;
-    
+
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
     // write the leading undescore
@@ -383,7 +382,7 @@ void save_VTK_3D(DataArray3d             Udata,
     outFile << "</VTKFile>" << std::endl;
 
   } // end ascii/binary heavy data write
-  
+
   outFile.close();
 
 } // end save_VTK_3D
@@ -400,7 +399,7 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
 		     int iStep,
 		     std::string debug_name)
 {
-  
+
   const int nx = params.nx;
   const int ny = params.ny;
 
@@ -409,13 +408,13 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
 
   const int jmin = params.jmin;
   const int jmax = params.jmax;
-  
+
   const int ghostWidth = params.ghostWidth;
 
   const real_t dx = params.dx;
   const real_t dy = params.dy;
   const real_t dz = 0.0;
-  
+
   const int isize = params.isize;
   const int jsize = params.jsize;
   const int nbCells = isize*jsize;
@@ -426,10 +425,10 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
   xmax=params.myMpiPos[0]*nx+nx;
   ymin=params.myMpiPos[1]*ny   ;
   ymax=params.myMpiPos[1]*ny+ny;
-  
+
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
-  
+
   // local variables
   int i,j,iVar;
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
@@ -443,7 +442,7 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
   if (sizeof(real_t) == sizeof(double)) {
     useDouble = true;
   }
-  
+
   // write iStep in string timeFormat
   std::ostringstream timeFormat;
   timeFormat.width(7);
@@ -466,11 +465,11 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
   // header file : parallel vti format
   std::string headerFilename   = outputDir+"/"+outputPrefix+"_time"+timeFormat.str()+".pvti";
 
-  
-  // open file 
+
+  // open file
   std::fstream outFile;
   outFile.open(filename.c_str(), std::ios_base::out);
-  
+
   // write header
   if (params.myRank == 0) {
     write_pvti_header(headerFilename,
@@ -480,7 +479,7 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
 		      variables_names,
 		      iStep);
   }
-      
+
   // if writing raw binary data (file does not respect XML standard)
   if (outputVtkAscii)
     outFile << "<?xml version=\"1.0\"?>\n";
@@ -494,19 +493,19 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\""
-	  << xmin << " " << xmax << " " 
-	  << ymin << " " << ymax << " " 
+	  << xmin << " " << xmax << " "
+	  << ymin << " " << ymax << " "
 	  << 0    << " " << 0    << "\" "
 	  << "Origin=\""
 	  << params.xmin << " " << params.ymin << " " << 0.0 << "\" "
 	  << "Spacing=\""
 	  << dx << " " << dy << " " << dz << "\">" << std::endl;
-  outFile << "  <Piece Extent=\"" 
-	  << xmin << " " << xmax << " " 
-	  << ymin << " " << ymax << " " 
+  outFile << "  <Piece Extent=\""
+	  << xmin << " " << xmax << " "
+	  << ymin << " " << ymax << " "
 	  << 0    << " " << 0    << ""
 	  << "\">" << std::endl;
-  
+
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
 
@@ -522,27 +521,27 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
       else
 	outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
-      	
+
       for (int index=0; index<nbCells; ++index) {
 	//index2coord(index,i,j,isize,jsize);
-	
+
 	// enforce the use of left layout (Ok for CUDA)
 	// but for OpenMP, we will need to transpose
 	j = index / isize;
 	i = index - j*isize;
-	
+
 	if (j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	    i>=imin+ghostWidth and i<=imax-ghostWidth) {
 	  outFile << Uhost(i, j, iVar) << " ";
 	}
       }
-      
+
       outFile << "\n    </DataArray>\n";
-      
+
     } // end for iVar
-    
+
     outFile << "    </CellData>\n";
-    
+
     // write footer
     outFile << "  </Piece>\n";
     outFile << "  </ImageData>\n";
@@ -567,7 +566,7 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
     outFile << "    </CellData>" << std::endl;
     outFile << "  </Piece>" << std::endl;
     outFile << "  </ImageData>" << std::endl;
-    
+
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
     // write the leading undescore
@@ -589,9 +588,9 @@ void save_VTK_2D_mpi(DataArray2d             Udata,
     outFile << "</VTKFile>" << std::endl;
 
   } // end ascii/binary heavy data write
-  
+
   outFile.close();
-  
+
 } // save_VTK_2D_mpi
 
 // =======================================================
@@ -609,7 +608,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 		     int iStep,
 		     std::string debug_name)
 {
-  
+
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
@@ -645,7 +644,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 
   // copy device data to host
   Kokkos::deep_copy(Uhost, Udata);
-  
+
   // local variables
   int i,j,k,iVar;
   std::string outputDir    = configMap.getString("output", "outputDir", "./");
@@ -659,7 +658,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
   if (sizeof(real_t) == sizeof(double)) {
     useDouble = true;
   }
-  
+
   // write iStep in string timeFormat
   std::ostringstream timeFormat;
   timeFormat.width(7);
@@ -682,11 +681,11 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
   // header file : parallel vti format
   std::string headerFilename   = outputDir+"/"+outputPrefix+"_time"+timeFormat.str()+".pvti";
 
-  
-  // open file 
+
+  // open file
   std::fstream outFile;
   outFile.open(filename.c_str(), std::ios_base::out);
-  
+
   // write header
   if (params.myRank == 0) {
     write_pvti_header(headerFilename,
@@ -696,7 +695,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 		      variables_names,
 		      iStep);
   }
-      
+
   // if writing raw binary data (file does not respect XML standard)
   if (outputVtkAscii)
     outFile << "<?xml version=\"1.0\"?>\n";
@@ -710,19 +709,19 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\""
-	  << xmin << " " << xmax << " " 
-	  << ymin << " " << ymax << " " 
+	  << xmin << " " << xmax << " "
+	  << ymin << " " << ymax << " "
 	  << zmin << " " << zmax << "\" "
 	  << "Origin=\""
 	  << params.xmin << " " << params.ymin << " " << params.zmin << "\" "
 	  << "Spacing=\""
 	  << dx << " " << dy << " " << dz << "\">" << std::endl;
-  outFile << "  <Piece Extent=\"" 
-	  << xmin << " " << xmax << " " 
-	  << ymin << " " << ymax << " " 
+  outFile << "  <Piece Extent=\""
+	  << xmin << " " << xmax << " "
+	  << ymin << " " << ymax << " "
 	  << zmin << " " << zmax << ""
 	  << "\">" << std::endl;
-  
+
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
 
@@ -738,29 +737,29 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
       else
 	outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
-      
+
       for (int index=0; index<nbCells; ++index) {
 	//index2coord(index,i,j,k,isize,jsize,ksize);
-	
+
 	// enforce the use of left layout (Ok for CUDA)
 	// but for OpenMP, we will need to transpose
 	k = index / ijsize;
 	j = (index - k*ijsize) / isize;
 	i = index - j*isize - k*ijsize;
-	
+
 	if (k>=kmin+ghostWidth and k<=kmax-ghostWidth and
 	    j>=jmin+ghostWidth and j<=jmax-ghostWidth and
 	    i>=imin+ghostWidth and i<=imax-ghostWidth) {
 	  outFile << Uhost(i,j,k,iVar) << " ";
 	}
       }
-      
+
       outFile << "\n    </DataArray>\n";
 
     } // end for iVar
-    
+
     outFile << "    </CellData>\n";
-    
+
     // write footer
     outFile << "  </Piece>\n";
     outFile << "  </ImageData>\n";
@@ -785,7 +784,7 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
     outFile << "    </CellData>" << std::endl;
     outFile << "  </Piece>" << std::endl;
     outFile << "  </ImageData>" << std::endl;
-    
+
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
     // write the leading undescore
@@ -805,14 +804,14 @@ void save_VTK_3D_mpi(DataArray3d             Udata,
 	} // for k
       } // for iVar
     }
-    
+
     outFile << "  </AppendedData>" << std::endl;
     outFile << "</VTKFile>" << std::endl;
-    
+
   } // end ascii/binary heavy data write
-  
+
   outFile.close();
-  
+
 } // save_VTK_3D_mpi
 
 /*
@@ -829,27 +828,27 @@ void write_pvti_header(std::string headerFilename,
 {
   // file handler
   std::fstream outHeader;
-  
+
   // dummy string here, when using the full VTK API, data can be compressed
   // here, no compression used
   std::string compressor("");
-  
+
   // check scalar data type
   bool useDouble = false;
-  
+
   if (sizeof(real_t) == sizeof(double)) {
     useDouble = true;
   }
-  
+
   const int dimType = params.dimType;
   const int nProcs = params.nProcs;
-  
+
   // write iStep in string timeFormat
   std::ostringstream timeFormat;
   timeFormat.width(7);
   timeFormat.fill('0');
   timeFormat << iStep;
-  
+
   // local sub-domain sizes
   const int nx = params.nx;
   const int ny = params.ny;
@@ -866,7 +865,7 @@ void write_pvti_header(std::string headerFilename,
 
   // open pvti header file
   outHeader.open (headerFilename.c_str(), std::ios_base::out);
-  
+
   outHeader << "<?xml version=\"1.0\"?>" << std::endl;
   if (isBigEndian())
     outHeader << "<VTKFile type=\"PImageData\" version=\"0.1\" byte_order=\"BigEndian\"" << compressor << ">" << std::endl;
@@ -883,13 +882,13 @@ void write_pvti_header(std::string headerFilename,
 	    << std::endl;
   outHeader << "    <PCellData Scalars=\"Scalars_\">" << std::endl;
   for (int iVar=0; iVar<nbvar; iVar++) {
-    if (useDouble) 
+    if (useDouble)
       outHeader << "      <PDataArray type=\"Float64\" Name=\""<< varNames.at(iVar)<<"\"/>" << std::endl;
     else
-      outHeader << "      <PDataArray type=\"Float32\" Name=\""<< varNames.at(iVar)<<"\"/>" << std::endl;	  
+      outHeader << "      <PDataArray type=\"Float32\" Name=\""<< varNames.at(iVar)<<"\"/>" << std::endl;
   }
   outHeader << "    </PCellData>" << std::endl;
-  
+
   // one piece per MPI process
   if (dimType == TWO_D) {
     for (int iPiece=0; iPiece<nProcs; ++iPiece) {
@@ -902,7 +901,7 @@ void write_pvti_header(std::string headerFilename,
       int coords[2];
       params.communicator->getCoords(iPiece,2,coords);
       outHeader << "    <Piece Extent=\"";
-      
+
       // pieces in first line of column are different (due to the special
       // pvti file format with overlapping by 1 cell)
       if (coords[0] == 0)
@@ -915,7 +914,7 @@ void write_pvti_header(std::string headerFilename,
 	outHeader << coords[1]*ny << " " << coords[1]*ny+ny << " ";
       outHeader << 0 << " " << 1 << "\" Source=\"";
       outHeader << pieceFilename << "\"/>" << std::endl;
-    } 
+    }
   } else { // THREE_D
     for (int iPiece=0; iPiece<nProcs; ++iPiece) {
       std::ostringstream pieceFormat;
@@ -927,34 +926,34 @@ void write_pvti_header(std::string headerFilename,
       int coords[3];
       params.communicator->getCoords(iPiece,3,coords);
       outHeader << " <Piece Extent=\"";
-      
+
       if (coords[0] == 0)
 	outHeader << 0 << " " << nx << " ";
       else
 	outHeader << coords[0]*nx << " " << coords[0]*nx+nx << " ";
-      
+
       if (coords[1] == 0)
 	outHeader << 0 << " " << ny << " ";
       else
 	outHeader << coords[1]*ny << " " << coords[1]*ny+ny << " ";
-      
+
       if (coords[2] == 0)
 	outHeader << 0 << " " << nz << " ";
       else
 	outHeader << coords[2]*nz << " " << coords[2]*nz+nz << " ";
-      
+
       outHeader << "\" Source=\"";
       outHeader << pieceFilename << "\"/>" << std::endl;
-    } 
+    }
   }
   outHeader << "</PImageData>" << std::endl;
   outHeader << "</VTKFile>" << std::endl;
-  
+
   // close header file
   outHeader.close();
-  
+
   // end writing pvti header
-  
+
 } // write_pvti_header
 #endif // USE_MPI
 
