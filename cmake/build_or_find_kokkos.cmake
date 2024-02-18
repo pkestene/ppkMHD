@@ -30,6 +30,15 @@ set(PPKMHD_BACKEND "Undefined" CACHE STRING
 set_property(CACHE PPKMHD_BACKEND PROPERTY STRINGS
   "OpenMP" "Cuda" "HIP" "Undefined")
 
+
+# raise the minimum C++ standard level if not already done
+# when build kokkos, it defaults to c++-17
+# when using installed kokkos, it is not set, so defaulting to c++-17
+# kokkos 4.0.00 requires c++-17 anyway
+if (NOT "${CMAKE_CXX_STANDARD}")
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
 # check if user requested a build of kokkos
 if(PPKMHD_BUILD_KOKKOS)
 
@@ -60,6 +69,10 @@ if(PPKMHD_BUILD_KOKKOS)
 
     if ((NOT DEFINED Kokkos_ENABLE_CUDA_CONSTEXPR) OR (NOT Kokkos_ENABLE_CUDA_CONSTEXPR))
       set(Kokkos_ENABLE_CUDA_CONSTEXPR ON CACHE BOOL "")
+    endif()
+
+    if ((NOT DEFINED Kokkos_ENABLE_CUDA_UVM) OR (NOT Kokkos_ENABLE_CUDA_UVM))
+      set(Kokkos_ENABLE_CUDA_UVM OFF CACHE BOOL "")
     endif()
 
     # Note : cuda architecture will probed by kokkos cmake configure
@@ -94,22 +107,18 @@ if(PPKMHD_BUILD_KOKKOS)
 
   endif()
 
-  # we set c++ standard to c++-17 as kokkos >= 4.0.00 requires at least c++-17
-  if (NOT "${CMAKE_CXX_STANDARD}")
-    set(CMAKE_CXX_STANDARD 17)
-  endif()
-
   #find_package(Git REQUIRED)
   include (FetchContent)
 
   if (PPKMHD_USE_GIT_KOKKOS)
     FetchContent_Declare( kokkos_external
       GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-      GIT_TAG 4.0.00
+      GIT_TAG 4.2.00
       )
   else()
     FetchContent_Declare( kokkos_external
-      URL https://github.com/kokkos/kokkos/archive/refs/tags/4.0.00.tar.gz
+      #URL https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.tar.gz
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/kokkos
       )
   endif()
 
@@ -131,19 +140,10 @@ else()
   #
   # check if an already installed kokkos exists
   #
-  find_package(Kokkos 3.7.00 REQUIRED)
+  find_package(Kokkos 4.0.00 CONFIG REQUIRED)
 
   if(TARGET Kokkos::kokkos)
 
-    # set default c++ standard according to Kokkos version
-    # Kokkos >= 4.0.00 requires c++-17
-    if (NOT "${CMAKE_CXX_STANDARD}")
-      if ( ${Kokkos_VERSION} VERSION_LESS 4.0.00)
-        set(CMAKE_CXX_STANDARD 14)
-      else()
-        set(CMAKE_CXX_STANDARD 17)
-      endif()
-    endif()
 
     # kokkos_check is defined in KokkosConfigCommon.cmake
     kokkos_check( DEVICES "OpenMP" RETURN_VALUE KOKKOS_DEVICE_ENABLE_OPENMP)
@@ -169,7 +169,7 @@ else()
 
   else()
 
-    message(FATAL_ERROR "[ppkmhd / kokkos] Kokkos is required but not found by find_package. Please adjet your env variable CMAKE_PREFIX_PATH (or Kokkos_ROOT) to where Kokkos is installed on your machine !")
+    message(FATAL_ERROR "[ppkmhd / kokkos] Kokkos is required but not found by find_package. Please adjust your env variable CMAKE_PREFIX_PATH (or Kokkos_ROOT) to where Kokkos is installed on your machine !")
 
   endif()
 
