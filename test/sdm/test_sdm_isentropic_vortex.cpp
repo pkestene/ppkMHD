@@ -28,13 +28,15 @@
 // and the exact solution (which is also the initial condition)
 #include "sdm/SDM_Compute_error.h"
 
-enum RK_type {
-  FORWARD_EULER=1,
-  SSP_RK2=2,
-  SSP_RK3=3
+enum RK_type
+{
+  FORWARD_EULER = 1,
+  SSP_RK2 = 2,
+  SSP_RK3 = 3
 };
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 using errors_t = std::array<real_t,2>;
 

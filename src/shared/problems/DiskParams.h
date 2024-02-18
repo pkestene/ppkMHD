@@ -3,12 +3,14 @@
 
 #include "utils/config/ConfigMap.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 /**
  * disk problem parameters.
  */
-struct DiskParams {
+struct DiskParams
+{
 
   //! disk radius
   real_t radius;
@@ -33,7 +35,7 @@ struct DiskParams {
 
   real_t ref_sound_speed;
 
-  DiskParams(ConfigMap& configMap)
+  DiskParams(ConfigMap & configMap)
   {
 
     double xmin = configMap.getFloat("mesh", "xmin", -0.5);
@@ -44,29 +46,33 @@ struct DiskParams {
     double ymax = configMap.getFloat("mesh", "ymax", 0.5);
     double zmax = configMap.getFloat("mesh", "zmax", 0.5);
 
-    radius        = configMap.getFloat("disk","radius", (xmax-xmin) * 0.125);
-    radius_inner  = configMap.getFloat("disk","radius_inner", radius/10);
-    xc = configMap.getFloat("disk","xc", (xmin+xmax)/2);
-    yc = configMap.getFloat("disk","yc", (ymin+ymax)/2);
-    zc = configMap.getFloat("disk","zc", (zmin+zmax)/2);
+    radius = configMap.getFloat("disk", "radius", (xmax - xmin) * 0.125);
+    radius_inner = configMap.getFloat("disk", "radius_inner", radius / 10);
+    xc = configMap.getFloat("disk", "xc", (xmin + xmax) / 2);
+    yc = configMap.getFloat("disk", "yc", (ymin + ymax) / 2);
+    zc = configMap.getFloat("disk", "zc", (zmin + zmax) / 2);
 
-    ref_density      = configMap.getFloat("disk","ref_density", 1.0);
-    contrast_density = configMap.getFloat("disk","contrast_density",100.0);
-    contrast_width   = configMap.getFloat("disk","contrast_width",0.01);
-    ref_sound_speed  = configMap.getFloat("disk","ref_sound_speed", 0.2);
-
+    ref_density = configMap.getFloat("disk", "ref_density", 1.0);
+    contrast_density = configMap.getFloat("disk", "contrast_density", 100.0);
+    contrast_width = configMap.getFloat("disk", "contrast_width", 0.01);
+    ref_sound_speed = configMap.getFloat("disk", "ref_sound_speed", 0.2);
   }
 
   KOKKOS_INLINE_FUNCTION
-  real_t radial_speed_of_sound(real_t r) const {
+  real_t
+  radial_speed_of_sound(real_t r) const
+  {
 
     real_t csound = 0;
 
     // saturate at the center to prevent diverging values
-    if (r < radius_inner) {
+    if (r < radius_inner)
+    {
       csound = ref_sound_speed / sqrt(radius_inner / radius);
-    } else {
-      csound = ref_sound_speed / sqrt(r            / radius);
+    }
+    else
+    {
+      csound = ref_sound_speed / sqrt(r / radius);
     }
 
     return csound;

@@ -4,19 +4,20 @@
 #include "shared/kokkos_shared.h"
 #include <array>
 
-namespace mood {
+namespace mood
+{
 
 /**
  * List of implemented stencil for MOOD numerical schemes, degree is the degree of
  * the multivariate polynomial used to interpolate value in the given stencil.
  *
  * Please note that, for a given degree, the miminal stencil points need to compute
- * the polynomial coefficient (using least squares minimization) is the binomial 
+ * the polynomial coefficient (using least squares minimization) is the binomial
  * number: (dim+degree)! / dim! / degree!
- * 
+ *
  * So the stencil size must be "significantly" larger than this number to estimate
  * the polynomial coefficients in a robust manner.
- * 
+ *
  * In 2D, the binomial coefficient (2+degree)! / 2! / degree! reduces to
  * (degree+1)(degree+2)/2
  *
@@ -38,14 +39,14 @@ namespace mood {
  *   x
  *
  * - 2D - degree 3 v2 (minimum number of points is 4*5/2 = 10)
- *   
+ *
  * xxxx
  * xxox
  * xxxx
  * xxxx
  *
  * - 2D - degree 4 (minimum number of points is 5*6/2 = 15)
- *   
+ *
  * xxxxx
  * xxxxx
  * xxoxx
@@ -53,7 +54,7 @@ namespace mood {
  * xxxxx
  *
  * - 2D - degree 5 (minimum number of points is 6*7/2 = 21)
- *   
+ *
  * xxxxxx
  * xxxxxx
  * xxxoxx
@@ -71,78 +72,68 @@ namespace mood {
  * - 3D - degree 3 (minimum number of points is 4*5*6/6 = 20)
  * - 3D - degree 4 (minimum number of points is 5*6*7/6 = 35)
  * - 3D - degree 5 (minimum number of points is 6*7*8/6 = 56)
- * 
+ *
  * Last item is not a stencil, just a trick to get the number of stencils.
  */
-enum STENCIL_ID {
-  STENCIL_2D_DEGREE1,       /*  0 */
-  STENCIL_2D_DEGREE2,       /*  1 */
-  STENCIL_2D_DEGREE3,       /*  2 */
-  STENCIL_2D_DEGREE3_V2,    /*  3 */
-  STENCIL_2D_DEGREE4,       /*  4 */
-  STENCIL_2D_DEGREE5,       /*  5 */
-  STENCIL_3D_DEGREE1,       /*  6 */
-  STENCIL_3D_DEGREE2,       /*  7 */
-  STENCIL_3D_DEGREE3,       /*  8 */
-  STENCIL_3D_DEGREE4,       /*  9 */
-  STENCIL_3D_DEGREE5,       /* 10 */
-  STENCIL_3D_DEGREE5_V2,    /* 11 */
-  STENCIL_TOTAL_NUMBER /* This is not a stencil ! */
+enum STENCIL_ID
+{
+  STENCIL_2D_DEGREE1,    /*  0 */
+  STENCIL_2D_DEGREE2,    /*  1 */
+  STENCIL_2D_DEGREE3,    /*  2 */
+  STENCIL_2D_DEGREE3_V2, /*  3 */
+  STENCIL_2D_DEGREE4,    /*  4 */
+  STENCIL_2D_DEGREE5,    /*  5 */
+  STENCIL_3D_DEGREE1,    /*  6 */
+  STENCIL_3D_DEGREE2,    /*  7 */
+  STENCIL_3D_DEGREE3,    /*  8 */
+  STENCIL_3D_DEGREE4,    /*  9 */
+  STENCIL_3D_DEGREE5,    /* 10 */
+  STENCIL_3D_DEGREE5_V2, /* 11 */
+  STENCIL_TOTAL_NUMBER   /* This is not a stencil ! */
 };
 
 /**
  * first  index is dim-2
  * second index is degree-1
  */
-constexpr STENCIL_ID STENCIL_MAP[2][5] =
-  {
-    {STENCIL_2D_DEGREE1,
-     STENCIL_2D_DEGREE2,
-     STENCIL_2D_DEGREE3,
-     STENCIL_2D_DEGREE4,
-     STENCIL_2D_DEGREE5},
-    {STENCIL_3D_DEGREE1,
-     STENCIL_3D_DEGREE2,
-     STENCIL_3D_DEGREE3,
-     STENCIL_3D_DEGREE4,
-     STENCIL_3D_DEGREE5}    
-  };
+constexpr STENCIL_ID STENCIL_MAP[2][5] = { { STENCIL_2D_DEGREE1,
+                                             STENCIL_2D_DEGREE2,
+                                             STENCIL_2D_DEGREE3,
+                                             STENCIL_2D_DEGREE4,
+                                             STENCIL_2D_DEGREE5 },
+                                           { STENCIL_3D_DEGREE1,
+                                             STENCIL_3D_DEGREE2,
+                                             STENCIL_3D_DEGREE3,
+                                             STENCIL_3D_DEGREE4,
+                                             STENCIL_3D_DEGREE5 } };
 
-constexpr STENCIL_ID STENCIL_MAPP[10] =
-  {
-    STENCIL_2D_DEGREE1,
-    STENCIL_2D_DEGREE2,
-    STENCIL_2D_DEGREE3,
-    STENCIL_2D_DEGREE4,
-    STENCIL_2D_DEGREE5,
-    STENCIL_3D_DEGREE1,
-    STENCIL_3D_DEGREE2,
-    STENCIL_3D_DEGREE3,
-    STENCIL_3D_DEGREE4,
-    STENCIL_3D_DEGREE5   
-  };
+constexpr STENCIL_ID STENCIL_MAPP[10] = { STENCIL_2D_DEGREE1, STENCIL_2D_DEGREE2,
+                                          STENCIL_2D_DEGREE3, STENCIL_2D_DEGREE4,
+                                          STENCIL_2D_DEGREE5, STENCIL_3D_DEGREE1,
+                                          STENCIL_3D_DEGREE2, STENCIL_3D_DEGREE3,
+                                          STENCIL_3D_DEGREE4, STENCIL_3D_DEGREE5 };
 
 /**
  * The following array is a "solution" to the probleme faced when one want
  * to get stencil size at compile in a template class; get_stencil_size routine
  * can't be used there.
  */
-//constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
-//constexpr Kokkos::Array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
-constexpr int STENCIL_SIZE[STENCIL_TOTAL_NUMBER] =
-  {5,  /* STENCIL_2D_DEGREE1 */
-   9,  /* STENCIL_2D_DEGREE2 */
-   13, /* STENCIL_2D_DEGREE3 */
-   16, /* STENCIL_2D_DEGREE3_V2 */
-   25, /* STENCIL_2D_DEGREE4 */
-   36, /* STENCIL_2D_DEGREE5 */
-   7,  /* STENCIL_3D_DEGREE1 */
-   27, /* STENCIL_3D_DEGREE2 */
-   33, /* STENCIL_3D_DEGREE3 */
-   63, /* STENCIL_3D_DEGREE4 */
-   88, /* STENCIL_3D_DEGREE5 */
-   131 /* STENCIL_3D_DEGREE5_V2 */
-  };
+// constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
+// constexpr Kokkos::Array<int,STENCIL_TOTAL_NUMBER> STENCIL_SIZE =
+constexpr int STENCIL_SIZE[STENCIL_TOTAL_NUMBER] = {
+  5,  /* STENCIL_2D_DEGREE1 */
+  9,  /* STENCIL_2D_DEGREE2 */
+  13, /* STENCIL_2D_DEGREE3 */
+  16, /* STENCIL_2D_DEGREE3_V2 */
+  25, /* STENCIL_2D_DEGREE4 */
+  36, /* STENCIL_2D_DEGREE5 */
+  7,  /* STENCIL_3D_DEGREE1 */
+  27, /* STENCIL_3D_DEGREE2 */
+  33, /* STENCIL_3D_DEGREE3 */
+  63, /* STENCIL_3D_DEGREE4 */
+  88, /* STENCIL_3D_DEGREE5 */
+  131 /* STENCIL_3D_DEGREE5_V2 */
+};
 
 /**
  * Return how many cell is made the stencil.
@@ -152,7 +143,9 @@ constexpr int STENCIL_SIZE[STENCIL_TOTAL_NUMBER] =
  * \return number of cells contained in stencil.
  */
 KOKKOS_INLINE_FUNCTION
-unsigned int get_stencil_size(STENCIL_ID stencilId)  {
+unsigned int
+get_stencil_size(STENCIL_ID stencilId)
+{
 
   if (stencilId == STENCIL_2D_DEGREE1)
     return 5;
@@ -182,7 +175,7 @@ unsigned int get_stencil_size(STENCIL_ID stencilId)  {
 
   // we shouldn't be here
   return 0;
-  
+
 } // get_stencil_size
 
 /**
@@ -190,22 +183,22 @@ unsigned int get_stencil_size(STENCIL_ID stencilId)  {
  *
  * Same information as get_stencil_degree, but at compile time.
  */
-//constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
-//constexpr Kokkos::Array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
-constexpr int STENCIL_DEGREE[STENCIL_TOTAL_NUMBER] =
-  {1,  /* STENCIL_2D_DEGREE1 */
-   2,  /* STENCIL_2D_DEGREE2 */
-   3,  /* STENCIL_2D_DEGREE3 */
-   3,  /* STENCIL_2D_DEGREE3_V2 */
-   4,  /* STENCIL_2D_DEGREE4 */
-   5,  /* STENCIL_2D_DEGREE5 */
-   1,  /* STENCIL_3D_DEGREE1 */
-   2,  /* STENCIL_3D_DEGREE2 */
-   3,  /* STENCIL_3D_DEGREE3 */
-   4,  /* STENCIL_3D_DEGREE4 */
-   5,  /* STENCIL_3D_DEGREE5 */
-   5   /* STENCIL_3D_DEGREE5_V2 */
-  };
+// constexpr std::array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
+// constexpr Kokkos::Array<int,STENCIL_TOTAL_NUMBER> STENCIL_DEGREE =
+constexpr int STENCIL_DEGREE[STENCIL_TOTAL_NUMBER] = {
+  1, /* STENCIL_2D_DEGREE1 */
+  2, /* STENCIL_2D_DEGREE2 */
+  3, /* STENCIL_2D_DEGREE3 */
+  3, /* STENCIL_2D_DEGREE3_V2 */
+  4, /* STENCIL_2D_DEGREE4 */
+  5, /* STENCIL_2D_DEGREE5 */
+  1, /* STENCIL_3D_DEGREE1 */
+  2, /* STENCIL_3D_DEGREE2 */
+  3, /* STENCIL_3D_DEGREE3 */
+  4, /* STENCIL_3D_DEGREE4 */
+  5, /* STENCIL_3D_DEGREE5 */
+  5  /* STENCIL_3D_DEGREE5_V2 */
+};
 
 /**
  * Return the polynomial degree used with input stencil.
@@ -215,7 +208,9 @@ constexpr int STENCIL_DEGREE[STENCIL_TOTAL_NUMBER] =
  * \return polynomial degree.
  */
 KOKKOS_INLINE_FUNCTION
-unsigned int get_stencil_degree(STENCIL_ID stencilId) {
+unsigned int
+get_stencil_degree(STENCIL_ID stencilId)
+{
 
   if (stencilId == STENCIL_2D_DEGREE1)
     return 1;
@@ -245,11 +240,11 @@ unsigned int get_stencil_degree(STENCIL_ID stencilId) {
 
   // we shouldn't be here
   return 0;
-  
+
 } // get_stencil_degree
 
 /**
- * Return the ghostwidth one should use to define a propoer mood 
+ * Return the ghostwidth one should use to define a propoer mood
  * computational kernel.
  *
  * \param[in] stencilId a valid value from enum STENCIL_ID
@@ -257,7 +252,9 @@ unsigned int get_stencil_degree(STENCIL_ID stencilId) {
  * \return ghostwidth.
  */
 KOKKOS_INLINE_FUNCTION
-unsigned int get_stencil_ghostwidth(STENCIL_ID stencilId) {
+unsigned int
+get_stencil_ghostwidth(STENCIL_ID stencilId)
+{
 
   if (stencilId == STENCIL_2D_DEGREE1)
     return 2;
@@ -287,23 +284,24 @@ unsigned int get_stencil_ghostwidth(STENCIL_ID stencilId) {
 
   // we shouldn't be here
   return 0;
-  
+
 } // get_stencil_ghostwidth
 
 /**
  * \struct Stencil
  * Just store the coordinates (x,y,z) of the neighbor cells contained in the stencil.
  */
-struct Stencil {
+struct Stencil
+{
 
   /**
    * a 2D array data type;
    * first dimension is the neighbor index
    * second dimension is the coordinate index
    */
-  using StencilArray     = Kokkos::View<int*[3], Device>;
+  using StencilArray = Kokkos::View<int * [3], Device>;
   using StencilArrayHost = StencilArray::HostMirror;
-  
+
   //! number identify stencil (values from enum STENCIL_ID)
   STENCIL_ID stencilId;
 
@@ -318,31 +316,35 @@ struct Stencil {
 
   //! is it a 3D stencil ?
   bool is3dStencil;
-  
+
   //! default constructor
-  Stencil(STENCIL_ID stencilId) : stencilId(stencilId) {
+  Stencil(STENCIL_ID stencilId)
+    : stencilId(stencilId)
+  {
 
     // we should check for stencilId here;
     // valid value is in range [0, STENCIL_TOTAL_NUMBER-1]
-    
+
     stencilSize = get_stencil_size(stencilId);
 
     is3dStencil = (stencilId >= STENCIL_3D_DEGREE1) ? true : false;
-    
-    offsets   = StencilArray    ("offsets",   stencilSize);
+
+    offsets = StencilArray("offsets", stencilSize);
 
     offsets_h = StencilArrayHost("offsets_h", stencilSize);
 
     init_stencil();
-    
+
   }; // Stencil
 
-  void init_stencil();
+  void
+  init_stencil();
 
 }; // Stencil
 
-STENCIL_ID select_stencil(int dim, int degree);
-  
+STENCIL_ID
+select_stencil(int dim, int degree);
+
 } // namespace mood
 
 #endif // MOOD_STENCIL_H_

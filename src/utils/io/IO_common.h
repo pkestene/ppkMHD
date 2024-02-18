@@ -3,14 +3,18 @@
 
 #include <string>
 
-namespace ppkMHD { namespace io {
+namespace ppkMHD
+{
+namespace io
+{
 
 // =======================================================
 // =======================================================
 /**
  * Return current date in a string.
  */
-std::string current_date();
+std::string
+current_date();
 
 } // namespace io
 

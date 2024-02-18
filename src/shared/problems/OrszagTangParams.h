@@ -5,19 +5,16 @@
 
 #include "utils/config/ConfigMap.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
-struct OrszagTangParams {
+struct OrszagTangParams
+{
 
   // transverse wave vector
   real_t kt;
 
-  OrszagTangParams(ConfigMap& configMap)
-  {
-
-    kt = configMap.getFloat  ("OrszagTang", "kt",  0.0);
-
-  }
+  OrszagTangParams(ConfigMap & configMap) { kt = configMap.getFloat("OrszagTang", "kt", 0.0); }
 
 }; // struct OrszagTangParams
 

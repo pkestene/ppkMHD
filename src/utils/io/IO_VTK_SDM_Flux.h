@@ -23,7 +23,10 @@
 
 #include "utils/io/IO_VTK_SDM_shared.h"
 
-namespace ppkMHD { namespace io {
+namespace ppkMHD
+{
+namespace io
+{
 
 // =======================================================
 // =======================================================
@@ -41,13 +44,14 @@ namespace ppkMHD { namespace io {
  *
  * \tparam dir specifies the flux direction
  */
-template<int N, int dir>
-void write_nodes_location_flux(std::ostream& outFile,
-			       DataArray2d::HostMirror Uhost,
-			       sdm::SDM_Geometry<2,N> sdm_geom,
-			       HydroParams& params,
-			       ConfigMap& configMap,
-			       uint64_t& offsetBytes)
+template <int N, int dir>
+void
+write_nodes_location_flux(std::ostream &          outFile,
+                          DataArray2d::HostMirror Uhost,
+                          sdm::SDM_Geometry<2, N> sdm_geom,
+                          HydroParams &           params,
+                          ConfigMap &             configMap,
+                          uint64_t &              offsetBytes)
 {
 
   const int nx = params.nx;
@@ -67,100 +71,128 @@ void write_nodes_location_flux(std::ostream& outFile,
   const int j_mpi = 0;
 #endif
 
-  //const int ghostWidth = params.ghostWidth;
+  // const int ghostWidth = params.ghostWidth;
 
-  //bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  //const char* dataType = useDouble ? "Float64" : "Float32";
+  // bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  // const char* dataType = useDouble ? "Float64" : "Float32";
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
+  bool         outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  const char * ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  //int nbNodesPerCell = (N+1)*(N+2); // in 3D
+  // int nbNodesPerCell = (N+1)*(N+2); // in 3D
 
   // bounds used to loop over sub-nodes
   // idx_end x idy_end is equal to nbNodesPerCells
   int idx_end;
   int idy_end;
 
-  if (dir == IX) {
+  if (dir == IX)
+  {
     // nodes     layout N+1 x N+2
     // sub-cells layout N   x N+1
-    idx_end = N+1;
-    idy_end = N+2;
-  } else if (dir == IY) {
+    idx_end = N + 1;
+    idy_end = N + 2;
+  }
+  else if (dir == IY)
+  {
     // nodes     layout N+2 x N+1
     // sub-cells layout N+1 x N
-    idx_end = N+2;
-    idy_end = N+1;
-  } else {
+    idx_end = N + 2;
+    idy_end = N + 1;
+  }
+  else
+  {
     idx_end = -1;
     idy_end = -1;
   }
 
   outFile << "  <Points>\n";
   outFile << "    <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\""
-	  << ascii_or_binary << "\"";
+          << ascii_or_binary << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << 0 << "\"";
   }
 
-  outFile << ">" << "\n";
+  outFile << ">"
+          << "\n";
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
 
-    for (int j=0; j<ny; ++j) {
-      for (int i=0; i<nx; ++i) {
+    for (int j = 0; j < ny; ++j)
+    {
+      for (int i = 0; i < nx; ++i)
+      {
 
-	// cell offset
-	real_t xo = xmin + (i+nx*i_mpi)*dx;
-	real_t yo = ymin + (j+ny*j_mpi)*dy;
+        // cell offset
+        real_t xo = xmin + (i + nx * i_mpi) * dx;
+        real_t yo = ymin + (j + ny * j_mpi) * dy;
 
-	for (int idy=0; idy<idy_end; ++idy) {
+        for (int idy = 0; idy < idy_end; ++idy)
+        {
 
-	  float y;
-	  if (dir == IY) {
-	    y = yo + sdm_geom.flux_pts_1d_host(idy) * dy;
-	  } else {
-	    if (idy == 0) {
-	      y = yo;
-	    } else if ( idy == N+1) {
-	      y = yo + dy;
-	    } else {
-	      y = yo + sdm_geom.solution_pts_1d_host(idy-1) * dy;
-	    }
-	  }
+          float y;
+          if (dir == IY)
+          {
+            y = yo + sdm_geom.flux_pts_1d_host(idy) * dy;
+          }
+          else
+          {
+            if (idy == 0)
+            {
+              y = yo;
+            }
+            else if (idy == N + 1)
+            {
+              y = yo + dy;
+            }
+            else
+            {
+              y = yo + sdm_geom.solution_pts_1d_host(idy - 1) * dy;
+            }
+          }
 
-	  for (int idx=0; idx<idx_end; ++idx) {
+          for (int idx = 0; idx < idx_end; ++idx)
+          {
 
-	    float x;
-	    if (dir == IX) {
-	      x = xo + sdm_geom.flux_pts_1d_host(idx) * dx;
-	    } else {
-	      if (idx == 0) {
-		x = xo;
-	      } else if ( idx == N+1) {
-		x = xo + dx;
-	      } else {
-		x = xo + sdm_geom.solution_pts_1d_host(idx-1) * dx;
-	      }
-	    }
+            float x;
+            if (dir == IX)
+            {
+              x = xo + sdm_geom.flux_pts_1d_host(idx) * dx;
+            }
+            else
+            {
+              if (idx == 0)
+              {
+                x = xo;
+              }
+              else if (idx == N + 1)
+              {
+                x = xo + dx;
+              }
+              else
+              {
+                x = xo + sdm_geom.solution_pts_1d_host(idx - 1) * dx;
+              }
+            }
 
-	    // now we can write node locations
-	    outFile << x << " " << y << " " << 0.0 << "\n";
+            // now we can write node locations
+            outFile << x << " " << y << " " << 0.0 << "\n";
 
-	  } // end for idx
-	} // end for idy
+          } // end for idx
+        }   // end for idy
 
       } // end for i
-    } // end for j
+    }   // end for j
 
   } // outputVtkAscii
 
   outFile << "    </DataArray>\n";
   outFile << "  </Points>\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(float)*nx*ny*(N+1)*(N+2)*3;
+  offsetBytes += sizeof(uint64_t) + sizeof(float) * nx * ny * (N + 1) * (N + 2) * 3;
 
 } // write_nodes_location_flux - 2d
 
@@ -180,13 +212,14 @@ void write_nodes_location_flux(std::ostream& outFile,
  *
  * \tparam dir specifies the flux direction
  */
-template<int N,int dir>
-void write_nodes_location_flux(std::ostream& outFile,
-			       DataArray3d::HostMirror Uhost,
-			       sdm::SDM_Geometry<3,N> sdm_geom,
-			       HydroParams& params,
-			       ConfigMap& configMap,
-			       uint64_t& offsetBytes)
+template <int N, int dir>
+void
+write_nodes_location_flux(std::ostream &          outFile,
+                          DataArray3d::HostMirror Uhost,
+                          sdm::SDM_Geometry<3, N> sdm_geom,
+                          HydroParams &           params,
+                          ConfigMap &             configMap,
+                          uint64_t &              offsetBytes)
 {
 
   const int nx = params.nx;
@@ -211,15 +244,15 @@ void write_nodes_location_flux(std::ostream& outFile,
   const int k_mpi = 0;
 #endif
 
-  //const int ghostWidth = params.ghostWidth;
+  // const int ghostWidth = params.ghostWidth;
 
-  //bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  //const char* dataType = useDouble ? "Float64" : "Float32";
+  // bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  // const char* dataType = useDouble ? "Float64" : "Float32";
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
+  bool         outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  const char * ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  int nbNodesPerCell = (N+1)*(N+2)*(N+2); // in 3D
+  int nbNodesPerCell = (N + 1) * (N + 2) * (N + 2); // in 3D
 
   // bounds used to loop over sub-nodes
   // idx_end x idy_end x idz_end is equal to nbNodesPerCells
@@ -227,110 +260,148 @@ void write_nodes_location_flux(std::ostream& outFile,
   int idy_end;
   int idz_end;
 
-  if (dir == IX) {
+  if (dir == IX)
+  {
     // nodes     layout N+1 x N+2 x N+2
     // sub-cells layout N   x N+1 x N+1
-    idx_end = N+1;
-    idy_end = N+2;
-    idz_end = N+2;
-  } else if (dir == IY) {
+    idx_end = N + 1;
+    idy_end = N + 2;
+    idz_end = N + 2;
+  }
+  else if (dir == IY)
+  {
     // nodes     layout N+2 x N+1 x N+2
     // sub-cells layout N+1 x N   x N+1
-    idx_end = N+2;
-    idy_end = N+1;
-    idz_end = N+2;
-  } else { // dir == IZ
+    idx_end = N + 2;
+    idy_end = N + 1;
+    idz_end = N + 2;
+  }
+  else
+  { // dir == IZ
     // nodes     layout N+2 x N+2 x N+1
     // sub-cells layout N+1 x N+1 x N
-    idx_end = N+2;
-    idy_end = N+2;
-    idz_end = N+1;
+    idx_end = N + 2;
+    idy_end = N + 2;
+    idz_end = N + 1;
   }
 
   outFile << "  <Points>\n";
   outFile << "    <DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\""
-	  << ascii_or_binary << "\"";
+          << ascii_or_binary << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << 0 << "\"";
   }
 
-  outFile << ">" << "\n";
+  outFile << ">"
+          << "\n";
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
 
-    for (int k=0; k<nz; ++k) {
-      for (int j=0; j<ny; ++j) {
-	for (int i=0; i<nx; ++i) {
+    for (int k = 0; k < nz; ++k)
+    {
+      for (int j = 0; j < ny; ++j)
+      {
+        for (int i = 0; i < nx; ++i)
+        {
 
-	  // cell offset
-	  real_t xo = xmin + (i+nx*i_mpi)*dx;
-	  real_t yo = ymin + (j+ny*j_mpi)*dy;
-	  real_t zo = zmin + (k+nz*k_mpi)*dz;
+          // cell offset
+          real_t xo = xmin + (i + nx * i_mpi) * dx;
+          real_t yo = ymin + (j + ny * j_mpi) * dy;
+          real_t zo = zmin + (k + nz * k_mpi) * dz;
 
-	  for (int idz=0; idz<idz_end; ++idz) {
+          for (int idz = 0; idz < idz_end; ++idz)
+          {
 
-	    float z;
-	    if (dir == IZ) {
-	      z = zo + sdm_geom.flux_pts_1d_host(idz) * dz;
-	    } else {
-	      if (idz == 0) {
-		z = zo;
-	      } else if ( idz == N+1) {
-		z = zo + dz;
-	      } else {
-		z = zo + sdm_geom.solution_pts_1d_host(idz-1) * dz;
-	      }
-	    }
+            float z;
+            if (dir == IZ)
+            {
+              z = zo + sdm_geom.flux_pts_1d_host(idz) * dz;
+            }
+            else
+            {
+              if (idz == 0)
+              {
+                z = zo;
+              }
+              else if (idz == N + 1)
+              {
+                z = zo + dz;
+              }
+              else
+              {
+                z = zo + sdm_geom.solution_pts_1d_host(idz - 1) * dz;
+              }
+            }
 
-	    for (int idy=0; idy<idy_end; ++idy) {
+            for (int idy = 0; idy < idy_end; ++idy)
+            {
 
-	      float y;
-	      if (dir == IY) {
-		y = yo + sdm_geom.flux_pts_1d_host(idy) * dy;
-	      } else {
-		if (idy == 0) {
-		  y = yo;
-		} else if ( idy == N+1) {
-		  y = yo + dy;
-		} else {
-		  y = yo + sdm_geom.solution_pts_1d_host(idy-1) * dy;
-		}
-	      }
+              float y;
+              if (dir == IY)
+              {
+                y = yo + sdm_geom.flux_pts_1d_host(idy) * dy;
+              }
+              else
+              {
+                if (idy == 0)
+                {
+                  y = yo;
+                }
+                else if (idy == N + 1)
+                {
+                  y = yo + dy;
+                }
+                else
+                {
+                  y = yo + sdm_geom.solution_pts_1d_host(idy - 1) * dy;
+                }
+              }
 
-	      for (int idx=0; idx<idx_end; ++idx) {
+              for (int idx = 0; idx < idx_end; ++idx)
+              {
 
-		float x;
+                float x;
 
-		if (dir == IX) {
-		  x = xo + sdm_geom.flux_pts_1d_host(idx) * dx;
-		} else {
-		  if (idx == 0) {
-		    x = xo;
-		  } else if ( idx == N+1) {
-		    x = xo + dx;
-		  } else {
-		    x = xo + sdm_geom.solution_pts_1d_host(idx-1) * dx;
-		  }
-		}
+                if (dir == IX)
+                {
+                  x = xo + sdm_geom.flux_pts_1d_host(idx) * dx;
+                }
+                else
+                {
+                  if (idx == 0)
+                  {
+                    x = xo;
+                  }
+                  else if (idx == N + 1)
+                  {
+                    x = xo + dx;
+                  }
+                  else
+                  {
+                    x = xo + sdm_geom.solution_pts_1d_host(idx - 1) * dx;
+                  }
+                }
 
-		// now we can write node location
-		outFile << x << " " << y << " " << z << "\n";
+                // now we can write node location
+                outFile << x << " " << y << " " << z << "\n";
 
-	      } // for idx
-	    } // for idy
-	  } // for idz
+              } // for idx
+            }   // for idy
+          }     // for idz
 
-	} // end for i
-      } // end for j
-    } // end for k
+        } // end for i
+      }   // end for j
+    }     // end for k
 
   } // end outputVtkAscii
 
   outFile << "    </DataArray>\n";
   outFile << "  </Points>\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(float)*nx*ny*nz*nbNodesPerCell*3;
+  offsetBytes += sizeof(uint64_t) + sizeof(float) * nx * ny * nz * nbNodesPerCell * 3;
 
 } // write_nodes_location - 3d
 
@@ -348,110 +419,124 @@ void write_nodes_location_flux(std::ostream& outFile,
  *
  * \tparam dir specifies the flux direction
  */
-template<int N, int dir>
-void write_cells_connectivity_flux(std::ostream& outFile,
-				   DataArray2d::HostMirror Uhost,
-				   sdm::SDM_Geometry<2,N> sdm_geom,
-				   HydroParams& params,
-				   ConfigMap& configMap,
-				   uint64_t& offsetBytes)
+template <int N, int dir>
+void
+write_cells_connectivity_flux(std::ostream &          outFile,
+                              DataArray2d::HostMirror Uhost,
+                              sdm::SDM_Geometry<2, N> sdm_geom,
+                              HydroParams &           params,
+                              ConfigMap &             configMap,
+                              uint64_t &              offsetBytes)
 {
 
   const int nx = params.nx;
   const int ny = params.ny;
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
+  bool         outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  const char * ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  int nbNodesPerCell = (N+1)*(N+2); // in 2D
-  int nbSubCells = N*(N+1);
+  int nbNodesPerCell = (N + 1) * (N + 2); // in 2D
+  int nbSubCells = N * (N + 1);
 
   outFile << "  <Cells>\n";
 
   /*
    * CONNECTIVITY
    */
-  outFile << "    <DataArray type=\"Int64\" Name=\"connectivity\" format=\"" << ascii_or_binary << "\"";
+  outFile << "    <DataArray type=\"Int64\" Name=\"connectivity\" format=\"" << ascii_or_binary
+          << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << offsetBytes << "\"";
   }
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nbSubCells*4;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t) * nx * ny * nbSubCells * 4;
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
 
-    if (dir == IX) {
+    if (dir == IX)
+    {
 
       // cell index
       int cell_index = 0;
 
-      for (int j=0; j<ny; ++j) {
-	for (int i=0; i<nx; ++i) {
+      for (int j = 0; j < ny; ++j)
+      {
+        for (int i = 0; i < nx; ++i)
+        {
 
-	  uint64_t index = i+nx*j;
+          uint64_t index = i + nx * j;
 
-	  // offset to the first nodes in this cell
-	  uint64_t offset = index * nbNodesPerCell;
+          // offset to the first nodes in this cell
+          uint64_t offset = index * nbNodesPerCell;
 
-	  // sub-cells grid  :  N   x N+1
-	  // sub-cells nodes :  N+1 x N+2
-	  for (int idy=0; idy<N+1; ++idy) {
-	    for (int idx=0; idx<N; ++idx) {
+          // sub-cells grid  :  N   x N+1
+          // sub-cells nodes :  N+1 x N+2
+          for (int idy = 0; idy < N + 1; ++idy)
+          {
+            for (int idx = 0; idx < N; ++idx)
+            {
 
-	      uint64_t i0,i1,i2,i3;
-	      i0 = offset+idx+  (N+1)* idy;
-	      i1 = offset+idx+1+(N+1)* idy;
-	      i2 = offset+idx+1+(N+1)*(idy+1);
-	      i3 = offset+idx  +(N+1)*(idy+1);
+              uint64_t i0, i1, i2, i3;
+              i0 = offset + idx + (N + 1) * idy;
+              i1 = offset + idx + 1 + (N + 1) * idy;
+              i2 = offset + idx + 1 + (N + 1) * (idy + 1);
+              i3 = offset + idx + (N + 1) * (idy + 1);
 
-	      outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
+              outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
 
-	    } // for idx
-	  } // for idy
+            } // for idx
+          }   // for idy
 
-	  cell_index += nbSubCells;
+          cell_index += nbSubCells;
 
-	} // for i
-      } // for j
+        } // for i
+      }   // for j
 
     } // end dir IX
 
-    if (dir == IY) {
+    if (dir == IY)
+    {
 
       // cell index
       int cell_index = 0;
 
-      for (int j=0; j<ny; ++j) {
-	for (int i=0; i<nx; ++i) {
+      for (int j = 0; j < ny; ++j)
+      {
+        for (int i = 0; i < nx; ++i)
+        {
 
-	  uint64_t index = i+nx*j;
+          uint64_t index = i + nx * j;
 
-	  // offset to the first nodes in this cell
-	  uint64_t offset = index * nbNodesPerCell;
+          // offset to the first nodes in this cell
+          uint64_t offset = index * nbNodesPerCell;
 
-	  // sub-cells grid  :  N+1 x N
-	  // sub-cells nodes :  N+2 x N+1
-	  for (int idy=0; idy<N; ++idy) {
-	    for (int idx=0; idx<N+1; ++idx) {
+          // sub-cells grid  :  N+1 x N
+          // sub-cells nodes :  N+2 x N+1
+          for (int idy = 0; idy < N; ++idy)
+          {
+            for (int idx = 0; idx < N + 1; ++idx)
+            {
 
-	      uint64_t i0,i1,i2,i3;
-	      i0 = offset+idx+  (N+2)* idy;
-	      i1 = offset+idx+1+(N+2)* idy;
-	      i2 = offset+idx+1+(N+2)*(idy+1);
-	      i3 = offset+idx  +(N+2)*(idy+1);
+              uint64_t i0, i1, i2, i3;
+              i0 = offset + idx + (N + 2) * idy;
+              i1 = offset + idx + 1 + (N + 2) * idy;
+              i2 = offset + idx + 1 + (N + 2) * (idy + 1);
+              i3 = offset + idx + (N + 2) * (idy + 1);
 
-	      outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
+              outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
 
-	    } // for idx
-	  } // for idy
+            } // for idx
+          }   // for idy
 
-	  cell_index += nbSubCells;
+          cell_index += nbSubCells;
 
-	} // for i
-      } // for j
+        } // for i
+      }   // for j
 
     } // end dir IY
 
@@ -464,18 +549,21 @@ void write_cells_connectivity_flux(std::ostream& outFile,
    */
   outFile << "    <DataArray type=\"Int64\" Name=\"offsets\" format=\"" << ascii_or_binary << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << offsetBytes << "\"";
   }
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nbSubCells;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t) * nx * ny * nbSubCells;
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
     // number of nodes per cell is 4 in 2D
-    for (int i=1; i<=nx*ny*nbSubCells; ++i) {
-      uint64_t cell_offset = 4*i;
+    for (int i = 1; i <= nx * ny * nbSubCells; ++i)
+    {
+      uint64_t cell_offset = 4 * i;
       outFile << cell_offset << " ";
     }
     outFile << "\n";
@@ -489,17 +577,20 @@ void write_cells_connectivity_flux(std::ostream& outFile,
    */
   outFile << "    <DataArray type=\"UInt8\" Name=\"types\" format=\"" << ascii_or_binary << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << offsetBytes << "\"";
   }
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(unsigned char)*nx*ny*nbSubCells;
+  offsetBytes += sizeof(uint64_t) + sizeof(unsigned char) * nx * ny * nbSubCells;
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
     // 9 means "Quad" - 12 means "Hexahedron"
-    for (int i=0; i<nx*ny*nbSubCells; ++i) {
+    for (int i = 0; i < nx * ny * nbSubCells; ++i)
+    {
       outFile << 9 << " ";
     }
 
@@ -529,39 +620,42 @@ void write_cells_connectivity_flux(std::ostream& outFile,
  *
  * \tparam dir specifies the flux direction
  */
-template<int N, int dir>
-void write_cells_connectivity_flux(std::ostream& outFile,
-				   DataArray3d::HostMirror Uhost,
-				   sdm::SDM_Geometry<3,N> sdm_geom,
-				   HydroParams& params,
-				   ConfigMap& configMap,
-				   uint64_t& offsetBytes)
+template <int N, int dir>
+void
+write_cells_connectivity_flux(std::ostream &          outFile,
+                              DataArray3d::HostMirror Uhost,
+                              sdm::SDM_Geometry<3, N> sdm_geom,
+                              HydroParams &           params,
+                              ConfigMap &             configMap,
+                              uint64_t &              offsetBytes)
 {
 
   const int nx = params.nx;
   const int ny = params.ny;
   const int nz = params.nz;
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
+  bool         outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  const char * ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  int nbNodesPerCell = (N+1)*(N+2)*(N+2); // in 3D
-  int nbSubCells = N*(N+1)*(N+1);
+  int nbNodesPerCell = (N + 1) * (N + 2) * (N + 2); // in 3D
+  int nbSubCells = N * (N + 1) * (N + 1);
 
   outFile << "  <Cells>\n";
 
   /*
    * CONNECTIVITY
    */
-  outFile << "    <DataArray type=\"Int64\" Name=\"connectivity\" format=\"" << ascii_or_binary << "\"";
+  outFile << "    <DataArray type=\"Int64\" Name=\"connectivity\" format=\"" << ascii_or_binary
+          << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << offsetBytes << "\"";
   }
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nz*nbSubCells*8;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t) * nx * ny * nz * nbSubCells * 8;
 
   // bounds used to loop over sub-cells
   // idx_end x idy_end x idz_end is equal to nbSubCells
@@ -569,71 +663,83 @@ void write_cells_connectivity_flux(std::ostream& outFile,
   int idy_end;
   int idz_end;
 
-  if (dir == IX) {
+  if (dir == IX)
+  {
     // nodes     layout N+1 x N+2 x N+2
     // sub-cells layout N   x N+1 x N+1
     idx_end = N;
-    idy_end = N+1;
-    idz_end = N+1;
-  } else if (dir == IY) {
+    idy_end = N + 1;
+    idz_end = N + 1;
+  }
+  else if (dir == IY)
+  {
     // nodes     layout N+2 x N+1 x N+2
     // sub-cells layout N+1 x N   x N+1
-    idx_end = N+1;
+    idx_end = N + 1;
     idy_end = N;
-    idz_end = N+1;
-  } else { // dir == IZ
+    idz_end = N + 1;
+  }
+  else
+  { // dir == IZ
     // nodes     layout N+2 x N+2 x N+1
     // sub-cells layout N+1 x N+1 x N
-    idx_end = N+1;
-    idy_end = N+1;
+    idx_end = N + 1;
+    idy_end = N + 1;
     idz_end = N;
   }
 
   // constants used to linearize index to sub-cells nodes
-  int N1 =  idx_end+1;
-  int N2 = (idx_end+1)*(idy_end+1);
+  int N1 = idx_end + 1;
+  int N2 = (idx_end + 1) * (idy_end + 1);
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
 
     // cell index
     int cell_index = 0;
 
-    for (int k=0; k<nz; ++k) {
-      for (int j=0; j<ny; ++j) {
-	for (int i=0; i<nx; ++i) {
+    for (int k = 0; k < nz; ++k)
+    {
+      for (int j = 0; j < ny; ++j)
+      {
+        for (int i = 0; i < nx; ++i)
+        {
 
-	  int index = i+nx*j+nx*ny*k;
+          int index = i + nx * j + nx * ny * k;
 
-	  // offset to the first nodes in this cell
-	  int offset = index * nbNodesPerCell;
+          // offset to the first nodes in this cell
+          int offset = index * nbNodesPerCell;
 
-	  // loop over sub-cells
-	  for (int idz=0; idz<idz_end; ++idz) {
-	    for (int idy=0; idy<idy_end; ++idy) {
-	      for (int idx=0; idx<idx_end; ++idx) {
+          // loop over sub-cells
+          for (int idz = 0; idz < idz_end; ++idz)
+          {
+            for (int idy = 0; idy < idy_end; ++idy)
+            {
+              for (int idx = 0; idx < idx_end; ++idx)
+              {
 
-		uint64_t i0,i1,i2,i3,i4,i5,i6,i7;
-		i0 = offset+idx  +N1* idy   + N2* idz   ;
-		i1 = offset+idx+1+N1* idy   + N2* idz   ;
-		i2 = offset+idx+1+N1*(idy+1)+ N2* idz   ;
-		i3 = offset+idx  +N1*(idy+1)+ N2* idz   ;
-		i4 = offset+idx  +N1* idy   + N2*(idz+1);
-		i5 = offset+idx+1+N1* idy   + N2*(idz+1);
-		i6 = offset+idx+1+N1*(idy+1)+ N2*(idz+1);
-		i7 = offset+idx  +N1*(idy+1)+ N2*(idz+1);
+                uint64_t i0, i1, i2, i3, i4, i5, i6, i7;
+                i0 = offset + idx + N1 * idy + N2 * idz;
+                i1 = offset + idx + 1 + N1 * idy + N2 * idz;
+                i2 = offset + idx + 1 + N1 * (idy + 1) + N2 * idz;
+                i3 = offset + idx + N1 * (idy + 1) + N2 * idz;
+                i4 = offset + idx + N1 * idy + N2 * (idz + 1);
+                i5 = offset + idx + 1 + N1 * idy + N2 * (idz + 1);
+                i6 = offset + idx + 1 + N1 * (idy + 1) + N2 * (idz + 1);
+                i7 = offset + idx + N1 * (idy + 1) + N2 * (idz + 1);
 
-		outFile << i0 << " " << i1 << " " << i2 << " " << i3 << " "
-			<< i4 << " " << i5 << " " << i6 << " " << i7 << "\n";
+                outFile << i0 << " " << i1 << " " << i2 << " " << i3 << " " << i4 << " " << i5
+                        << " " << i6 << " " << i7 << "\n";
 
-	      } // for idx
-	    } // for idy
-	  } // for idz
+              } // for idx
+            }   // for idy
+          }     // for idz
 
-	  cell_index += nbSubCells;
+          cell_index += nbSubCells;
 
-	} // for i
-      } // for j
-    } // for k
+        } // for i
+      }   // for j
+    }     // for k
 
   } // end outputVtkAscii
 
@@ -644,18 +750,21 @@ void write_cells_connectivity_flux(std::ostream& outFile,
    */
   outFile << "    <DataArray type=\"Int64\" Name=\"offsets\" format=\"" << ascii_or_binary << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     outFile << " offset=\"" << offsetBytes << "\"";
   }
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t)*nx*ny*nz*nbSubCells;
+  offsetBytes += sizeof(uint64_t) + sizeof(uint64_t) * nx * ny * nz * nbSubCells;
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
     // number of nodes per cell is 8 in 3D
-    for (int i=1; i<=nx*ny*nz*nbSubCells; ++i) {
-      uint64_t cell_offset = 8*i;
+    for (int i = 1; i <= nx * ny * nz * nbSubCells; ++i)
+    {
+      uint64_t cell_offset = 8 * i;
       outFile << cell_offset << " ";
     }
     outFile << "\n";
@@ -669,18 +778,21 @@ void write_cells_connectivity_flux(std::ostream& outFile,
    */
   outFile << "    <DataArray type=\"UInt8\" Name=\"types\" format=\"" << ascii_or_binary << "\"";
 
-  if (!outputVtkAscii) {
+  if (!outputVtkAscii)
+  {
     // before offset is cells location + connectivity + offsets
     outFile << " offset=\"" << offsetBytes << "\"";
   }
 
   outFile << " >\n";
 
-  offsetBytes += sizeof(uint64_t) + sizeof(unsigned char)*nx*ny*nz*nbSubCells;
+  offsetBytes += sizeof(uint64_t) + sizeof(unsigned char) * nx * ny * nz * nbSubCells;
 
-  if (outputVtkAscii) {
+  if (outputVtkAscii)
+  {
     // 9 means "Quad" - 12 means "Hexahedron"
-    for (int i=0; i<nx*ny*nz*nbSubCells; ++i) {
+    for (int i = 0; i < nx * ny * nz * nbSubCells; ++i)
+    {
       outFile << 12 << " ";
     }
     outFile << "\n";
@@ -704,14 +816,15 @@ void write_cells_connectivity_flux(std::ostream& outFile,
  *
  * \tparam dir specifies the flux direction
  */
-template<int N,int dir>
-void write_flux_points_data(std::ostream& outFile,
-			    DataArray2d::HostMirror Uhost,
-			    sdm::SDM_Geometry<2,N> sdm_geom,
-			    HydroParams& params,
-			    ConfigMap& configMap,
-			    const std::map<int, std::string>& variables_names,
-			    uint64_t& offsetBytes)
+template <int N, int dir>
+void
+write_flux_points_data(std::ostream &                     outFile,
+                       DataArray2d::HostMirror            Uhost,
+                       sdm::SDM_Geometry<2, N>            sdm_geom,
+                       HydroParams &                      params,
+                       ConfigMap &                        configMap,
+                       const std::map<int, std::string> & variables_names,
+                       uint64_t &                         offsetBytes)
 {
 
   const int nx = params.nx;
@@ -719,30 +832,35 @@ void write_flux_points_data(std::ostream& outFile,
 
   const int gw = params.ghostWidth;
 
-  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  const char* dataType = useDouble ? "Float64" : "Float32";
+  bool         useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  const char * dataType = useDouble ? "Float64" : "Float32";
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
+  bool         outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  const char * ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  int nbNodesPerCell = (N+1)*(N+2); // in 2D
+  int nbNodesPerCell = (N + 1) * (N + 2); // in 2D
 
   // bounds used to loop over sub-nodes
   // idx_end x idy_end is equal to nbNodesPerCells
   int idx_end;
   int idy_end;
 
-  if (dir == IX) {
+  if (dir == IX)
+  {
     // nodes     layout N+1 x N+2
     // sub-cells layout N   x N+1
-    idx_end = N+1;
-    idy_end = N+2;
-  } else if (dir == IY) {
+    idx_end = N + 1;
+    idy_end = N + 2;
+  }
+  else if (dir == IY)
+  {
     // nodes     layout N+2 x N+1
     // sub-cells layout N+1 x N
-    idx_end = N+2;
-    idy_end = N+1;
-  } else {
+    idx_end = N + 2;
+    idy_end = N + 1;
+  }
+  else
+  {
     idx_end = -1;
     idy_end = -1;
   }
@@ -753,59 +871,67 @@ void write_flux_points_data(std::ostream& outFile,
   outFile << "  <PointData>\n";
 
   // loop over scalar variables
-  for ( int iVar=0; iVar<params.nbvar; iVar++ ) {
+  for (int iVar = 0; iVar < params.nbvar; iVar++)
+  {
 
-    outFile << "    <DataArray type=\"" << dataType
-	    << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"" << ascii_or_binary << "\"";
+    outFile << "    <DataArray type=\"" << dataType << "\" Name=\"" << variables_names.at(iVar)
+            << "\" format=\"" << ascii_or_binary << "\"";
 
-    if (!outputVtkAscii) {
+    if (!outputVtkAscii)
+    {
       outFile << " offset=\"" << offsetBytes << "\"";
     }
 
     outFile << " >\n";
 
-    offsetBytes += sizeof(uint64_t) + sizeof(real_t)*nx*ny*nbNodesPerCell;
+    offsetBytes += sizeof(uint64_t) + sizeof(real_t) * nx * ny * nbNodesPerCell;
 
-    if (outputVtkAscii) {
+    if (outputVtkAscii)
+    {
 
       // no ghost !!
-      for (int j=0; j<ny; ++j) {
-	for (int i=0; i<nx; ++i) {
+      for (int j = 0; j < ny; ++j)
+      {
+        for (int i = 0; i < nx; ++i)
+        {
 
-	  // loop over sub-nodes
-	  for (int idy=0; idy<idy_end; ++idy) {
-	    for (int idx=0; idx<idx_end; ++idx) {
+          // loop over sub-nodes
+          for (int idy = 0; idy < idy_end; ++idy)
+          {
+            for (int idx = 0; idx < idx_end; ++idx)
+            {
 
-	      int iidx = idx;
-	      int iidy = idy;
+              int iidx = idx;
+              int iidy = idy;
 
-	      if (dir == IX) {
+              if (dir == IX)
+              {
 
-		if (idy == 0)
-		  iidy = 1;
-		else if (idy == N+1)
-		  iidy = N;
-		iidy -= 1;
+                if (idy == 0)
+                  iidy = 1;
+                else if (idy == N + 1)
+                  iidy = N;
+                iidy -= 1;
+              }
+              else
+              { // dir == IY
 
-	      } else { // dir == IY
+                if (idx == 0)
+                  iidx = 1;
+                else if (idx == N + 1)
+                  iidx = N;
+                iidx -= 1;
+              }
 
-		if (idx == 0)
-		  iidx = 1;
-		else if (idx == N+1)
-		  iidx = N;
-		iidx -= 1;
+              real_t data = Uhost(gw + i, gw + j, sdm::DofMapFlux<2, N, dir>(iidx, iidy, 0, iVar));
 
-	      }
+              outFile << data << " ";
 
-	      real_t data = Uhost(gw+i,gw+j, sdm::DofMapFlux<2,N,dir>(iidx,iidy, 0, iVar));
+            } // for idx
+          }   // for idy
 
-	      outFile << data << " ";
-
-	    } // for idx
-	  } // for idy
-
-	} // for i
-      } // for j
+        } // for i
+      }   // for j
 
       outFile << "\n";
 
@@ -824,14 +950,15 @@ void write_flux_points_data(std::ostream& outFile,
 /**
  * Write VTK unstructured grid cells data - 3D.
  */
-template<int N, int dir>
-void write_flux_points_data(std::ostream& outFile,
-			    DataArray3d::HostMirror Uhost,
-			    sdm::SDM_Geometry<3,N> sdm_geom,
-			    HydroParams& params,
-			    ConfigMap& configMap,
-			    const std::map<int, std::string>& variables_names,
-			    uint64_t& offsetBytes)
+template <int N, int dir>
+void
+write_flux_points_data(std::ostream &                     outFile,
+                       DataArray3d::HostMirror            Uhost,
+                       sdm::SDM_Geometry<3, N>            sdm_geom,
+                       HydroParams &                      params,
+                       ConfigMap &                        configMap,
+                       const std::map<int, std::string> & variables_names,
+                       uint64_t &                         offsetBytes)
 {
 
   const int nx = params.nx;
@@ -840,13 +967,13 @@ void write_flux_points_data(std::ostream& outFile,
 
   const int gw = params.ghostWidth;
 
-  bool useDouble = sizeof(real_t) == sizeof(double) ? true : false;
-  const char* dataType = useDouble ? "Float64" : "Float32";
+  bool         useDouble = sizeof(real_t) == sizeof(double) ? true : false;
+  const char * dataType = useDouble ? "Float64" : "Float32";
 
-  bool outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
-  const char *ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
+  bool         outputVtkAscii = configMap.getBool("output", "outputVtkAscii", false);
+  const char * ascii_or_binary = outputVtkAscii ? "ascii" : "appended";
 
-  int nbNodesPerCell = (N+1)*(N+2)*(N+2); // in 3D
+  int nbNodesPerCell = (N + 1) * (N + 2) * (N + 2); // in 3D
 
   // bounds used to loop over sub-nodes
   // idx_end x idy_end x idz_end is equal to nbNodesPerCells
@@ -854,24 +981,29 @@ void write_flux_points_data(std::ostream& outFile,
   int idy_end;
   int idz_end;
 
-  if (dir == IX) {
+  if (dir == IX)
+  {
     // nodes     layout N+1 x N+2 x N+2
     // sub-cells layout N   x N+1 x N+1
-    idx_end = N+1;
-    idy_end = N+2;
-    idz_end = N+2;
-  } else if (dir == IY) {
+    idx_end = N + 1;
+    idy_end = N + 2;
+    idz_end = N + 2;
+  }
+  else if (dir == IY)
+  {
     // nodes     layout N+2 x N+1 x N+2
     // sub-cells layout N+1 x N   x N+1
-    idx_end = N+2;
-    idy_end = N+1;
-    idz_end = N+2;
-  } else { // dir == IZ
+    idx_end = N + 2;
+    idy_end = N + 1;
+    idz_end = N + 2;
+  }
+  else
+  { // dir == IZ
     // nodes     layout N+2 x N+2 x N+1
     // sub-cells layout N+1 x N+1 x N
-    idx_end = N+2;
-    idy_end = N+2;
-    idz_end = N+1;
+    idx_end = N + 2;
+    idy_end = N + 2;
+    idz_end = N + 1;
   }
 
   /*
@@ -880,90 +1012,100 @@ void write_flux_points_data(std::ostream& outFile,
   outFile << "  <PointData>\n";
 
   // loop over scalar variables
-  for ( int iVar=0; iVar<params.nbvar; iVar++ ) {
+  for (int iVar = 0; iVar < params.nbvar; iVar++)
+  {
 
-    outFile << "    <DataArray type=\"" << dataType
-	    << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"" << ascii_or_binary << "\"";
+    outFile << "    <DataArray type=\"" << dataType << "\" Name=\"" << variables_names.at(iVar)
+            << "\" format=\"" << ascii_or_binary << "\"";
 
-    if (!outputVtkAscii) {
+    if (!outputVtkAscii)
+    {
       outFile << " offset=\"" << offsetBytes << "\"";
     }
 
-    outFile<< " >\n";
+    outFile << " >\n";
 
-    offsetBytes += sizeof(uint64_t) + sizeof(real_t)*nx*ny*nz*nbNodesPerCell;
+    offsetBytes += sizeof(uint64_t) + sizeof(real_t) * nx * ny * nz * nbNodesPerCell;
 
-    if (outputVtkAscii) {
+    if (outputVtkAscii)
+    {
       // no ghost !!
-      for (int k=0; k<nz; ++k) {
-	for (int j=0; j<ny; ++j) {
-	  for (int i=0; i<nx; ++i) {
+      for (int k = 0; k < nz; ++k)
+      {
+        for (int j = 0; j < ny; ++j)
+        {
+          for (int i = 0; i < nx; ++i)
+          {
 
-	    // loop over sub-cells
-	    for (int idz=0; idz<idz_end; ++idz) {
-	      for (int idy=0; idy<idy_end; ++idy) {
-		for (int idx=0; idx<idx_end; ++idx) {
+            // loop over sub-cells
+            for (int idz = 0; idz < idz_end; ++idz)
+            {
+              for (int idy = 0; idy < idy_end; ++idy)
+              {
+                for (int idx = 0; idx < idx_end; ++idx)
+                {
 
-		  int iidx = idx;
-		  int iidy = idy;
-		  int iidz = idz;
+                  int iidx = idx;
+                  int iidy = idy;
+                  int iidz = idz;
 
-		  if (dir == IX) {
+                  if (dir == IX)
+                  {
 
-		    if (idy == 0)
-		      iidy = 1;
-		    else if (idy == N+1)
-		      iidy = N;
-		    iidy -= 1;
+                    if (idy == 0)
+                      iidy = 1;
+                    else if (idy == N + 1)
+                      iidy = N;
+                    iidy -= 1;
 
-		    if (idz == 0)
-		      iidz = 1;
-		    else if (idz == N+1)
-		      iidz = N;
-		    iidz -= 1;
+                    if (idz == 0)
+                      iidz = 1;
+                    else if (idz == N + 1)
+                      iidz = N;
+                    iidz -= 1;
+                  }
+                  else if (dir == IY)
+                  {
 
-		  } else if (dir == IY) {
+                    if (idx == 0)
+                      iidx = 1;
+                    else if (idx == N + 1)
+                      iidx = N;
+                    iidx -= 1;
 
-		    if (idx == 0)
-		      iidx = 1;
-		    else if (idx == N+1)
-		      iidx = N;
-		    iidx -= 1;
+                    if (idz == 0)
+                      iidz = 1;
+                    else if (idz == N + 1)
+                      iidz = N;
+                    iidz -= 1;
+                  }
+                  else
+                  { // dir == IZ
 
-		    if (idz == 0)
-		      iidz = 1;
-		    else if (idz == N+1)
-		      iidz = N;
-		    iidz -= 1;
+                    if (idx == 0)
+                      iidx = 1;
+                    else if (idx == N + 1)
+                      iidx = N;
+                    iidx -= 1;
 
-		  } else {  // dir == IZ
+                    if (idy == 0)
+                      iidy = 1;
+                    else if (idy == N + 1)
+                      iidy = N;
+                    iidy -= 1;
+                  }
 
-		    if (idx == 0)
-		      iidx = 1;
-		    else if (idx == N+1)
-		      iidx = N;
-		    iidx -= 1;
+                  real_t data = Uhost(
+                    gw + i, gw + j, gw + k, sdm::DofMapFlux<3, N, dir>(iidx, iidy, iidz, iVar));
+                  outFile << data << " ";
 
-		    if (idy == 0)
-		      iidy = 1;
-		    else if (idy == N+1)
-		      iidy = N;
-		    iidy -= 1;
+                } // for idx
+              }   // for idy
+            }     // for idz
 
-		  }
-
-		  real_t data = Uhost(gw+i,gw+j,gw+k,
-				      sdm::DofMapFlux<3,N,dir>(iidx,iidy,iidz,
-							       iVar));
-		  outFile << data << " ";
-
-		} // for idx
-	      } // for idy
-	    } // for idz
-
-	  } // for i
-	} // for j
-      } // for k
+          } // for i
+        }   // for j
+      }     // for k
 
       outFile << "\n";
 
@@ -1471,23 +1613,25 @@ void write_flux_points_data(std::ostream& outFile,
  *
  *   {
  *	DataArrayHost FluxesHost = Kokkos::create_mirror(Fluxes);
- *	ppkMHD::io::IO_Writer_SDM<dim,N>* p_io_writer = static_cast<typename ppkMHD::io::IO_Writer_SDM<dim,N>*>(m_io_writer.get());
- *	p_io_writer-> template save_flux<IX>(Fluxes, FluxesHost, m_times_saved, m_t, "debug1");
+ *	ppkMHD::io::IO_Writer_SDM<dim,N>* p_io_writer = static_cast<typename
+ ppkMHD::io::IO_Writer_SDM<dim,N>*>(m_io_writer.get()); *	p_io_writer-> template
+ save_flux<IX>(Fluxes, FluxesHost, m_times_saved, m_t, "debug1");
  *   }
  *
  *
  */
-template<int N, int dir>
-void save_VTK_SDM_Flux(DataArray2d             Udata,
-		       DataArray2d::HostMirror Uhost,
-		       HydroParams& params,
-		       ConfigMap& configMap,
-		       sdm::SDM_Geometry<2,N> sdm_geom,
-		       int nbvar,
-		       const std::map<int, std::string>& variables_names,
-		       int iStep,
-		       real_t time,
-		       std::string debug_name = "")
+template <int N, int dir>
+void
+save_VTK_SDM_Flux(DataArray2d                        Udata,
+                  DataArray2d::HostMirror            Uhost,
+                  HydroParams &                      params,
+                  ConfigMap &                        configMap,
+                  sdm::SDM_Geometry<2, N>            sdm_geom,
+                  int                                nbvar,
+                  const std::map<int, std::string> & variables_names,
+                  int                                iStep,
+                  real_t                             time,
+                  std::string                        debug_name = "")
 {
   const int nx = params.nx;
   const int ny = params.ny;
@@ -1496,7 +1640,7 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
   Kokkos::deep_copy(Uhost, Udata);
 
   // local variables
-  std::string outputDir    = configMap.getString("output", "outputDir", "./");
+  std::string outputDir = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
   std::string dirStr;
@@ -1505,7 +1649,7 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
   if (dir == IY)
     dirStr = "_Flux_y_";
 
-  if ( !debug_name.empty() )
+  if (!debug_name.empty())
     dirStr += debug_name + "_";
 
   // write iStep in string stepNum
@@ -1516,19 +1660,15 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
 
 #ifdef USE_MPI
   // write pvtu wrapper file
-  if (params.myRank == 0) {
+  if (params.myRank == 0)
+  {
 
     // header file : parallel vtu format
-    std::string headerFilename = outputDir+"/"+outputPrefix+dirStr+"_time"+stepNum.str()+".pvtu";
+    std::string headerFilename =
+      outputDir + "/" + outputPrefix + dirStr + "_time" + stepNum.str() + ".pvtu";
 
-    write_pvtu_header(headerFilename,
-		      outputPrefix,
-		      params,
-		      configMap,
-		      nbvar,
-		      variables_names,
-		      iStep,
-		      true);
+    write_pvtu_header(
+      headerFilename, outputPrefix, params, configMap, nbvar, variables_names, iStep, true);
   }
 #endif // USE_MPI
 
@@ -1545,7 +1685,8 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
     rankFormat << params.myRank;
 
     // modify filename for mpi
-    filename = outputDir + "/" + outputPrefix + "_time" + stepNum.str()+"_mpi"+rankFormat.str()+".vtu";
+    filename =
+      outputDir + "/" + outputPrefix + "_time" + stepNum.str() + "_mpi" + rankFormat.str() + ".vtu";
   }
 #endif // USE_MPI
 
@@ -1561,25 +1702,26 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
 
   // write mesh information
   // each "cell" actually has a N x N+1 mini-mesh
-  int nbSubCells = N*(N+1);
-  int nbOfCells = nx*ny *  nbSubCells;
+  int nbSubCells = N * (N + 1);
+  int nbOfCells = nx * ny * nbSubCells;
 
-  int nbNodesPerCell = (N+1)*(N+2); // in 2D
-  int nbOfNodes = nx*ny * nbNodesPerCell;
+  int nbNodesPerCell = (N + 1) * (N + 2); // in 2D
+  int nbOfNodes = nx * ny * nbNodesPerCell;
 
-  outFile << "<Piece NumberOfPoints=\"" << nbOfNodes
-	  <<"\" NumberOfCells=\"" << nbOfCells << "\" >\n";
+  outFile << "<Piece NumberOfPoints=\"" << nbOfNodes << "\" NumberOfCells=\"" << nbOfCells
+          << "\" >\n";
 
   /*
    * write nodes location + data.
    */
   uint64_t offsetBytes = 0;
 
-  write_nodes_location_flux<N,dir>(outFile,Uhost,sdm_geom,params,configMap,offsetBytes);
+  write_nodes_location_flux<N, dir>(outFile, Uhost, sdm_geom, params, configMap, offsetBytes);
 
-  write_cells_connectivity_flux<N,dir>(outFile, Uhost, sdm_geom, params, configMap,offsetBytes);
+  write_cells_connectivity_flux<N, dir>(outFile, Uhost, sdm_geom, params, configMap, offsetBytes);
 
-  write_flux_points_data<N,dir>(outFile, Uhost, sdm_geom, params, configMap, variables_names,offsetBytes);
+  write_flux_points_data<N, dir>(
+    outFile, Uhost, sdm_geom, params, configMap, variables_names, offsetBytes);
 
   outFile << " </Piece>\n";
 
@@ -1608,17 +1750,18 @@ void save_VTK_SDM_Flux(DataArray2d             Udata,
  * \param[in] Udata device data to save
  * \param[in,out] Uhost host data temporary array before saving to file
  */
-template<int N,int dir>
-void save_VTK_SDM_Flux(DataArray3d             Udata,
-		       DataArray3d::HostMirror Uhost,
-		       HydroParams& params,
-		       ConfigMap& configMap,
-		       sdm::SDM_Geometry<3,N> sdm_geom,
-		       int nbvar,
-		       const std::map<int, std::string>& variables_names,
-		       int iStep,
-		       real_t time,
-		       std::string debug_name = "")
+template <int N, int dir>
+void
+save_VTK_SDM_Flux(DataArray3d                        Udata,
+                  DataArray3d::HostMirror            Uhost,
+                  HydroParams &                      params,
+                  ConfigMap &                        configMap,
+                  sdm::SDM_Geometry<3, N>            sdm_geom,
+                  int                                nbvar,
+                  const std::map<int, std::string> & variables_names,
+                  int                                iStep,
+                  real_t                             time,
+                  std::string                        debug_name = "")
 {
   const int nx = params.nx;
   const int ny = params.ny;
@@ -1628,7 +1771,7 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
   Kokkos::deep_copy(Uhost, Udata);
 
   // local variables
-  std::string outputDir    = configMap.getString("output", "outputDir", "./");
+  std::string outputDir = configMap.getString("output", "outputDir", "./");
   std::string outputPrefix = configMap.getString("output", "outputPrefix", "output");
 
   std::string dirStr;
@@ -1639,7 +1782,7 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
   if (dir == IZ)
     dirStr = "_Flux_z_";
 
-  if ( !debug_name.empty() )
+  if (!debug_name.empty())
     dirStr += debug_name + "_";
 
   // write iStep in string stepNum
@@ -1650,19 +1793,15 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
 
 #ifdef USE_MPI
   // write pvtu wrapper file
-  if (params.myRank == 0) {
+  if (params.myRank == 0)
+  {
 
     // header file : parallel vtu format
-    std::string headerFilename = outputDir+"/"+outputPrefix+dirStr+"_time"+stepNum.str()+".pvtu";
+    std::string headerFilename =
+      outputDir + "/" + outputPrefix + dirStr + "_time" + stepNum.str() + ".pvtu";
 
-    write_pvtu_header(headerFilename,
-		      outputPrefix,
-		      params,
-		      configMap,
-		      nbvar,
-		      variables_names,
-		      iStep,
-		      true);
+    write_pvtu_header(
+      headerFilename, outputPrefix, params, configMap, nbvar, variables_names, iStep, true);
   }
 #endif // USE_MPI
 
@@ -1679,7 +1818,8 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
     rankFormat << params.myRank;
 
     // modify filename for mpi
-    filename = outputDir + "/" + outputPrefix + "_time" + stepNum.str()+"_mpi"+rankFormat.str()+".vtu";
+    filename =
+      outputDir + "/" + outputPrefix + "_time" + stepNum.str() + "_mpi" + rankFormat.str() + ".vtu";
   }
 #endif // USE_MPI
 
@@ -1695,25 +1835,26 @@ void save_VTK_SDM_Flux(DataArray3d             Udata,
 
   // write mesh information
   // each "cell" actually has a N x N+1 x N+1 mini-mesh
-  int nbSubCells = N*(N+1)*(N+1);
-  int nbOfCells = nx*ny*nz *  nbSubCells;
+  int nbSubCells = N * (N + 1) * (N + 1);
+  int nbOfCells = nx * ny * nz * nbSubCells;
 
-  int nbNodesPerCell = (N+1)*(N+2)*(N+2); // in 3D
-  int nbOfNodes = nx*ny*nz * nbNodesPerCell;
+  int nbNodesPerCell = (N + 1) * (N + 2) * (N + 2); // in 3D
+  int nbOfNodes = nx * ny * nz * nbNodesPerCell;
 
-  outFile << "<Piece NumberOfPoints=\"" << nbOfNodes
-	  <<"\" NumberOfCells=\"" << nbOfCells << "\" >\n";
+  outFile << "<Piece NumberOfPoints=\"" << nbOfNodes << "\" NumberOfCells=\"" << nbOfCells
+          << "\" >\n";
 
   /*
    * write nodes location + data.
    */
   uint64_t offsetBytes = 0;
 
-  write_nodes_location_flux<N,dir>(outFile,Uhost,sdm_geom,params,configMap,offsetBytes);
+  write_nodes_location_flux<N, dir>(outFile, Uhost, sdm_geom, params, configMap, offsetBytes);
 
-  write_cells_connectivity_flux<N,dir>(outFile, Uhost, sdm_geom, params, configMap,offsetBytes);
+  write_cells_connectivity_flux<N, dir>(outFile, Uhost, sdm_geom, params, configMap, offsetBytes);
 
-  write_flux_points_data<N,dir>(outFile, Uhost, sdm_geom, params, configMap, variables_names,offsetBytes);
+  write_flux_points_data<N, dir>(
+    outFile, Uhost, sdm_geom, params, configMap, variables_names, offsetBytes);
 
   outFile << " </Piece>\n";
 

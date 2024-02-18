@@ -14,10 +14,9 @@
 // #include "IO_PNETCDF_SDM.h"
 // #endif // USE_PNETCDF
 
-namespace ppkMHD { namespace io {
-
-
-
-} // namespace io
+namespace ppkMHD
+{
+namespace io
+{} // namespace io
 
 } // namespace ppkMHD

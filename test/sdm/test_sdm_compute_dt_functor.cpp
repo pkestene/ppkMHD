@@ -19,14 +19,17 @@
 #include "utils/io/IO_ReadWrite_SDM.h"
 
 #ifdef USE_MPI
-#include "utils/mpiUtils/GlobalMpiSession.h"
-#include <mpi.h>
+#  include "utils/mpiUtils/GlobalMpiSession.h"
+#  include <mpi.h>
 #endif // USE_MPI
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
-template< int dim, int N >
-real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
+template <int dim, int N>
+real_t
+compute_dt(sdm::SolverHydroSDM<dim, N> & solver)
+{
 
   // create equation system object
   ppkMHD::EulerEquations<dim> euler;
@@ -34,17 +37,12 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
   real_t invDt = 0.0;
 
   // alias to the computational functor, dimension dependend
-  using ComputeDtFunctor =
-    typename std::conditional<dim==2,
-                              sdm::ComputeDt_Functor_2d<N>,
-                              sdm::ComputeDt_Functor_3d<N> >::type;
-  invDt = ComputeDtFunctor::apply(solver.params,
-                                  solver.sdm_geom,
-                                  euler,
-                                  solver.U);
+  using ComputeDtFunctor = typename std::
+    conditional<dim == 2, sdm::ComputeDt_Functor_2d<N>, sdm::ComputeDt_Functor_3d<N>>::type;
+  invDt = ComputeDtFunctor::apply(solver.params, solver.sdm_geom, euler, solver.U);
 
-  real_t dt = solver.params.settings.cfl/invDt;
-  printf("dt = %f (invDt = %f)\n", dt,invDt);
+  real_t dt = solver.params.settings.cfl / invDt;
+  printf("dt = %f (invDt = %f)\n", dt, invDt);
 
   return dt;
 
@@ -56,9 +54,9 @@ real_t compute_dt(sdm::SolverHydroSDM<dim,N>& solver) {
  * order is the number of solution points per direction.
  *
  */
-template<int dim,
-	 int N>
-int test_compute_dt_functors()
+template <int dim, int N>
+int
+test_compute_dt_functors()
 {
 
   int myRank = 0;
@@ -66,14 +64,15 @@ int test_compute_dt_functors()
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 #endif // USE_MPI
 
-  if (myRank==0) {
+  if (myRank == 0)
+  {
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
     std::cout << "  Dimension is : " << dim << "\n";
-    std::cout << "  Using order : "  << N   << "\n";
+    std::cout << "  Using order : " << N << "\n";
     std::cout << "  Number of solution points : " << N << "\n";
-    std::cout << "  Number of flux     points : " << N+1 << "\n";
+    std::cout << "  Number of flux     points : " << N + 1 << "\n";
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
@@ -83,14 +82,14 @@ int test_compute_dt_functors()
   // read parameter file and initialize parameter
   // parse parameters from input file
   std::string input_file = dim == 2 ? "test_sdm_io_2D.ini" : "test_sdm_io_3D.ini";
-  ConfigMap configMap(input_file);
+  ConfigMap   configMap(input_file);
 
   // create a HydroParams object
   HydroParams params = HydroParams();
   params.setup(configMap);
 
   // create solver
-  sdm::SolverHydroSDM<dim,N> solver(params, configMap);
+  sdm::SolverHydroSDM<dim, N> solver(params, configMap);
 
   // initialize the IO_ReadWrite object (normally done in
   // SolverFactory's create method)
@@ -100,11 +99,11 @@ int test_compute_dt_functors()
   solver.save_solution();
 
   // actual test here
-  real_t dt = compute_dt<dim,N>(solver);
+  real_t dt = compute_dt<dim, N>(solver);
 
   int status = 0;
-  if (dt>0.1)
-    status=1;
+  if (dt > 0.1)
+    status = 1;
 
   return status;
 

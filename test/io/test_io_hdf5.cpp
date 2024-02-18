@@ -9,41 +9,42 @@
 // minimal kokkos support
 #include "shared/kokkos_shared.h"
 
-#include "shared/HydroState.h" // for constants
+#include "shared/HydroState.h"  // for constants
 #include "shared/real_type.h"   // choose between single and double precision
 #include "shared/HydroParams.h" // read parameter file
 
 // MPI support
 #ifdef USE_MPI
-#include "utils/mpiUtils/GlobalMpiSession.h"
-#include <mpi.h>
+#  include "utils/mpiUtils/GlobalMpiSession.h"
+#  include <mpi.h>
 #endif // USE_MPI
 
 // HDF5 IO implementation (to be tested)
 #include "utils/io/IO_HDF5.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 // ===========================================================
 // ===========================================================
 // create some fake data
-template<unsigned int dim>
+template <unsigned int dim>
 class InitData
 {
 
 public:
   //! Decide at compile-time which data array type to use
-  using DataArray  = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  using DataArray = typename std::conditional<dim == 2, DataArray2d, DataArray3d>::type;
 
-  InitData(HydroParams params, DataArray data) :
-    params(params),
-    data(data) {};
-  ~InitData() {};
+  InitData(HydroParams params, DataArray data)
+    : params(params)
+    , data(data){};
+  ~InitData(){};
 
   //! functor for 2d
-  template<unsigned int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename std::enable_if<dim_==2, int>::type& index)  const
+  template <unsigned int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION void
+  operator()(const typename std::enable_if<dim_ == 2, int>::type & index) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
@@ -56,8 +57,8 @@ public:
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
 #else
-    const int i_mpi = 0;
-    const int j_mpi = 0;
+    const int            i_mpi = 0;
+    const int            j_mpi = 0;
 #endif // USE_MPI
 
     const real_t xmin = params.xmin;
@@ -65,23 +66,22 @@ public:
     const real_t dx = params.dx;
     const real_t dy = params.dy;
 
-    int i,j;
-    index2coord(index,i,j,isize,jsize);
+    int i, j;
+    index2coord(index, i, j, isize, jsize);
 
-    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
+    real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
+    real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
 
-    data(i,j,ID) =   x+y;
-    data(i,j,IE) = 2*x+y;
-    data(i,j,IU) = 3*x+y;
-    data(i,j,IV) = 4*x+y;
-
+    data(i, j, ID) = x + y;
+    data(i, j, IE) = 2 * x + y;
+    data(i, j, IU) = 3 * x + y;
+    data(i, j, IV) = 4 * x + y;
   }
 
   //! functor for 3d
-  template<unsigned int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename std::enable_if<dim_==3, int>::type& index)  const
+  template <unsigned int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION void
+  operator()(const typename std::enable_if<dim_ == 3, int>::type & index) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
@@ -97,9 +97,9 @@ public:
     const int j_mpi = params.myMpiPos[IY];
     const int k_mpi = params.myMpiPos[IZ];
 #else
-    const int i_mpi = 0;
-    const int j_mpi = 0;
-    const int k_mpi = 0;
+    const int            i_mpi = 0;
+    const int            j_mpi = 0;
+    const int            k_mpi = 0;
 #endif // USE_MPI
 
     const real_t xmin = params.xmin;
@@ -110,18 +110,18 @@ public:
     const real_t dy = params.dy;
     const real_t dz = params.dz;
 
-    int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    int i, j, k;
+    index2coord(index, i, j, k, isize, jsize, ksize);
 
-    real_t x = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
-    real_t y = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
-    real_t z = zmin + dz/2 + (k+nz*k_mpi-ghostWidth)*dz;
+    real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
+    real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
+    real_t z = zmin + dz / 2 + (k + nz * k_mpi - ghostWidth) * dz;
 
-    data(i,j,k,ID) =   x+y+z;
-    data(i,j,k,IE) = 2*x+y+z;
-    data(i,j,k,IU) = 3*x+y+z;
-    data(i,j,k,IV) = 4*x+y+z;
-    data(i,j,k,IW) = 5*x+y+z;
+    data(i, j, k, ID) = x + y + z;
+    data(i, j, k, IE) = 2 * x + y + z;
+    data(i, j, k, IU) = 3 * x + y + z;
+    data(i, j, k, IV) = 4 * x + y + z;
+    data(i, j, k, IW) = 5 * x + y + z;
 
     // data(i,j,k,ID) = index + 0*isize*jsize*ksize;//  x+y+z;
     // data(i,j,k,IE) = index + 1*isize*jsize*ksize;//2*x+y+z;
@@ -131,7 +131,7 @@ public:
   }
 
   HydroParams params;
-  DataArray data;
+  DataArray   data;
 
 }; // class InitData
 

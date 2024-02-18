@@ -1,13 +1,14 @@
 /**
  * Some utilities for multivariate polynomials.
- * 
+ *
  */
 #ifndef MOOD_POLYNOMIALS_UTILS_H_
 #define MOOD_POLYNOMIALS_UTILS_H_
 
 #include "mood/Binomial.h"
 
-namespace mood {
+namespace mood
+{
 
 /**
  * Return number of coefficients in a n-dimensional (i.e. multivariate) polynomial
@@ -24,16 +25,18 @@ namespace mood {
  * which relies on "star and bars" arguments:
  * https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
  *
- * TODO : remove template specialization, implement the general formula as in 
+ * TODO : remove template specialization, implement the general formula as in
  * boost/math/special_functions/binomial.hpp
  *
  * \param[in] order of polynomial
  */
-template<unsigned int dim>
-int get_number_of_coefficients(unsigned int order) {
+template <unsigned int dim>
+int
+get_number_of_coefficients(unsigned int order)
+{
 
   // default value for univariate polynomial
-  return order+1;
+  return order + 1;
 
 } // get_number_of_coefficients
 
@@ -42,24 +45,28 @@ int get_number_of_coefficients(unsigned int order) {
 /**
  * Number of coefficients of a bivariate polynomial.
  */
-template<>
-int get_number_of_coefficients<2>(unsigned int order);
+template <>
+int
+get_number_of_coefficients<2>(unsigned int order);
 
 /**
  * Number of coefficients of a trivariate polynomial.
  */
-template<>
-int get_number_of_coefficients<3>(unsigned int order);
+template <>
+int
+get_number_of_coefficients<3>(unsigned int order);
 
 
 /**
  * The general formula is (dim+order)! / dim! / order! (Binomial coefficient).
  */
-template<unsigned int dim, unsigned int order>
-int get_number_of_coefficients() {
+template <unsigned int dim, unsigned int order>
+int
+get_number_of_coefficients()
+{
 
   // default value for univariate polynomial
-  return binomial<dim+order,dim>();
+  return binomial<dim + order, dim>();
 
 } // get_number_of_coefficients
 

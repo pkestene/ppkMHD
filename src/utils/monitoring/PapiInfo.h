@@ -14,7 +14,8 @@
 
 #include "OpenMPTimer.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 class PapiInfo
 {
@@ -23,36 +24,41 @@ public:
    * constructor
    */
   PapiInfo();
-  
+
   /**
    * destructor
    */
   ~PapiInfo();
-  
-  void start();
-  void stop();
-  double getFlops();
-  long long int getFlop();
-  double elapsed();
-  
+
+  void
+  start();
+  void
+  stop();
+  double
+  getFlops();
+  long long int
+  getFlop();
+  double
+  elapsed();
+
 protected:
   /* Wall clock time */
-  OpenMPTimer         papiTimer;
-  
+  OpenMPTimer papiTimer;
+
   /* cumulative counters */
-  float               crtime;   /* cumulative real time */
-  float               cptime;   /* cumulative process time */
-  long long int       cflpops;  /* cumulative floating point operations */
-  
+  float         crtime;  /* cumulative real time */
+  float         cptime;  /* cumulative process time */
+  long long int cflpops; /* cumulative floating point operations */
+
   /* values used in start routine */
-  float               irtime;   /* interval real time */
-  float               iptime;   /* interval process time */
-  long long int       iflpops;  /* interval floating point operations */
-  
-  double              mflops;   /* MFlop/s rate  */
-  
+  float         irtime;  /* interval real time */
+  float         iptime;  /* interval process time */
+  long long int iflpops; /* interval floating point operations */
+
+  double mflops; /* MFlop/s rate  */
+
 }; // class PapiInfo
 
-} // namespace pphMHD
+} // namespace ppkMHD
 
 #endif // PAPI_INFO_H_

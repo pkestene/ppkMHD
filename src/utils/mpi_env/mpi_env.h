@@ -27,45 +27,52 @@
 #include <string>
 #include <iosfwd>
 
-namespace ppkMHD { namespace mpi {
+namespace ppkMHD
+{
+namespace mpi
+{
 
-namespace threading {
+namespace threading
+{
 
 /** @brief specify the supported threading level.
- * 
+ *
  * Based on MPI 2 standard/8.7.3
  */
-enum level {
-  /** Only one thread will execute. 
+enum level
+{
+  /** Only one thread will execute.
    */
-  single     = MPI_THREAD_SINGLE,
+  single = MPI_THREAD_SINGLE,
   /** Only main thread will do MPI calls.
-   * 
-   * The process may be multi-threaded, but only the main 
+   *
+   * The process may be multi-threaded, but only the main
    * thread will make MPI calls (all MPI calls are ``funneled''
    * to the main thread).
    */
-  funneled   = MPI_THREAD_FUNNELED,
+  funneled = MPI_THREAD_FUNNELED,
   /** Only one thread at the time do MPI calls.
-   * 
-   * The process may be multi-threaded, and multiple 
+   *
+   * The process may be multi-threaded, and multiple
    * threads may make MPI calls, but only one at a time:
-   * MPI calls are not made concurrently from two distinct 
+   * MPI calls are not made concurrently from two distinct
    * threads (all MPI calls are ``serialized'').
    */
   serialized = MPI_THREAD_SERIALIZED,
   /** Multiple thread may do MPI calls.
-   * 
+   *
    * Multiple threads may call MPI, with no restrictions.
    */
-  multiple   = MPI_THREAD_MULTIPLE
+  multiple = MPI_THREAD_MULTIPLE
 };
 
 /** Formated output for threading level. */
-std::ostream& operator<<(std::ostream& out, level l);
+std::ostream &
+operator<<(std::ostream & out, level l);
 
 /** Formated input for threading level. */
-std::istream& operator>>(std::istream& in, level& l);
+std::istream &
+operator>>(std::istream & in, level & l);
 } // namespace threading
 
 /** @brief Initialize, finalize, and query the MPI environment.
@@ -93,10 +100,10 @@ std::istream& operator>>(std::istream& in, level& l);
  *  @c environment object is needed. If one is created, however, it
  *  will do nothing on either construction or destruction.
  */
-class environment {
+class environment
+{
 
 public:
-
   /** Initialize the MPI environment.
    *
    *  If the MPI environment has not already been initialized,
@@ -111,7 +118,7 @@ public:
    *  @param abort_on_exception When true, this object will abort the
    *  program if it is destructed due to an uncaught exception.
    */
-  environment(int& argc, char** &argv, bool abort_on_exception = true);
+  environment(int & argc, char **& argv, bool abort_on_exception = true);
 
   /** Initialize the MPI environment.
    *
@@ -129,8 +136,7 @@ public:
    *  @param abort_on_exception When true, this object will abort the
    *  program if it is destructed due to an uncaught exception.
    */
-  environment(int& argc, char** &argv, threading::level mt_level,
-              bool abort_on_exception = true);
+  environment(int & argc, char **& argv, threading::level mt_level, bool abort_on_exception = true);
 
   /** Shuts down the MPI environment.
    *
@@ -156,7 +162,8 @@ public:
    *  @param errcode The error code to return to the environment.
    *  @returns Will not return.
    */
-  static void abort(int errcode);
+  static void
+  abort(int errcode);
 
   /** Determine if the MPI environment has already been initialized.
    *
@@ -164,7 +171,8 @@ public:
    *
    *  @returns @c true if the MPI environment has been initialized.
    */
-  static bool initialized();
+  static bool
+  initialized();
 
   /** Determine if the MPI environment has already been finalized.
    *
@@ -172,7 +180,8 @@ public:
    *
    *  @returns @c true if the MPI environment has been finalized.
    */
-  static bool finalized();
+  static bool
+  finalized();
 
   /** Retrieves the maximum tag value.
    *
@@ -184,7 +193,8 @@ public:
    *
    *  @returns the maximum tag value.
    */
-  static int max_tag();
+  static int
+  max_tag();
 
   /** The tag value used for collective operations.
    *
@@ -195,7 +205,8 @@ public:
    *
    * @returns the tag value used for collective operations.
    */
-  static int collectives_tag();
+  static int
+  collectives_tag();
 
   /** Retrieve the name of this processor.
    *
@@ -206,21 +217,25 @@ public:
    *
    *  @returns the name of this processor.
    */
-  static std::string processor_name();
+  static std::string
+  processor_name();
 
   /** Query the current level of thread support.
    */
-  static threading::level thread_level();
+  static threading::level
+  thread_level();
 
   /** Are we in the main thread?
    */
-  static bool is_main_thread();
-  
+  static bool
+  is_main_thread();
+
   /** @brief MPI version.
    *
    * Returns a pair with the version and sub-version number.
    */
-  static std::pair<int, int> version();
+  static std::pair<int, int>
+  version();
 
 private:
   /// Whether this environment object called MPI_Init
@@ -228,11 +243,12 @@ private:
 
   /// Whether we should abort if the destructor is
   bool abort_on_exception;
-  
+
   /// The number of reserved tags.
   static const int num_reserved_tags = 1;
 };
 
-} } // end namespace ppkMHD::mpi
+} // namespace mpi
+} // namespace ppkMHD
 
 #endif // MPI_ENV_H_

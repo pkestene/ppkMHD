@@ -16,13 +16,13 @@
 
 namespace ppkMHD {
 
-struct HydroParamsMpi : HydroParams {
-
-
-
+struct HydroParamsMpi : HydroParams
+{
 
   //! constructor
-  HydroParamsMpi() : HydroParams() {}
+  HydroParamsMpi()
+    : HydroParams()
+  {}
 
   void setup(ConfigMap& configMap);
 

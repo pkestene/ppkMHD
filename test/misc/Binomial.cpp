@@ -15,35 +15,37 @@ class Binomial
 public:
   Binomial(int Max)
   {
-    max = Max+1;
-    table = new unsigned int * [max]();
-    for (int i=0; i < max; i++)
-      {
-	table[i] = new unsigned int[max]();
+    max = Max + 1;
+    table = new unsigned int *[max]();
+    for (int i = 0; i < max; i++)
+    {
+      table[i] = new unsigned int[max]();
 
-	for (int j = 0; j < max; j++)
-	  {
-	    table[i][j] = 0;
-	  }
+      for (int j = 0; j < max; j++)
+      {
+        table[i][j] = 0;
       }
+    }
   }
 
   ~Binomial()
   {
-    for (int i =0; i < max; i++)
-      {
-	delete table[i];
-      }
+    for (int i = 0; i < max; i++)
+    {
+      delete table[i];
+    }
     delete table;
   }
 
-  unsigned int Choose(unsigned int n, unsigned int k);
+  unsigned int
+  Choose(unsigned int n, unsigned int k);
 
 private:
-  bool Contains(unsigned int n, unsigned int k);
+  bool
+  Contains(unsigned int n, unsigned int k);
 
-  int max;
-  unsigned int **table;
+  int             max;
+  unsigned int ** table;
 };
 
 unsigned int Binomial::Choose(unsigned int n, unsigned int k)
@@ -63,29 +65,30 @@ unsigned int Binomial::Choose(unsigned int n, unsigned int k)
   return table[n][k];
 }
 
-bool Binomial::Contains(unsigned int n, unsigned int k)
+bool
+Binomial::Contains(unsigned int n, unsigned int k)
 {
-  if (table[n][k] == 0) 
-    {
-      return false;
-    }
+  if (table[n][k] == 0)
+  {
+    return false;
+  }
   return true;
 }
 
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   int n = 4;
   int k = 2;
-  if (argc>1)
+  if (argc > 1)
     n = atoi(argv[1]);
-  if (argc>2)
+  if (argc > 2)
     k = atoi(argv[2]);
 
   Binomial binom(12);
-  
-  std::cout << "Binomial(" << n << "," << k << ") = " << binom.Choose(n,k) << "\n";
-  
+
+  std::cout << "Binomial(" << n << "," << k << ") = " << binom.Choose(n, k) << "\n";
+
   return EXIT_SUCCESS;
 }
-  

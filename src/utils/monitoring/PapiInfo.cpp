@@ -17,7 +17,8 @@
 #include <stdio.h>
 #include <papi.h>
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 ////////////////////////////////////////////////////////////////////////////////
 // PapiInfo class methods body
@@ -25,67 +26,69 @@ namespace ppkMHD {
 
 // =======================================================
 // =======================================================
-PapiInfo::PapiInfo() : papiTimer() {
+PapiInfo::PapiInfo()
+  : papiTimer()
+{
 
-  crtime  = 0.0f;
-  cptime  = 0.0f;
+  crtime = 0.0f;
+  cptime = 0.0f;
   cflpops = 0;
-  irtime  = 0.0f;
-  iptime  = 0.0f;
+  irtime = 0.0f;
+  iptime = 0.0f;
   iflpops = 0;
-  mflops  = 0.0;
+  mflops = 0.0;
   float tmp;
 
   // initialize PAPI counters
   int status = 0;
-  if ( (status = PAPI_flops_rate(PAPI_FP_OPS, &irtime, &iptime, &iflpops, &tmp)) < PAPI_OK )
+  if ((status = PAPI_flops_rate(PAPI_FP_OPS, &irtime, &iptime, &iflpops, &tmp)) < PAPI_OK)
   {
-    fprintf(stderr, "PAPI_flops_rate failed with error %d\n",status);
+    fprintf(stderr, "PAPI_flops_rate failed with error %d\n", status);
   }
 
 } // PapiInfo::PapiInfo
 
 // =======================================================
 // =======================================================
-PapiInfo::~PapiInfo()
-{
-
-} // PapiInfo::~PapiInfo
+PapiInfo::~PapiInfo() {} // PapiInfo::~PapiInfo
 
 // =======================================================
 // =======================================================
-void PapiInfo::start()
+void
+PapiInfo::start()
 {
 
   float tmp;
-  int status = 0;
+  int   status = 0;
 
   papiTimer.start();
-  if ( (status = PAPI_flops_rate(PAPI_FP_OPS, &irtime, &iptime, &iflpops, &tmp)) < PAPI_OK )
+  if ((status = PAPI_flops_rate(PAPI_FP_OPS, &irtime, &iptime, &iflpops, &tmp)) < PAPI_OK)
   {
-    fprintf(stderr, "PAPI_flops_rate failed with error %d\n",status);
+    fprintf(stderr, "PAPI_flops_rate failed with error %d\n", status);
   }
 
 } // PapiInfo::start
 
 // =======================================================
 // =======================================================
-void PapiInfo::stop() {
+void
+PapiInfo::stop()
+{
 
-  float rtime, ptime;
+  float         rtime, ptime;
   long long int flpops;
-  float tmp;
+  float         tmp;
 
   int status = 0;
-  if ( (status = PAPI_flops_rate(PAPI_FP_OPS, &rtime, &ptime, &flpops, &tmp)) < PAPI_OK )
+  if ((status = PAPI_flops_rate(PAPI_FP_OPS, &rtime, &ptime, &flpops, &tmp)) < PAPI_OK)
   {
-    fprintf(stderr, "PAPI_flops_rate failed with error %d\n",status);
+    fprintf(stderr, "PAPI_flops_rate failed with error %d\n", status);
   }
   papiTimer.stop();
 
   // add increment from previous call to start values to accumulator counters
-  crtime  = rtime  - irtime;
-  cptime  = ptime  - iptime;
+  crtime = rtime - irtime;
+  cptime = ptime - iptime;
   cflpops += flpops - iflpops;
 
   mflops = 1.0 * cflpops / papiTimer.elapsed();
@@ -94,7 +97,9 @@ void PapiInfo::stop() {
 
 // =======================================================
 // =======================================================
-double PapiInfo::getFlops() {
+double
+PapiInfo::getFlops()
+{
 
   return mflops;
 
@@ -102,7 +107,9 @@ double PapiInfo::getFlops() {
 
 // =======================================================
 // =======================================================
-long long int PapiInfo::getFlop() {
+long long int
+PapiInfo::getFlop()
+{
 
   return cflpops;
 
@@ -110,7 +117,9 @@ long long int PapiInfo::getFlop() {
 
 // =======================================================
 // =======================================================
-double PapiInfo::elapsed() {
+double
+PapiInfo::elapsed()
+{
 
   return papiTimer.elapsed();
 

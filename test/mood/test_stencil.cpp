@@ -11,7 +11,8 @@
 #include "mood/StencilUtils.h"
 #include "shared/real_type.h"
 
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   Kokkos::initialize(argc, argv);
@@ -20,33 +21,32 @@ int main(int argc, char* argv[])
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
-    
+
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
-    if ( Kokkos::hwloc::available() ) {
-      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-          << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-          << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-          << "] )"
-          << std::endl ;
+    if (Kokkos::hwloc::available())
+    {
+      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+          << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+          << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
     }
-    Kokkos::print_configuration( msg );
+    Kokkos::print_configuration(msg);
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
 
   // dim is the number of variable in the multivariate polynomial representation
-  unsigned int dim=3;
+  unsigned int dim = 3;
 
   // highest degree / order of the polynomial
   int order = 4;
-  
-  if (argc>1)
+
+  if (argc > 1)
     dim = atoi(argv[1]);
-  if (argc>2)
+  if (argc > 2)
     order = atoi(argv[2]);
 
-  mood::STENCIL_ID stencilId = mood::select_stencil(dim,order);
+  mood::STENCIL_ID stencilId = mood::select_stencil(dim, order);
 
   /*
    * test class Polynomial.
@@ -69,12 +69,10 @@ int main(int argc, char* argv[])
   std::string test_str = "STENCIL_2D_DEGREE3";
   stencilId = mood::StencilUtils::get_stencilId_from_string(test_str);
   std::cout << "StencilId " << stencilId << " (" << test_str << ")"
-	    << " is the same as "
-	    << mood::StencilUtils::get_stencil_name(stencilId) << "\n";
-  
-  
+            << " is the same as " << mood::StencilUtils::get_stencil_name(stencilId) << "\n";
+
+
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-  
 }

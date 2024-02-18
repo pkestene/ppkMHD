@@ -21,18 +21,21 @@
 
 #include "sdm/SDM_Geometry.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 //! 4th order polynomial
-real_t f_4(real_t x)
+real_t
+f_4(real_t x)
 {
-  return  2*x*x*x*x - 4*x*x + 7*x + 3;
+  return 2 * x * x * x * x - 4 * x * x + 7 * x + 3;
 }
 
 //! derivative of the previous polynomial
-real_t df_4(real_t x)
+real_t
+df_4(real_t x)
 {
-  return 8*x*x*x - 8*x + 7;
+  return 8 * x * x * x - 8 * x + 7;
 }
 
 using f_t = real_t (*)(real_t);
@@ -44,9 +47,9 @@ using f_t = real_t (*)(real_t);
  * order is the number of solution points per direction.
  *
  */
-template<int dim,
-	 int N>
-void test_lagrange_derivative()
+template <int dim, int N>
+void
+test_lagrange_derivative()
 {
 
   std::cout << "=========================================================\n";
@@ -56,14 +59,14 @@ void test_lagrange_derivative()
   // polynomials up to degree N-1; so here we test the exact reconstruction.
 
   // example function and its exact derivative
-  f_t  f = f_4;
+  f_t f = f_4;
   f_t df = df_4;
 
   std::cout << "  Dimension is : " << dim << "\n";
   std::cout << "  Using order  : " << N << "\n";
   std::cout << "  Number of solution points : " << N << "\n";
 
-  sdm::SDM_Geometry<dim,N> sdm_geom;
+  sdm::SDM_Geometry<dim, N> sdm_geom;
 
   sdm_geom.init(0);
 
@@ -72,18 +75,18 @@ void test_lagrange_derivative()
   std::cout << "1D lagrange derivative evaluation (at solution points):\n";
 
   // some useful types to hold values at solution points
-  using DataVal     = Kokkos::View<real_t*,Device>;
-  using DataValHost = Kokkos::View<real_t*,Device>::HostMirror;
+  using DataVal = Kokkos::View<real_t *, Device>;
+  using DataValHost = Kokkos::View<real_t *, Device>::HostMirror;
 
-  DataVal     solution_values   = DataVal("solution_values",N);
+  DataVal     solution_values = DataVal("solution_values", N);
   DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
 
   // create values at solution points:
-  for (int i=0; i<N; ++i)
+  for (int i = 0; i < N; ++i)
     solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
 
   // some useful types (the same as in SDM_Geometry class)
-  using LagrangeMatrix     = Kokkos::View<real_t **, Device>;
+  using LagrangeMatrix = Kokkos::View<real_t **, Device>;
   using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
 
   // retrieve on host the Lagrange polynomial derivative matrix
@@ -91,28 +94,36 @@ void test_lagrange_derivative()
   Kokkos::deep_copy(sol2sol_derivative_h, sdm_geom.sol2sol_derivative);
 
   // print matrix
-  for (int i=0; i<N; ++i) {
-    for (int j=0; j<N; ++j) {
-      std::cout << sol2sol_derivative_h(i,j) << " ";
+  for (int i = 0; i < N; ++i)
+  {
+    for (int j = 0; j < N; ++j)
+    {
+      std::cout << sol2sol_derivative_h(i, j) << " ";
     }
     std::cout << "\n";
   }
 
   // evaluate derivative at solution points
-  for (int j=0; j<N; ++j) {
+  for (int j = 0; j < N; ++j)
+  {
 
     // compute derivative value
     // remember that sol2sol_derivative_h(k,j) is the derivative of the k-th
     // Lagrange polynomial evaluated at the j-th solution points
-    real_t val=0;
-    for (int k=0; k<N; ++k) {
-      val += solution_values_h(k) * sol2sol_derivative_h(k,j);
+    real_t val = 0;
+    for (int k = 0; k < N; ++k)
+    {
+      val += solution_values_h(k) * sol2sol_derivative_h(k, j);
     }
 
     real_t x_j = sdm_geom.solution_pts_1d_host(j);
 
-    printf("Evaluated derivative of function f at %f is %f - exact value is %f (difference with exact value is %e)\n",x_j,val, df(x_j), val-df(x_j));
-
+    printf("Evaluated derivative of function f at %f is %f - exact value is %f (difference with "
+           "exact value is %e)\n",
+           x_j,
+           val,
+           df(x_j),
+           val - df(x_j));
   }
 
 } // test_lagrange_derivative

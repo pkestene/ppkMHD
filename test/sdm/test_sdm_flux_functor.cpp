@@ -23,11 +23,12 @@
 #include "test_sdm_flux_functor_init.h"
 
 #ifdef USE_MPI
-#include "utils/mpiUtils/GlobalMpiSession.h"
-#include <mpi.h>
+#  include "utils/mpiUtils/GlobalMpiSession.h"
+#  include <mpi.h>
 #endif // USE_MPI
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 /*
  *
@@ -35,12 +36,12 @@ namespace ppkMHD {
  * order is the number of solution points per direction.
  *
  */
-template<int dim,
-	 int N>
-void test_flux_functors()
+template <int dim, int N>
+void
+test_flux_functors()
 {
 
-  using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
+  using DataArray = typename std::conditional<dim == 2, DataArray2d, DataArray3d>::type;
   using DataArrayHost = typename DataArray::HostMirror;
 
   int myRank = 0;
@@ -48,14 +49,15 @@ void test_flux_functors()
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 #endif // USE_MPI
 
-  if (myRank==0) {
+  if (myRank == 0)
+  {
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
     std::cout << "  Dimension is : " << dim << "\n";
-    std::cout << "  Using order : "  << N   << "\n";
+    std::cout << "  Using order : " << N << "\n";
     std::cout << "  Number of solution points : " << N << "\n";
-    std::cout << "  Number of flux     points : " << N+1 << "\n";
+    std::cout << "  Number of flux     points : " << N + 1 << "\n";
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
     std::cout << "===============================================\n";
@@ -64,7 +66,8 @@ void test_flux_functors()
   // read input file
   // read parameter file and initialize parameter
   // parse parameters from input file
-  std::string input_file = dim == 2 ? "test_sdm_flux_functor_2D.ini" : "test_sdm_flux_functor_3D.ini";
+  std::string input_file =
+    dim == 2 ? "test_sdm_flux_functor_2D.ini" : "test_sdm_flux_functor_3D.ini";
   ConfigMap configMap(input_file);
 
   // create a HydroParams object
@@ -72,34 +75,26 @@ void test_flux_functors()
   params.setup(configMap);
 
   // create solver
-  sdm::SolverHydroSDM<dim,N> solver(params, configMap);
+  sdm::SolverHydroSDM<dim, N> solver(params, configMap);
 
   // initialize the IO_Writer object (normally done in
   // SolverFactory's create method)
   solver.init_io();
 
-  int nbCells = dim==2 ?
-    params.isize*params.jsize :
-    params.isize*params.jsize*params.ksize;
+  int nbCells = dim == 2 ? params.isize * params.jsize : params.isize * params.jsize * params.ksize;
 
   // init data
   {
 
-    sdm::InitTestFluxFunctor<dim,N,0>::apply(solver.params,
-                                             solver.sdm_geom,
-                                             solver.U);
+    sdm::InitTestFluxFunctor<dim, N, 0>::apply(solver.params, solver.sdm_geom, solver.U);
 
     solver.save_solution();
-
   }
 
 
   // create an io_writer
-  auto io_writer =
-    std::make_shared<io::IO_ReadWrite_SDM<dim,N>>(solver.params,
-							  solver.configMap,
-							  solver.m_variables_names,
-							  solver.sdm_geom);
+  auto io_writer = std::make_shared<io::IO_ReadWrite_SDM<dim, N>>(
+    solver.params, solver.configMap, solver.m_variables_names, solver.sdm_geom);
 
   DataArrayHost FluxHost = Kokkos::create_mirror(solver.Fluxes);
 
@@ -112,20 +107,15 @@ void test_flux_functors()
     // interpolate conservative variables from solution points to flux points
     {
 
-      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IX> functor(solver.params,
-							       solver.sdm_geom,
-							       solver.U,
-							       solver.Fluxes);
+      sdm::Interpolate_At_FluxPoints_Functor<dim, N, IX> functor(
+        solver.params, solver.sdm_geom, solver.U, solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
-
     }
 
     {
       // compute some flux along X direction
-      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IX> functor(solver.params,
-							     solver.sdm_geom,
-							     euler,
-							     solver.Fluxes);
+      sdm::ComputeFluxAtFluxPoints_Functor<dim, N, IX> functor(
+        solver.params, solver.sdm_geom, euler, solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
     }
 
@@ -133,10 +123,7 @@ void test_flux_functors()
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
      */
-    io_writer-> template save_flux<IX>(solver.Fluxes,
-				       FluxHost,
-				       0,
-				       0.0);
+    io_writer->template save_flux<IX>(solver.Fluxes, FluxHost, 0, 0.0);
   } // end dir X
 
   //
@@ -146,20 +133,15 @@ void test_flux_functors()
     // interpolate conservative variables from solution points to flux points
     {
 
-      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IY> functor(solver.params,
-							       solver.sdm_geom,
-							       solver.U,
-							       solver.Fluxes);
+      sdm::Interpolate_At_FluxPoints_Functor<dim, N, IY> functor(
+        solver.params, solver.sdm_geom, solver.U, solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
-
     }
 
     {
       // compute some flux along X direction
-      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IY> functor(solver.params,
-							     solver.sdm_geom,
-							     euler,
-							     solver.Fluxes);
+      sdm::ComputeFluxAtFluxPoints_Functor<dim, N, IY> functor(
+        solver.params, solver.sdm_geom, euler, solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
     }
 
@@ -167,33 +149,26 @@ void test_flux_functors()
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
      */
-    io_writer-> template save_flux<IY>(solver.Fluxes,
-				       FluxHost,
-				       0,
-				       0.0);
+    io_writer->template save_flux<IY>(solver.Fluxes, FluxHost, 0, 0.0);
   } // end dir Y
 
   //
   // Dir Z
   //
-  if (dim==3) {
+  if (dim == 3)
+  {
     // interpolate conservative variables from solution points to flux points
     {
 
-      sdm::Interpolate_At_FluxPoints_Functor<dim,N,IZ> functor(solver.params,
-							       solver.sdm_geom,
-							       solver.U,
-							       solver.Fluxes);
+      sdm::Interpolate_At_FluxPoints_Functor<dim, N, IZ> functor(
+        solver.params, solver.sdm_geom, solver.U, solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
-
     }
 
     {
       // compute some flux along X direction
-      sdm::ComputeFluxAtFluxPoints_Functor<dim,N,IZ> functor(solver.params,
-							     solver.sdm_geom,
-							     euler,
-							     solver.Fluxes);
+      sdm::ComputeFluxAtFluxPoints_Functor<dim, N, IZ> functor(
+        solver.params, solver.sdm_geom, euler, solver.Fluxes);
       Kokkos::parallel_for(nbCells, functor);
     }
 
@@ -201,10 +176,7 @@ void test_flux_functors()
      * thanks to this post on the template use
      * https://stackoverflow.com/questions/4929869/c-calling-template-functions-of-base-class
      */
-    io_writer-> template save_flux<IZ>(solver.Fluxes,
-				       FluxHost,
-				       0,
-				       0.0);
+    io_writer->template save_flux<IZ>(solver.Fluxes, FluxHost, 0, 0.0);
   } // end dim==3 / dir Z
 
 } // test_flux_functors

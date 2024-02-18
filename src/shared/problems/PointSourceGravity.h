@@ -4,7 +4,8 @@
 #include <math.h>
 #include "utils/config/ConfigMap.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 /**
  * Gravity field due to a point source.
@@ -12,7 +13,8 @@ namespace ppkMHD {
  * Method eval can be used to recompute locally as needed gravity field
  * components.
  */
-struct PointSourceGravity {
+struct PointSourceGravity
+{
 
   //! source location
   real_t xs, ys, zs;
@@ -24,15 +26,15 @@ struct PointSourceGravity {
   //! soften parameter
   real_t eps;
 
-  PointSourceGravity(ConfigMap& configMap)
+  PointSourceGravity(ConfigMap & configMap)
   {
-    xs = configMap.getFloat("gravity","x",0.0);
-    ys = configMap.getFloat("gravity","y",0.0);
-    zs = configMap.getFloat("gravity","z",0.0);
-    real_t G  = configMap.getFloat("gravity","G",1.0);
-    real_t M  = configMap.getFloat("gravity","M",1.0);
-    GM = G*M;
-    eps = configMap.getFloat("gravity","soften", 0.01);
+    xs = configMap.getFloat("gravity", "x", 0.0);
+    ys = configMap.getFloat("gravity", "y", 0.0);
+    zs = configMap.getFloat("gravity", "z", 0.0);
+    real_t G = configMap.getFloat("gravity", "G", 1.0);
+    real_t M = configMap.getFloat("gravity", "M", 1.0);
+    GM = G * M;
+    eps = configMap.getFloat("gravity", "soften", 0.01);
   }
 
   /**
@@ -47,16 +49,16 @@ struct PointSourceGravity {
    * \param[out] gx,gy,gz gravity field cartesian components
    */
   KOKKOS_INLINE_FUNCTION
-  void eval_exact(real_t   x, real_t   y, real_t   z,
-		  real_t& gx, real_t& gy, real_t& gz ) const
+  void
+  eval_exact(real_t x, real_t y, real_t z, real_t & gx, real_t & gy, real_t & gz) const
   {
 
-    real_t r   = sqrt( (x-xs)*(x-xs) + (y-ys)*(y-ys) + (z-zs)*(z-zs) );
-    real_t GM2 = GM/(r*r*r);
+    real_t r = sqrt((x - xs) * (x - xs) + (y - ys) * (y - ys) + (z - zs) * (z - zs));
+    real_t GM2 = GM / (r * r * r);
 
-    gx = GM2 * (xs-x);
-    gy = GM2 * (ys-y);
-    gz = GM2 * (zs-z);
+    gx = GM2 * (xs - x);
+    gy = GM2 * (ys - y);
+    gz = GM2 * (zs - z);
 
   } // eval_exact
 
@@ -75,16 +77,16 @@ struct PointSourceGravity {
    * \param[out] gx,gy,gz gravity field cartesian components
    */
   KOKKOS_INLINE_FUNCTION
-  void eval(real_t   x, real_t   y, real_t   z,
-	    real_t& gx, real_t& gy, real_t& gz ) const
+  void
+  eval(real_t x, real_t y, real_t z, real_t & gx, real_t & gy, real_t & gz) const
   {
 
-    real_t r   = sqrt( (x-xs)*(x-xs) + (y-ys)*(y-ys)  + (z-zs)*(z-zs) + eps*eps);
-    real_t GM2 = GM/(r*r*r);
+    real_t r = sqrt((x - xs) * (x - xs) + (y - ys) * (y - ys) + (z - zs) * (z - zs) + eps * eps);
+    real_t GM2 = GM / (r * r * r);
 
-    gx = GM2 * (xs-x);
-    gy = GM2 * (ys-y);
-    gz = GM2 * (zs-z);
+    gx = GM2 * (xs - x);
+    gy = GM2 * (ys - y);
+    gz = GM2 * (zs - z);
 
   } // eval
 

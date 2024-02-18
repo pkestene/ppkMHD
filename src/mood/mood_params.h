@@ -7,26 +7,24 @@
 #include "mood/GeometricTerms.h"
 #include "mood/Matrix.h"
 
-namespace mood {
+namespace mood
+{
 
 /**
  *
  */
-struct MoodParams {
+struct MoodParams
+{
 
   STENCIL_ID       stencilId;
   Stencil          stencil;
   mood_matrix_pi_t mood_matrix_pi;
 
-  MoodParams(STENCIL_ID stencilId) :
-    stencilId(stencilId),
-    Stencil(stencilId)
-  {
+  MoodParams(STENCIL_ID stencilId)
+    : stencilId(stencilId)
+    , Stencil(stencilId)
+  {}
 
-    
-    
-  }
-  
 }; // MoodParams
 
 } // namespace mood

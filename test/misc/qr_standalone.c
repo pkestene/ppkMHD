@@ -6,9 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
- 
-typedef struct {
-  int m, n;
+
+typedef struct
+{
+  int       m, n;
   double ** v;
 } mat_t, *mat;
 
@@ -82,15 +83,16 @@ double *vmadd(double a[], double b[], double s, double c[], int n)
 }
 
 /* m = I - v v^T */
-mat vmul(double v[], int n)
+mat
+vmul(double v[], int n)
 {
   mat x = matrix_new(n, n);
   for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++)
-      x->v[i][j] = -2 *  v[i] * v[j];
+      x->v[i][j] = -2 * v[i] * v[j];
   for (int i = 0; i < n; i++)
     x->v[i][i] += 1;
-  
+
   return x;
 }
 
@@ -129,38 +131,45 @@ void matrix_show(mat m, const char* str)
   printf("\n");
 }
 
-void householder(mat m, mat *R, mat *Q)
+void
+householder(mat m, mat * R, mat * Q)
 {
   mat q[m->m];
   mat z = m, z1;
-  for (int k = 0; k < m->n && k < m->m - 1; k++) {
+  for (int k = 0; k < m->n && k < m->m - 1; k++)
+  {
     double e[m->m], x[m->m], a;
     z1 = matrix_minor(z, k);
 
-    if (z != m) matrix_delete(z);
+    if (z != m)
+      matrix_delete(z);
     z = z1;
-    
+
     mcol(z, x, k);
     a = vnorm(x, m->m);
-    if (m->v[k][k] > 0) a = -a;
-    
+    if (m->v[k][k] > 0)
+      a = -a;
+
     for (int i = 0; i < m->m; i++)
       e[i] = (i == k) ? 1 : 0;
-    
+
     vmadd(x, e, a, e, m->m);
     vdiv(e, vnorm(e, m->m), e, m->m);
     q[k] = vmul(e, m->m);
     z1 = matrix_mul(q[k], z);
 
-    if (z != m) matrix_delete(z);
+    if (z != m)
+      matrix_delete(z);
     z = z1;
   }
   matrix_delete(z);
   *Q = q[0];
   *R = matrix_mul(q[0], m);
-  for (int i = 1; i < m->n && i < m->m - 1; i++) {
+  for (int i = 1; i < m->n && i < m->m - 1; i++)
+  {
     z1 = matrix_mul(q[i], *Q);
-    if (i > 1) matrix_delete(*Q);
+    if (i > 1)
+      matrix_delete(*Q);
     *Q = z1;
     matrix_delete(q[i]);
   }
@@ -170,28 +179,25 @@ void householder(mat m, mat *R, mat *Q)
   *R = z;
   matrix_transpose(*Q);
 }
- 
+
 double in[][3] = {
-  { 12, -51,   4},
-  {  6, 167, -68},
-  { -4,  24, -41},
-  { -1, 1, 0},
-  { 2, 0, 3},
+  { 12, -51, 4 }, { 6, 167, -68 }, { -4, 24, -41 }, { -1, 1, 0 }, { 2, 0, 3 },
 };
- 
-int main()
+
+int
+main()
 {
   mat R, Q;
   mat x = matrix_copy(3, in, 5);
   householder(x, &R, &Q);
- 
-  matrix_show(Q,"Q");
-  matrix_show(R,"R");
- 
+
+  matrix_show(Q, "Q");
+  matrix_show(R, "R");
+
   // to show their product is the input matrix
   mat m = matrix_mul(Q, R);
-  matrix_show(m,"Q * R");
- 
+  matrix_show(m, "Q * R");
+
   matrix_delete(x);
   matrix_delete(R);
   matrix_delete(Q);

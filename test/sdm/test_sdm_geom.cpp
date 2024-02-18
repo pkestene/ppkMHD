@@ -12,7 +12,8 @@
 
 #include "sdm/SDM_Geometry.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 /*
  *
@@ -20,8 +21,9 @@ namespace ppkMHD {
  * order is the number of solution points per direction.
  *
  */
-template<int N>
-void test_sdm_geom_2d()
+template <int N>
+void
+test_sdm_geom_2d()
 {
 
   std::cout << "===========\n";
@@ -29,16 +31,18 @@ void test_sdm_geom_2d()
   std::cout << "===========\n";
 
   // dim is the number of variable in the multivariate polynomial representation
-  //int dim=2;
+  // int dim=2;
 
-  sdm::SDM_Geometry<2,N> sdm_geom;
+  sdm::SDM_Geometry<2, N> sdm_geom;
 
   sdm_geom.init(N);
 
-  for (int j=0; j<N; ++j) {
-    for (int i=0; i<N; ++i) {
-      std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
-		<< "," << sdm_geom.solution_pts_1d_host(j) << ") ";
+  for (int j = 0; j < N; ++j)
+  {
+    for (int i = 0; i < N; ++i)
+    {
+      std::cout << "(" << sdm_geom.solution_pts_1d_host(i) << ","
+                << sdm_geom.solution_pts_1d_host(j) << ") ";
     }
     std::cout << "\n";
   }
@@ -46,8 +50,9 @@ void test_sdm_geom_2d()
 
 } // test_sdm_geom_2d<N>
 
-template<int N>
-void test_sdm_geom_3d()
+template <int N>
+void
+test_sdm_geom_3d()
 {
 
   std::cout << "===========\n";
@@ -55,18 +60,21 @@ void test_sdm_geom_3d()
   std::cout << "===========\n";
 
   // dim is the number of variable in the multivariate polynomial representation
-  //int dim=3;
+  // int dim=3;
 
-  sdm::SDM_Geometry<3,N> sdm_geom;
+  sdm::SDM_Geometry<3, N> sdm_geom;
 
   sdm_geom.init(N);
 
-  for (int k=0; k<N; ++k) {
-    for (int j=0; j<N; ++j) {
-      for (int i=0; i<N; ++i) {
-	std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
-		  << "," << sdm_geom.solution_pts_1d_host(j)
-		  << "," << sdm_geom.solution_pts_1d_host(k) << ") ";
+  for (int k = 0; k < N; ++k)
+  {
+    for (int j = 0; j < N; ++j)
+    {
+      for (int i = 0; i < N; ++i)
+      {
+        std::cout << "(" << sdm_geom.solution_pts_1d_host(i) << ","
+                  << sdm_geom.solution_pts_1d_host(j) << "," << sdm_geom.solution_pts_1d_host(k)
+                  << ") ";
       }
       std::cout << "\n";
     }

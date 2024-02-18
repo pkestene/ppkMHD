@@ -11,7 +11,8 @@
 #include "shared/kokkos_shared.h"
 #include "shared/EulerEquations.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 /*
  *
@@ -19,12 +20,14 @@ namespace ppkMHD {
  * order is the number of solution points per direction.
  *
  */
-template<int dim, int dir>
-void test()
+template <int dim, int dir>
+void
+test()
 {
 
   std::cout << "===========\n";
-  std::cout << "=====" << dim << "D" << "====\n";
+  std::cout << "=====" << dim << "D"
+            << "====\n";
   std::cout << "===========\n";
 
   EulerEquations<dim> eq;
@@ -45,7 +48,7 @@ void test()
 
   // primitive variables
   HydroState w;
-  eq.convert_to_primitive(q,w,gamma0);
+  eq.convert_to_primitive(q, w, gamma0);
 
   // speed of sound
   real_t c = eq.compute_speed_of_sound(w, gamma0);
@@ -86,12 +89,17 @@ void test()
   std::cout << "===============================\n";
   std::cout << "Testing dim=" << dim << " dir=" << dir << "\n";
   std::cout << "compare cons_out to cons_in:\n";
-  std::cout << cons_in[ID] << " " << charac[ID] << " " << cons_out[ID] << " " << fabs(cons_in[ID]-cons_out[ID]) << "\n";
-  std::cout << cons_in[IE] << " " << charac[IE] << " " << cons_out[IE] << " " << fabs(cons_in[IE]-cons_out[IE]) << "\n";
-  std::cout << cons_in[IU] << " " << charac[IU] << " " << cons_out[IU] << " " << fabs(cons_in[IU]-cons_out[IU]) << "\n";
-  std::cout << cons_in[IV] << " " << charac[IV] << " " << cons_out[IV] << " " << fabs(cons_in[IV]-cons_out[IV]) << "\n";
+  std::cout << cons_in[ID] << " " << charac[ID] << " " << cons_out[ID] << " "
+            << fabs(cons_in[ID] - cons_out[ID]) << "\n";
+  std::cout << cons_in[IE] << " " << charac[IE] << " " << cons_out[IE] << " "
+            << fabs(cons_in[IE] - cons_out[IE]) << "\n";
+  std::cout << cons_in[IU] << " " << charac[IU] << " " << cons_out[IU] << " "
+            << fabs(cons_in[IU] - cons_out[IU]) << "\n";
+  std::cout << cons_in[IV] << " " << charac[IV] << " " << cons_out[IV] << " "
+            << fabs(cons_in[IV] - cons_out[IV]) << "\n";
   if (dim == 3)
-    std::cout << cons_in[IW] << " " << charac[IW] << " " << cons_out[IW] << " " << fabs(cons_in[IW]-cons_out[IW]) << "\n";
+    std::cout << cons_in[IW] << " " << charac[IW] << " " << cons_out[IW] << " "
+              << fabs(cons_in[IW] - cons_out[IW]) << "\n";
 
 } // test
 
