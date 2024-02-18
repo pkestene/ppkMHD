@@ -27,38 +27,45 @@ static char *
 rstrip(char * s)
 {
   char * p = s + strlen(s);
-  while (p > s && isspace(*--p))
+  while (p > s && isspace((unsigned char)(*--p)))
     *p = '\0';
   return s;
 }
 
 /* Return pointer to first non-whitespace char in given string. */
-static char* lskip(const char* s)
+static char *
+lskip(const char * s)
 {
-    while (*s && isspace(*s))
-        s++;
-    return (char*)s;
+  while (*s && isspace((unsigned char)(*s)))
+    s++;
+  return (char *)s;
 }
 
 /* Return pointer to first char c or ';' ( or '#') comment in given
  string, or pointer to null at end of string if neither found. ';' (or
  '#') must be prefixed by a whitespace character to register as a comment. */
-static char* find_char_or_comment(const char* s, char c)
+static char *
+find_char_or_comment(const char * s, char c)
 {
-    int was_whitespace = 0;
-    while (*s && *s != c && !(was_whitespace && *s == ';')) {
-        was_whitespace = isspace(*s);
-        s++;
-    }
-    return (char*)s;
+  int was_whitespace = 0;
+  while (*s && *s != c && !(was_whitespace && *s == ';'))
+  {
+    was_whitespace = isspace(*s);
+    s++;
+  }
+  return (char *)s;
 }
 
 /* Version of strncpy that ensures dest (size bytes) is null-terminated. */
-static char* strncpy0(char* dest, const char* src, size_t size)
+static char *
+strncpy0(char * dest, const char * src, size_t size)
 {
-    strncpy(dest, src, size);
-    dest[size - 1] = '\0';
-    return dest;
+  /* Could use strncpy internally, but it causes gcc warnings */
+  size_t i;
+  for (i = 0; i < size - 1 && src[i]; i++)
+    dest[i] = src[i];
+  dest[i] = '\0';
+  return dest;
 }
 
 // ================================================================
@@ -181,7 +188,6 @@ ini_parse_buffer(char *& buffer,
   char * value;
   int    lineno = 0;
   int    error = 0;
-
 
   // Scan through string stream line by line
   for (std::string linestr = ""; std::getline(strs, linestr);)
