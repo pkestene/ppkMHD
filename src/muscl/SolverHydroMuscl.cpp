@@ -1,6 +1,7 @@
 #include <string>
 #include <cstdio>
 #include <cstdbool>
+#include <iostream> // for std::cout
 #include <sstream>
 #include <fstream>
 #include <algorithm>
