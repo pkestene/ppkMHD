@@ -1,9 +1,38 @@
-[*.{cpp,h,c,h,cuh,txt}]
+# EditorConfig: https://EditorConfig.org
 
-indent_style = space
-indent_size = 2
-tab_width = 8
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*.{cpp,hpp,c,h}]
 end_of_line = lf
-trim_trailing_whitespace = false
+insert_final_newline = true
+charset = utf-8
+
+# Various options
+trim_trailing_whitespace = true
 insert_final_newline = true
 
+# 4 space indentation
+tab_width = 4
+indent_style = space
+indent_size = 2
+
+# YAML should not use tab as indentation
+[*.yml]
+indent_style = space
+indent_size = 2
+
+# Docstrings and comments use max_line_length = 79
+[*.py]
+max_line_length = 119
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+charset = utf-8
+
+[{CMakeLists.txt,*.cmake,*.rst}]
+indent_size = 2
+indent_style = space
