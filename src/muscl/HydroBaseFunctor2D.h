@@ -208,7 +208,6 @@ public:
    * \param[in] q          : Primitive variables state.
    * \param[in] dqX        : slope along X
    * \param[in] dqY        : slope along Y
-   * \param[in] c          : local sound speed.
    * \param[in] dtdx       : dt over dx
    * \param[in] dtdy       : dt over dy
    * \param[in] faceId     : which face will be reconstructed
