@@ -210,7 +210,7 @@ IO_ReadWrite::load_data_impl(DataArray2d             Udata,
   std::string h5Suffix(".h5");
   std::string ncSuffix(".nc"); // pnetcdf file only available when MPI is activated
 
-  bool                  isHdf5 = false;
+  [[maybe_unused]] bool isHdf5 = false;
   [[maybe_unused]] bool isNcdf = false;
   if (inputFilename.length() >= 3)
   {
@@ -256,7 +256,7 @@ IO_ReadWrite::load_data_impl(DataArray3d             Udata,
   std::string h5Suffix(".h5");
   std::string ncSuffix(".nc"); // pnetcdf file only available when MPI is activated
 
-  bool                  isHdf5 = false;
+  [[maybe_unused]] bool isHdf5 = false;
   [[maybe_unused]] bool isNcdf = false;
   if (inputFilename.length() >= 3)
   {

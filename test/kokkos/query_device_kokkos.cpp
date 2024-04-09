@@ -68,8 +68,8 @@ main(int argc, char ** argv)
 
   std::ostringstream msg;
 
-  int mpi_rank = 0;
-  int nRanks = 1;
+  [[maybe_unused]] int mpi_rank = 0;
+  [[maybe_unused]] int nRanks = 1;
 
 #if defined(USE_MPI)
 

@@ -286,37 +286,6 @@ public:
     MHDState & dqY = dq[IY];
     MHDState & dqZ = dq[IZ];
 
-    if (slope_type == 0)
-    {
-
-      dqX[ID] = ZERO_F;
-      dqY[ID] = ZERO_F;
-      dqZ[ID] = ZERO_F;
-      dqX[IP] = ZERO_F;
-      dqY[IP] = ZERO_F;
-      dqZ[IP] = ZERO_F;
-      dqX[IU] = ZERO_F;
-      dqY[IU] = ZERO_F;
-      dqZ[IU] = ZERO_F;
-      dqX[IV] = ZERO_F;
-      dqY[IV] = ZERO_F;
-      dqZ[IV] = ZERO_F;
-      dqX[IW] = ZERO_F;
-      dqY[IW] = ZERO_F;
-      dqZ[IW] = ZERO_F;
-      dqX[IBX] = ZERO_F;
-      dqY[IBX] = ZERO_F;
-      dqZ[IBX] = ZERO_F;
-      dqX[IBY] = ZERO_F;
-      dqY[IBY] = ZERO_F;
-      dqZ[IBY] = ZERO_F;
-      dqX[IBZ] = ZERO_F;
-      dqY[IBZ] = ZERO_F;
-      dqZ[IBZ] = ZERO_F;
-
-      return;
-    }
-
     if (slope_type == 1 or slope_type == 2)
     { // minmod or average
 
@@ -401,9 +370,38 @@ public:
                                     &(dqY[IBZ]),
                                     &(dqZ[IBZ]));
     }
+    else // slope_type == 0
+    {
+
+      dqX[ID] = ZERO_F;
+      dqY[ID] = ZERO_F;
+      dqZ[ID] = ZERO_F;
+      dqX[IP] = ZERO_F;
+      dqY[IP] = ZERO_F;
+      dqZ[IP] = ZERO_F;
+      dqX[IU] = ZERO_F;
+      dqY[IU] = ZERO_F;
+      dqZ[IU] = ZERO_F;
+      dqX[IV] = ZERO_F;
+      dqY[IV] = ZERO_F;
+      dqZ[IV] = ZERO_F;
+      dqX[IW] = ZERO_F;
+      dqY[IW] = ZERO_F;
+      dqZ[IW] = ZERO_F;
+      dqX[IBX] = ZERO_F;
+      dqY[IBX] = ZERO_F;
+      dqZ[IBX] = ZERO_F;
+      dqX[IBY] = ZERO_F;
+      dqY[IBY] = ZERO_F;
+      dqZ[IBY] = ZERO_F;
+      dqX[IBZ] = ZERO_F;
+      dqY[IBZ] = ZERO_F;
+      dqZ[IBZ] = ZERO_F;
+
+      return;
+    }
 
   } // slope_unsplit_hydro_3d
-
 
   /**
    * slope_unsplit_mhd_3d computes only magnetic field slopes in 3D; hydro
