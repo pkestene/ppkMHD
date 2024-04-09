@@ -347,9 +347,8 @@ public:
 
     const real_t gamma0 = params.settings.gamma0;
 
-    const double TwoPi = 4.0 * asin(1.0);
-    const double B0 = 1.0 / sqrt(2.0 * TwoPi);
-    const double p0 = gamma0 / (2.0 * TwoPi);
+    const double B0 = 1.0 / sqrt(4 * PI_v<double>);
+    const double p0 = gamma0 / (4 * PI_v<double>);
     const double d0 = gamma0 * p0;
     const double v0 = 1.0;
     const double kt = otParams.kt;
@@ -365,19 +364,19 @@ public:
     Udata(i, j, k, ID) = d0;
 
     // rho*vx
-    Udata(i, j, k, IU) = static_cast<real_t>(-d0 * v0 * sin(yPos * TwoPi));
+    Udata(i, j, k, IU) = static_cast<real_t>(-d0 * v0 * sin(yPos * TWOPI_F));
 
     // rho*vy
-    Udata(i, j, k, IV) = static_cast<real_t>(d0 * v0 * sin(xPos * TwoPi));
+    Udata(i, j, k, IV) = static_cast<real_t>(d0 * v0 * sin(xPos * TWOPI_F));
 
     // rho*vz
     Udata(i, j, k, IW) = ZERO_F;
 
     // bx, by, bz
     Udata(i, j, k, IBX) =
-      -B0 * cos(2 * TwoPi * kt * (zPos - zmin) / (zmax - zmin)) * sin(yPos * TwoPi);
+      -B0 * cos(2 * TWOPI_F * kt * (zPos - zmin) / (zmax - zmin)) * sin(yPos * TWOPI_F);
     Udata(i, j, k, IBY) =
-      B0 * cos(2 * TwoPi * kt * (zPos - zmin) / (zmax - zmin)) * sin(2.0 * xPos * TwoPi);
+      B0 * cos(2 * TWOPI_F * kt * (zPos - zmin) / (zmax - zmin)) * sin(2.0 * xPos * TWOPI_F);
     Udata(i, j, k, IBZ) = 0.0;
 
   } // init_all_var_but_energy
@@ -394,9 +393,8 @@ public:
 
     const real_t gamma0 = params.settings.gamma0;
 
-    const double TwoPi = 4.0 * asin(1.0);
-    // const double B0    = 1.0/sqrt(2.0*TwoPi);
-    const double p0 = gamma0 / (2.0 * TwoPi);
+    // const double B0    = 1.0/sqrt(2.0*TWOPI_F);
+    const double p0 = gamma0 / (4 * PI_v<double>);
     // const double d0    = gamma0*p0;
     // const double v0    = 1.0;
 

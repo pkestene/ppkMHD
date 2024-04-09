@@ -313,9 +313,8 @@ public:
 
     const real_t gamma0 = params.settings.gamma0;
 
-    const double TwoPi = 4.0 * asin(1.0);
-    const double B0 = 1.0 / sqrt(2.0 * TwoPi);
-    const double p0 = gamma0 / (2.0 * TwoPi);
+    const double B0 = 1.0 / sqrt(4 * PI_v<double>);
+    const double p0 = gamma0 / (4 * PI_v<double>);
     const double d0 = gamma0 * p0;
     const double v0 = 1.0;
 
@@ -332,17 +331,17 @@ public:
       Udata(i, j, ID) = d0;
 
       // rho*vx
-      Udata(i, j, IU) = static_cast<real_t>(-d0 * v0 * sin(yPos * TwoPi));
+      Udata(i, j, IU) = static_cast<real_t>(-d0 * v0 * sin(yPos * TWOPI_F));
 
       // rho*vy
-      Udata(i, j, IV) = static_cast<real_t>(d0 * v0 * sin(xPos * TwoPi));
+      Udata(i, j, IV) = static_cast<real_t>(d0 * v0 * sin(xPos * TWOPI_F));
 
       // rho*vz
       Udata(i, j, IW) = ZERO_F;
 
       // bx, by, bz
-      Udata(i, j, IBX) = -B0 * sin(yPos * TwoPi);
-      Udata(i, j, IBY) = B0 * sin(2.0 * xPos * TwoPi);
+      Udata(i, j, IBX) = -B0 * sin(yPos * TWOPI_F);
+      Udata(i, j, IBY) = B0 * sin(2.0 * xPos * TWOPI_F);
       Udata(i, j, IBZ) = 0.0;
     }
 
@@ -524,7 +523,7 @@ public:
 
       const real_t d = rho1 + ramp * (rho2 - rho1);
       const real_t u = v1 + ramp * (v2 - v1);
-      const real_t v = w0 * sin(n * M_PI * x);
+      const real_t v = w0 * sin(n * PI_F * x);
 
       const real_t bx = 0.5;
       const real_t by = 0.0;
@@ -552,7 +551,7 @@ public:
 
       const real_t d = (y >= y1 and y <= y2) ? d_in : d_out;
       const real_t u = (y >= y1 and y <= y2) ? vflow_in : vflow_out;
-      const real_t v = w0 * sin(n * M_PI * x);
+      const real_t v = w0 * sin(n * PI_F * x);
 
       const real_t bx = 0.5;
       const real_t by = 0.0;
