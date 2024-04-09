@@ -33,9 +33,9 @@ If you build kokkos yourself, we advise you to always active HWLOC TPLS.
 Just make sure that your env variable `CMAKE_PREFIX_PATH` point to the location where Kokkos where installed. More precisely if Kokkos is installed in `KOKKOS_ROOT`, you add `$KOKKOS_ROOT/lib/cmake` to your `CMAKE_PREFIX_PATH`; this way kokkos will be found automagically by cmake, and the right Kokkos hardware backend will be selected.
 
 ```shell
-mkdir -p build; cd build
-cmake -DPPKMHD_BUILD_KOKKOS=OFF ..
-make
+# cd into ppkMHD toplevel sources
+cmake -S . -B _build/default -DPPKMHD_BUILD_KOKKOS=OFF
+cmake --build _build/default -j 6
 ```
 
 ### Build ppkMHD and kokkos without MPI activated for Kokkos-openmp backend
@@ -43,9 +43,9 @@ make
 * Create a build directory, configure and make
 
 ```shell
-mkdir build; cd build
-cmake -DPPKMHD_BUILD_KOKKOS=ON -DPPKMHD_USE_MPI=OFF -DPPKMHD_BACKEND=OpenMP -DKokkos_ENABLE_HWLOC=ON ..
-make -j 4
+# cd into ppkMHD toplevel sources
+cmake -S . -B _build/openmp -DPPKMHD_BUILD_KOKKOS=ON -DPPKMHD_USE_MPI=OFF -DPPKMHD_BACKEND=OpenMP -DKokkos_ENABLE_HWLOC=ON
+cmake --build _build/openmp -j 6
 ```
 
 Add variable CXX on the cmake command line to change the compiler (clang++, icpc, pgcc, ....).
@@ -55,9 +55,11 @@ Add variable CXX on the cmake command line to change the compiler (clang++, icpc
 * Create a build directory, configure and make
 
 ```shell
-mkdir build; cd build
-cmake -DPPKMHD_BUILD_KOKKOS=ON -DPPKMHD_USE_MPI=OFF -DPPKMHD_BACKEND=Cuda -DKokkos_ARCH_TURING75=ON ..
-make -j 4
+# cd into ppkMHD toplevel sources
+cmake -S . -B _build/cuda -DPPKMHD_BUILD_KOKKOS=ON -DPPKMHD_USE_MPI=OFF -DPPKMHD_BACKEND=Cuda
+# note: GPU architecture will be detected when building on a host with a GPU; if you're building on a host, and running on another machine
+# you'll need to tell kokkos what is the target architecture, e.g. add flag like '-DKokkos_ARCH_TURING75=ON' on the cmake configure line
+cmake --build _build/cuda -j 6
 ```
 
 ### Build ppkMHD with MPI activated for Kokkos-cuda backend
