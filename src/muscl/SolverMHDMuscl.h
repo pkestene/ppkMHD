@@ -694,7 +694,7 @@ SolverMHDMuscl<dim>::compute_dt_local()
     typename std::conditional<dim == 2, ComputeDtFunctor2D_MHD, ComputeDtFunctor3D_MHD>::type;
 
   // call device functor
-  ComputeDtFunctor::apply(params, Udata, nbCells, invDt);
+  ComputeDtFunctor::apply(params, Udata, invDt);
 
   dt = params.settings.cfl / invDt;
 
@@ -811,7 +811,7 @@ SolverMHDMuscl<dim>::convertToPrimitives(DataArray Udata)
     conditional<dim == 2, ConvertToPrimitivesFunctor2D_MHD, ConvertToPrimitivesFunctor3D_MHD>::type;
 
   // call device functor
-  ConvertToPrimitivesFunctor::apply(params, Udata, Q, nbCells);
+  ConvertToPrimitivesFunctor::apply(params, Udata, Q);
 
 } // SolverMHDMuscl::convertToPrimitives
 

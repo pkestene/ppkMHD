@@ -1,11 +1,6 @@
 #ifndef HYDRO_RUN_FUNCTORS_2D_H_
 #define HYDRO_RUN_FUNCTORS_2D_H_
 
-#include <limits> // for std::numeric_limits
-#ifdef __CUDA_ARCH__
-#  include <math_constants.h> // for cuda math constants, e.g. CUDART_INF
-#endif                        // __CUDA_ARCH__
-
 #include "shared/kokkos_shared.h"
 #include "HydroBaseFunctor2D.h"
 #include "shared/RiemannSolvers.h"
@@ -34,43 +29,29 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, DataArray2d Udata, int nbCells, real_t & invDt)
+  apply(HydroParams params, DataArray2d Udata, real_t & invDt)
   {
-    ComputeDtFunctor2D functor(params, Udata);
-    Kokkos::parallel_reduce(nbCells, functor, invDt);
+    ComputeDtFunctor2D  functor(params, Udata);
+    Kokkos::Max<real_t> reducer(invDt);
+    Kokkos::parallel_reduce(
+      "ComputeDtFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor,
+      reducer);
   }
-
-  // Tell each thread how to initialize its reduction result.
-  KOKKOS_INLINE_FUNCTION
-  void
-  init(real_t & dst) const
-  {
-    // The identity under max is -Inf.
-    // Kokkos does not come with a portable way to access
-    // floating-point Inf and NaN.
-#ifdef __CUDA_ARCH__
-    dst = -CUDART_INF;
-#else
-    dst = std::numeric_limits<real_t>::min();
-#endif // __CUDA_ARCH__
-  }    // init
 
   /* this is a reduce (max) functor */
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index, real_t & invDt) const
+  operator()(const int & i, const int & j, real_t & invDt) const
   {
-    const int isize = params.isize;
-    const int jsize = params.jsize;
-    const int ghostWidth = params.ghostWidth;
-    // const int nbvar = params.nbvar;
+    const int    isize = params.isize;
+    const int    jsize = params.jsize;
+    const int    ghostWidth = params.ghostWidth;
     const real_t dx = params.dx;
     const real_t dy = params.dy;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j < jsize - ghostWidth && i >= ghostWidth && i < isize - ghostWidth)
+    if (j >= ghostWidth and j < jsize - ghostWidth and i >= ghostWidth and i < isize - ghostWidth)
     {
 
       HydroState uLoc; // conservative    variables in current cell
@@ -93,28 +74,6 @@ public:
     }
 
   } // operator ()
-
-
-  // "Join" intermediate results from different threads.
-  // This should normally implement the same reduction
-  // operation as operator() above. Note that both input
-  // arguments MUST be declared volatile.
-  KOKKOS_INLINE_FUNCTION
-#if KOKKOS_VERSION_MAJOR > 3
-  void
-  join(real_t & dst, const real_t & src) const
-#else
-  void
-  join(volatile real_t & dst, const volatile real_t & src) const
-#endif
-  {
-    // max reduce
-    if (dst < src)
-    {
-      dst = src;
-    }
-  } // join
-
 
   DataArray2d Udata;
 
@@ -148,36 +107,21 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams   params,
-        real_t        cfl,
-        VectorField2d gravity,
-        DataArray2d   Udata,
-        int           nbCells,
-        real_t &      invDt)
+  apply(HydroParams params, real_t cfl, VectorField2d gravity, DataArray2d Udata, real_t & invDt)
   {
     ComputeDtGravityFunctor2D functor(params, cfl, gravity, Udata);
-    Kokkos::parallel_reduce(nbCells, functor, invDt);
+    Kokkos::Max<real_t>       reducer(invDt);
+    Kokkos::parallel_reduce(
+      "ComputeDtGravityFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor,
+      reducer);
   }
-
-  // Tell each thread how to initialize its reduction result.
-  KOKKOS_INLINE_FUNCTION
-  void
-  init(real_t & dst) const
-  {
-    // The identity under max is -Inf.
-    // Kokkos does not come with a portable way to access
-    // floating-point Inf and NaN.
-#ifdef __CUDA_ARCH__
-    dst = -CUDART_INF;
-#else
-    dst = std::numeric_limits<real_t>::min();
-#endif // __CUDA_ARCH__
-  }    // init
 
   /* this is a reduce (max) functor */
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index, real_t & invDt) const
+  operator()(const int & i, const int & j, real_t & invDt) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
@@ -185,10 +129,7 @@ public:
     // const int nbvar = params.nbvar;
     const real_t dx = fmin(params.dx, params.dy);
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j < jsize - ghostWidth && i >= ghostWidth && i < isize - ghostWidth)
+    if (j >= ghostWidth and j < jsize - ghostWidth and i >= ghostWidth and i < isize - ghostWidth)
     {
 
       HydroState uLoc; // conservative    variables in current cell
@@ -229,27 +170,6 @@ public:
 
   } // operator ()
 
-
-  // "Join" intermediate results from different threads.
-  // This should normally implement the same reduction
-  // operation as operator() above. Note that both input
-  // arguments MUST be declared volatile.
-  KOKKOS_INLINE_FUNCTION
-#if KOKKOS_VERSION_MAJOR > 3
-  void
-  join(real_t & dst, const real_t & src) const
-#else
-  void
-  join(volatile real_t & dst, const volatile real_t & src) const
-#endif
-  {
-    // max reduce
-    if (dst < src)
-    {
-      dst = src;
-    }
-  } // join
-
   real_t        cfl;
   VectorField2d gravity;
   DataArray2d   Udata;
@@ -279,23 +199,22 @@ public:
   static void
   apply(HydroParams params, DataArray2d Udata, DataArray2d Qdata)
   {
-    int                          nbCells = params.isize * params.jsize;
     ConvertToPrimitivesFunctor2D functor(params, Udata, Qdata);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "ConvertToPrimitivesFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     // const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= 0 && j < jsize && i >= 0 && i < isize)
+    if (j >= 0 and j < jsize and i >= 0 and i < isize)
     {
 
       HydroState uLoc; // conservative    variables in current cell
@@ -360,16 +279,13 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j <= jsize - ghostWidth && i >= ghostWidth && i <= isize - ghostWidth)
+    if (j >= ghostWidth and j <= jsize - ghostWidth and i >= ghostWidth and i <= isize - ghostWidth)
     {
 
       HydroState qleft, qright;
@@ -478,16 +394,13 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= 1 && j <= jsize - ghostWidth && i >= 1 && i <= isize - ghostWidth)
+    if (j >= 1 and j <= jsize - ghostWidth and i >= 1 and i <= isize - ghostWidth)
     {
 
       HydroState qLoc; // local primitive variables
@@ -614,24 +527,23 @@ public:
         bool          gravity_enabled,
         VectorField2d gravity)
   {
-    int                            nbCells = params.isize * params.jsize;
     ComputeAndStoreFluxesFunctor2D functor(
       params, Qdata, FluxData_x, FluxData_y, dt, gravity_enabled, gravity);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "ComputeAndStoreFluxesFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j <= jsize - ghostWidth && i >= ghostWidth && i <= isize - ghostWidth)
+    if (j >= ghostWidth and j <= jsize - ghostWidth and i >= ghostWidth and i <= isize - ghostWidth)
     {
 
       // local primitive variables
@@ -876,23 +788,22 @@ public:
   static void
   apply(HydroParams params, DataArray2d Udata, DataArray2d FluxData_x, DataArray2d FluxData_y)
   {
-    int             nbCells = params.isize * params.jsize;
     UpdateFunctor2D functor(params, Udata, FluxData_x, FluxData_y);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "UpdateFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j < jsize - ghostWidth && i >= ghostWidth && i < isize - ghostWidth)
+    if (j >= ghostWidth and j < jsize - ghostWidth and i >= ghostWidth and i < isize - ghostWidth)
     {
 
       Udata(i, j, ID) += FluxData_x(i, j, ID);
@@ -950,23 +861,22 @@ public:
   static void
   apply(HydroParams params, DataArray2d Udata, DataArray2d FluxData)
   {
-    int                     nbCells = params.isize * params.jsize;
     UpdateDirFunctor2D<dir> functor(params, Udata, FluxData);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "UpdateDirFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j < jsize - ghostWidth && i >= ghostWidth && i < isize - ghostWidth)
+    if (j >= ghostWidth and j < jsize - ghostWidth and i >= ghostWidth and i < isize - ghostWidth)
     {
 
       if (dir == XDIR)
@@ -1033,23 +943,22 @@ public:
   static void
   apply(HydroParams params, DataArray2d Qdata, DataArray2d Slopes_x, DataArray2d Slopes_y)
   {
-    int                    nbCells = params.isize * params.jsize;
     ComputeSlopesFunctor2D functor(params, Qdata, Slopes_x, Slopes_y);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "ComputeSlopesFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth - 1 && j <= jsize - ghostWidth && i >= ghostWidth - 1 &&
+    if (j >= ghostWidth - 1 and j <= jsize - ghostWidth and i >= ghostWidth - 1 and
         i <= isize - ghostWidth)
     {
 
@@ -1164,24 +1073,23 @@ public:
         bool          gravity_enabled,
         VectorField2d gravity)
   {
-    int                                  nbCells = params.isize * params.jsize;
     ComputeTraceAndFluxes_Functor2D<dir> functor(
       params, Qdata, Slopes_x, Slopes_y, Fluxes, dt, gravity_enabled, gravity);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "ComputeTraceAndFluxes_Functor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j <= jsize - ghostWidth && i >= ghostWidth && i <= isize - ghostWidth)
+    if (j >= ghostWidth and j <= jsize - ghostWidth and i >= ghostWidth and i <= isize - ghostWidth)
     {
 
       // local primitive variables
@@ -1381,23 +1289,22 @@ public:
         VectorField2d gravity,
         real_t        dt)
   {
-    int                        nbCells = params.isize * params.jsize;
     GravitySourceTermFunctor2D functor(params, Udata_in, Udata_out, gravity, dt);
-    Kokkos::parallel_for(nbCells, functor);
+    Kokkos::parallel_for(
+      "GravitySourceTermFunctor2D",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     const int isize = params.isize;
     const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
-    if (j >= ghostWidth && j < jsize - ghostWidth && i >= ghostWidth && i < isize - ghostWidth)
+    if (j >= ghostWidth and j < jsize - ghostWidth and i >= ghostWidth and i < isize - ghostWidth)
     {
 
       real_t rhoOld = Udata_in(i, j, ID);

@@ -678,7 +678,7 @@ SolverHydroMuscl<dim>::compute_dt_local()
       conditional<dim == 2, ComputeDtGravityFunctor2D, ComputeDtGravityFunctor3D>::type;
 
     // call device functor
-    ComputeDtFunctor::apply(params, params.settings.cfl, gravity, Udata, nbCells, invDt);
+    ComputeDtFunctor::apply(params, params.settings.cfl, gravity, Udata, invDt);
   }
   else
   {
@@ -690,7 +690,7 @@ SolverHydroMuscl<dim>::compute_dt_local()
       typename std::conditional<dim == 2, ComputeDtFunctor2D, ComputeDtFunctor3D>::type;
 
     // call device functor
-    ComputeDtFunctor::apply(params, Udata, nbCells, invDt);
+    ComputeDtFunctor::apply(params, Udata, invDt);
   }
 
   dt = params.settings.cfl / invDt;
