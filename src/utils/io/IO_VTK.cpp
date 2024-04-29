@@ -93,14 +93,16 @@ save_VTK_2D(DataArray2d                        Udata,
     outFile << "<?xml version=\"1.0\"?>\n";
 
   // write xml data header
+  // clang-format off
   if (isBigEndian())
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"BigEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"BigEndian\" header_type=\"UInt64\">\n";
   }
   else
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n";
   }
+  // clang-format on
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << 0 << " " << nx << " " << 0 << " " << ny << " " << 0
@@ -170,8 +172,7 @@ save_VTK_2D(DataArray2d                        Udata,
         outFile << "     <DataArray type=\"Float32\" Name=\"";
       }
       outFile << variables_names.at(iVar) << "\" format=\"appended\" offset=\""
-              << iVar * nx * ny * sizeof(real_t) + iVar * sizeof(unsigned int) << "\" />"
-              << std::endl;
+              << iVar * nx * ny * sizeof(real_t) + iVar * sizeof(uint64_t) << "\" />" << std::endl;
     }
 
     outFile << "    </CellData>" << std::endl;
@@ -184,10 +185,10 @@ save_VTK_2D(DataArray2d                        Udata,
     outFile << "_";
     // then write heavy data (column major format)
     {
-      unsigned int nbOfWords = nx * ny * sizeof(real_t);
+      uint64_t nbOfWords = nx * ny * sizeof(real_t);
       for (int iVar = 0; iVar < nbvar; iVar++)
       {
-        outFile.write((char *)&nbOfWords, sizeof(unsigned int));
+        outFile.write((char *)&nbOfWords, sizeof(uint64_t));
         for (int j = jmin + ghostWidth; j <= jmax - ghostWidth; j++)
           for (int i = imin + ghostWidth; i <= imax - ghostWidth; i++)
           {
@@ -241,11 +242,11 @@ save_VTK_3D(DataArray3d                        Udata,
   const int kmin = params.kmin;
   const int kmax = params.kmax;
 
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int ksize = params.ksize;
-  const int ijsize = isize * jsize;
-  const int nbCells = isize * jsize * ksize;
+  const int      isize = params.isize;
+  const int      jsize = params.jsize;
+  const int      ksize = params.ksize;
+  const uint64_t ijsize = isize * jsize;
+  const uint64_t nbCells = isize * jsize * ksize;
 
 
   const int ghostWidth = params.ghostWidth;
@@ -292,14 +293,16 @@ save_VTK_3D(DataArray3d                        Udata,
     outFile << "<?xml version=\"1.0\"?>\n";
 
   // write xml data header
+  // clang-format off
   if (isBigEndian())
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"BigEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"BigEndian\" header_type=\"UInt64\">\n";
   }
   else
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n";
   }
+  // clang-format on
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << 0 << " " << nx << " " << 0 << " " << ny << " " << 0
@@ -328,7 +331,7 @@ save_VTK_3D(DataArray3d                        Udata,
         outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
 
-      for (int index = 0; index < nbCells; ++index)
+      for (uint64_t index = 0; index < nbCells; ++index)
       {
         // index2coord(index,i,j,k,isize,jsize,ksize);
 
@@ -370,7 +373,7 @@ save_VTK_3D(DataArray3d                        Udata,
         outFile << "     <DataArray type=\"Float32\" Name=\"";
       }
       outFile << variables_names.at(iVar) << "\" format=\"appended\" offset=\""
-              << iVar * nx * ny * nz * sizeof(real_t) + iVar * sizeof(unsigned int) << "\" />"
+              << iVar * nx * ny * nz * sizeof(real_t) + iVar * sizeof(uint64_t) << "\" />"
               << std::endl;
     }
 
@@ -385,10 +388,10 @@ save_VTK_3D(DataArray3d                        Udata,
 
     // then write heavy data (column major format)
     {
-      unsigned int nbOfWords = nx * ny * nz * sizeof(real_t);
+      uint64_t nbOfWords = nx * ny * nz * sizeof(real_t);
       for (int iVar = 0; iVar < nbvar; iVar++)
       {
-        outFile.write((char *)&nbOfWords, sizeof(unsigned int));
+        outFile.write((char *)&nbOfWords, sizeof(uint64_t));
         for (int k = kmin + ghostWidth; k <= kmax - ghostWidth; k++)
           for (int j = jmin + ghostWidth; j <= jmax - ghostWidth; j++)
             for (int i = imin + ghostWidth; i <= imax - ghostWidth; i++)
@@ -437,9 +440,9 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
   const real_t dy = params.dy;
   const real_t dz = 0.0;
 
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int nbCells = isize * jsize;
+  const uint64_t isize = params.isize;
+  const uint64_t jsize = params.jsize;
+  const uint64_t nbCells = isize * jsize;
 
   int xmin = 0, xmax = 0, ymin = 0, ymax = 0;
 
@@ -507,14 +510,16 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
     outFile << "<?xml version=\"1.0\"?>\n";
 
   // write xml data header
+  // clang-format off
   if (isBigEndian())
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"BigEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"BigEndian\" header_type=\"UInt64\">\n";
   }
   else
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n";
   }
+  // clang-format on
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << xmin << " " << xmax << " " << ymin << " " << ymax
@@ -543,7 +548,7 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
         outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
 
-      for (int index = 0; index < nbCells; ++index)
+      for (uint64_t index = 0; index < nbCells; ++index)
       {
         // index2coord(index,i,j,isize,jsize);
 
@@ -586,8 +591,7 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
         outFile << "     <DataArray type=\"Float32\" Name=\"";
       }
       outFile << variables_names.at(iVar) << "\" format=\"appended\" offset=\""
-              << iVar * nx * ny * sizeof(real_t) + iVar * sizeof(unsigned int) << "\" />"
-              << std::endl;
+              << iVar * nx * ny * sizeof(real_t) + iVar * sizeof(uint64_t) << "\" />" << std::endl;
     }
 
     outFile << "    </CellData>" << std::endl;
@@ -600,10 +604,10 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
     outFile << "_";
     // then write heavy data (column major format)
     {
-      unsigned int nbOfWords = nx * ny * sizeof(real_t);
+      uint64_t nbOfWords = nx * ny * sizeof(real_t);
       for (int iVar = 0; iVar < nbvar; iVar++)
       {
-        outFile.write((char *)&nbOfWords, sizeof(unsigned int));
+        outFile.write((char *)&nbOfWords, sizeof(uint64_t));
         for (int j = jmin + ghostWidth; j <= jmax - ghostWidth; j++)
           for (int i = imin + ghostWidth; i <= imax - ghostWidth; i++)
           {
@@ -658,11 +662,11 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
   const real_t dy = params.dy;
   const real_t dz = params.dz;
 
-  const int isize = params.isize;
-  const int jsize = params.jsize;
-  const int ksize = params.ksize;
-  const int ijsize = isize * jsize;
-  const int nbCells = isize * jsize * ksize;
+  const int      isize = params.isize;
+  const int      jsize = params.jsize;
+  const int      ksize = params.ksize;
+  const uint64_t ijsize = isize * jsize;
+  const uint64_t nbCells = isize * jsize * ksize;
 
   int xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
   xmin = params.myMpiPos[0] * nx;
@@ -731,14 +735,16 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
     outFile << "<?xml version=\"1.0\"?>\n";
 
   // write xml data header
+  // clang-format off
   if (isBigEndian())
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"BigEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"BigEndian\" header_type=\"UInt64\">\n";
   }
   else
   {
-    outFile << "<VTKFile type=\"ImageData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    outFile << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n";
   }
+  // clang-format on
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << xmin << " " << xmax << " " << ymin << " " << ymax
@@ -767,7 +773,7 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
         outFile << "Float32";
       outFile << "\" Name=\"" << variables_names.at(iVar) << "\" format=\"ascii\" >\n";
 
-      for (int index = 0; index < nbCells; ++index)
+      for (uint64_t index = 0; index < nbCells; ++index)
       {
         // index2coord(index,i,j,k,isize,jsize,ksize);
 
@@ -811,7 +817,7 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
         outFile << "     <DataArray type=\"Float32\" Name=\"";
       }
       outFile << variables_names.at(iVar) << "\" format=\"appended\" offset=\""
-              << iVar * nx * ny * nz * sizeof(real_t) + iVar * sizeof(unsigned int) << "\" />"
+              << iVar * nx * ny * nz * sizeof(real_t) + iVar * sizeof(uint64_t) << "\" />"
               << std::endl;
     }
 
@@ -825,10 +831,10 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
     outFile << "_";
     // then write heavy data (column major format)
     {
-      unsigned int nbOfWords = nx * ny * nz * sizeof(real_t);
+      uint64_t nbOfWords = nx * ny * nz * sizeof(real_t);
       for (int iVar = 0; iVar < nbvar; iVar++)
       {
-        outFile.write((char *)&nbOfWords, sizeof(unsigned int));
+        outFile.write((char *)&nbOfWords, sizeof(uint64_t));
         for (int k = kmin + ghostWidth; k <= kmax - ghostWidth; k++)
         {
           for (int j = jmin + ghostWidth; j <= jmax - ghostWidth; j++)
@@ -838,9 +844,9 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
               real_t tmp = Uhost(i, j, k, iVar);
               outFile.write((char *)&tmp, sizeof(real_t));
             } // for i
-          }   // for j
-        }     // for k
-      }       // for iVar
+          } // for j
+        } // for k
+      } // for iVar
     }
 
     outFile << "  </AppendedData>" << std::endl;
@@ -908,10 +914,12 @@ write_pvti_header(std::string                        headerFilename,
 
   outHeader << "<?xml version=\"1.0\"?>" << std::endl;
   if (isBigEndian())
-    outHeader << "<VTKFile type=\"PImageData\" version=\"0.1\" byte_order=\"BigEndian\""
+    outHeader << "<VTKFile type=\"PImageData\" version=\"1.0\" byte_order=\"BigEndian\" "
+                 "header_type=\"UInt64\""
               << compressor << ">" << std::endl;
   else
-    outHeader << "<VTKFile type=\"PImageData\" version=\"0.1\" byte_order=\"LittleEndian\""
+    outHeader << "<VTKFile type=\"PImageData\" version=\"1.0\" byte_order=\"LittleEndian\" "
+                 "header_type=\"UInt64\""
               << compressor << ">" << std::endl;
   outHeader << "  <PImageData WholeExtent=\"";
   outHeader << 0 << " " << mx * nx << " ";
