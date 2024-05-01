@@ -162,7 +162,6 @@ public:
   save_solution_impl();
 
   int isize, jsize, ksize;
-  int nbCells;
 
 }; // class SolverHydroMuscl
 
@@ -190,15 +189,11 @@ SolverHydroMuscl<dim>::SolverHydroMuscl(HydroParams & params, ConfigMap & config
   , isize(params.isize)
   , jsize(params.jsize)
   , ksize(params.ksize)
-  , nbCells(params.isize * params.jsize)
 {
 
   solver_type = SOLVER_MUSCL_HANCOCK;
 
-  if (dim == 3)
-    nbCells = params.isize * params.jsize * params.ksize;
-
-  m_nCells = nbCells;
+  m_nCells = dim == 2 ? params.isize * params.jsize : params.isize * params.jsize * params.ksize;
   m_nDofsPerCell = 1;
 
   int nbvar = params.nbvar;
@@ -377,7 +372,7 @@ SolverHydroMuscl<dim>::init_implode(DataArray Udata)
     typename std::conditional<dim == 2, InitImplodeFunctor2D, InitImplodeFunctor3D>::type;
 
   // perform init
-  InitImplodeFunctor::apply(params, iparams, Udata, nbCells);
+  InitImplodeFunctor::apply(params, iparams, Udata);
 
 } // SolverHydroMuscl::init_implode
 
@@ -399,7 +394,7 @@ SolverHydroMuscl<dim>::init_blast(DataArray Udata)
     typename std::conditional<dim == 2, InitBlastFunctor2D, InitBlastFunctor3D>::type;
 
   // perform init
-  InitBlastFunctor::apply(params, blastParams, Udata, nbCells);
+  InitBlastFunctor::apply(params, blastParams, Udata);
 
 } // SolverHydroMuscl::init_blast
 
@@ -427,7 +422,7 @@ SolverHydroMuscl<dim>::init_kelvin_helmholtz(DataArray Udata)
     conditional<dim == 2, InitKelvinHelmholtzFunctor2D, InitKelvinHelmholtzFunctor3D>::type;
 
   // perform init
-  InitKelvinHelmholtzFunctor::apply(params, khParams, Udata, nbCells);
+  InitKelvinHelmholtzFunctor::apply(params, khParams, Udata);
 
 } // SolverHydroMuscl::init_kelvin_helmholtz
 
@@ -453,7 +448,7 @@ SolverHydroMuscl<dim>::init_gresho_vortex(DataArray Udata)
     typename std::conditional<dim == 2, InitGreshoVortexFunctor2D, InitGreshoVortexFunctor3D>::type;
 
   // perform init
-  InitGreshoVortexFunctor::apply(params, gvParams, Udata, nbCells);
+  InitGreshoVortexFunctor::apply(params, gvParams, Udata);
 
 } // SolverHydroMuscl<dim>::init_gresho_vortex
 

@@ -196,7 +196,7 @@ public:
   {
     ComputeFluxesAndStoreFunctor2D_MHD functor(
       params, Qm_x, Qm_y, Qp_x, Qp_y, Flux_x, Flux_y, dtdx, dtdy);
-    Kokkos::parallel_for(
+    Kokkos::parallel_for("ComputeFluxesAndStoreFunctor2D_MHD",
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }), functor);
   }
 
@@ -289,7 +289,7 @@ public:
   {
     ComputeEmfAndStoreFunctor2D functor(
       params, QEdge_RT, QEdge_RB, QEdge_LT, QEdge_LB, Emf, dtdx, dtdy);
-    Kokkos::parallel_for(
+    Kokkos::parallel_for("ComputeEmfAndStoreFunctor2D",
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }), functor);
   }
 
@@ -394,7 +394,7 @@ public:
                                       QEdge_LB,
                                       dtdx,
                                       dtdy);
-    Kokkos::parallel_for(
+    Kokkos::parallel_for("ComputeTraceFunctor2D_MHD",
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }), functor);
   }
 
@@ -492,7 +492,7 @@ public:
         real_t      dtdy)
   {
     UpdateFunctor2D_MHD functor(params, Udata, FluxData_x, FluxData_y, dtdx, dtdy);
-    Kokkos::parallel_for(
+    Kokkos::parallel_for("UpdateFunctor2D_MHD",
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }), functor);
   }
 
@@ -590,7 +590,7 @@ public:
   apply(HydroParams params, DataArray2d Udata, DataArrayScalar Emf, real_t dtdx, real_t dtdy)
   {
     UpdateEmfFunctor2D functor(params, Udata, Emf, dtdx, dtdy);
-    Kokkos::parallel_for(
+    Kokkos::parallel_for("UpdateEmfFunctor2D",
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }), functor);
   }
 

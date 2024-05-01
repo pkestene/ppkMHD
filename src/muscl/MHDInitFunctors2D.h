@@ -44,19 +44,20 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, ImplodeParams iparams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, ImplodeParams iparams, DataArray2d Udata)
   {
     InitImplodeFunctor2D_MHD functor(params, iparams, Udata);
-    Kokkos::parallel_for("InitImplodeFunctor2D_MHD", Kokkos::RangePolicy<>(0, nbCells), functor);
+    Kokkos::parallel_for(
+      "InitImplodeFunctor2D_MHD",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
 
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
 #ifdef USE_MPI
@@ -77,9 +78,6 @@ public:
     const real_t dy = params.dy;
 
     const real_t gamma0 = params.settings.gamma0;
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
     real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
@@ -138,7 +136,7 @@ public:
   ImplodeParams iparams;
   DataArray2d   Udata;
 
-}; // InitImplodeFunctor
+}; // InitImplodeFunctor2D_MHD
 
 /*************************************************/
 /*************************************************/
@@ -154,19 +152,20 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, BlastParams bParams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, BlastParams bParams, DataArray2d Udata)
   {
     InitBlastFunctor2D_MHD functor(params, bParams, Udata);
-    Kokkos::parallel_for("InitBlastFunctor2D_MHD", Kokkos::RangePolicy<>(0, nbCells), functor);
+    Kokkos::parallel_for(
+      "InitBlastFunctor2D_MHD",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
 
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
 #ifdef USE_MPI
@@ -197,10 +196,6 @@ public:
     const real_t blast_density_out = bParams.blast_density_out;
     const real_t blast_pressure_in = bParams.blast_pressure_in;
     const real_t blast_pressure_out = bParams.blast_pressure_out;
-
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
     real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
@@ -262,36 +257,38 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, OrszagTangParams otParams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, OrszagTangParams otParams, DataArray2d Udata)
   {
     InitOrszagTangFunctor2D functor(params, otParams, Udata);
 
     functor.phase = INIT_ALL_VAR_BUT_ENERGY;
-    Kokkos::parallel_for("InitOrszagTangFunctor2D INIT_ALL_VAR_BUT_ENERGY",
-                         Kokkos::RangePolicy<>(0, nbCells),
-                         functor);
+    Kokkos::parallel_for(
+      "InitOrszagTangFunctor2D INIT_ALL_VAR_BUT_ENERGY",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
 
     functor.phase = INIT_ENERGY;
-    Kokkos::parallel_for("InitOrszagTangFunctor2D INIT_ENERGY            ",
-                         Kokkos::RangePolicy<>(0, nbCells),
-                         functor);
+    Kokkos::parallel_for(
+      "InitOrszagTangFunctor2D INIT_ENERGY",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
 
     if (phase == INIT_ALL_VAR_BUT_ENERGY)
-      init_all_var_but_energy(index);
+      init_all_var_but_energy(i, j);
     else if (phase == INIT_ENERGY)
-      init_energy(index);
+      init_energy(i, j);
 
   } // end operator ()
 
   KOKKOS_INLINE_FUNCTION
   void
-  init_all_var_but_energy(const int index) const
+  init_all_var_but_energy(const int & i, const int & j) const
   {
 
     const int isize = params.isize;
@@ -322,9 +319,6 @@ public:
     const double d0 = gamma0 * p0;
     const double v0 = 1.0;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
     double xPos = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
     double yPos = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
 
@@ -353,7 +347,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void
-  init_energy(const int index) const
+  init_energy(const int & i, const int & j) const
   {
 
     const int isize = params.isize;
@@ -373,9 +367,6 @@ public:
     const double p0 = gamma0 / (2.0 * TwoPi);
     // const double d0    = gamma0*p0;
     // const double v0    = 1.0;
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     // double xPos = xmin + dx/2 + (i+nx*i_mpi-ghostWidth)*dx;
     // double yPos = ymin + dy/2 + (j+ny*j_mpi-ghostWidth)*dy;
@@ -413,20 +404,20 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, KHParams khParams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, KHParams khParams, DataArray2d Udata)
   {
     InitKelvinHelmholtzFunctor2D_MHD functor(params, khParams, Udata);
     Kokkos::parallel_for(
-      "InitKelvinHelmholtzFunctor2D_MHD", Kokkos::RangePolicy<>(0, nbCells), functor);
+      "InitKelvinHelmholtzFunctor2D_MHD",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
 
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
 #ifdef USE_MPI
@@ -455,9 +446,6 @@ public:
     const real_t vflow_out = khParams.vflow_out;
     const real_t ampl = khParams.amplitude;
     const real_t pressure = khParams.pressure;
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
     real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
@@ -608,19 +596,20 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, RotorParams rParams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, RotorParams rParams, DataArray2d Udata)
   {
     InitRotorFunctor2D_MHD functor(params, rParams, Udata);
-    Kokkos::parallel_for("InitRotorFunctor2D_MHD", Kokkos::RangePolicy<>(0, nbCells), functor);
+    Kokkos::parallel_for(
+      "InitRotorFunctor2D_MHD",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
 
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
 #ifdef USE_MPI
@@ -653,9 +642,6 @@ public:
 
     const real_t xCenter = (xmax + xmin) / 2;
     const real_t yCenter = (ymax + ymin) / 2;
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
     real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
@@ -745,10 +731,7 @@ public:
   struct TagInitEnergy
   {};
 
-  InitFieldLoopFunctor2D_MHD(HydroParams     params,
-                             FieldLoopParams flParams,
-                             DataArray2d     Udata,
-                             int             nbCells)
+  InitFieldLoopFunctor2D_MHD(HydroParams params, FieldLoopParams flParams, DataArray2d Udata)
     : MHDBaseFunctor2D(params)
     , flParams(flParams)
     , Udata(Udata)
@@ -758,52 +741,53 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, FieldLoopParams flParams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, FieldLoopParams flParams, DataArray2d Udata)
   {
-    InitFieldLoopFunctor2D_MHD functor(params, flParams, Udata, nbCells);
+    InitFieldLoopFunctor2D_MHD functor(params, flParams, Udata);
 
     functor.phase = COMPUTE_VECTOR_POTENTIAL;
-    Kokkos::parallel_for("InitFieldLoopFunctor2D_MHD COMPUTE_VECTOR_POTENTIAL",
-                         Kokkos::RangePolicy<>(0, nbCells),
-                         functor);
+    Kokkos::parallel_for(
+      "InitFieldLoopFunctor2D_MHD COMPUTE_VECTOR_POTENTIAL",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
 
     functor.phase = DO_INIT_CONDITION;
-    Kokkos::parallel_for("InitFieldLoopFunctor2D_MHD DO_INIT_CONDITION       ",
-                         Kokkos::RangePolicy<>(0, nbCells),
-                         functor);
+    Kokkos::parallel_for(
+      "InitFieldLoopFunctor2D_MHD DO_INIT_CONDITION",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
 
     functor.phase = DO_INIT_ENERGY;
-    Kokkos::parallel_for("InitFieldLoopFunctor2D_MHD DO_INIT_ENERGY          ",
-                         Kokkos::RangePolicy<>(0, nbCells),
-                         functor);
+    Kokkos::parallel_for(
+      "InitFieldLoopFunctor2D_MHD DO_INIT_ENERGY",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
 
   } // apply
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {
     if (phase == COMPUTE_VECTOR_POTENTIAL)
     {
-      compute_vector_potential(index);
+      compute_vector_potential(i, j);
     }
     else if (phase == DO_INIT_CONDITION)
     {
-      do_init_condition(index);
+      do_init_condition(i, j);
     }
     else if (phase == DO_INIT_ENERGY)
     {
-      do_init_energy(index);
+      do_init_energy(i, j);
     }
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  compute_vector_potential(const int & index) const
+  compute_vector_potential(const int & i, const int & j) const
   {
 
-    const int isize = params.isize;
-    const int jsize = params.jsize;
     const int ghostWidth = params.ghostWidth;
 
     const int nx = params.nx;
@@ -827,9 +811,6 @@ public:
     const real_t radius = flParams.radius;
     const real_t amplitude = flParams.amplitude;
 
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
-
     real_t x = xmin + dx / 2 + (i + nx * i_mpi - ghostWidth) * dx;
     real_t y = ymin + dy / 2 + (j + ny * j_mpi - ghostWidth) * dy;
 
@@ -847,7 +828,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void
-  do_init_condition(const int & index) const
+  do_init_condition(const int & i, const int & j) const
   {
 
     const int isize = params.isize;
@@ -882,10 +863,6 @@ public:
 
     const real_t cos_theta = 2.0 / sqrt(5.0);
     const real_t sin_theta = sqrt(1 - cos_theta * cos_theta);
-
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     if (i >= ghostWidth and i < isize - ghostWidth and j >= ghostWidth and j < jsize - ghostWidth)
     {
@@ -927,7 +904,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void
-  do_init_energy(const int & index) const
+  do_init_energy(const int & i, const int & j) const
   {
 
     const int isize = params.isize;
@@ -935,9 +912,6 @@ public:
     const int ghostWidth = params.ghostWidth;
 
     const real_t gamma0 = params.settings.gamma0;
-
-    int i, j;
-    index2coord(index, i, j, isize, jsize);
 
     if (i >= ghostWidth and i < isize - ghostWidth and j >= ghostWidth and j < jsize - ghostWidth)
     {
@@ -984,17 +958,20 @@ public:
 
   // static method which does it all: create and execute functor
   static void
-  apply(HydroParams params, WaveParams wParams, DataArray2d Udata, int nbCells)
+  apply(HydroParams params, WaveParams wParams, DataArray2d Udata)
   {
 
     InitWaveFunctor2D_MHD functor(params, wParams, Udata);
 
-    Kokkos::parallel_for("InitWaveFunctor2D_MHD", Kokkos::RangePolicy<>(0, nbCells), functor);
+    Kokkos::parallel_for(
+      "InitWaveFunctor2D_MHD",
+      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({ 0, 0 }, { params.isize, params.jsize }),
+      functor);
   }
 
   KOKKOS_INLINE_FUNCTION
   void
-  operator()(const int & index) const
+  operator()(const int & i, const int & j) const
   {} // end operator ()
 
   WaveParams  wParams;
