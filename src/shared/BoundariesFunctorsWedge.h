@@ -5,6 +5,9 @@
 #include "shared/kokkos_shared.h"        // for Data arrays
 #include "shared/problems/WedgeParams.h" // for Wedge border condition
 
+namespace ppkMHD
+{
+
 /*************************************************/
 /*************************************************/
 /*************************************************/
@@ -178,5 +181,7 @@ public:
   DataArray2d Udata;
 
 }; // MakeBoundariesFunctor2D_wedge
+
+} // namespace ppkMHD
 
 #endif // BOUNDARIES_FUNCTORS_WEDGE_H_

@@ -2,7 +2,6 @@
 #define MHD_BASE_FUNCTOR_3D_H_
 
 #include "shared/kokkos_shared.h"
-
 #include "shared/HydroParams.h"
 #include "shared/HydroState.h"
 
@@ -370,8 +369,9 @@ public:
                                     &(dqY[IBZ]),
                                     &(dqZ[IBZ]));
     }
-    else // slope_type == 0
+    else
     {
+      // slope_type = 0
 
       dqX[ID] = ZERO_F;
       dqY[ID] = ZERO_F;

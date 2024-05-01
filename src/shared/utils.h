@@ -1,6 +1,7 @@
 #ifndef PPKMHD_UTILS_H
 #define PPKMHD_UTILS_H
 
+
 #include <math.h>
 #include <iosfwd>
 
@@ -18,15 +19,20 @@
 
 #define THRESHOLD 1e-12
 
-#define ISFUZZYNULL(a) (std::abs(a) < THRESHOLD)
+#define ISFUZZYNULL(a) (Kokkos::abs(a) < THRESHOLD)
 #define FUZZYCOMPARE(a, b)               \
   ((ISFUZZYNULL(a) && ISFUZZYNULL(b)) || \
-   (std::abs((a) - (b)) * 1000000000000. <= std::fmin(std::abs(a), std::abs(b))))
+   (Kokkos::abs((a) - (b)) * 1000000000000. <= Kokkos::fmin(Kokkos::abs(a), Kokkos::abs(b))))
 #define FUZZYLIMITS(x, a, b) (((x) > ((a)-THRESHOLD)) && ((x) < ((b) + THRESHOLD)))
+
+namespace ppkMHD
+{
 
 void
 print_current_date(std::ostream & stream);
 std::string
 get_current_date();
+
+} // namespace ppkMHD
 
 #endif // PPKMHD_UTILS_H

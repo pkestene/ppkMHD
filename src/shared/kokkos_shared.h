@@ -106,7 +106,7 @@ index2coord(int64_t index, int & i, int & j, int & k, int Nx, int Ny, int Nz)
 }
 
 KOKKOS_INLINE_FUNCTION
-int
+int64_t
 coord2index(int i, int j, int k, int Nx, int Ny, int Nz)
 {
   UNUSED(Nx);

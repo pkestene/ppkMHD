@@ -39,7 +39,7 @@ target_sources (shared
 
 target_link_libraries(shared
   PUBLIC
-  kokkos
+  Kokkos::kokkos
   ppkMHD::config
   ppkMHD::io
   )

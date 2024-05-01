@@ -4,10 +4,9 @@
 #ifndef RIEMANN_SOLVERS_MHD_H_
 #define RIEMANN_SOLVERS_MHD_H_
 
-#include <math.h>
-
 #include "HydroParams.h"
 #include "HydroState.h"
+#include "real_type.h"
 #include "mhd_utils.h"
 
 namespace ppkMHD

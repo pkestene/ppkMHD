@@ -6,6 +6,9 @@
 #include <iomanip> // for std::put_time
 #include <iostream>
 
+namespace ppkMHD
+{
+
 // =======================================================
 // =======================================================
 void
@@ -74,3 +77,5 @@ get_current_date()
 #endif
 
 } // get_current_date
+
+} // namespace ppkMHD
