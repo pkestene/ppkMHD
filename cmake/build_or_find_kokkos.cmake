@@ -113,11 +113,11 @@ if(PPKMHD_BUILD_KOKKOS)
   if (PPKMHD_USE_GIT_KOKKOS)
     FetchContent_Declare( kokkos_external
       GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-      GIT_TAG 4.2.00
+      GIT_TAG 4.3.00
       )
   else()
     FetchContent_Declare( kokkos_external
-      #URL https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.tar.gz
+      #URL https://github.com/kokkos/kokkos/archive/refs/tags/4.3.00.tar.gz
       SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/kokkos
       )
   endif()
