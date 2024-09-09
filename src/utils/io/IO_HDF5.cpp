@@ -3,6 +3,8 @@
 #include "shared/HydroParams.h"
 #include "utils/config/ConfigMap.h"
 
+#include <fstream>
+
 namespace ppkMHD
 {
 namespace io

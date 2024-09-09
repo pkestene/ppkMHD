@@ -57,8 +57,8 @@ public:
     const int i_mpi = params.myMpiPos[IX];
     const int j_mpi = params.myMpiPos[IY];
 #else
-    const int            i_mpi = 0;
-    const int            j_mpi = 0;
+    const int i_mpi = 0;
+    const int j_mpi = 0;
 #endif // USE_MPI
 
     const real_t xmin = params.xmin;
@@ -97,9 +97,9 @@ public:
     const int j_mpi = params.myMpiPos[IY];
     const int k_mpi = params.myMpiPos[IZ];
 #else
-    const int            i_mpi = 0;
-    const int            j_mpi = 0;
-    const int            k_mpi = 0;
+    const int i_mpi = 0;
+    const int j_mpi = 0;
+    const int k_mpi = 0;
 #endif // USE_MPI
 
     const real_t xmin = params.xmin;
@@ -135,58 +135,13 @@ public:
 
 }; // class InitData
 
-} // namespace ppkMHD
-
 // ==============================================================================
 // ==============================================================================
-// ==============================================================================
-int main(int argc, char* argv[])
+void
+run_test_hdf5(const std::string input_filename)
 {
 
-  // namespace alias
-  namespace io = ::ppkMHD::io;
-
-  // Create MPI session if MPI enabled
-#ifdef USE_MPI
-  hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
-#endif // USE_MPI
-
-  Kokkos::initialize(argc, argv);
-
-  int mpi_rank = 0;
-#ifdef USE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-#endif
-  if (mpi_rank==0) {
-    std::cout << "##########################\n";
-    std::cout << "KOKKOS CONFIG             \n";
-    std::cout << "##########################\n";
-
-    std::ostringstream msg;
-    std::cout << "Kokkos configuration" << std::endl;
-    if ( Kokkos::hwloc::available() ) {
-      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-          << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-          << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-          << "] )"
-          << std::endl ;
-
-    }
-    Kokkos::print_configuration( msg );
-    std::cout << msg.str();
-    std::cout << "##########################\n";
-  }
-
-  // if (argc != 2) {
-  //   fprintf(stderr, "Error: wrong number of argument; input filename must be the only parameter on the command line\n");
-  //   Kokkos::finalize();
-  //   exit(EXIT_FAILURE);
-  // }
-
-  // read parameter file and initialize parameter
-  // parse parameters from input file
-  std::string input_file = std::string(argv[1]);
-  ConfigMap configMap(input_file);
+  ConfigMap configMap(input_filename);
 
   // test: create a HydroParams object
   ppkMHD::HydroParams params = ppkMHD::HydroParams();
@@ -200,25 +155,25 @@ int main(int argc, char* argv[])
   // for upscale test
   ConfigMap configMapUp(configMap);
   {
-    int nx = configMap.getInteger("mesh","nx",0);
-    configMapUp.setInteger("mesh","nx",2*nx);
+    int nx = configMap.getInteger("mesh", "nx", 0);
+    configMapUp.setInteger("mesh", "nx", 2 * nx);
 
-    int ny = configMap.getInteger("mesh","ny",0);
-    configMapUp.setInteger("mesh","ny",2*ny);
+    int ny = configMap.getInteger("mesh", "ny", 0);
+    configMapUp.setInteger("mesh", "ny", 2 * ny);
 
-    if (params.nz > 1) {
-      int nz = configMap.getInteger("mesh","nz",0);
-      configMapUp.setInteger("mesh","nz",2*nz);
+    if (params.nz > 1)
+    {
+      int nz = configMap.getInteger("mesh", "nz", 0);
+      configMapUp.setInteger("mesh", "nz", 2 * nz);
     }
 
     // enable upscale upon reading
-    configMapUp.setBool("run","restart_upscale",true);
-
+    configMapUp.setBool("run", "restart_upscale", true);
   }
-  //if (rank==0)
-  //std::cout << configMapUp << std::endl;
+  // if (rank==0)
+  // std::cout << configMapUp << std::endl;
 
-  ppkMHD::HydroParams paramsUp = ppkMHD::HydroParams();
+  HydroParams paramsUp = HydroParams();
   paramsUp.setup(configMapUp);
 
 
@@ -232,60 +187,66 @@ int main(int argc, char* argv[])
   // =================
   // ==== 2D test ====
   // =================
-  if (params.nz == 1) {
+  if (params.nz == 1)
+  {
 
-    if (rank==0)
+    if (rank == 0)
       std::cout << "2D test - create data\n";
 
-    ppkMHD::DataArray2d     data("data",params.isize,params.jsize,ppkMHD::HYDRO_2D_NBVAR);
-    ppkMHD::DataArray2dHost data_host = Kokkos::create_mirror(data);
+    DataArray2d     data("data", params.isize, params.jsize, HYDRO_2D_NBVAR);
+    DataArray2dHost data_host = Kokkos::create_mirror(data);
 
-    ppkMHD::DataArray2d     data2("data2",params.isize,params.jsize,ppkMHD::HYDRO_2D_NBVAR);
-    ppkMHD::DataArray2dHost data2_host = Kokkos::create_mirror(data2);
+    DataArray2d     data2("data2", params.isize, params.jsize, HYDRO_2D_NBVAR);
+    DataArray2dHost data2_host = Kokkos::create_mirror(data2);
 
     // create fake data
-    ppkMHD::InitData<2> functor(params, data);
-    Kokkos::parallel_for(params.isize*params.jsize, functor);
+    InitData<2> functor(params, data);
+    Kokkos::parallel_for(
+      "InitData<2>", Kokkos::RangePolicy<>(0, params.isize * params.jsize), functor);
 
     // save to file
-    if (rank==0)
+    if (rank == 0)
       std::cout << "2D test -- save data\n";
 
 #ifdef USE_MPI
-    io::Save_HDF5_mpi<TWO_D> writer(data, data_host, params, configMap, ppkMHD::HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    io::Save_HDF5_mpi<TWO_D> writer(
+      data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #else
-    io::Save_HDF5<TWO_D> writer(data, data_host, params, configMap, ppkMHD::HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+    io::Save_HDF5<TWO_D> writer(
+      data, data_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #endif
 
     // try to reload file
     {
-      if (rank==0)
-	std::cout << "2D test -- reload and save data for comparison\n";
+      if (rank == 0)
+        std::cout << "2D test -- reload and save data for comparison\n";
 
 #ifdef USE_MPI
-      io::Load_HDF5_mpi<TWO_D> reader(data2, params, configMap, ppkMHD::HYDRO_2D_NBVAR, var_names);
+      io::Load_HDF5_mpi<TWO_D> reader(data2, params, configMap, HYDRO_2D_NBVAR, var_names);
       reader.load("output2d_0000000.h5");
 
-      configMap.setString("output","outputPrefix","output2d_save");
+      configMap.setString("output", "outputPrefix", "output2d_save");
       {
-	io::Save_HDF5_mpi<TWO_D> writer(data2, data2_host, params, configMap, ppkMHD::HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
-	writer.save();
-	io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+        io::Save_HDF5_mpi<TWO_D> writer(
+          data2, data2_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
       }
       // the two files should contain the same data
 #else
-      io::Load_HDF5<TWO_D> reader(data2, params, configMap, ppkMHD::HYDRO_2D_NBVAR, var_names);
+      io::Load_HDF5<TWO_D> reader(data2, params, configMap, HYDRO_2D_NBVAR, var_names);
       reader.load("output2d_0000000.h5");
 
-      configMap.setString("output","outputPrefix","output2d_save");
+      configMap.setString("output", "outputPrefix", "output2d_save");
       {
-	io::Save_HDF5<TWO_D> writer(data2, data2_host, params, configMap, ppkMHD::HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
-	writer.save();
-	io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+        io::Save_HDF5<TWO_D> writer(
+          data2, data2_host, params, configMap, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
       }
       // the two files should contain the same data
 #endif
@@ -293,37 +254,39 @@ int main(int argc, char* argv[])
 
     // reload and upscale test
     {
-      ppkMHD::DataArray2d     data2up("data2up",paramsUp.isize,paramsUp.jsize,ppkMHD::HYDRO_2D_NBVAR);
-      ppkMHD::DataArray2dHost data2up_host = Kokkos::create_mirror(data2up);
+      DataArray2d     data2up("data2up", paramsUp.isize, paramsUp.jsize, HYDRO_2D_NBVAR);
+      DataArray2dHost data2up_host = Kokkos::create_mirror(data2up);
 
-      if (rank==0)
-	std::cout << "2D test -- reload, upscale and save data\n";
+      if (rank == 0)
+        std::cout << "2D test -- reload, upscale and save data\n";
 
       // set restart filename
-      configMapUp.setString("run","restart_filename","output2d_0000000.h5");
+      configMapUp.setString("run", "restart_filename", "output2d_0000000.h5");
 
 #ifdef USE_MPI
-       io::Load_HDF5_mpi<TWO_D> reader(data2up, paramsUp, configMapUp, ppkMHD::HYDRO_2D_NBVAR, var_names);
-       reader.load("output2d_0000000.h5");
+      io::Load_HDF5_mpi<TWO_D> reader(data2up, paramsUp, configMapUp, HYDRO_2D_NBVAR, var_names);
+      reader.load("output2d_0000000.h5");
 
-       configMapUp.setString("output","outputPrefix","output2d_upscale_save");
-       {
-	 io::Save_HDF5_mpi<TWO_D> writer(data2up, data2up_host, paramsUp, configMapUp, ppkMHD::HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
-	 writer.save();
-	 io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
-       }
-       // the two files should contain the same data
+      configMapUp.setString("output", "outputPrefix", "output2d_upscale_save");
+      {
+        io::Save_HDF5_mpi<TWO_D> writer(
+          data2up, data2up_host, paramsUp, configMapUp, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
+      }
+      // the two files should contain the same data
 #else
-       io::Load_HDF5<TWO_D> reader(data2up, paramsUp, configMapUp, ppkMHD::HYDRO_2D_NBVAR, var_names);
-       reader.load("output2d_0000000.h5");
+      io::Load_HDF5<TWO_D> reader(data2up, paramsUp, configMapUp, HYDRO_2D_NBVAR, var_names);
+      reader.load("output2d_0000000.h5");
 
-       configMapUp.setString("output","outputPrefix","output2d_upscale_save");
-       {
-	 io::Save_HDF5<TWO_D> writer(data2up, data2up_host, paramsUp, configMapUp, ppkMHD::HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
-	 writer.save();
-	 io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
-       }
-       // the two files should contain the same data
+      configMapUp.setString("output", "outputPrefix", "output2d_upscale_save");
+      {
+        io::Save_HDF5<TWO_D> writer(
+          data2up, data2up_host, paramsUp, configMapUp, HYDRO_2D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
+      }
+      // the two files should contain the same data
 #endif
     } // end reload and upscale test
 
@@ -336,69 +299,67 @@ int main(int argc, char* argv[])
   // =================
   // ==== 3D test ====
   // =================
-  if (params.nz > 1) {
+  if (params.nz > 1)
+  {
 
-    if (rank==0)
+    if (rank == 0)
       std::cout << "3D test -- create data\n";
 
-    ppkMHD::DataArray3d     data("data",
-			 params.isize,
-			 params.jsize,
-			 params.ksize,
-			 ppkMHD::HYDRO_3D_NBVAR);
-    ppkMHD::DataArray3dHost data_host = Kokkos::create_mirror(data);
+    DataArray3d     data("data", params.isize, params.jsize, params.ksize, HYDRO_3D_NBVAR);
+    DataArray3dHost data_host = Kokkos::create_mirror(data);
 
-    ppkMHD::DataArray3d     data2("data2",
-                                  params.isize,
-                                  params.jsize,
-                                  params.ksize,
-                                  ppkMHD::HYDRO_3D_NBVAR);
-    ppkMHD::DataArray3dHost data2_host = Kokkos::create_mirror(data2);
+    DataArray3d     data2("data2", params.isize, params.jsize, params.ksize, HYDRO_3D_NBVAR);
+    DataArray3dHost data2_host = Kokkos::create_mirror(data2);
 
     // create fake data
-    ppkMHD::InitData<3> functor(params, data);
-    Kokkos::parallel_for(params.isize*params.jsize*params.ksize, functor);
+    InitData<3> functor(params, data);
+    Kokkos::parallel_for(
+      "InitData<3>", Kokkos::RangePolicy<>(0, params.isize * params.jsize * params.ksize), functor);
 
     // ================ save to file =======================
     // save to file
-    if (rank==0)
+    if (rank == 0)
       std::cout << "3D test -- save data\n";
 
 #ifdef USE_MPI
-    io::Save_HDF5_mpi<THREE_D> writer(data, data_host, params, configMap, ppkMHD::HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+    io::Save_HDF5_mpi<THREE_D> writer(
+      data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #else
-    io::Save_HDF5<THREE_D> writer(data, data_host, params, configMap, ppkMHD::HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+    io::Save_HDF5<THREE_D> writer(
+      data, data_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
     writer.save();
     io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
 #endif // USE_MPI
 
     // try to reload file
     {
-      if (rank==0)
-	std::cout << "3D test -- reload and save data for comparison\n";
+      if (rank == 0)
+        std::cout << "3D test -- reload and save data for comparison\n";
 
 #ifdef USE_MPI
-      io::Load_HDF5_mpi<THREE_D> reader(data2, params, configMap, ppkMHD::HYDRO_3D_NBVAR, var_names);
+      io::Load_HDF5_mpi<THREE_D> reader(data2, params, configMap, HYDRO_3D_NBVAR, var_names);
       reader.load("output3d_0000000.h5");
 
-      configMap.setString("output","outputPrefix","output3d_save");
+      configMap.setString("output", "outputPrefix", "output3d_save");
       {
-	io::Save_HDF5_mpi<THREE_D> writer(data2, data2_host, params, configMap, ppkMHD::HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
-	writer.save();
-	io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+        io::Save_HDF5_mpi<THREE_D> writer(
+          data2, data2_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
       }
       // the two files should contain the same data
 #else
-      io::Load_HDF5<THREE_D> reader(data2, params, configMap, ppkMHD::HYDRO_3D_NBVAR, var_names);
+      io::Load_HDF5<THREE_D> reader(data2, params, configMap, HYDRO_3D_NBVAR, var_names);
       reader.load("output3d_0000000.h5");
 
-      configMap.setString("output","outputPrefix","output3d_save");
+      configMap.setString("output", "outputPrefix", "output3d_save");
       {
-	io::Save_HDF5<THREE_D> writer(data2, data2_host, params, configMap, ppkMHD::HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
-	writer.save();
-	io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
+        io::Save_HDF5<THREE_D> writer(
+          data2, data2_host, params, configMap, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(params, configMap, var_names, 1, false);
       }
       // the two files should contain the same data
 #endif // USE_MPI
@@ -407,39 +368,38 @@ int main(int argc, char* argv[])
 
     // reload and upscale test
     {
-      ppkMHD::DataArray3d     data2up("data2up",
-			      paramsUp.isize,
-			      paramsUp.jsize,
-			      paramsUp.ksize,
-			      ppkMHD::HYDRO_3D_NBVAR);
-      ppkMHD::DataArray3dHost data2up_host = Kokkos::create_mirror(data2up);
+      DataArray3d data2up(
+        "data2up", paramsUp.isize, paramsUp.jsize, paramsUp.ksize, HYDRO_3D_NBVAR);
+      DataArray3dHost data2up_host = Kokkos::create_mirror(data2up);
 
-      if (rank==0)
-	std::cout << "3D test -- reload, upscale and save data\n";
+      if (rank == 0)
+        std::cout << "3D test -- reload, upscale and save data\n";
 
       // set restart filename
-      configMapUp.setString("run","restart_filename","output3d_0000000.h5");
+      configMapUp.setString("run", "restart_filename", "output3d_0000000.h5");
 
 #ifdef USE_MPI
-      io::Load_HDF5_mpi<THREE_D> reader(data2up, paramsUp, configMapUp, ppkMHD::HYDRO_3D_NBVAR, var_names);
+      io::Load_HDF5_mpi<THREE_D> reader(data2up, paramsUp, configMapUp, HYDRO_3D_NBVAR, var_names);
       reader.load("output3d_0000000.h5");
 
-      configMapUp.setString("output","outputPrefix","output3d_upscale_save");
+      configMapUp.setString("output", "outputPrefix", "output3d_upscale_save");
       {
-	io::Save_HDF5_mpi<THREE_D> writer(data2up, data2up_host, paramsUp, configMapUp, ppkMHD::HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
-	writer.save();
-	io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
+        io::Save_HDF5_mpi<THREE_D> writer(
+          data2up, data2up_host, paramsUp, configMapUp, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
       }
       // the two files should contain the same data
 #else
-      io::Load_HDF5<THREE_D> reader(data2up, paramsUp, configMapUp, ppkMHD::HYDRO_3D_NBVAR, var_names);
+      io::Load_HDF5<THREE_D> reader(data2up, paramsUp, configMapUp, HYDRO_3D_NBVAR, var_names);
       reader.load("output3d_0000000.h5");
 
-      configMapUp.setString("output","outputPrefix","output3d_upscale_save");
+      configMapUp.setString("output", "outputPrefix", "output3d_upscale_save");
       {
-	io::Save_HDF5<THREE_D> writer(data2up, data2up_host, paramsUp, configMapUp, ppkMHD::HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
-	writer.save();
-	io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
+        io::Save_HDF5<THREE_D> writer(
+          data2up, data2up_host, paramsUp, configMapUp, HYDRO_3D_NBVAR, var_names, 0, 0.0, "");
+        writer.save();
+        io::writeXdmfForHdf5Wrapper(paramsUp, configMapUp, var_names, 1, false);
       }
       // the two files should contain the same data
 #endif
@@ -447,8 +407,60 @@ int main(int argc, char* argv[])
 
   } // end 3D
 
+} // run_test_hdf5
+
+} // namespace ppkMHD
+
+// ===========================================================
+// ===========================================================
+// ===========================================================
+int
+main(int argc, char * argv[])
+{
+
+  // Create MPI session if MPI enabled
+#ifdef USE_MPI
+  hydroSimu::GlobalMpiSession mpiSession(&argc, &argv);
+#endif // USE_MPI
+
+  Kokkos::initialize(argc, argv);
+
+  int mpi_rank = 0;
+#ifdef USE_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+#endif
+  if (mpi_rank == 0)
+  {
+    std::cout << "##########################\n";
+    std::cout << "KOKKOS CONFIG             \n";
+    std::cout << "##########################\n";
+
+    std::ostringstream msg;
+    std::cout << "Kokkos configuration" << std::endl;
+    if (Kokkos::hwloc::available())
+    {
+      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+          << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+          << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
+    }
+    Kokkos::print_configuration(msg);
+    std::cout << msg.str();
+    std::cout << "##########################\n";
+  }
+
+  // if (argc != 2) {
+  //   fprintf(stderr, "Error: wrong number of argument; input filename must be the only parameter
+  //   on the command line\n"); Kokkos::finalize(); exit(EXIT_FAILURE);
+  // }
+
+  // read parameter file and initialize parameter
+  // parse parameters from input file
+  std::string input_filename = std::string(argv[1]);
+
+  ppkMHD::run_test_hdf5(input_filename);
+
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
 
-}
+} // main
