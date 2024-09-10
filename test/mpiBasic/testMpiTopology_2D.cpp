@@ -71,7 +71,7 @@ main(int argc, char * argv[])
   myRank = worldComm.getRank();
   numTasks = worldComm.getNProc();
 
-  int mpierr = ::MPI_Get_processor_name(processor_name, &namelength);
+  [[maybe_unused]] int mpierr = ::MPI_Get_processor_name(processor_name, &namelength);
 
   // print warning
   if (myRank == 0)
