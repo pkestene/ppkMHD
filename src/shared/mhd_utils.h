@@ -18,7 +18,7 @@ namespace ppkMHD
 {
 
 /**
- * enum used ti identified one the four state arround a cell edge.
+ * enum used to identify one the four states arround a cell edge.
  *
  * This is useful when computing emf (electromotive forces)
  */
