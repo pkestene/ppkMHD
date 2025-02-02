@@ -36,7 +36,6 @@ endif(PPKMHD_USE_MPI)
 if(PPKMHD_USE_HDF5)
   add_executable(test_io_hdf5
     test_io_hdf5.cpp
-    #${BACKWARD_ENABLE}
     )
 
   target_link_libraries(test_io_hdf5
@@ -54,8 +53,6 @@ if(PPKMHD_USE_HDF5)
       ppkMHD::mpiUtils)
   endif(PPKMHD_USE_MPI)
 
-  #add_backward(test_io_hdf5)
-
 endif(PPKMHD_USE_HDF5)
 
 if(PPKMHD_USE_MPI)
@@ -63,7 +60,6 @@ if(PPKMHD_USE_MPI)
 
     add_executable(test_io_pnetcdf
       test_io_pnetcdf.cpp
-      #${BACKWARD_ENABLE}
       )
 
     target_link_libraries(test_io_pnetcdf
@@ -75,8 +71,6 @@ if(PPKMHD_USE_MPI)
       ppkMHD::io
       ppkMHD::mpiUtils
       ${PNETCDF_LIBRARIES})
-
-    #add_backward(test_io_pnetcdf)
 
   endif(PPKMHD_USE_PNETCDF)
 endif(PPKMHD_USE_MPI)

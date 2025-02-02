@@ -31,7 +31,6 @@ add_executable(${PROJECT_NAME} "")
 target_sources(${PROJECT_NAME}
   PRIVATE
   main.cpp
-  #${BACKWARD_ENABLE}
   )
 
 target_include_directories(${PROJECT_NAME}
@@ -50,8 +49,6 @@ target_link_libraries(${PROJECT_NAME}
   ppkMHD::shared
   ppkMHD::io
   ppkMHD::monitoring)
-
-#add_backward(${PROJECT_NAME})
 
 if (PPKMHD_USE_SDM)
   target_link_libraries(${PROJECT_NAME}
