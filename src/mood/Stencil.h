@@ -11,7 +11,7 @@ namespace mood
  * List of implemented stencil for MOOD numerical schemes, degree is the degree of
  * the multivariate polynomial used to interpolate value in the given stencil.
  *
- * Please note that, for a given degree, the miminal stencil points need to compute
+ * Please note that, for a given degree, the minimal stencil points need to compute
  * the polynomial coefficient (using least squares minimization) is the binomial
  * number: (dim+degree)! / dim! / degree!
  *
@@ -114,7 +114,7 @@ constexpr STENCIL_ID STENCIL_MAPP[10] = { STENCIL_2D_DEGREE1, STENCIL_2D_DEGREE2
                                           STENCIL_3D_DEGREE4, STENCIL_3D_DEGREE5 };
 
 /**
- * The following array is a "solution" to the probleme faced when one want
+ * The following array is a "solution" to the problem faced when one want
  * to get stencil size at compile in a template class; get_stencil_size routine
  * can't be used there.
  */
@@ -305,7 +305,7 @@ struct Stencil
   //! number identify stencil (values from enum STENCIL_ID)
   STENCIL_ID stencilId;
 
-  //! stencil size, is usefull for allocating offsets arrays
+  //! stencil size, is useful for allocating offsets arrays
   unsigned int stencilSize;
 
   //! coordinates of the neighbors on DEVICE

@@ -48,7 +48,8 @@ public:
 } // namespace ppkMHD
 
 
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
   ppkMHD::PapiInfoTest test;
 

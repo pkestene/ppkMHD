@@ -25,7 +25,7 @@ def eigen_cons_1d():
 
     # intermediate value: scaling factor for the left eigen vector matrix
     D = 2*c*(H-u*u/2)
-    
+
     A = np.array([[0, 1, 0],
                   [0.5*(g-3)*u*u,(3-g)*u,g-1],
                   [u*(0.5*(g-1)*u*u-H),H-(g-1)*u*u, g*u]])
@@ -38,19 +38,19 @@ def eigen_cons_1d():
     print("to be compared with u+c={} u={} and u-c={}".format(u+c,u,u-c))
 
     #printf("Determinant of A={} compared to ".format(np.linalg.det(A)))
-    
+
     # eigenvalues matrix
     L_eig=np.array([[u-c,0,0],
                     [0,u,0],
                     [0,0,u+c]])
 
-    
+
     # right eigenvectors
     R = np.array([[1,1,1],
                   [u-c,u,u+c],
                   [H-u*c,u*u/2,H+u*c]])
 
-    
+
     # left eigenvectors (R^-1)
     L = np.array([[u*(H-u*u/2+c*u/2), -H-c*u+u*u/2,    c],
                   [2*c*(H-u*u),        2*c*u,       -2*c],
@@ -62,19 +62,19 @@ def eigen_cons_1d():
 
     print("Checking that Lamba = L.A.R")
     print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(L,A),R)-L_eig)))
-    
+
 def eigen_cons_2d():
 
     # enthalpy
     H = (u*u+v*v)/2+c*c/(g-1)
     V2=u*u+v*v
-    
+
     c2 = c*c
     g1 = g-1
     beta = 1.0/2/c2
-    
+
     phi2 = g1*H-c2
-    
+
     A = np.array([[0, 1, 0, 0],
                   [phi2-u*u, (3-g)*u, -g1*v, g1],
                   [-u*v, v,u,0],
@@ -93,7 +93,7 @@ def eigen_cons_2d():
     print("to be compared with u+c={} u={} and u-c={}".format(u+c,u,u-c))
 
     #printf("Determinant of A={} compared to ".format(np.linalg.det(A)))
-    
+
     # eigenvalues matrix
     eigA = np.array([[u-c,0,0,0],
                      [0,u,0,0],
@@ -105,7 +105,7 @@ def eigen_cons_2d():
                      [0,0,v,0],
                      [0,0,0,v+c]])
 
-    
+
     # right eigenvectors
     Ra = np.array([[1,    1,    0, 1],
                    [u-c,  u,    0, u+c],
@@ -122,12 +122,12 @@ def eigen_cons_2d():
                    [1.0-phi2/c2, g1*u/c2, g1*v/c2, -g1/c2],
                    [-v,0,1,0],
                    [beta*(phi2-u*c), -beta*(g1*u-c), -beta*g1*v, beta*g1]])
-        
+
     Lb = np.array([[beta*(phi2+v*c), -beta*g1*u, -beta*(g1*v+c), beta*g1],
                    [1.0-phi2/c2, g1*u/c2, g1*v/c2, -g1/c2],
                    [-u,1,0,0],
                    [beta*(phi2-v*c), -beta*g1*u, -beta*(g1*v-c), beta*g1]])
-        
+
     # check
     print("Checking that La.Ra=identy")
     print(np.dot(La,Ra))
@@ -142,19 +142,19 @@ def eigen_cons_2d():
 
     print("Checking that eigB = Lb.B.Rb")
     print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(Lb,B),Rb)-eigB)))
-    
+
 def eigen_cons_3d():
 
     # enthalpy
     H = (u*u+v*v+w*w)/2+c*c/(g-1)
     V2=u*u+v*v+w*w
-    
+
     c2 = c*c
     g1 = g-1
     beta = 1.0/2/c2
-    
+
     phi2 = g1*H-c2
-    
+
     A = np.array([[0, 1, 0, 0, 0],
                   [phi2-u*u, (3-g)*u, -g1*v, -g1*w, g1],
                   [-u*v, v,u,0,0],
@@ -208,7 +208,7 @@ def eigen_cons_3d():
                      [0,0,0,0,w+c]])
 
 
-    
+
     # right eigenvectors
     Ra = np.array([[1,    1,    0, 0, 1],
                    [u-c,  u,    0, 0, u+c],
@@ -234,19 +234,19 @@ def eigen_cons_3d():
                    [-v,              0,              1,             0,              0],
                    [-w,              0,              0,             1,              0],
                    [beta*(phi2-u*c), -beta*(g1*u-c), -beta*g1*v,    -beta*g1*w,     beta*g1]])
-        
+
     Lb = np.array([[beta*(phi2+v*c), -beta*g1*u,    -beta*(g1*v+c), -beta*g1*w,     beta*g1],
                    [1.0-phi2/c2,     g1*u/c2,       g1*v/c2,        g1*w/c2,        -g1/c2],
                    [-u,              1,             0,              0,              0],
                    [-w,              0,             0,              1,              0],
                    [beta*(phi2-v*c), -beta*g1*u,    -beta*(g1*v-c), -beta*g1*w,     beta*g1]])
-        
+
     Lc = np.array([[beta*(phi2+w*c), -beta*g1*u, -beta*g1*v,        -beta*(g1*w+c), beta*g1],
                    [1.0-phi2/c2,     g1*u/c2,    g1*v/c2,           g1*w/c2,        -g1/c2],
                    [-u,              1,          0,                 0,              0],
                    [-v,              0,          1,                 0,              0],
                    [beta*(phi2-w*c), -beta*g1*u, -beta*g1*v,        -beta*(g1*w-c), beta*g1]])
-        
+
     # check
     print("Checking that La.Ra=identy")
     print(np.dot(La,Ra))
@@ -265,15 +265,15 @@ def eigen_cons_3d():
 
     print("Checking that eigB = Lb.B.Rb")
     print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(Lb,B),Rb)-eigB)))
-    
+
     print("Checking that eigB = Lc.C.Rc")
     print("norm of difference is {}".format(np.linalg.norm(np.dot(np.dot(Lc,C),Rc)-eigC)))
-    
+
 def test2d_A():
 
 
     print("rho={} c={} u={} v={}".format(rho,c,u,v))
-    
+
     # left eigen matrix of x flux
     La = np.array(
         [[0.0,            -rho/(2*c),            0.0,   1.0/(2*c**2)],
@@ -283,7 +283,7 @@ def test2d_A():
     print(La)
 
     print()
-    
+
     # right eigen matrix of x flux
     Ra = np.array(
       [[1.0,    1.0, rho,   1.0],
@@ -303,7 +303,7 @@ def test2d_A():
 def test2d_B():
 
     print("rho={} c={} u={} v={}".format(rho,c,u,v))
-    
+
     # left eigen matrix of x flux
     Lb = np.array(
         [[0.0,                        0.0,   -rho/(2*c),   1.0/(2*c**2)],
@@ -319,7 +319,7 @@ def test2d_B():
     print("u/(1-rho*u)={}".format(u/(1.0-rho*u)))
     print("rho*u/(1-rho*u)={}".format(rho*u/(1.0-rho*u)))
     print("u/(u-rho)={}".format(u/(u-rho)))
-    
+
     # right eigen matrix of x flux
     Rb = np.array(
       [[1.0,    1.0, rho,   1.0],
@@ -341,7 +341,7 @@ def test2d_B():
 def test3d_A():
 
     print("rho={} c={} u={} v={} w={}".format(rho,c,u,v,w))
-    
+
     # right eigen matrix of x flux
     Ra = np.array(
       [[1.0,    1.0, rho,   rho,  1.0],
@@ -353,7 +353,7 @@ def test3d_A():
     print(Ra)
 
     D = rho*(v-1)*(w-1)+(1-rho)*(1-v*w)
-    
+
     # left eigen matrix of x flux
     La = np.array(
         [[ 0.0,       -rho/(2*c),     0.0,                  0.0,                   1.0/(2*c**2)],
@@ -370,22 +370,22 @@ def test3d_A():
     print("1.0/(2*c**2)={}".format(1.0/(2*c**2)))
     print("w/(1-rho*v-rho*w)={}".format(w/(1.0-rho*v-rho*w)))
     print()
-    
+
     print("La*Ra:\n")
     print(np.dot(La,Ra))
     print(np.sum(np.dot(La,Ra)))
-    
+
     # print("Ra*La:\n")
     # print(np.dot(Ra,La))
 
     print("inv(Ra)")
     print(np.linalg.inv(Ra))
-    
+
 def test3d_B():
 
 
     print("rho={} c={} u={} v={} w={}".format(rho,c,u,v,w))
-    
+
     # right eigen matrix of x flux
     Rb = np.array(
       [[1.0,    rho,  1.0,  rho,  1.0],
@@ -397,7 +397,7 @@ def test3d_B():
     print(Rb)
 
     D = rho*(w-1)*(u-1)+(1-rho)*(1-w*u)
-    
+
     # left eigen matrix of x flux
 
     Lb = np.array(
@@ -407,7 +407,7 @@ def test3d_B():
          [-(1-u)*w/D, -(w*(1-rho))/D, 0.0, (1-rho*u)/D,  (1 - u)*w/D/c**2],
          [0.0, 0.0, rho/2/c, 0.0, 1.0/2/c**2]])
 
-    
+
     print("Lb:")
     print(Lb)
 
@@ -417,21 +417,21 @@ def test3d_B():
     print("1.0/(2*c**2)={}".format(1.0/(2*c**2)))
     print("w/(1-rho*v-rho*w)={}".format(w/(1.0-rho*v-rho*w)))
     print()
-    
+
     print("Lb*Rb:\n")
     print(np.dot(Lb,Rb))
     print(np.sum(np.dot(Lb,Rb)))
-    
+
     # print("Rb*Lb:\n")
     # print(np.dot(Rb,Lb))
 
     print("inv(Rb)")
     print(np.linalg.inv(Rb))
-    
+
 def test3d_C():
 
     print("rho={} c={} u={} v={} w={}".format(rho,c,u,v,w))
-    
+
     # right eigen matrix of x flux
     Rc = np.array(
       [[1.0,    rho,  rho,  1.0,  1.0],
@@ -443,7 +443,7 @@ def test3d_C():
     print(Rc)
 
     D = rho*(u-1)*(v-1)+(1-rho)*(1-u*v)
-    
+
     # left eigen matrix of x flux
 
     Lc = np.array(
@@ -453,20 +453,20 @@ def test3d_C():
          [(1-u*v)/D, -(rho*(1-v))/D, -(rho*(1-u))/D, 0.0, -(1 -u*v)/D/c**2],
          [0.0, 0.0, 0.0, rho/2/c,  1.0/2/c**2]])
 
-    
+
     print("Lc:")
     print(Lc)
-    
+
     print("Lc*Rc:\n")
     print(np.dot(Lc,Rc))
     print(np.sum(np.dot(Lc,Rc)))
-    
+
     # print("Rc*Lc:\n")
     # print(np.dot(Rc,Lc))
 
     print("inv(Rc)")
     print(np.linalg.inv(Rc))
-    
+
 if __name__ == "__main__":
 
     #print("Test 2d")

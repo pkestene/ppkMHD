@@ -8,8 +8,8 @@
 # Target run directory (must include the mhd_wave_3D.ini.skel file)
 TARGETDIR=/home/pgrete/src/ppkMHD/test/convergence/test
 
-# Full path to ppkMHD executable 
-BIN=/home/pgrete/src/ppkMHD/build_mpi-omp/src/ppkMHD 
+# Full path to ppkMHD executable
+BIN=/home/pgrete/src/ppkMHD/build_mpi-omp/src/ppkMHD
 
 # Base mpicommand (e.g., mpirun for OpenMPI)
 MPICMD=mpirun
@@ -37,19 +37,19 @@ declare -A TENDS=( [0]=0.5 [1]=1.0 [2]=2.0 [3]=1.0)
 ########################################################################################
 ########################################################################################
 
-cd $TARGETDIR 
+cd $TARGETDIR
 
 for WAVETYPE in "${!TENDS[@]}"; do
   mkdir $WAVETYPE
-  cd $WAVETYPE 
+  cd $WAVETYPE
 
   for NX in "${!NMPIS[@]}"; do
     mkdir $NX
     cd $NX
     cp ../../mhd_wave_3D.ini.skel mhd_wave_3D.ini
-    
-    
-    sed -i "s/WAVETYPE/$WAVETYPE/" mhd_wave_3D.ini 
+
+
+    sed -i "s/WAVETYPE/$WAVETYPE/" mhd_wave_3D.ini
     sed -i "s/TEND/${TENDS[$WAVETYPE]}/" mhd_wave_3D.ini
 
     MX=${NMPIS[$NX]}
@@ -82,6 +82,6 @@ for WAVETYPE in "${!TENDS[@]}"; do
 
     cd ..
   done
-  
+
   cd ..
 done

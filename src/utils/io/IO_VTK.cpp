@@ -106,12 +106,10 @@ save_VTK_2D(DataArray2d                        Udata,
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << 0 << " " << nx << " " << 0 << " " << ny << " " << 0
-          << " " << 0 << "\" "
-          << "Origin=\"" << xmin << " " << ymin << " " << 0 << "\" "
+          << " " << 0 << "\" " << "Origin=\"" << xmin << " " << ymin << " " << 0 << "\" "
           << "Spacing=\"" << dx << " " << dy << " " << ZERO_F << "\">\n";
   outFile << "  <Piece Extent=\"" << 0 << " " << nx << " " << 0 << " " << ny << " " << 0 << " " << 0
-          << " "
-          << "\">\n";
+          << " " << "\">\n";
 
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
@@ -181,7 +179,7 @@ save_VTK_2D(DataArray2d                        Udata,
 
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
-    // write the leading undescore
+    // write the leading underscore
     outFile << "_";
     // then write heavy data (column major format)
     {
@@ -306,12 +304,10 @@ save_VTK_3D(DataArray3d                        Udata,
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << 0 << " " << nx << " " << 0 << " " << ny << " " << 0
-          << " " << nz << "\" "
-          << "Origin=\"" << xmin << " " << ymin << " " << zmin << "\" "
+          << " " << nz << "\" " << "Origin=\"" << xmin << " " << ymin << " " << zmin << "\" "
           << "Spacing=\"" << dx << " " << dy << " " << dz << "\">\n";
   outFile << "  <Piece Extent=\"" << 0 << " " << nx << " " << 0 << " " << ny << " " << 0 << " "
-          << nz << " "
-          << "\">\n";
+          << nz << " " << "\">\n";
 
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
@@ -383,7 +379,7 @@ save_VTK_3D(DataArray3d                        Udata,
 
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
-    // write the leading undescore
+    // write the leading underscore
     outFile << "_";
 
     // then write heavy data (column major format)
@@ -523,12 +519,11 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << xmin << " " << xmax << " " << ymin << " " << ymax
-          << " " << 0 << " " << 0 << "\" "
-          << "Origin=\"" << params.xmin << " " << params.ymin << " " << 0.0 << "\" "
-          << "Spacing=\"" << dx << " " << dy << " " << dz << "\">" << std::endl;
+          << " " << 0 << " " << 0 << "\" " << "Origin=\"" << params.xmin << " " << params.ymin
+          << " " << 0.0 << "\" " << "Spacing=\"" << dx << " " << dy << " " << dz << "\">"
+          << std::endl;
   outFile << "  <Piece Extent=\"" << xmin << " " << xmax << " " << ymin << " " << ymax << " " << 0
-          << " " << 0 << ""
-          << "\">" << std::endl;
+          << " " << 0 << "" << "\">" << std::endl;
 
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
@@ -600,7 +595,7 @@ save_VTK_2D_mpi(DataArray2d                        Udata,
 
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
-    // write the leading undescore
+    // write the leading underscore
     outFile << "_";
     // then write heavy data (column major format)
     {
@@ -748,12 +743,11 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
 
   // write mesh extent
   outFile << "  <ImageData WholeExtent=\"" << xmin << " " << xmax << " " << ymin << " " << ymax
-          << " " << zmin << " " << zmax << "\" "
-          << "Origin=\"" << params.xmin << " " << params.ymin << " " << params.zmin << "\" "
-          << "Spacing=\"" << dx << " " << dy << " " << dz << "\">" << std::endl;
+          << " " << zmin << " " << zmax << "\" " << "Origin=\"" << params.xmin << " " << params.ymin
+          << " " << params.zmin << "\" " << "Spacing=\"" << dx << " " << dy << " " << dz << "\">"
+          << std::endl;
   outFile << "  <Piece Extent=\"" << xmin << " " << xmax << " " << ymin << " " << ymax << " "
-          << zmin << " " << zmax << ""
-          << "\">" << std::endl;
+          << zmin << " " << zmax << "" << "\">" << std::endl;
 
   outFile << "    <PointData>\n";
   outFile << "    </PointData>\n";
@@ -827,7 +821,7 @@ save_VTK_3D_mpi(DataArray3d                        Udata,
 
     outFile << "  <AppendedData encoding=\"raw\">" << std::endl;
 
-    // write the leading undescore
+    // write the leading underscore
     outFile << "_";
     // then write heavy data (column major format)
     {
@@ -924,9 +918,9 @@ write_pvti_header(std::string                        headerFilename,
   outHeader << "  <PImageData WholeExtent=\"";
   outHeader << 0 << " " << mx * nx << " ";
   outHeader << 0 << " " << my * ny << " ";
-  outHeader << 0 << " " << mz * nz << "\" GhostLevel=\"0\" "
-            << "Origin=\"" << params.xmin << " " << params.ymin << " " << params.zmin << "\" "
-            << "Spacing=\"" << dx << " " << dy << " " << dz << "\">" << std::endl;
+  outHeader << 0 << " " << mz * nz << "\" GhostLevel=\"0\" " << "Origin=\"" << params.xmin << " "
+            << params.ymin << " " << params.zmin << "\" " << "Spacing=\"" << dx << " " << dy << " "
+            << dz << "\">" << std::endl;
   outHeader << "    <PCellData Scalars=\"Scalars_\">" << std::endl;
   for (int iVar = 0; iVar < nbvar; iVar++)
   {

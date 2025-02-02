@@ -233,7 +233,7 @@ test_chebyshev_quadrature(int i)
 
   sdm_geom.init(0);
 
-  // std::cout << "Solution poins:\n";
+  // std::cout << "Solution points:\n";
   // for (int j=0; j<N; ++j) {
   //   for (int i=0; i<N; ++i) {
   //     std::cout << "(" << sdm_geom.solution_pts_1d_host(i)
@@ -275,7 +275,8 @@ test_chebyshev_quadrature(int i)
 // ==========================================================================
 // ==========================================================================
 // ==========================================================================
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   Kokkos::initialize(argc, argv);
@@ -287,15 +288,14 @@ int main(int argc, char* argv[])
 
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
-    if ( Kokkos::hwloc::available() ) {
-      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-          << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-          << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-          << "] )"
-          << std::endl ;
+    if (Kokkos::hwloc::available())
+    {
+      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+          << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+          << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
     }
 
-    Kokkos::print_configuration( msg );
+    Kokkos::print_configuration(msg);
 
     std::cout << msg.str();
     std::cout << "##########################\n";
@@ -308,13 +308,13 @@ int main(int argc, char* argv[])
   // testing for multiple value of N
   {
     // dim = 2
-    ppkMHD::test_chebyshev_quadrature<2,2>(3);
-    ppkMHD::test_chebyshev_quadrature<2,3>(4);
-    ppkMHD::test_chebyshev_quadrature<2,4>(6);
-    ppkMHD::test_chebyshev_quadrature<2,5>(6);
-    ppkMHD::test_chebyshev_quadrature<2,50>(6);
-    ppkMHD::test_chebyshev_quadrature<2,360>(7);
-    ppkMHD::test_chebyshev_quadrature<2,36>(8);
+    ppkMHD::test_chebyshev_quadrature<2, 2>(3);
+    ppkMHD::test_chebyshev_quadrature<2, 3>(4);
+    ppkMHD::test_chebyshev_quadrature<2, 4>(6);
+    ppkMHD::test_chebyshev_quadrature<2, 5>(6);
+    ppkMHD::test_chebyshev_quadrature<2, 50>(6);
+    ppkMHD::test_chebyshev_quadrature<2, 360>(7);
+    ppkMHD::test_chebyshev_quadrature<2, 36>(8);
   }
 
   Kokkos::finalize();

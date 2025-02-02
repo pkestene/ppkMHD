@@ -125,14 +125,14 @@ public:
     return x * x + 2.2 * x * y + 4.1 * y * y - 5.0 + x;
   }
 
-  TestReconstructFunctor(result_t result,
-			 geom_t geomPI,
-			 typename mood::MonomialMap<dim,degree>::MonomMap monomMap) :
-    PolynomialEvaluator<dim,degree>(monomMap),
-    result(result),
-    stencil(stencilId),
-    geomPI(geomPI) {};
-  ~TestReconstructFunctor() {};
+  TestReconstructFunctor(result_t                                          result,
+                         geom_t                                            geomPI,
+                         typename mood::MonomialMap<dim, degree>::MonomMap monomMap)
+    : PolynomialEvaluator<dim, degree>(monomMap)
+    , result(result)
+    , stencil(stencilId)
+    , geomPI(geomPI){};
+  ~TestReconstructFunctor(){};
 
   KOKKOS_INLINE_FUNCTION
   void
@@ -318,7 +318,7 @@ main(int argc, char * argv[])
   // check that pseudo-inv times A = Identity
   mood::Matrix product;
   product.mult(geomMatrixPI, geomMatrix);
-  product.print("geomMatrixPI * geomMatrix (should be Indentity)");
+  product.print("geomMatrixPI * geomMatrix (should be Identity)");
 
   printf("\n");
   std::array<real_t, stencil_size - 1> rhs_host;
@@ -363,8 +363,7 @@ main(int argc, char * argv[])
   std::cout << "polynomial coef obtained by least-square fit\n";
   for (int ii = 0; ii < mood::MonomialMap<dim, degree>::ncoefs; ++ii)
     std::cout << "polynomial [" << ii << "] = " << coef_host[ii]
-              << " (diff = " << coef_host[ii] - coefs[ii] << ")"
-              << "\n";
+              << " (diff = " << coef_host[ii] - coefs[ii] << ")" << "\n";
 
   // cross-check polynomial
   if (dim == 2)

@@ -7,7 +7,7 @@ ppMHD License
 
 .. include:: ../../../LICENSE.CECILL.EN.utf8
 
-	     
+
 Third Party Builtin Libraries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

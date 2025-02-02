@@ -272,7 +272,7 @@ private:
 }; // class Matrix
 
 /**
- * Compute pseudo-inverse of a Matrix using its QR decompostion.
+ * Compute pseudo-inverse of a Matrix using its QR decomposition.
  *
  * \param[in] A input matrix
  * \param[out] A_PI pseudo-inverse matrix of A

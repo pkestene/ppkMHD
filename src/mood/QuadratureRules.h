@@ -1,7 +1,7 @@
 #ifndef MOOD_QUADRATURE_RULES_H_
 #define MOOD_QUADRATURE_RULES_H_
 
-//#include <array>
+// #include <array>
 #include <cmath>
 
 #include "shared/real_type.h"
@@ -80,7 +80,7 @@ constexpr int QUADRATURE_NUM_POINTS[STENCIL_TOTAL_NUMBER] = {
 
 /**
  * X,Y coordinates of quadrature points relative to cell center (0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Left interface along X axis.
  */
@@ -88,7 +88,7 @@ constexpr real_t QUADRATURE_LOCATION_2D_N1_X_M[1][2] = { { -0.5, 0.0 } };
 
 /**
  * X,Y coordinates of quadrature points relative to cell center (0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Right interface along X axis.
  */
@@ -96,7 +96,7 @@ constexpr real_t QUADRATURE_LOCATION_2D_N1_X_P[1][2] = { { 0.5, 0.0 } };
 
 /**
  * X,Y coordinates of quadrature points relative to cell center (0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Left interface along Y axis.
  */
@@ -104,7 +104,7 @@ constexpr real_t QUADRATURE_LOCATION_2D_N1_Y_M[1][2] = { { 0.0, -0.5 } };
 
 /**
  * X,Y coordinates of quadrature points relative to cell center (0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Right interface along Y axis.
  */
@@ -112,7 +112,7 @@ constexpr real_t QUADRATURE_LOCATION_2D_N1_Y_P[1][2] = { { 0.0, 0.5 } };
 
 /**
  * X,Y coordinates of Gauss-Legendre quadrature points relative to cell center (0,0)
- * when 2 points are enougth.
+ * when 2 points are enough.
  */
 // from sympy import *
 // N(sqrt(3),37)
@@ -141,7 +141,7 @@ constexpr real_t QUADRATURE_LOCATION_2D_N2_Y_P[2][2] = {
 
 /**
  * X,Y coordinates of Gauss-Legendre quadrature points relative to cell center (0,0)
- * when 3 points are enougth.
+ * when 3 points are enough.
  */
 constexpr real_t QUADRATURE_LOCATION_2D_N3_X_M[3][2] = {
   { -0.5, -0.5 * SQRT_3_5 },
@@ -175,7 +175,7 @@ constexpr real_t QUADRATURE_LOCATION_2D_N3_Y_P[3][2] = {
 
 /**
  * X,Y,Z coordinates of quadrature points relative to cell center (0,0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Left interface along X axis.
  */
@@ -183,7 +183,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_X_M[1][3] = { { -0.5, 0.0, 0.0 } };
 
 /**
  * X,Y,Z coordinates of quadrature points relative to cell center (0,0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Right interface along X axis.
  */
@@ -191,7 +191,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_X_P[1][3] = { { 0.5, 0.0, 0.0 } };
 
 /**
  * X,Y,Z coordinates of quadrature points relative to cell center (0,0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Left interface along Y axis.
  */
@@ -199,7 +199,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_Y_M[1][3] = { { 0.0, -0.5, 0.0 } };
 
 /**
  * X,Y,Z coordinates of quadrature points relative to cell center (0,0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Right interface along Y axis.
  */
@@ -207,7 +207,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_Y_P[1][3] = { { 0.0, 0.5, 0.0 } };
 
 /**
  * X,Y,Z coordinates of quadrature points relative to cell center (0,0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Left interface along Z axis.
  */
@@ -215,7 +215,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_Z_M[1][3] = { { 0.0, 0.0, -0.5 } };
 
 /**
  * X,Y,Z coordinates of quadrature points relative to cell center (0,0,0)
- * when 1 point is enougth.
+ * when 1 point is enough.
  *
  * Right interface along Z axis.
  */
@@ -223,7 +223,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N1_Z_P[1][3] = { { 0.0, 0.0, 0.5 } };
 
 /**
  * X,Y,Z coordinates of Gauss-Legendre quadrature points relative to cell center (0,0,0)
- * when 2x2 points are enougth.
+ * when 2x2 points are enough.
  */
 constexpr real_t QUADRATURE_LOCATION_3D_N2_X_M[4][3] = {
   { -0.5, -0.5 / SQRT_3, -0.5 / SQRT_3 },
@@ -269,7 +269,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N2_Z_P[4][3] = {
 
 /**
  * X,Y,Z coordinates of Gauss-Legendre quadrature points relative to cell center (0,0,0)
- * when 3x3 points are enougth.
+ * when 3x3 points are enough.
  */
 constexpr real_t QUADRATURE_LOCATION_3D_N3_X_M[9][3] = {
   { -0.5, -0.5 * SQRT_3_5, -0.5 * SQRT_3_5 },

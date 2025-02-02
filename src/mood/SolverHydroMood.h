@@ -161,7 +161,7 @@ public:
   void
   time_integration(real_t dt);
 
-  //! wrapper to tha actual time integation scheme
+  //! wrapper to tha actual time integration scheme
   void
   time_integration_impl(DataArray data_in, DataArray data_out, real_t dt);
 
@@ -420,8 +420,7 @@ SolverHydroMood<dim, degree>::SolverHydroMood(HydroParams & params, ConfigMap & 
     std::cout << "Use default - Four Quadrant" << std::endl;
     init_four_quadrant(U);
   }
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
   std::cout << "Solver is " << m_solver_name << "\n";
   std::cout << "Problem (init condition) is " << m_problem_name << "\n";
   std::cout << "Mood degree : " << degree << "\n";
@@ -433,16 +432,13 @@ SolverHydroMood<dim, degree>::SolverHydroMood(HydroParams & params, ConfigMap & 
   std::cout << "SSPRK2        : " << ssprk2_enabled << "\n";
   std::cout << "SSPRK3        : " << ssprk3_enabled << "\n";
   std::cout << "SSPRK54       : " << ssprk54_enabled << "\n";
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
 
   // print parameters on screen
   params.print();
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
   std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n";
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
 
   // initialize time step
   compute_dt();
@@ -819,7 +815,7 @@ SolverHydroMood<dim, degree>::next_iteration_impl()
       save_solution();
 
     } // end output
-  }   // end enable output
+  } // end enable output
 
   // compute new dt
   timers[TIMER_DT]->start();
@@ -983,7 +979,7 @@ SolverHydroMood<dim, degree>::time_int_forward_euler(DataArray data_in,
   // for (int iRecomp=0; iRecomp<5; ++iRecomp) {
 
   // flag cells for which fluxes will need to be recomputed
-  // because attemp to update leads to physically invalid values
+  // because attempt to update leads to physically invalid values
   // (negative density or pressure)
   {
     ComputeMoodFlagsUpdateFunctor<dim, degree> functor(
@@ -992,7 +988,7 @@ SolverHydroMood<dim, degree>::time_int_forward_euler(DataArray data_in,
     // save_data_debug(MoodFlags, Uhost, m_times_saved, m_t, "mood_flags");
   }
 
-  // recompute fluxes arround flagged cells
+  // recompute fluxes around flagged cells
   {
     RecomputeFluxesFunctor<dim, degree> functor(
       params, monomialMap.data, data_in, MoodFlags, Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
@@ -1085,7 +1081,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk2(DataArray data_in, DataArray data_
   }
 
   // flag cells for which fluxes will need to be recomputed
-  // because attemp to update leads to physically invalid values
+  // because attempt to update leads to physically invalid values
   // (negative density or pressure)
   {
     ComputeMoodFlagsUpdateFunctor<dim, degree> functor(
@@ -1094,7 +1090,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk2(DataArray data_in, DataArray data_
     // save_data_debug(MoodFlags, Uhost, m_times_saved, m_t, "mood_flags");
   }
 
-  // recompute fluxes arround flagged cells
+  // recompute fluxes around flagged cells
   {
     RecomputeFluxesFunctor<dim, degree> functor(
       params, monomialMap.data, data_in, MoodFlags, Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
@@ -1143,7 +1139,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk2(DataArray data_in, DataArray data_
   }
 
   // flag cells for which fluxes will need to be recomputed
-  // because attemp to update leads to physically invalid values
+  // because attempt to update leads to physically invalid values
   // (negative density or pressure)
   {
     ComputeMoodFlagsUpdateFunctor<dim, degree> functor(
@@ -1151,7 +1147,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk2(DataArray data_in, DataArray data_
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // recompute fluxes arround flagged cells
+  // recompute fluxes around flagged cells
   {
     RecomputeFluxesFunctor<dim, degree> functor(
       params, monomialMap.data, U_RK1, MoodFlags, Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
@@ -1243,7 +1239,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_
   }
 
   // flag cells for which fluxes will need to be recomputed
-  // because attemp to update leads to physically invalid values
+  // because attempt to update leads to physically invalid values
   // (negative density or pressure)
   {
     ComputeMoodFlagsUpdateFunctor<dim, degree> functor(
@@ -1252,7 +1248,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_
     // save_data_debug(MoodFlags, Uhost, m_times_saved, m_t, "mood_flags");
   }
 
-  // recompute fluxes arround flagged cells
+  // recompute fluxes around flagged cells
   {
     RecomputeFluxesFunctor<dim, degree> functor(
       params, monomialMap.data, data_in, MoodFlags, Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
@@ -1301,7 +1297,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_
   }
 
   // flag cells for which fluxes will need to be recomputed
-  // because attemp to update leads to physically invalid values
+  // because attempt to update leads to physically invalid values
   // (negative density or pressure)
   {
     ComputeMoodFlagsUpdateFunctor<dim, degree> functor(
@@ -1309,7 +1305,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // recompute fluxes arround flagged cells
+  // recompute fluxes around flagged cells
   {
     RecomputeFluxesFunctor<dim, degree> functor(
       params, monomialMap.data, U_RK1, MoodFlags, Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
@@ -1358,7 +1354,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_
   }
 
   // flag cells for which fluxes will need to be recomputed
-  // because attemp to update leads to physically invalid values
+  // because attempt to update leads to physically invalid values
   // (negative density or pressure)
   {
     ComputeMoodFlagsUpdateFunctor<dim, degree> functor(
@@ -1366,7 +1362,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_
     Kokkos::parallel_for(nbCells, functor);
   }
 
-  // recompute fluxes arround flagged cells
+  // recompute fluxes around flagged cells
   {
     RecomputeFluxesFunctor<dim, degree> functor(
       params, monomialMap.data, U_RK2, MoodFlags, Fluxes_x, Fluxes_y, Fluxes_z, dtdx, dtdy, dtdz);
@@ -1428,7 +1424,7 @@ SolverHydroMood<dim, degree>::time_int_ssprk54(DataArray data_in, DataArray data
 // =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
-// absorbant, reflexive or periodic
+// absorbent, reflexive or periodic
 // //////////////////////////////////////////////////
 template <int dim, int degree>
 template <int dim_>

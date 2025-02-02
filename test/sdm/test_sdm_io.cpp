@@ -1,6 +1,6 @@
 /**
  * This executable is used to test sdm::SolverHydroSDM class,
- * more specificly init conditions and vtk output.
+ * more specifically init conditions and vtk output.
  *
  * For output, we would like to output multiple values per cell, in order to
  * "visualize" the high-order quality of the SDM scheme.
@@ -8,7 +8,7 @@
  * About what others do:
  * - Deal.ii uses a class named DataOut, which has a method build_patches
  *   build_patches (const unsigned int n_subdivisions=0)
- *   which allows when outputing data coming from a Discontinuous Galerkin
+ *   which allows when outputting data coming from a Discontinuous Galerkin
  *   scheme to subdivide each cell, a recompute some local interpolation on a
  *   refine patche.
  *   see https://www.dealii.org/8.5.0/doxygen/deal.II/classDataOut.html
@@ -92,12 +92,13 @@ test_sdm_io(int argc, char * argv[])
 // =======================================================================
 // =======================================================================
 // =======================================================================
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   // Create MPI session if MPI enabled
 #ifdef USE_MPI
-  hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
+  hydroSimu::GlobalMpiSession mpiSession(&argc, &argv);
 #endif // USE_MPI
 
   int myRank = 0;
@@ -109,26 +110,27 @@ int main(int argc, char* argv[])
   Kokkos::initialize(argc, argv);
 
   {
-    if (myRank==0) {
+    if (myRank == 0)
+    {
       std::cout << "##########################\n";
       std::cout << "KOKKOS CONFIG             \n";
       std::cout << "##########################\n";
 
       std::ostringstream msg;
       std::cout << "Kokkos configuration" << std::endl;
-      if ( Kokkos::hwloc::available() ) {
-        msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-            << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-            << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-            << "] )"
-            << std::endl ;
+      if (Kokkos::hwloc::available())
+      {
+        msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+            << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+            << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
       }
-      Kokkos::print_configuration( msg );
+      Kokkos::print_configuration(msg);
       std::cout << msg.str();
       std::cout << "##########################\n";
     }
 
-    if (myRank==0) {
+    if (myRank == 0)
+    {
       std::cout << "===============================================\n";
       std::cout << "==== Spectral Difference Lagrange IO  test ====\n";
       std::cout << "===============================================\n";
@@ -139,11 +141,10 @@ int main(int argc, char* argv[])
     {
 
       // 2d
-      ppkMHD::test_sdm_io<2,4>(argc,argv);
+      ppkMHD::test_sdm_io<2, 4>(argc, argv);
 
       // 3d
-      ppkMHD::test_sdm_io<3,4>(argc,argv);
-
+      ppkMHD::test_sdm_io<3, 4>(argc, argv);
     }
   }
 

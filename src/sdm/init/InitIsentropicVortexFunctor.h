@@ -147,7 +147,7 @@ public:
                                                0.5 * rho * (v_a + dv) * (v_a + dv);
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
   } // end operator () - 2d
 
@@ -258,8 +258,8 @@ public:
                                                       0.5 * rho * (v_a + dv) * (v_a + dv);
 
         } // end for idx
-      }   // end for idy
-    }     // end for idz
+      } // end for idy
+    } // end for idz
 
   } // end operator () - 3d
 

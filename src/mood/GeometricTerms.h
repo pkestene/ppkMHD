@@ -69,7 +69,7 @@ public:
    * \right)^n \left( (y-y_j)+(y_j-y_i) \right)^m  \dif v  - \overline{x^n y^m}_i \f$ which can be
    * computed exactly on regular cartesian grid.
    *
-   * For unstructured grid, it can be developped into
+   * For unstructured grid, it can be developed into
    *
    * \f$  \widehat{x^n y^m}_{i,j} = \sum_{a=0}^{n} \sum_{b=0}^{m} \binom{n}{a} \binom{m}{b}
    * (x_j-x_i)^a (y_j-y_i)^b \overline{x^{n-a} y^{m-b}}_j \; - \; \overline{x^n y^m}_i \f$

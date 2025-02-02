@@ -673,7 +673,7 @@ public:
    * trace_unsplit_mhd_3d.
    *
    * By simpler, we mean to design a device function that could lead to better
-   * ressource utilization and thus better performances (hopefully).
+   * resource utilization and thus better performances (hopefully).
    *
    * To achieve this goal, several modifications are brought (compared to
    * trace_unsplit_mhd_3d) :

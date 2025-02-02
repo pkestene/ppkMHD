@@ -54,7 +54,7 @@ main(int argc, char * argv[])
   mood::Matrix product;
   product.mult(A_pseudo_inv, A);
 
-  product.print("A_pseudo-inv * A (should be Indentity)");
+  product.print("A_pseudo-inv * A (should be Identity)");
 
   Kokkos::finalize();
 

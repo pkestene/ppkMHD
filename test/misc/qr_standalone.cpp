@@ -180,7 +180,8 @@ private:
 }; // struct Matrix
 
 // column vector
-class Vector {
+class Vector
+{
 
 public:
   // default constructor (don't allocate)
@@ -198,15 +199,19 @@ public:
   }
 
   // destructor
-  ~Vector() {
-    deallocate();
-  }
+  ~Vector() { deallocate(); }
 
   // access data operators
-  double& operator() (int i) {
-    return data[i]; }
-  double  operator() (int i) const {
-    return data[i]; }
+  double &
+  operator()(int i)
+  {
+    return data[i];
+  }
+  double
+  operator()(int i) const
+  {
+    return data[i];
+  }
 
   // operator assignment
   Vector &
@@ -263,8 +268,11 @@ public:
   }
 
   // divide data by factor
-  void rescale(double factor) {
-    for (int i = 0; i < size; i++) (*this)(i) /= factor;
+  void
+  rescale(double factor)
+  {
+    for (int i = 0; i < size; i++)
+      (*this)(i) /= factor;
   }
 
   void
@@ -324,12 +332,15 @@ Matrix::extract_column(Vector & v, int c)
     v(i) = (*this)(i, c);
 }
 
-void matrix_show(const Matrix&  m, const std::string& str="")
+void
+matrix_show(const Matrix & m, const std::string & str = "")
 {
   std::cout << str << "\n";
-  for(int i = 0; i < m.m; i++) {
-    for (int j = 0; j < m.n; j++) {
-      printf(" %8.3f", m(i,j));
+  for (int i = 0; i < m.m; i++)
+  {
+    for (int j = 0; j < m.n; j++)
+    {
+      printf(" %8.3f", m(i, j));
     }
     printf("\n");
   }
@@ -337,19 +348,23 @@ void matrix_show(const Matrix&  m, const std::string& str="")
 }
 
 // L2-norm ||A-B||^2
-double matrix_compare(const Matrix& A, const Matrix& B) {
+double
+matrix_compare(const Matrix & A, const Matrix & B)
+{
   // matrices must have same size
-  if (A.m != B.m or  A.n != B.n)
+  if (A.m != B.m or A.n != B.n)
     return std::numeric_limits<double>::max();
 
-  double res=0;
-  for(int i = 0; i < A.m; i++) {
-    for (int j = 0; j < A.n; j++) {
-      res += (A(i,j)-B(i,j)) * (A(i,j)-B(i,j));
+  double res = 0;
+  for (int i = 0; i < A.m; i++)
+  {
+    for (int j = 0; j < A.n; j++)
+    {
+      res += (A(i, j) - B(i, j)) * (A(i, j) - B(i, j));
     }
   }
 
-  res /= A.m*A.n;
+  res /= A.m * A.n;
   return res;
 }
 
@@ -426,7 +441,7 @@ main()
 
   matrix_show(A, "A");
 
-  // compute QR decompostion
+  // compute QR decomposition
   householder(A, R, Q);
 
   matrix_show(Q, "Q");

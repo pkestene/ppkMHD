@@ -1,6 +1,6 @@
 /**
  * This executable is used to print on screen a map between an index
- * (spaning the total number of monomials) and a vector of exponents
+ * (spanning the total number of monomials) and a vector of exponents
  * in the corresponding monomial.
  */
 
@@ -92,10 +92,7 @@ main(int argc, char * argv[])
 
     std::cout << "    {";
     std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
-    std::cout << "   // "
-              << "X^" << e[0] << " * "
-              << "Y^" << e[1] << " * "
-              << "Z^" << e[2] << "\n";
+    std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2] << "\n";
   }
 
   std::cout << "####################################\n";
@@ -119,10 +116,7 @@ main(int argc, char * argv[])
 
     std::cout << "    {";
     std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
-    std::cout << "   // "
-              << "X^" << e[0] << " * "
-              << "Y^" << e[1] << " * "
-              << "Z^" << e[2] << "\n";
+    std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2] << "\n";
   }
 
   Kokkos::finalize();

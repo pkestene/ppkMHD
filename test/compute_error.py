@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Load vtk image data file (.vti). 
+Load vtk image data file (.vti).
 Compute error with reference file.
 """
 
@@ -27,7 +27,7 @@ if not os.path.exists(sys.argv[2]):
 
 f1=sys.argv[1]
 f2=sys.argv[2]
-    
+
 # open vti files
 print 'Reading data {} {}'.format(f1, f2)
 reader1 = vtk.vtkXMLImageDataReader()

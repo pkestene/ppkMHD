@@ -32,9 +32,10 @@ test_func(double x, double y)
   // return 3.5*x*x+y*0.02+6;
 }
 
-double test_func_3d(double x, double y, double z)
+double
+test_func_3d(double x, double y, double z)
 {
-  return x*x+y-2*z*z;
+  return x * x + y - 2 * z * z;
 }
 
 namespace mood
@@ -100,7 +101,7 @@ public:
     // rhs is sized upon stencil, just remove central point
     Kokkos::Array<real_t, stencil_size - 1> rhs;
 
-    // rhs for neighbor cell (accross an x-face, y-face or z-face)
+    // rhs for neighbor cell (across an x-face, y-face or z-face)
     // Kokkos::Array<real_t,stencil_size-1> rhs_n;
 
 

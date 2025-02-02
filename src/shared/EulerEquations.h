@@ -243,7 +243,7 @@ struct EulerEquations<2>
    * Compute characteristic variables by multiply input vector
    * by L (left eigenvalue matrix of Euler Jacobian). Computation is done in place
    *
-   * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
+   * The formulas defining eigen matrix are detailed in doc/euler/euler_equations.tex
    * and also copied here using python syntax
    *
    * # left eigenvectors (R^-1)
@@ -329,7 +329,7 @@ struct EulerEquations<2>
    * Transform from characteristic variables to conservative by multiply input vector
    * by R (right eigenvalue matrix of Euler Jacobian). Computation is done in place
    *
-   * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
+   * The formulas defining eigen matrix are detailed in doc/euler/euler_equations.tex
    * and also copied here using python syntax
    *
    * # right eigenvectors
@@ -700,7 +700,7 @@ struct EulerEquations<3>
    * Compute characteristic variables by multiply input vector
    * by L (left eigenvalue matrix of Euler Jacobian). Computation is done in place.
    *
-   * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
+   * The formulas defining eigen matrix are detailed in doc/euler/euler_equations.tex
    * and also copied here using python syntax
    *
    * # left eigenvectors (R^-1)
@@ -814,7 +814,7 @@ struct EulerEquations<3>
    * Transform from characteristic variables to conservative by multiply input vector
    * by R (right eigenvalue matrix of Euler Jacobian). Computation done in place.
    *
-   * The formulas defining eigen matrix are detailled in doc/euler/euler_equations.tex
+   * The formulas defining eigen matrix are detailed in doc/euler/euler_equations.tex
    * and also copied here using python syntax
    *
    * # right eigenvectors

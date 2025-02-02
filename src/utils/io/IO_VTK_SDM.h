@@ -76,8 +76,7 @@ write_nodes_location(std::ostream &          outFile,
     outFile << " offset=\"" << 0 << "\"";
   }
 
-  outFile << ">"
-          << "\n";
+  outFile << ">" << "\n";
 
   if (outputVtkAscii)
   {
@@ -134,10 +133,10 @@ write_nodes_location(std::ostream &          outFile,
             // now we can write node locations
             outFile << x << " " << y << " " << 0.0 << "\n";
           } // end for idx
-        }   // end for idy
+        } // end for idy
 
       } // end for i
-    }   // end for j
+    } // end for j
 
   } // outputVtkAscii
 
@@ -199,8 +198,7 @@ write_nodes_location(std::ostream &          outFile,
     outFile << " offset=\"" << 0 << "\"";
   }
 
-  outFile << ">"
-          << "\n";
+  outFile << ">" << "\n";
 
   if (outputVtkAscii)
   {
@@ -280,12 +278,12 @@ write_nodes_location(std::ostream &          outFile,
                 outFile << x << " " << y << " " << z << "\n";
 
               } // for idx
-            }   // for idy
-          }     // for idz
+            } // for idy
+          } // for idz
 
         } // end for i
-      }   // end for j
-    }     // end for k
+      } // end for j
+    } // end for k
 
   } // end outputVtkAscii
 
@@ -370,13 +368,13 @@ write_cells_connectivity(std::ostream &          outFile,
             outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
 
           } // for idx
-        }   // for idy
+        } // for idy
 
         cell_index += nbSubCells;
 
       } // for i
-    }   // for j
-  }     // end outputVtkAscii
+    } // for j
+  } // end outputVtkAscii
 
   outFile << "    </DataArray>\n";
 
@@ -529,14 +527,14 @@ write_cells_connectivity(std::ostream &          outFile,
                         << " " << i6 << " " << i7 << "\n";
 
               } // for idx
-            }   // for idy
-          }     // for idz
+            } // for idy
+          } // for idz
 
           cell_index += nbSubCells;
 
         } // for i
-      }   // for j
-    }     // for k
+      } // for j
+    } // for k
 
   } // end outputVtkAscii
 
@@ -670,10 +668,10 @@ write_cells_data(std::ostream &                     outFile,
               outFile << data << " ";
 
             } // for idx
-          }   // for idy
+          } // for idy
 
         } // for i
-      }   // for j
+      } // for j
 
       outFile << "\n";
 
@@ -759,12 +757,12 @@ write_cells_data(std::ostream &                     outFile,
                   outFile << data << " ";
 
                 } // for idx
-              }   // for idy
-            }     // for idz
+              } // for idy
+            } // for idz
 
           } // for i
-        }   // for j
-      }     // for k
+        } // for j
+      } // for k
 
       outFile << "\n";
 
@@ -818,8 +816,7 @@ write_appended_binary_data(std::ostream &                     outFile,
   int nbNodesPerCell = (N + 1) * (N + 1); // in 2D
   int nbSubCells = N * N;
 
-  outFile << " <AppendedData encoding=\"raw\">"
-          << "\n";
+  outFile << " <AppendedData encoding=\"raw\">" << "\n";
 
   // leading underscore
   outFile << "_";
@@ -886,10 +883,10 @@ write_appended_binary_data(std::ostream &                     outFile,
             vertices.push_back(0.0);
 
           } // for idx
-        }   // for idy
+        } // for idy
 
       } // end for i
-    }   // end for j
+    } // end for j
 
     uint64_t size = sizeof(float) * nx * ny * (N + 1) * (N + 1) * 3;
     outFile.write(reinterpret_cast<char *>(&size), sizeof(uint64_t));
@@ -937,12 +934,12 @@ write_appended_binary_data(std::ostream &                     outFile,
             connectivity.push_back(i3);
 
           } // for idx
-        }   // for idy
+        } // for idy
 
         cell_index += nbSubCells;
 
       } // for i
-    }   // for j
+    } // for j
 
     uint64_t size = sizeof(uint64_t) * nx * ny * N * N * 4;
     outFile.write(reinterpret_cast<char *>(&size), sizeof(uint64_t));
@@ -1017,10 +1014,10 @@ write_appended_binary_data(std::ostream &                     outFile,
               cells_data.push_back(data);
 
             } // for idx
-          }   // for idy
+          } // for idy
 
         } // for i
-      }   // for j
+      } // for j
 
 
       uint64_t size = sizeof(real_t) * nx * ny * N * N;
@@ -1032,8 +1029,7 @@ write_appended_binary_data(std::ostream &                     outFile,
 
   } // end write cells data
 
-  outFile << " </AppendedData>"
-          << "\n";
+  outFile << " </AppendedData>" << "\n";
 
 } // write_appended_binary_data - 2D
 
@@ -1082,8 +1078,7 @@ write_appended_binary_data(std::ostream &                     outFile,
   int N1 = N + 1;
   int N2 = (N + 1) * (N + 1);
 
-  outFile << " <AppendedData encoding=\"raw\">"
-          << "\n";
+  outFile << " <AppendedData encoding=\"raw\">" << "\n";
 
   // leading underscore
   outFile << "_";
@@ -1173,12 +1168,12 @@ write_appended_binary_data(std::ostream &                     outFile,
                 vertices.push_back(z);
 
               } // for idx
-            }   // for idy
-          }     // for idz
+            } // for idy
+          } // for idz
 
         } // end for i
-      }   // end for j
-    }     // end for k
+      } // end for j
+    } // end for k
 
     uint64_t size = sizeof(float) * nx * ny * nz * (N + 1) * (N + 1) * (N + 1) * 3;
     outFile.write(reinterpret_cast<char *>(&size), sizeof(uint64_t));
@@ -1227,14 +1222,14 @@ write_appended_binary_data(std::ostream &                     outFile,
                 connectivity.push_back(offset + idx + N1 * (idy + 1) + N2 * (idz + 1));
 
               } // for idx
-            }   // for idy
-          }     // for idz
+            } // for idy
+          } // for idz
 
           cell_index += nbSubCells;
 
         } // for i
-      }   // for j
-    }     // for k
+      } // for j
+    } // for k
 
     uint64_t size = sizeof(uint64_t) * nx * ny * nz * N * N * N * 8;
     outFile.write(reinterpret_cast<char *>(&size), sizeof(uint64_t));
@@ -1314,12 +1309,12 @@ write_appended_binary_data(std::ostream &                     outFile,
                   cells_data.push_back(data);
 
                 } // for idx
-              }   // for idy
-            }     // for idz
+              } // for idy
+            } // for idz
 
           } // for i
-        }   // for j
-      }     // for k
+        } // for j
+      } // for k
 
       uint64_t size = sizeof(real_t) * nx * ny * nz * N * N * N;
       outFile.write(reinterpret_cast<char *>(&size), sizeof(uint64_t));
@@ -1330,8 +1325,7 @@ write_appended_binary_data(std::ostream &                     outFile,
 
   } // end write cells data
 
-  outFile << " </AppendedData>"
-          << "\n";
+  outFile << " </AppendedData>" << "\n";
 
 } // write_appended_binary_data - 3D
 
@@ -1342,7 +1336,7 @@ write_appended_binary_data(std::ostream &                     outFile,
  * Write Parallel VTU header.
  * Must be done by a single MPI process.
  *
- * \note optionnal parameter is_flux_data_array when true is used to
+ * \note optional parameter is_flux_data_array when true is used to
  * trigger saving a flux data array, for which dof are attached to nodes
  * rather than cells.
  *
