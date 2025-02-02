@@ -1,0 +1,23 @@
+[files]
+extend-exclude = ["external/*", "doc/doxyfile.in", "**/*.ipynb"]
+
+[default.extend-words]
+IY = "IY"
+
+[default.extend-identifiers]
+gam0 = "gam0"
+gam_int = "gam_int"
+iten = "iten"
+StateNd = "StateNd"
+som_vit = "som_vit"
+som_vit2 = "som_vit2"
+otParams = "otParams"
+m_otParams = "m_otParams"
+SuppressLOD = "SuppressLOD"
+LODResolution = "LODResolution"
+LODThreshold = "LODThreshold"
+UseOutlineForLODRendering = "UseOutlineForLODRendering"
+Numer = "Numer"
+STENCIL_MAPP = "STENCIL_MAPP"
+dout = "dout"
+sur = "sur"
