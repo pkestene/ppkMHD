@@ -21,7 +21,7 @@ ExternalProject_Add(kokkos
   PREFIX ${CMAKE_BINARY_DIR}/external
   GIT_REPOSITORY https://github.com/pkestene/kokkos.git
   GIT_TAG output_kokkos_cmake
-  
+
   CONFIGURE_COMMAND <SOURCE_DIR>/generate_makefile.bash ${KOKKOS_CONFIGURE_LINE_LIST}
 
   BUILD_COMMAND make kokkoslib
@@ -39,6 +39,6 @@ ExternalProject_Add (mandelbrot_kokkos
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${DEPENDENCIES}
   SOURCE_DIR ${PROJECT_SOURCE_DIR}
-  CMAKE_ARGS -DBUILD_KOKKOS=OFF 
+  CMAKE_ARGS -DBUILD_KOKKOS=OFF
   INSTALL_COMMAND ""
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
