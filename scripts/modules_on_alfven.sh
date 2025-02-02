@@ -13,7 +13,7 @@ case $compiler in
     module load cmake
     module load gcc/7.2.0
     module load openmpi/gcc72
-    
+
     if [ "$enable_mpi" = true ] ; then
 	export CXX=`which mpicxx`
 	export OMPI_CXX=`which g++`
@@ -23,19 +23,19 @@ case $compiler in
     ;;
 
 "INTEL" )
-    
+
     # intel compiler
     module load userspace
     module load cmake
     module load intel-suite
-    
+
     if [ "$enable_mpi" = true ] ; then
 	# intel mpicxx is already rooted to use icpc
 	export CXX=`which mpicxx`
     else
 	export CXX=`which icpc`
     fi
-    
+
     ;;
 
 # TODO
@@ -50,4 +50,3 @@ esac
 if [ "$verbose" = true ] ; then
     module list
 fi
-

@@ -21,30 +21,30 @@ now()
   return boost::posix_time::microsec_clock::local_time();
 }
 
-#define TEST(num, expression)	       \
-  double test##num(double b, long loops)	\
-  {						\
-    double x = 0.0;				\
-						\
-    boost::posix_time::ptime startTime = now(); \
-    for (long i=0; i<loops; ++i)		\
-      {						\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-        x += expression;			\
-      }								  \
+#define TEST(num, expression)                                     \
+  double test##num(double b, long loops)                          \
+  {                                                               \
+    double x = 0.0;                                               \
+                                                                  \
+    boost::posix_time::ptime startTime = now();                   \
+    for (long i = 0; i < loops; ++i)                              \
+    {                                                             \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+      x += expression;                                            \
+    }                                                             \
     boost::posix_time::time_duration elapsed = now() - startTime; \
-								  \
-    std::cout << elapsed << " ";				  \
-								  \
-    return x;							  \
+                                                                  \
+    std::cout << elapsed << " ";                                  \
+                                                                  \
+    return x;                                                     \
   }
 
 TEST(1, b)

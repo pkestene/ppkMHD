@@ -14,7 +14,8 @@
 
 #include "utils/mpiUtils/MpiCommCart.h"
 
-namespace ppkMHD {
+namespace ppkMHD
+{
 
 struct HydroParamsMpi : HydroParams
 {
@@ -24,7 +25,8 @@ struct HydroParamsMpi : HydroParams
     : HydroParams()
   {}
 
-  void setup(ConfigMap& configMap);
+  void
+  setup(ConfigMap & configMap);
 
 }; // struct HydroParamsMpi
 

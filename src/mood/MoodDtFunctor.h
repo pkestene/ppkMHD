@@ -190,7 +190,7 @@ public:
 #else
     dst = std::numeric_limits<real_t>::min();
 #endif // __CUDA_ARCH__
-  }    // init
+  } // init
 
   /* this is a reduce (max) functor  for 2d data */
   KOKKOS_INLINE_FUNCTION
@@ -281,7 +281,7 @@ public:
 #else
     dst = std::numeric_limits<real_t>::min();
 #endif // __CUDA_ARCH__
-  }    // init
+  } // init
 
   /* this is a reduce (max) functor for 3d data */
   KOKKOS_INLINE_FUNCTION

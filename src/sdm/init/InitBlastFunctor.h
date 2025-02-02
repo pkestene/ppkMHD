@@ -128,7 +128,7 @@ public:
         }
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
   } // end operator () - 2d
 
@@ -226,8 +226,8 @@ public:
           }
 
         } // end for idx
-      }   // end for idy
-    }     // end for idz
+      } // end for idy
+    } // end for idz
 
   } // end operator () - 3d
 

@@ -96,7 +96,7 @@ public:
         Udata(i, j, dofMap(idx, idy, 0, IV)) = flux[IV];
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
   } // end operator () - 2d
 
@@ -182,12 +182,13 @@ test_sdm_flux(int argc, char * argv[])
 
 } // namespace ppkMHD
 
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   // Create MPI session if MPI enabled
 #ifdef USE_MPI
-  hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
+  hydroSimu::GlobalMpiSession mpiSession(&argc, &argv);
 #endif // USE_MPI
 
   int myRank = 0;
@@ -198,27 +199,28 @@ int main(int argc, char* argv[])
 
   Kokkos::initialize(argc, argv);
 
-  if (myRank==0) {
+  if (myRank == 0)
+  {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
 
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
-    if ( Kokkos::hwloc::available() ) {
-      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-          << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-          << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-          << "] )"
-          << std::endl ;
+    if (Kokkos::hwloc::available())
+    {
+      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+          << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+          << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
     }
 
-    Kokkos::print_configuration( msg );
+    Kokkos::print_configuration(msg);
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
 
-  if (myRank==0) {
+  if (myRank == 0)
+  {
     std::cout << "================================================\n";
     std::cout << "==== Spectral Difference Lagrange Flux test ====\n";
     std::cout << "================================================\n";
@@ -229,11 +231,10 @@ int main(int argc, char* argv[])
   {
 
     // 2d
-    ppkMHD::test_sdm_flux<2,4>(argc,argv);
+    ppkMHD::test_sdm_flux<2, 4>(argc, argv);
 
     // 3d
-    ppkMHD::test_sdm_flux<3,4>(argc,argv);
-
+    ppkMHD::test_sdm_flux<3, 4>(argc, argv);
   }
 
   Kokkos::finalize();

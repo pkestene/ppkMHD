@@ -21,4 +21,3 @@ target_include_directories(test_lapacke_qr
   )
 #target_link_libraries(test_lapacke_qr ${LAPACKE_LIBRARIES} ${BLAS_LIBRARIES})
 target_link_libraries(test_lapacke_qr ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
-

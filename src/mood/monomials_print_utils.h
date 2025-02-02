@@ -61,18 +61,18 @@ print_all_monomials(int order)
     // print current monomial exponents, most significant exponent first
     if (dim == 2)
     {
-      std::cout << " mono_next_grlex(dim=" << dim << ",e) = "
-                << "(" << e[1] << "," << e[0] << ")\n";
+      std::cout << " mono_next_grlex(dim=" << dim << ",e) = " << "(" << e[1] << "," << e[0]
+                << ")\n";
     }
     else if (dim == 3)
     {
-      std::cout << " mono_next_grlex(dim=" << dim << ",e) = "
-                << "(" << e[2] << "," << e[1] << "," << e[0] << ")\n";
+      std::cout << " mono_next_grlex(dim=" << dim << ",e) = " << "(" << e[2] << "," << e[1] << ","
+                << e[0] << ")\n";
     }
     else if (dim == 4)
     {
-      std::cout << " mono_next_grlex(dim=" << dim << ",e) = "
-                << "(" << e[3] << "," << e[2] << "," << e[1] << "," << e[0] << ")\n";
+      std::cout << " mono_next_grlex(dim=" << dim << ",e) = " << "(" << e[3] << "," << e[2] << ","
+                << e[1] << "," << e[0] << ")\n";
     }
 
     // increment (in the sens of graded reverse lexicographic order)
@@ -123,18 +123,14 @@ print_all_monomials_map(int order)
     {
 
       std::cout << e[0] << "," << e[1] << "},";
-      std::cout << "   // "
-                << "X^" << e[0] << " * "
-                << "Y^" << e[1] << "\n";
+      std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << "\n";
     }
     else if (dim == 3)
     {
 
       std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
-      std::cout << "   // "
-                << "X^" << e[0] << " * "
-                << "Y^" << e[1] << " * "
-                << "Z^" << e[2] << "\n";
+      std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2]
+                << "\n";
     }
 
     // increment (in the sens of graded reverse lexicographic order)

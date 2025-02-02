@@ -154,7 +154,7 @@ public:
         }
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
   } // end operator () - 2d
 
@@ -216,8 +216,8 @@ public:
           z += this->sdm_geom.solution_pts_1d(idz) * dz;
 
         } // end for idx
-      }   // end for idy
-    }     // end for idz
+      } // end for idy
+    } // end for idz
 
   } // end operator () - 3d
 

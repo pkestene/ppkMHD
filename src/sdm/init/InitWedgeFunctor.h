@@ -128,7 +128,7 @@ public:
         }
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
   } // end operator () - 2d
 
@@ -214,8 +214,8 @@ public:
           }
 
         } // end for idx
-      }   // end for idy
-    }     // end for idz
+      } // end for idy
+    } // end for idz
 
   } // end operator () - 3d
 
@@ -227,4 +227,4 @@ public:
 } // namespace sdm
 } // namespace ppkMHD
 
-# endif // SDM_INIT_WEDGE_FUNCTOR_H_
+#endif // SDM_INIT_WEDGE_FUNCTOR_H_

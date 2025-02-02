@@ -1,7 +1,7 @@
 #ifndef MOOD_QUADRATURE_RULES_H_
 #define MOOD_QUADRATURE_RULES_H_
 
-//#include <array>
+// #include <array>
 #include <cmath>
 
 #include "shared/real_type.h"

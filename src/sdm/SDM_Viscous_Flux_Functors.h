@@ -3,8 +3,8 @@
 
 #include <limits> // for std::numeric_limits
 #ifdef __CUDA_ARCH__
-#include <math_constants.h> // for cuda math constants, e.g. CUDART_INF
-#endif // __CUDA_ARCH__
+#  include <math_constants.h> // for cuda math constants, e.g. CUDART_INF
+#endif                        // __CUDA_ARCH__
 
 #include "shared/kokkos_shared.h"
 #include "sdm/SDMBaseFunctor.h"
@@ -15,8 +15,10 @@
 #include "shared/RiemannSolvers.h"
 #include "shared/EulerEquations.h"
 
-namespace ppkMHD {
-namespace sdm {
+namespace ppkMHD
+{
+namespace sdm
+{
 
 /*************************************************/
 /*************************************************/
@@ -25,47 +27,48 @@ namespace sdm {
  * This functor computes viscous fluxes at fluxes points taking
  * as input conservative variables and their gradients at fluxes points.
  */
-template<int dim, int N, int dir>
-class ComputeViscousFluxAtFluxPoints_Functor : public SDMBaseFunctor<dim,N> {
+template <int dim, int N, int dir>
+class ComputeViscousFluxAtFluxPoints_Functor : public SDMBaseFunctor<dim, N>
+{
 
 public:
-  using typename SDMBaseFunctor<dim,N>::DataArray;
-  using typename SDMBaseFunctor<dim,N>::HydroState;
+  using typename SDMBaseFunctor<dim, N>::DataArray;
+  using typename SDMBaseFunctor<dim, N>::HydroState;
 
-  static constexpr auto dofMapF = DofMapFlux<dim,N,dir>;
+  static constexpr auto dofMapF = DofMapFlux<dim, N, dir>;
 
-  using Vector     = typename ppkMHD::EulerEquations<dim>::Vector;
+  using Vector = typename ppkMHD::EulerEquations<dim>::Vector;
   using GradTensor = typename ppkMHD::EulerEquations<dim>::GradTensor;
 
-  using SDMBaseFunctor<dim,N>::IGU;
-  using SDMBaseFunctor<dim,N>::IGV;
-  using SDMBaseFunctor<dim,N>::IGW;
+  using SDMBaseFunctor<dim, N>::IGU;
+  using SDMBaseFunctor<dim, N>::IGV;
+  using SDMBaseFunctor<dim, N>::IGW;
 
-  using SDMBaseFunctor<dim,N>::IGUX;
-  using SDMBaseFunctor<dim,N>::IGVX;
-  using SDMBaseFunctor<dim,N>::IGWX;
+  using SDMBaseFunctor<dim, N>::IGUX;
+  using SDMBaseFunctor<dim, N>::IGVX;
+  using SDMBaseFunctor<dim, N>::IGWX;
 
-  using SDMBaseFunctor<dim,N>::IGUY;
-  using SDMBaseFunctor<dim,N>::IGVY;
-  using SDMBaseFunctor<dim,N>::IGWY;
+  using SDMBaseFunctor<dim, N>::IGUY;
+  using SDMBaseFunctor<dim, N>::IGVY;
+  using SDMBaseFunctor<dim, N>::IGWY;
 
-  using SDMBaseFunctor<dim,N>::IGUZ;
-  using SDMBaseFunctor<dim,N>::IGVZ;
-  using SDMBaseFunctor<dim,N>::IGWZ;
+  using SDMBaseFunctor<dim, N>::IGUZ;
+  using SDMBaseFunctor<dim, N>::IGVZ;
+  using SDMBaseFunctor<dim, N>::IGWZ;
 
-  //using SDMBaseFunctor<dim,N>::IGT;
+  // using SDMBaseFunctor<dim,N>::IGT;
 
-  using SDMBaseFunctor<dim,N>::U_X;
-  using SDMBaseFunctor<dim,N>::U_Y;
-  using SDMBaseFunctor<dim,N>::U_Z;
+  using SDMBaseFunctor<dim, N>::U_X;
+  using SDMBaseFunctor<dim, N>::U_Y;
+  using SDMBaseFunctor<dim, N>::U_Z;
 
-  using SDMBaseFunctor<dim,N>::V_X;
-  using SDMBaseFunctor<dim,N>::V_Y;
-  using SDMBaseFunctor<dim,N>::V_Z;
+  using SDMBaseFunctor<dim, N>::V_X;
+  using SDMBaseFunctor<dim, N>::V_Y;
+  using SDMBaseFunctor<dim, N>::V_Z;
 
-  using SDMBaseFunctor<dim,N>::W_X;
-  using SDMBaseFunctor<dim,N>::W_Y;
-  using SDMBaseFunctor<dim,N>::W_Z;
+  using SDMBaseFunctor<dim, N>::W_X;
+  using SDMBaseFunctor<dim, N>::W_Y;
+  using SDMBaseFunctor<dim, N>::W_Z;
 
   /**
    *
@@ -75,14 +78,13 @@ public:
    *
    */
   ComputeViscousFluxAtFluxPoints_Functor(HydroParams                 params,
-					 SDM_Geometry<dim,N>         sdm_geom,
-					 ppkMHD::EulerEquations<dim> euler,
-					 DataArray                   FUgrad,
-					 DataArray                   UdataFlux) :
-    SDMBaseFunctor<dim,N>(params,sdm_geom),
-    euler(euler),
-    UdataFlux(UdataFlux)
-  {};
+                                         SDM_Geometry<dim, N>        sdm_geom,
+                                         ppkMHD::EulerEquations<dim> euler,
+                                         DataArray                   FUgrad,
+                                         DataArray                   UdataFlux)
+    : SDMBaseFunctor<dim, N>(params, sdm_geom)
+    , euler(euler)
+    , UdataFlux(UdataFlux){};
 
   // ================================================
   //
@@ -90,9 +92,9 @@ public:
   //
   // ================================================
   //! functor for 2d
-  template<int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename std::enable_if<dim_==2, int>::type& index) const
+  template <int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION void
+  operator()(const typename std::enable_if<dim_ == 2, int>::type & index) const
   {
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
@@ -100,14 +102,14 @@ public:
     const int nbvar = this->params.nbvar;
 
     // local cell index
-    int i,j;
-    index2coord(index,i,j,isize,jsize);
+    int i, j;
+    index2coord(index, i, j, isize, jsize);
 
     // velocity vector
     Vector vel;
 
     // forcing term (unused for now)
-    Vector forcing = {0.0, 0.0};
+    Vector forcing = { 0.0, 0.0 };
 
     // velocity gradient tensor
     GradTensor grad;
@@ -119,34 +121,38 @@ public:
     // ========= DIR X =========
     // =========================
     // loop over cell DoF's
-    if (dir == IX) {
+    if (dir == IX)
+    {
 
-      for (int idy=0; idy<N; ++idy) {
+      for (int idy = 0; idy < N; ++idy)
+      {
 
-	// all flux points along direction X
-	for (int idx=0; idx<N+1; ++idx) {
+        // all flux points along direction X
+        for (int idx = 0; idx < N + 1; ++idx)
+        {
 
-	  // retrieve velocity vector
-	  vel[IX] = FUgrad(i,j, dofMapF(idx,idy,0,IGU));
-	  vel[IY] = FUgrad(i,j, dofMapF(idx,idy,0,IGV));
+          // retrieve velocity vector
+          vel[IX] = FUgrad(i, j, dofMapF(idx, idy, 0, IGU));
+          vel[IY] = FUgrad(i, j, dofMapF(idx, idy, 0, IGV));
 
-	  // retrieve velocity gradient tensor
-	  grad[U_X] = FUgrad(i,j, dofMapF(idx,idy,0,IGUX));
-	  grad[U_Y] = FUgrad(i,j, dofMapF(idx,idy,0,IGUY));
-	  grad[V_X] = FUgrad(i,j, dofMapF(idx,idy,0,IGVX));
-	  grad[V_Y] = FUgrad(i,j, dofMapF(idx,idy,0,IGVY));
+          // retrieve velocity gradient tensor
+          grad[U_X] = FUgrad(i, j, dofMapF(idx, idy, 0, IGUX));
+          grad[U_Y] = FUgrad(i, j, dofMapF(idx, idy, 0, IGUY));
+          grad[V_X] = FUgrad(i, j, dofMapF(idx, idy, 0, IGVX));
+          grad[V_Y] = FUgrad(i, j, dofMapF(idx, idy, 0, IGVY));
 
-	  // compute flux along X direction
-	  euler.flux_visc_x(grad, vel, forcing, this->params.settings.mu, flux);
+          // compute flux along X direction
+          euler.flux_visc_x(grad, vel, forcing, this->params.settings.mu, flux);
 
-	  // copy back interpolated value
-	  for (int ivar = 0; ivar<nbvar; ++ivar) {
+          // copy back interpolated value
+          for (int ivar = 0; ivar < nbvar; ++ivar)
+          {
 
-	    UdataFlux(i,j, dofMapF(idx,idy,0,ivar)) = flux[ivar];
+            UdataFlux(i, j, dofMapF(idx, idy, 0, ivar)) = flux[ivar];
 
-	  } // end for ivar
+          } // end for ivar
 
-	} // end for idx
+        } // end for idx
 
       } // end for idy
 
@@ -156,34 +162,38 @@ public:
     // ========= DIR Y =========
     // =========================
     // loop over cell DoF's
-    if (dir == IY) {
+    if (dir == IY)
+    {
 
-      for (int idx=0; idx<N; ++idx) {
+      for (int idx = 0; idx < N; ++idx)
+      {
 
-	// interior points along direction X
-	for (int idy=0; idy<N+1; ++idy) {
+        // interior points along direction X
+        for (int idy = 0; idy < N + 1; ++idy)
+        {
 
-	  // retrieve velocity vector
-	  vel[IX] = FUgrad(i,j, dofMapF(idx,idy,0,IGU));
-	  vel[IY] = FUgrad(i,j, dofMapF(idx,idy,0,IGV));
+          // retrieve velocity vector
+          vel[IX] = FUgrad(i, j, dofMapF(idx, idy, 0, IGU));
+          vel[IY] = FUgrad(i, j, dofMapF(idx, idy, 0, IGV));
 
-	  // retrieve velocity gradient tensor
-	  grad[U_X] = FUgrad(i,j, dofMapF(idx,idy,0,IGUX));
-	  grad[U_Y] = FUgrad(i,j, dofMapF(idx,idy,0,IGUY));
-	  grad[V_X] = FUgrad(i,j, dofMapF(idx,idy,0,IGVX));
-	  grad[V_Y] = FUgrad(i,j, dofMapF(idx,idy,0,IGVY));
+          // retrieve velocity gradient tensor
+          grad[U_X] = FUgrad(i, j, dofMapF(idx, idy, 0, IGUX));
+          grad[U_Y] = FUgrad(i, j, dofMapF(idx, idy, 0, IGUY));
+          grad[V_X] = FUgrad(i, j, dofMapF(idx, idy, 0, IGVX));
+          grad[V_Y] = FUgrad(i, j, dofMapF(idx, idy, 0, IGVY));
 
-	  // compute flux along Y direction
-	  euler.flux_visc_y(grad, vel, forcing, this->params.settings.mu, flux);
+          // compute flux along Y direction
+          euler.flux_visc_y(grad, vel, forcing, this->params.settings.mu, flux);
 
-	  // copy back interpolated value
-	  for (int ivar = 0; ivar<nbvar; ++ivar) {
+          // copy back interpolated value
+          for (int ivar = 0; ivar < nbvar; ++ivar)
+          {
 
-	    UdataFlux(i,j, dofMapF(idx,idy,0,ivar)) = flux[ivar];
+            UdataFlux(i, j, dofMapF(idx, idy, 0, ivar)) = flux[ivar];
 
-	  } // end for ivar
+          } // end for ivar
 
-	} // end for idy
+        } // end for idy
 
       } // end for idx
 
@@ -197,9 +207,9 @@ public:
   //
   // ================================================
   //! functor for 3d
-  template<int dim_ = dim>
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const typename std::enable_if<dim_==3, int>::type& index) const
+  template <int dim_ = dim>
+  KOKKOS_INLINE_FUNCTION void
+  operator()(const typename std::enable_if<dim_ == 3, int>::type & index) const
   {
 
     const int isize = this->params.isize;
@@ -209,14 +219,14 @@ public:
     const int nbvar = this->params.nbvar;
 
     // local cell index
-    int i,j,k;
-    index2coord(index,i,j,k,isize,jsize,ksize);
+    int i, j, k;
+    index2coord(index, i, j, k, isize, jsize, ksize);
 
     // velocity vector
     Vector vel;
 
     // forcing term (unused for now)
-    Vector forcing = {0.0, 0.0};
+    Vector forcing = { 0.0, 0.0 };
 
     // velocity gradient tensor
     GradTensor grad;
@@ -228,45 +238,50 @@ public:
     // ========= DIR X =========
     // =========================
     // loop over cell DoF's
-    if (dir == IX) {
+    if (dir == IX)
+    {
 
-      for (int idz=0; idz<N; ++idz) {
-	for (int idy=0; idy<N; ++idy) {
+      for (int idz = 0; idz < N; ++idz)
+      {
+        for (int idy = 0; idy < N; ++idy)
+        {
 
-	  // all flux points along direction X
-	  for (int idx=0; idx<N+1; ++idx) {
+          // all flux points along direction X
+          for (int idx = 0; idx < N + 1; ++idx)
+          {
 
-	    // retrieve velocity vector
-	    vel[IX] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGU));
-	    vel[IY] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGV));
-	    vel[IZ] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGW));
+            // retrieve velocity vector
+            vel[IX] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGU));
+            vel[IY] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGV));
+            vel[IZ] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGW));
 
-	    // retrieve velocity gradient tensor
-	    grad[U_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUX));
-	    grad[U_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUY));
-	    grad[U_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUZ));
+            // retrieve velocity gradient tensor
+            grad[U_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUX));
+            grad[U_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUY));
+            grad[U_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUZ));
 
-	    grad[V_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVX));
-	    grad[V_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVY));
-	    grad[V_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVZ));
+            grad[V_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVX));
+            grad[V_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVY));
+            grad[V_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVZ));
 
-	    grad[W_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWX));
-	    grad[W_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWY));
-	    grad[W_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWZ));
+            grad[W_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWX));
+            grad[W_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWY));
+            grad[W_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWZ));
 
-	    // compute flux along X direction
-	    euler.flux_visc_x(grad, vel, forcing, this->params.settings.mu, flux);
+            // compute flux along X direction
+            euler.flux_visc_x(grad, vel, forcing, this->params.settings.mu, flux);
 
-	    // copy back interpolated value
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+            // copy back interpolated value
+            for (int ivar = 0; ivar < nbvar; ++ivar)
+            {
 
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+              UdataFlux(i, j, k, dofMapF(idx, idy, idz, ivar)) = flux[ivar];
 
-	    } // end for ivar
+            } // end for ivar
 
-	  } // end for idx
+          } // end for idx
 
-	} // end for idy
+        } // end for idy
       } // end for idz
 
     } // end for dir IX
@@ -275,45 +290,50 @@ public:
     // ========= DIR Y =========
     // =========================
     // loop over cell DoF's
-    if (dir == IY) {
+    if (dir == IY)
+    {
 
-      for (int idz=0; idz<N; ++idz) {
-	for (int idx=0; idx<N; ++idx) {
+      for (int idz = 0; idz < N; ++idz)
+      {
+        for (int idx = 0; idx < N; ++idx)
+        {
 
-	  // all flux points along direction Y
-	  for (int idy=0; idy<N+1; ++idy) {
+          // all flux points along direction Y
+          for (int idy = 0; idy < N + 1; ++idy)
+          {
 
-	    // retrieve velocity vector
-	    vel[IX] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGU));
-	    vel[IY] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGV));
-	    vel[IZ] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGW));
+            // retrieve velocity vector
+            vel[IX] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGU));
+            vel[IY] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGV));
+            vel[IZ] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGW));
 
-	    // retrieve velocity gradient tensor
-	    grad[U_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUX));
-	    grad[U_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUY));
-	    grad[U_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUZ));
+            // retrieve velocity gradient tensor
+            grad[U_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUX));
+            grad[U_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUY));
+            grad[U_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUZ));
 
-	    grad[V_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVX));
-	    grad[V_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVY));
-	    grad[V_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVZ));
+            grad[V_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVX));
+            grad[V_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVY));
+            grad[V_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVZ));
 
-	    grad[W_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWX));
-	    grad[W_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWY));
-	    grad[W_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWZ));
+            grad[W_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWX));
+            grad[W_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWY));
+            grad[W_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWZ));
 
-	    // compute flux along Y direction
-	    euler.flux_visc_y(grad, vel, forcing, this->params.settings.mu, flux);
+            // compute flux along Y direction
+            euler.flux_visc_y(grad, vel, forcing, this->params.settings.mu, flux);
 
-	    // copy back interpolated value
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+            // copy back interpolated value
+            for (int ivar = 0; ivar < nbvar; ++ivar)
+            {
 
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+              UdataFlux(i, j, k, dofMapF(idx, idy, idz, ivar)) = flux[ivar];
 
-	    } // end for ivar
+            } // end for ivar
 
-	  } // end for idx
+          } // end for idx
 
-	} // end for idy
+        } // end for idy
       } // end for idz
 
     } // end for dir IY
@@ -322,45 +342,50 @@ public:
     // ========= DIR Z =========
     // =========================
     // loop over cell DoF's
-    if (dir == IZ) {
+    if (dir == IZ)
+    {
 
-      for (int idy=0; idy<N; ++idy) {
-	for (int idx=0; idx<N; ++idx) {
+      for (int idy = 0; idy < N; ++idy)
+      {
+        for (int idx = 0; idx < N; ++idx)
+        {
 
-	  // all flux points along direction Z
-	  for (int idz=0; idz<N+1; ++idz) {
+          // all flux points along direction Z
+          for (int idz = 0; idz < N + 1; ++idz)
+          {
 
-	    // retrieve velocity vector
-	    vel[IX] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGU));
-	    vel[IY] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGV));
-	    vel[IZ] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGW));
+            // retrieve velocity vector
+            vel[IX] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGU));
+            vel[IY] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGV));
+            vel[IZ] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGW));
 
-	    // retrieve velocity gradient tensor
-	    grad[U_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUX));
-	    grad[U_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUY));
-	    grad[U_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGUZ));
+            // retrieve velocity gradient tensor
+            grad[U_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUX));
+            grad[U_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUY));
+            grad[U_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGUZ));
 
-	    grad[V_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVX));
-	    grad[V_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVY));
-	    grad[V_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGVZ));
+            grad[V_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVX));
+            grad[V_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVY));
+            grad[V_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGVZ));
 
-	    grad[W_X] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWX));
-	    grad[W_Y] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWY));
-	    grad[W_Z] = FUgrad(i,j,k, dofMapF(idx,idy,idz,IGWZ));
+            grad[W_X] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWX));
+            grad[W_Y] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWY));
+            grad[W_Z] = FUgrad(i, j, k, dofMapF(idx, idy, idz, IGWZ));
 
-	    // compute flux along Z direction
-	    euler.flux_visc_z(grad, vel, forcing, this->params.settings.mu, flux);
+            // compute flux along Z direction
+            euler.flux_visc_z(grad, vel, forcing, this->params.settings.mu, flux);
 
-	    // copy back interpolated value
-	    for (int ivar = 0; ivar<nbvar; ++ivar) {
+            // copy back interpolated value
+            for (int ivar = 0; ivar < nbvar; ++ivar)
+            {
 
-	      UdataFlux(i,j,k, dofMapF(idx,idy,idz,ivar)) = flux[ivar];
+              UdataFlux(i, j, k, dofMapF(idx, idy, idz, ivar)) = flux[ivar];
 
-	    } // end for ivar
+            } // end for ivar
 
-	  } // end for idx
+          } // end for idx
 
-	} // end for idy
+        } // end for idy
       } // end for idz
 
     } // end for dir IZ
@@ -369,8 +394,8 @@ public:
 
 
   ppkMHD::EulerEquations<dim> euler;
-  DataArray FUgrad;
-  DataArray UdataFlux;
+  DataArray                   FUgrad;
+  DataArray                   UdataFlux;
 
 }; // class ComputeViscousFluxAtFluxPoints_Functor
 

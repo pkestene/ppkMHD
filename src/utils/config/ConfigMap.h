@@ -48,7 +48,8 @@ public:
  *
  * ConfigMap is return by value here.
  */
-ConfigMap broadcast_parameters(std::string filename);
+ConfigMap
+broadcast_parameters(std::string filename);
 
 
 #endif // CONFIG_MAP_H_

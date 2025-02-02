@@ -16,7 +16,7 @@ To build doxygen API documentation:
    # the output is in doc/doxygen/html/index.html
 
 
-To build sphinx/html documentation:		
+To build sphinx/html documentation:
 
 .. code-block:: bash
 
@@ -25,4 +25,3 @@ To build sphinx/html documentation:
    cmake -DBUILD_CODE:BOOL=OFF -DBUILD_DOC:BOOL=ON -DDOC:STRING=html ..
    make doc
    # the output web page is in build/doc/html/index.html
-

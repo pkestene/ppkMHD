@@ -91,7 +91,7 @@ public:
         Udata(i, j, dofMap(idx, idy, 0, IV)) = jparams.rho_v2;
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
   } // end operator () - 2d
 
@@ -127,8 +127,8 @@ public:
           Udata(i, j, k, dofMap(idx, idy, idz, IW)) = jparams.rho_w2;
 
         } // end for idx
-      }   // end for idy
-    }     // end for idz
+      } // end for idy
+    } // end for idz
 
   } // end operator () - 3d
 

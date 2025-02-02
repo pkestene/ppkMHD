@@ -114,7 +114,7 @@ test_sdm_lsq_gradient()
         rhs[1] += w * dy * df;
 
       } // end i
-    }   // end j
+    } // end j
 
     // symetry
     mat[1][0] = mat[0][1];
@@ -161,8 +161,8 @@ test_sdm_lsq_gradient()
           rhs[2] += w * dz * df;
 
         } // end i
-      }   // end j
-    }     // end k
+      } // end j
+    } // end k
 
     printf("%f %f %f\n", mat[0][0], mat[1][1], mat[2][2]);
 
@@ -183,12 +183,13 @@ test_sdm_lsq_gradient()
 // =====================================================================
 // =====================================================================
 // =====================================================================
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   // Create MPI session if MPI enabled
 #ifdef USE_MPI
-  hydroSimu::GlobalMpiSession mpiSession(&argc,&argv);
+  hydroSimu::GlobalMpiSession mpiSession(&argc, &argv);
 #endif // USE_MPI
 
   int myRank = 0;
@@ -199,28 +200,29 @@ int main(int argc, char* argv[])
 
   Kokkos::initialize(argc, argv);
 
-  if (myRank==0) {
+  if (myRank == 0)
+  {
     std::cout << "##########################\n";
     std::cout << "KOKKOS CONFIG             \n";
     std::cout << "##########################\n";
 
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
-    if ( Kokkos::hwloc::available() ) {
-      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-          << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-          << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-          << "] )"
-          << std::endl ;
+    if (Kokkos::hwloc::available())
+    {
+      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+          << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+          << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
     }
 
-    Kokkos::print_configuration( msg );
+    Kokkos::print_configuration(msg);
 
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
 
-  if (myRank==0) {
+  if (myRank == 0)
+  {
     std::cout << "================================================\n";
     std::cout << "==== Spectral Difference Lagrange      test ====\n";
     std::cout << "==== Least-square gradient estimation ==========\n";
@@ -232,15 +234,13 @@ int main(int argc, char* argv[])
   {
 
     // 2d
-    ppkMHD::test_sdm_lsq_gradient<2,4>();
+    ppkMHD::test_sdm_lsq_gradient<2, 4>();
 
     // 3d
-    ppkMHD::test_sdm_lsq_gradient<3,4>();
-
+    ppkMHD::test_sdm_lsq_gradient<3, 4>();
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-
 }

@@ -48,20 +48,26 @@ private:
   unsigned int ** table;
 };
 
-unsigned int Binomial::Choose(unsigned int n, unsigned int k)
+unsigned int
+Binomial::Choose(unsigned int n, unsigned int k)
 {
-  if (n < k) return 0;
-  if (k == 0 || n==1 ) return 1;
-  if (n==2 && k==1) return 2;
-  if (n==2 && k==2) return 1;
-  if (n==k) return 1;
+  if (n < k)
+    return 0;
+  if (k == 0 || n == 1)
+    return 1;
+  if (n == 2 && k == 1)
+    return 2;
+  if (n == 2 && k == 2)
+    return 1;
+  if (n == k)
+    return 1;
 
 
-  if (Contains(n,k))
-    {
-      return table[n][k];
-    }
-  table[n][k] = Choose(n-1,k) + Choose(n-1,k-1);
+  if (Contains(n, k))
+  {
+    return table[n][k];
+  }
+  table[n][k] = Choose(n - 1, k) + Choose(n - 1, k - 1);
   return table[n][k];
 }
 

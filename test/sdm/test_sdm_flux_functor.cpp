@@ -19,7 +19,7 @@
 // for IO
 #include "utils/io/IO_ReadWrite_SDM.h"
 
-//#include "SDMTestFunctors.h"
+// #include "SDMTestFunctors.h"
 #include "test_sdm_flux_functor_init.h"
 
 #ifdef USE_MPI
@@ -182,7 +182,8 @@ test_flux_functors()
 } // test_flux_functors
 } // namespace ppkMHD
 
-int main(int argc, char* argv[])
+int
+main(int argc, char * argv[])
 {
 
   Kokkos::initialize(argc, argv);
@@ -194,15 +195,14 @@ int main(int argc, char* argv[])
 
     std::ostringstream msg;
     std::cout << "Kokkos configuration" << std::endl;
-    if ( Kokkos::hwloc::available() ) {
-      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-          << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-          << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-          << "] )"
-          << std::endl ;
+    if (Kokkos::hwloc::available())
+    {
+      msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count() << "] x CORE["
+          << Kokkos::hwloc::get_available_cores_per_numa() << "] x HT["
+          << Kokkos::hwloc::get_available_threads_per_core() << "] )" << std::endl;
     }
 
-    Kokkos::print_configuration( msg );
+    Kokkos::print_configuration(msg);
     std::cout << msg.str();
     std::cout << "##########################\n";
   }
@@ -214,15 +214,13 @@ int main(int argc, char* argv[])
   // testing for multiple value of N in 2 to 6
   {
     // 2d
-    ppkMHD::test_flux_functors<2,4>();
+    ppkMHD::test_flux_functors<2, 4>();
 
     // 3d
-    ppkMHD::test_flux_functors<3,4>();
-
+    ppkMHD::test_flux_functors<3, 4>();
   }
 
   Kokkos::finalize();
 
   return EXIT_SUCCESS;
-
 }

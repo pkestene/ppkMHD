@@ -177,7 +177,7 @@ public:
         }
 
       } // end for idx
-    }   // end for idy
+    } // end for idy
 
     // free random number
     rand_pool.free_state(rand_gen);
@@ -332,8 +332,8 @@ public:
           }
 
         } // end for idx
-      }   // end for idy
-    }     // end for idz
+      } // end for idy
+    } // end for idz
 
     // free random number
     rand_pool.free_state(rand_gen);

@@ -68,8 +68,8 @@ main(int argc, char * argv[])
   std::cout << "A valid test :\n";
   std::string test_str = "STENCIL_2D_DEGREE3";
   stencilId = mood::StencilUtils::get_stencilId_from_string(test_str);
-  std::cout << "StencilId " << stencilId << " (" << test_str << ")"
-            << " is the same as " << mood::StencilUtils::get_stencil_name(stencilId) << "\n";
+  std::cout << "StencilId " << stencilId << " (" << test_str << ")" << " is the same as "
+            << mood::StencilUtils::get_stencil_name(stencilId) << "\n";
 
 
   Kokkos::finalize();

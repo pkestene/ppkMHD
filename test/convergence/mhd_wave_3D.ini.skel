@@ -11,11 +11,11 @@ mz=MZ
 
 [mesh]
 nx=NX
-ny=NY 
+ny=NY
 nz=NZ
 xmax=3.0
 ymax=1.5
-zmax=1.5 
+zmax=1.5
 boundary_type_xmin=3
 boundary_type_xmax=3
 boundary_type_ymin=3
@@ -43,4 +43,3 @@ outputVtkAscii=false
 
 [other]
 implementationVersion=0
-

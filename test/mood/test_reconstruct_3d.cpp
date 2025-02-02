@@ -124,14 +124,14 @@ public:
     return x * x + 2.2 * x * y + 4.1 * y * y - 5.0 + x - 3.4 * z;
   }
 
-  TestReconstructFunctor(result_t result,
-			 geom_t geomPI,
-			 typename mood::MonomialMap<dim,degree>::MonomMap monomMap) :
-    PolynomialEvaluator<dim,degree>(monomMap),
-    result(result),
-    stencil(stencilId),
-    geomPI(geomPI) {};
-  ~TestReconstructFunctor() {};
+  TestReconstructFunctor(result_t                                          result,
+                         geom_t                                            geomPI,
+                         typename mood::MonomialMap<dim, degree>::MonomMap monomMap)
+    : PolynomialEvaluator<dim, degree>(monomMap)
+    , result(result)
+    , stencil(stencilId)
+    , geomPI(geomPI){};
+  ~TestReconstructFunctor(){};
 
   KOKKOS_INLINE_FUNCTION
   void
@@ -380,8 +380,7 @@ main(int argc, char * argv[])
   std::cout << "polynomial coef obtained by least-square fit\n";
   for (int ii = 0; ii < mood::MonomialMap<dim, degree>::ncoefs; ++ii)
     std::cout << "polynomial [" << ii << "] = " << coef_host[ii]
-              << " (diff = " << coef_host[ii] - coefs[ii] << ")"
-              << "\n";
+              << " (diff = " << coef_host[ii] - coefs[ii] << ")" << "\n";
 
   // cross-check polynomial
   if (dim == 2)

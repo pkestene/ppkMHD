@@ -306,20 +306,16 @@ SolverHydroMuscl<dim>::SolverHydroMuscl(HydroParams & params, ConfigMap & config
 
   if (myRank == 0)
   {
-    std::cout << "##########################"
-              << "\n";
+    std::cout << "##########################" << "\n";
     std::cout << "Solver is " << m_solver_name << "\n";
     std::cout << "Problem (init condition) is " << m_problem_name << "\n";
-    std::cout << "##########################"
-              << "\n";
+    std::cout << "##########################" << "\n";
 
     // print parameters on screen
     params.print();
-    std::cout << "##########################"
-              << "\n";
+    std::cout << "##########################" << "\n";
     std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n";
-    std::cout << "##########################"
-              << "\n";
+    std::cout << "##########################" << "\n";
   }
 
 } // SolverHydroMuscl::SolverHydroMuscl
@@ -730,7 +726,7 @@ SolverHydroMuscl<dim>::next_iteration_impl()
       save_solution();
 
     } // end output
-  }   // end enable output
+  } // end enable output
 
   // compute new dt
   timers[TIMER_DT]->start();

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Simple plot of a vtk image data file (.vti). 
-To use when paraview is anavailable. 
+Simple plot of a vtk image data file (.vti).
+To use when paraview is anavailable.
 """
 
 import sys

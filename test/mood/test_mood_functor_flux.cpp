@@ -32,9 +32,10 @@ test_func(double x, double y)
   // return 3.5*x*x+y*0.02+6;
 }
 
-double test_func_3d(double x, double y, double z)
+double
+test_func_3d(double x, double y, double z)
 {
-  return x*x+y-2*z*z;
+  return x * x + y - 2 * z * z;
 }
 
 namespace mood

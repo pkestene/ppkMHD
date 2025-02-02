@@ -420,8 +420,7 @@ SolverHydroMood<dim, degree>::SolverHydroMood(HydroParams & params, ConfigMap & 
     std::cout << "Use default - Four Quadrant" << std::endl;
     init_four_quadrant(U);
   }
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
   std::cout << "Solver is " << m_solver_name << "\n";
   std::cout << "Problem (init condition) is " << m_problem_name << "\n";
   std::cout << "Mood degree : " << degree << "\n";
@@ -433,16 +432,13 @@ SolverHydroMood<dim, degree>::SolverHydroMood(HydroParams & params, ConfigMap & 
   std::cout << "SSPRK2        : " << ssprk2_enabled << "\n";
   std::cout << "SSPRK3        : " << ssprk3_enabled << "\n";
   std::cout << "SSPRK54       : " << ssprk54_enabled << "\n";
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
 
   // print parameters on screen
   params.print();
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
   std::cout << "Memory requested : " << (total_mem_size / 1e6) << " MBytes\n";
-  std::cout << "##########################"
-            << "\n";
+  std::cout << "##########################" << "\n";
 
   // initialize time step
   compute_dt();
@@ -819,7 +815,7 @@ SolverHydroMood<dim, degree>::next_iteration_impl()
       save_solution();
 
     } // end output
-  }   // end enable output
+  } // end enable output
 
   // compute new dt
   timers[TIMER_DT]->start();

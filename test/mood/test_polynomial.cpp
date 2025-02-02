@@ -88,7 +88,7 @@ public:
     : data(data)
     , monomMap(monomMap)
     , eval_point(eval_point){};
-  ~TestPolynomialFunctor() {};
+  ~TestPolynomialFunctor(){};
 
 
   template <int dim_ = dim>
@@ -191,9 +191,7 @@ main(int argc, char * argv[])
       int e[2] = { monomialMap.data_h(i, 0), monomialMap.data_h(i, 1) };
       std::cout << "    {";
       std::cout << e[0] << "," << e[1] << "},";
-      std::cout << "   // "
-                << "X^" << e[0] << " * "
-                << "Y^" << e[1] << "\n";
+      std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << "\n";
     }
   }
   else
@@ -204,10 +202,8 @@ main(int argc, char * argv[])
       int e[3] = { monomialMap.data_h(i, 0), monomialMap.data_h(i, 1), monomialMap.data_h(i, 2) };
       std::cout << "    {";
       std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
-      std::cout << "   // "
-                << "X^" << e[0] << " * "
-                << "Y^" << e[1] << " * "
-                << "Z^" << e[2] << "\n";
+      std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2]
+                << "\n";
     }
   }
 
@@ -248,9 +244,7 @@ main(int argc, char * argv[])
       int e[2] = { monomialMap.data_h(i, 0), monomialMap.data_h(i, 1) };
       std::cout << "    {";
       std::cout << e[0] << "," << e[1] << "},";
-      std::cout << "   // "
-                << "X^" << e[0] << " * "
-                << "Y^" << e[1] << "\n";
+      std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << "\n";
     }
   }
   else
@@ -261,10 +255,8 @@ main(int argc, char * argv[])
       int e[3] = { monomialMap.data_h(i, 0), monomialMap.data_h(i, 1), monomialMap.data_h(i, 2) };
       std::cout << "    {";
       std::cout << e[0] << "," << e[1] << "," << e[2] << "},";
-      std::cout << "   // "
-                << "X^" << e[0] << " * "
-                << "Y^" << e[1] << " * "
-                << "Z^" << e[2] << "\n";
+      std::cout << "   // " << "X^" << e[0] << " * " << "Y^" << e[1] << " * " << "Z^" << e[2]
+                << "\n";
     }
   }
 

@@ -115,8 +115,7 @@ write_nodes_location_flux(std::ostream &          outFile,
     outFile << " offset=\"" << 0 << "\"";
   }
 
-  outFile << ">"
-          << "\n";
+  outFile << ">" << "\n";
 
   if (outputVtkAscii)
   {
@@ -182,10 +181,10 @@ write_nodes_location_flux(std::ostream &          outFile,
             outFile << x << " " << y << " " << 0.0 << "\n";
 
           } // end for idx
-        }   // end for idy
+        } // end for idy
 
       } // end for i
-    }   // end for j
+    } // end for j
 
   } // outputVtkAscii
 
@@ -294,8 +293,7 @@ write_nodes_location_flux(std::ostream &          outFile,
     outFile << " offset=\"" << 0 << "\"";
   }
 
-  outFile << ">"
-          << "\n";
+  outFile << ">" << "\n";
 
   if (outputVtkAscii)
   {
@@ -389,12 +387,12 @@ write_nodes_location_flux(std::ostream &          outFile,
                 outFile << x << " " << y << " " << z << "\n";
 
               } // for idx
-            }   // for idy
-          }     // for idz
+            } // for idy
+          } // for idz
 
         } // end for i
-      }   // end for j
-    }     // end for k
+      } // end for j
+    } // end for k
 
   } // end outputVtkAscii
 
@@ -490,12 +488,12 @@ write_cells_connectivity_flux(std::ostream &          outFile,
               outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
 
             } // for idx
-          }   // for idy
+          } // for idy
 
           cell_index += nbSubCells;
 
         } // for i
-      }   // for j
+      } // for j
 
     } // end dir IX
 
@@ -531,12 +529,12 @@ write_cells_connectivity_flux(std::ostream &          outFile,
               outFile << i0 << " " << i1 << " " << i2 << " " << i3 << "\n";
 
             } // for idx
-          }   // for idy
+          } // for idy
 
           cell_index += nbSubCells;
 
         } // for i
-      }   // for j
+      } // for j
 
     } // end dir IY
 
@@ -732,14 +730,14 @@ write_cells_connectivity_flux(std::ostream &          outFile,
                         << " " << i6 << " " << i7 << "\n";
 
               } // for idx
-            }   // for idy
-          }     // for idz
+            } // for idy
+          } // for idz
 
           cell_index += nbSubCells;
 
         } // for i
-      }   // for j
-    }     // for k
+      } // for j
+    } // for k
 
   } // end outputVtkAscii
 
@@ -928,10 +926,10 @@ write_flux_points_data(std::ostream &                     outFile,
               outFile << data << " ";
 
             } // for idx
-          }   // for idy
+          } // for idy
 
         } // for i
-      }   // for j
+      } // for j
 
       outFile << "\n";
 
@@ -1100,12 +1098,12 @@ write_flux_points_data(std::ostream &                     outFile,
                   outFile << data << " ";
 
                 } // for idx
-              }   // for idy
-            }     // for idz
+              } // for idy
+            } // for idz
 
           } // for i
-        }   // for j
-      }     // for k
+        } // for j
+      } // for k
 
       outFile << "\n";
 
