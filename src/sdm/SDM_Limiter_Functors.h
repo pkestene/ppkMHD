@@ -808,7 +808,7 @@ public:
  *
  * The limiting procedure is described in Cockburn and Shu,
  * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V:
- * MultiDimensinal systems", Journal of Computational Physics, 141, 199-224
+ * MultiDimensional systems", Journal of Computational Physics, 141, 199-224
  * (1998).
  *
  * We use as a reference implementation (for Discontinuous Galerkin schemes)

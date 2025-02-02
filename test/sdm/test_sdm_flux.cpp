@@ -1,6 +1,6 @@
 /**
  * This executable is used to test sdm::SolverHydroSDM class,
- * more specificly object EulerEquations.
+ * more specifically object EulerEquations.
  *
  */
 

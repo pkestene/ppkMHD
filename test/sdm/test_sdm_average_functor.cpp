@@ -36,7 +36,7 @@ namespace ppkMHD
 {
 
 /**
- * Wrapper routine arround the functor call
+ * Wrapper routine around the functor call
  * sdm::Average_Conservative_Variables_Functor
  */
 template <int dim, int N>

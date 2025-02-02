@@ -2,7 +2,7 @@
  * Found on
  * http://stackoverflow.com/questions/3537360/calculating-binomial-coefficient-nck-for-large-n-k
  *
- * Binomial class stores all coefficients up to a maximun number defined in constructor.
+ * Binomial class stores all coefficients up to a maximum number defined in constructor.
  *
  */
 

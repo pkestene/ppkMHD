@@ -26,7 +26,7 @@ namespace sdm
  * This functor takes as an input variables
  * at solution points and perform interpolation at flux points.
  *
- * It is essentially a wrapper arround interpolation method sol2flux_vector.
+ * It is essentially a wrapper around interpolation method sol2flux_vector.
  *
  * Perform exactly the inverse of Interpolate_At_SolutionPoints_Functor.
  *
@@ -344,7 +344,7 @@ enum Interpolation_type_t
  * at flux points and perform interpolation at solution points, and
  * accumulates result in output array (UdataSol).
  *
- * Its is essentially a wrapper arround interpolation method flux2sol_vector.
+ * Its is essentially a wrapper around interpolation method flux2sol_vector.
  *
  * Perform exactly the inverse of Interpolate_At_FluxPoints_Functor
  */

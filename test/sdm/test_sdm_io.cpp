@@ -1,6 +1,6 @@
 /**
  * This executable is used to test sdm::SolverHydroSDM class,
- * more specificly init conditions and vtk output.
+ * more specifically init conditions and vtk output.
  *
  * For output, we would like to output multiple values per cell, in order to
  * "visualize" the high-order quality of the SDM scheme.
@@ -8,7 +8,7 @@
  * About what others do:
  * - Deal.ii uses a class named DataOut, which has a method build_patches
  *   build_patches (const unsigned int n_subdivisions=0)
- *   which allows when outputing data coming from a Discontinuous Galerkin
+ *   which allows when outputting data coming from a Discontinuous Galerkin
  *   scheme to subdivide each cell, a recompute some local interpolation on a
  *   refine patche.
  *   see https://www.dealii.org/8.5.0/doxygen/deal.II/classDataOut.html

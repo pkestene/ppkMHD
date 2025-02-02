@@ -233,7 +233,7 @@ test_chebyshev_quadrature(int i)
 
   sdm_geom.init(0);
 
-  // std::cout << "Solution poins:\n";
+  // std::cout << "Solution points:\n";
   // for (int j=0; j<N; ++j) {
   //   for (int i=0; i<N; ++i) {
   //     std::cout << "(" << sdm_geom.solution_pts_1d_host(i)

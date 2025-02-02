@@ -174,7 +174,7 @@ include(build_or_find_kokkos)
 # ##################################################################################################
 # Eigen3
 # ##################################################################################################
-# Eigen3 (for MOOD) -- not mature enought to be used with nvcc_wrapper, even on host code, I was not
+# Eigen3 (for MOOD) -- not mature enough to be used with nvcc_wrapper, even on host code, I was not
 # able to build code with nvcc_wrapper find_package(Eigen3)
 
 # ##################################################################################################

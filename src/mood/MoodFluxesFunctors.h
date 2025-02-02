@@ -776,7 +776,7 @@ public:
 // =======================================================================
 // =======================================================================
 /**
- * Recompute MOOD fluxes arround flagged cells.
+ * Recompute MOOD fluxes around flagged cells.
  *
  * Please note:
  * - DataArray and HydroState are typedef'ed in MoodBaseFunctor

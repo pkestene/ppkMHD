@@ -1,6 +1,6 @@
 /**
  * This executable is used to print on screen a map between an index
- * (spaning the total number of monomials) and a vector of exponents
+ * (spanning the total number of monomials) and a vector of exponents
  * in the corresponding monomial.
  */
 

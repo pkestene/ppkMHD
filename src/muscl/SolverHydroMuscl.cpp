@@ -17,7 +17,7 @@ namespace muscl
 // =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
-// absorbant, reflexive or periodic
+// absorbent, reflexive or periodic
 // //////////////////////////////////////////////////
 template <>
 void
@@ -42,7 +42,7 @@ SolverHydroMuscl<2>::make_boundaries(DataArray Udata)
 // =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
-// absorbant, reflexive or periodic
+// absorbent, reflexive or periodic
 // //////////////////////////////////////////////////
 template <>
 void

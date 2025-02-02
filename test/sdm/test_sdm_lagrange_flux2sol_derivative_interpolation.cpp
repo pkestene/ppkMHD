@@ -53,7 +53,7 @@ test_lagrange_derivative()
   std::cout << "=========================================================\n";
 
   // function pointer setup for interpolation values
-  // remember that with N solution points, one can recontruct exactly
+  // remember that with N solution points, one can reconstruct exactly
   // polynomials up to degree N-1; so here we test the exact reconstruction.
 
   // example function and its exact derivative

@@ -25,10 +25,10 @@ namespace sdm
 /**
  * This functor takes as an input conservative variables
  * at solution points and perform interpolation of velocities
- * at flux points. What happends at cell borders is the subject
+ * at flux points. What happens at cell borders is the subject
  * of an another functor : Average_component_at_cell_borders_functor
  *
- * It is essentially a wrapper arround interpolation method sol2flux_vector.
+ * It is essentially a wrapper around interpolation method sol2flux_vector.
  *
  * Please note that velocity components in the flux out array must be addressed through
  * IGU, IGV, IGW defined in enum class VarIndexGrad2d and VarIndexGrad3d.
@@ -637,7 +637,7 @@ public:
 /**
  * This functor takes as an input a fluxes data array (only IU,IV, IW are used)
  * containing velocity at flux points, supposed to be continuous at flux points (i.e.
- * an array ouput by function Average_component_at_cell_borders_Functor)
+ * an array output by function Average_component_at_cell_borders_Functor)
  * and perform interpolation of velocity gradients at solution points.
  *
  * Only one direction of gradient is considered (specified as template parameter dir).
@@ -937,7 +937,7 @@ public:
 /**
  * This functor takes as an input velocity gradients
  * at solution points and perform interpolation at flux points.
- * What happends at cell borders is the subject
+ * What happens at cell borders is the subject
  * of an another functor : Average_component_gradient_at_cell_borders_functor
  *
  * Please note that velocity components in the flux out array must be addressed through
@@ -947,7 +947,7 @@ public:
  * \tparam N is SDM order (number of solution point per dimension.
  * \tparam dir specifies the flux points direction (IX, IY or IZ)
  * \tparam dir_grad specifies the gradient direction (IX, IY or IZ)
- * dir_grad controls the indexes used to adress the output array.
+ * dir_grad controls the indexes used to address the output array.
  *
  */
 template <int dim, int N, int dir, int dir_grad>

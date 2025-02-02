@@ -1336,7 +1336,7 @@ write_appended_binary_data(std::ostream &                     outFile,
  * Write Parallel VTU header.
  * Must be done by a single MPI process.
  *
- * \note optionnal parameter is_flux_data_array when true is used to
+ * \note optional parameter is_flux_data_array when true is used to
  * trigger saving a flux data array, for which dof are attached to nodes
  * rather than cells.
  *

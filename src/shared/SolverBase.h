@@ -71,7 +71,7 @@ public:
   double m_t;         //!< the time at the current iteration
   double m_dt;        //!< the time step at the current iteration
   int    m_iteration; //!< the current iteration (integer)
-  double m_tEnd;      //!< maximun time
+  double m_tEnd;      //!< maximum time
   double m_cfl;       //!< Courant number
   int    m_nlog;      //!< number of steps between two monitoring print on screen
 
@@ -91,7 +91,7 @@ public:
 
   /*
    *
-   * Computation interface that may be overriden in a derived
+   * Computation interface that may be overridden in a derived
    * concrete implementation.
    *
    */
@@ -112,7 +112,7 @@ public:
   virtual int
   finished();
 
-  //! This is where action takes place. Wrapper arround next_iteration_impl.
+  //! This is where action takes place. Wrapper around next_iteration_impl.
   virtual void
   next_iteration();
 

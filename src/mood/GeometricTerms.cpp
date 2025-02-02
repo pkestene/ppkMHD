@@ -21,7 +21,7 @@ GeometricTerms::GeometricTerms(real_t dx, real_t dy, real_t dz)
 {
 
   // assumes that stencil_radius is in [1,6]
-  // so we just need to instanciate the maximun value
+  // so we just need to instantiate the maximum value
 
 } // GeometricTerms::GeometricTerms
 

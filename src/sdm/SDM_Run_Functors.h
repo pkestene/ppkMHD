@@ -22,7 +22,7 @@ namespace sdm
 /*************************************************/
 /**
  * A parallel functor to reset either a Solution point / Flux point
- * data arrary.
+ * data array.
  */
 template <int dim, int N>
 class SDM_Erase_Functor : public SDMBaseFunctor<dim, N>

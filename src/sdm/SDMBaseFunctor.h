@@ -211,7 +211,7 @@ public:
    * This routine used SDM_Geometry information to perform interpolation at flux
    * points using values located at solution points.
    *
-   * \param[in] solution_values is a static array containings N values (solution pts)
+   * \param[in] solution_values is a static array containing N values (solution pts)
    * \param[in] index is an integer in 0,1,..,N that identifies a flux point
    *
    * \return the interpolated value at a given flux point
@@ -237,7 +237,7 @@ public:
    * This routine used SDM_Geometry information to perform interpolation at flux
    * points using values located at solution points.
    *
-   * \param[in]  solution_values is a static array containings N values (solution pts)
+   * \param[in]  solution_values is a static array containing N values (solution pts)
    * \param[out] flux_values are interpolated values computed at all flux points
    *
    */
@@ -265,7 +265,7 @@ public:
    * This routine used SDM_Geometry information to perform interpolation at solution
    * points using values located at flux points.
    *
-   * \param[in] flux_values is a static array containings N+1 values (flux pts)
+   * \param[in] flux_values is a static array containing N+1 values (flux pts)
    * \param[in] index is an integer in 0,1,..,N-1 that identifies a solution point
    *
    * \return the interpolated value at a given solution point
@@ -291,7 +291,7 @@ public:
    * This routine used SDM_Geometry information to perform interpolation at solution
    * points using values located at flux points.
    *
-   * \param[in]  flux_values is a static array containings N+1 values (flux pts)
+   * \param[in]  flux_values is a static array containing N+1 values (flux pts)
    * \param[out] solution_values are interpolated values computed at all solution pts.
    *
    */
@@ -325,7 +325,7 @@ public:
    * You will SURELY HAVE TO RESCALE the derivative values for
    * the target interval e.g. [x, x+dx], i.e. multiply by dx.
    *
-   * \param[in]  flux_values is a static array containings N+1 values (flux pts)
+   * \param[in]  flux_values is a static array containing N+1 values (flux pts)
    * \param[in]  index is an integer identifying the Dof location
    *
    * \return derivative evaluations at a solution point.
@@ -358,7 +358,7 @@ public:
    * derivative values for the target interval e.g. [x, x+dx], i.e. multiply by
    * dx.
    *
-   * \param[in]  flux_values is a static array containings N+1 values (flux pts)
+   * \param[in]  flux_values is a static array containing N+1 values (flux pts)
    * \param[out] derivative evaluations at all solution pts.
    *
    */

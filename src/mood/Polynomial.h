@@ -198,7 +198,7 @@ public:
 /**
  * set polynomial coefficients based on monomial exponents :
  *
- * \param[in,out] coefs arrary of coefficients, one per monomial
+ * \param[in,out] coefs array of coefficients, one per monomial
  * \param[in] MonomialMap member data_h contains the map between monomial and exponents
  * \param[in] e0 e1 exponents (identifying a given monomial)
  * \param[in] value is the specified monomial coefficient.
@@ -233,7 +233,7 @@ polynomial_setCoefs(Kokkos::Array<real_t, ncoefs> & coefs,
 /**
  * set polynomial coefficients based on monomial exponents :
  *
- * \param[in,out] coefs arrary of coefficients, one per monomial
+ * \param[in,out] coefs array of coefficients, one per monomial
  * \param[in] MonomialMap member data_h contains the map between monomial and exponents
  * \param[in] e0 e1 e2 exponents (identifying a given monomial)
  * \param[in] value is the specified monomial coefficient.

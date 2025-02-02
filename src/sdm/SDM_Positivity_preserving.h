@@ -140,7 +140,7 @@ public:
      * enforce density positivity
      */
 
-    // first compute minimun density inside current cell
+    // first compute minimum density inside current cell
     real_t rho_min;
 #ifdef __CUDA_ARCH__
     rho_min = CUDART_INF; // something big
@@ -503,7 +503,7 @@ public:
      * enforce density positivity
      */
 
-    // first compute minimun density inside current cell
+    // first compute minimum density inside current cell
     real_t rho_min;
 #ifdef __CUDA_ARCH__
     rho_min = CUDART_INF; // something big
@@ -914,7 +914,7 @@ public:
  * This functor implements ideas from Zhang and Shu about
  * positivity preserving.
  *
- * It designed to be called at the begining of a Runge-Kutta
+ * It designed to be called at the beginning of a Runge-Kutta
  * sub-step.
  *
  * Its purpose is to modify conservative variable at flux to
@@ -994,7 +994,7 @@ public:
      * enforce density positivity
      */
 
-    // first compute minimun density inside current cell
+    // first compute minimum density inside current cell
     real_t rho_min;
 #ifdef __CUDA_ARCH__
     rho_min = CUDART_INF; // something big
@@ -1328,7 +1328,7 @@ public:
      * enforce density positivity
      */
 
-    // first compute minimun density inside current cell
+    // first compute minimum density inside current cell
     real_t rho_min;
 #ifdef __CUDA_ARCH__
     rho_min = CUDART_INF; // something big

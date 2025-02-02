@@ -116,7 +116,7 @@ test_sdm_lsq_gradient()
       } // end i
     } // end j
 
-    // symetry
+    // symmetry
     mat[1][0] = mat[0][1];
 
     printf("%f %f\n", mat[0][0], mat[0][1]);

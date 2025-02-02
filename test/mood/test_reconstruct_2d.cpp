@@ -318,7 +318,7 @@ main(int argc, char * argv[])
   // check that pseudo-inv times A = Identity
   mood::Matrix product;
   product.mult(geomMatrixPI, geomMatrix);
-  product.print("geomMatrixPI * geomMatrix (should be Indentity)");
+  product.print("geomMatrixPI * geomMatrix (should be Identity)");
 
   printf("\n");
   std::array<real_t, stencil_size - 1> rhs_host;

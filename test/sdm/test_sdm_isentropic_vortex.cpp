@@ -159,7 +159,7 @@ compute_error_versus_exact(sdm::SolverHydroSDM<2, N> * solver)
 
   int nbCells = solver->params.isize * solver->params.jsize;
 
-  // retrieve exact solution in auxiliary data arrary : solver.Uaux
+  // retrieve exact solution in auxiliary data array : solver.Uaux
   {
     solver->configMap.setBool("isentropic_vortex", "use_tEnd", true);
     IsentropicVortexParams iparams(solver->configMap);

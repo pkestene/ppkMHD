@@ -73,7 +73,7 @@ namespace sdm
  * a unique Dof among the N^2 Dof in 2D.
  *
  * Time integration is configurable through parameter file. Allowed
- * possiblities are foward_euler, ssprk2, ssprk3 or ssprk54.
+ * possibilities are forward_euler, ssprk2, ssprk3 or ssprk54.
  *
  * Shock capturing with limiters is a delicate subject.
  * It is disabled by default, but can be enable through parameter
@@ -94,7 +94,7 @@ namespace sdm
  *
  * We finaly implement the original idea published in Cockburn and Shu,
  * "The Runge-Kutta Discontinuous Galerkin Method for Conservation Laws V:
- * MultiDimensinal systems", Journal of Computational Physics, 141, 199-224 (1998).
+ * MultiDimensional systems", Journal of Computational Physics, 141, 199-224 (1998).
  *
  * 1. compute cell-average of conservative variables, as well as cell-average gradient
  * of the conservative variables.
@@ -117,7 +117,7 @@ namespace sdm
  *
  * If viscous terms computation is enabled, we need
  * - Ugrax_v, Ugrady_v (and Ugradz_v) allocated;
- *   these arrays are used to store velocity gradients at soluton points.
+ *   these arrays are used to store velocity gradients at solution points.
  * - FUgrad allocated;
  *   this array is used to store both velocity and velocity gradients at flux points.
  *
@@ -235,7 +235,7 @@ public:
   void
   time_integration(real_t dt);
 
-  //! wrapper to tha actual time integation scheme
+  //! wrapper to tha actual time integration scheme
   void
   time_integration_impl(DataArray Udata, DataArray Udata_fdiv, real_t dt);
 
@@ -638,7 +638,7 @@ SolverHydroSDM<dim, N>::SolverHydroSDM(HydroParams & params, ConfigMap & configM
     configMap.getBool("sdm", "limiter_characteristics_enabled", false);
 
   /*
-   * Data arrary Uaverage is used in both positivity preserving and
+   * Data array Uaverage is used in both positivity preserving and
    * limiter
    */
   positivity_enabled = configMap.getBool("sdm", "positivity_enabled", false);
@@ -1615,7 +1615,7 @@ SolverHydroSDM<dim, N>::make_boundary_sdm_jet(DataArray Udata, JetParams jparams
 // =======================================================
 // //////////////////////////////////////////////////
 // Fill ghost cells according to border condition :
-// absorbant, reflexive or periodic
+// absorbent, reflexive or periodic
 // //////////////////////////////////////////////////
 template <int dim, int N>
 void

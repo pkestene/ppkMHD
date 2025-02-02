@@ -40,7 +40,7 @@ STENCIL_ID
 StencilUtils::get_stencilId_from_string(const std::string & name)
 {
 
-  // initialize to unvalid value
+  // initialize to invalid value
   STENCIL_ID result = STENCIL_TOTAL_NUMBER;
 
   // look into valid names

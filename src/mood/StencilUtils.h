@@ -33,7 +33,7 @@ inline STENCIL_ID
 get_stencilId_from_solver_name(const std::string &                                   name,
                                const std::array<std::string, STENCIL_TOTAL_NUMBER> & solver_names)
 {
-  // initialize to unvalid value
+  // initialize to invalid value
   STENCIL_ID result = STENCIL_TOTAL_NUMBER;
 
   // look into valid names

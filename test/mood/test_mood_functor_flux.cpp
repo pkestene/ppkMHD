@@ -101,7 +101,7 @@ public:
     // rhs is sized upon stencil, just remove central point
     Kokkos::Array<real_t, stencil_size - 1> rhs;
 
-    // rhs for neighbor cell (accross an x-face, y-face or z-face)
+    // rhs for neighbor cell (across an x-face, y-face or z-face)
     // Kokkos::Array<real_t,stencil_size-1> rhs_n;
 
 

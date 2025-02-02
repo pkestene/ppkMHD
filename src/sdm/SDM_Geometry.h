@@ -174,7 +174,7 @@ public:
   /**@}*/
 
   //! some useful variables for estimating gradient at cell center
-  //! taking into account symetry of the solution points layout
+  //! taking into account symmetry of the solution points layout
   real_t sum_dx_square;
   real_t sum_dy_square;
   real_t sum_dz_square;

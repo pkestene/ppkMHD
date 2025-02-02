@@ -1,6 +1,6 @@
 /**
  * This executable is used to test sdm::SDM_Geometry class,
- * more specificly the computation of a derivative using Lagrange
+ * more specifically the computation of a derivative using Lagrange
  * polynomial representation.
  *
  * Please be aware the following test is OK as long as we are using polynomial
@@ -55,7 +55,7 @@ test_lagrange_derivative()
   std::cout << "=========================================================\n";
 
   // function pointer setup for interpolation values
-  // remember that with N solution points, one can recontruct exactly
+  // remember that with N solution points, one can reconstruct exactly
   // polynomials up to degree N-1; so here we test the exact reconstruction.
 
   // example function and its exact derivative

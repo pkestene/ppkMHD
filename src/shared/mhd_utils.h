@@ -18,7 +18,7 @@ namespace ppkMHD
 {
 
 /**
- * enum used to identify one the four states arround a cell edge.
+ * enum used to identify one the four states around a cell edge.
  *
  * This is useful when computing emf (electromotive forces)
  */
@@ -308,8 +308,8 @@ fast_mhd_speed(const MHDState & qState, real_t (&fastMagSpeed)[3], const HydroPa
  * \param[out] fastInfoSpeed array containing fastest information speed along
  * x, y, and z direction.
  *
- * Directionnal information speed being defined as :
- * directionnal fast magneto speed + fabs(velocity component)
+ * Directional information speed being defined as :
+ * directional fast magneto speed + fabs(velocity component)
  *
  * \warning This routine uses gamma ! You need to set gamma to something very near to 1
  *

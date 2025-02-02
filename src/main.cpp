@@ -40,7 +40,7 @@ void
 fpehandler(int sig_num)
 {
   signal(SIGFPE, fpehandler);
-  printf("SIGFPE: floating point exception occured of type %d, exiting.\n", sig_num);
+  printf("SIGFPE: floating point exception occurred of type %d, exiting.\n", sig_num);
   abort();
 }
 #endif // USE_FPE_DEBUG
@@ -84,7 +84,7 @@ main(int argc, char * argv[])
 #ifdef USE_FPE_DEBUG
     /*
      * Install a signal handler for floating point errors.
-     * This only usefull when debugging, doing a backtrace in gdb,
+     * This only useful when debugging, doing a backtrace in gdb,
      * tracking for NaN
      */
     feenableexcept(FE_DIVBYZERO | FE_INVALID);
@@ -101,7 +101,7 @@ main(int argc, char * argv[])
       // add option "--ndevices=X" where X is the number of GPUs
       // you want to use per node.
 
-      // on a large cluster, the scheduler should assign ressources
+      // on a large cluster, the scheduler should assign resources
       // in a way that each MPI task is mapped to a different GPU
       // let's cross-checked that:
 

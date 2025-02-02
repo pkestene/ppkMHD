@@ -66,11 +66,11 @@ enum level
   multiple = MPI_THREAD_MULTIPLE
 };
 
-/** Formated output for threading level. */
+/** Formatted output for threading level. */
 std::ostream &
 operator<<(std::ostream & out, level l);
 
-/** Formated input for threading level. */
+/** Formatted input for threading level. */
 std::istream &
 operator>>(std::istream & in, level & l);
 } // namespace threading

@@ -122,7 +122,7 @@ riemann_llf(MHDState & qleft, MHDState & qright, MHDState & flux, const HydroPar
  * \warning This version of HLLD integrates the pressure term in
  * flux[IU] (as in RAMSES). This will need to be modified in the
  * future (as it is done in DUMSES) to handle cylindrical / spherical
- * coordinate systems. For example, one could add a new ouput named qStar
+ * coordinate systems. For example, one could add a new output named qStar
  * to store star state, and that could be used to compute geometrical terms
  * outside this routine.
  *

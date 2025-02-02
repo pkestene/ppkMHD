@@ -84,7 +84,7 @@ Example command line to run the application (1 GPU used per MPI task)
 mpirun -np 4 ./ppkMHD ./test_implode_2D_mpi.ini
 ```
 
-### Additionnal features
+### Additional features
 
 In order to activate building SDM (Spectral Difference Method) schemes, use cmake option `-DPPKMHD_USE_SDM=ON`.
 

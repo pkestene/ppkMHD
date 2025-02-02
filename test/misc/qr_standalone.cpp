@@ -441,7 +441,7 @@ main()
 
   matrix_show(A, "A");
 
-  // compute QR decompostion
+  // compute QR decomposition
   householder(A, R, Q);
 
   matrix_show(Q, "Q");
