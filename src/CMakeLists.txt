@@ -19,7 +19,7 @@ endif()
 
 # include header for main application
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-if (PAPI_FOUND)
+if(PAPI_FOUND)
   include_directories(${PAPI_INCLUDE_DIR})
 endif()
 
@@ -28,44 +28,30 @@ endif()
 #
 add_executable(${PROJECT_NAME} "")
 
-target_sources(${PROJECT_NAME}
-  PRIVATE
-  main.cpp
-  )
+target_sources(${PROJECT_NAME} PRIVATE main.cpp)
 
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_BINARY_DIR}/src
-  )
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+                                                  ${CMAKE_BINARY_DIR}/src)
 
-target_link_libraries(${PROJECT_NAME}
-  PUBLIC
-  ppkMHD::solver_factory
-  ppkMHD::config
-  kokkos
-  dl
-  ppkMHD::muscl
-  ppkMHD::shared
-  ppkMHD::io
-  ppkMHD::monitoring)
+target_link_libraries(
+  ${PROJECT_NAME}
+  PUBLIC ppkMHD::solver_factory
+         ppkMHD::config
+         kokkos
+         dl
+         ppkMHD::muscl
+         ppkMHD::shared
+         ppkMHD::io
+         ppkMHD::monitoring)
 
-if (PPKMHD_USE_SDM)
-  target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-    ppkMHD::sdm)
+if(PPKMHD_USE_SDM)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ppkMHD::sdm)
 endif()
 
-if (PPKMHD_USE_MOOD)
-  target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-    ppkMHD::mood
-    ${LAPACKE_LIBRARIES}
-    ${OpenBLAS_LIB})
+if(PPKMHD_USE_MOOD)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ppkMHD::mood ${LAPACKE_LIBRARIES} ${OpenBLAS_LIB})
 endif()
 
-if (PPKMHD_USE_MPI)
-  target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-    ppkMHD::mpiUtils)
+if(PPKMHD_USE_MPI)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ppkMHD::mpiUtils)
 endif()
