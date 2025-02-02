@@ -2,9 +2,11 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
@@ -14,18 +16,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
-            cuda: "12.0.0"
+          - os: ubuntu-24.04
+            cuda: "12.5.0"
 
     env:
       config: "Release"
 
     steps:
-      - name: Install dependencies
-        run: sudo apt-get install -y libhwloc-dev
+      - name: hardware info
+        run: cat /proc/cpuinfo
+      - name: Install native dependencies
+        run: sudo apt-get install -y libhwloc-dev mpi-default-dev libhdf5-openmpi-dev
 
       - name: Install CUDA
-        uses: Jimver/cuda-toolkit@v0.2.9
+        uses: Jimver/cuda-toolkit@v0.2.17
+        id: cuda-toolkit
         if: runner.os == 'Linux'
         with:
           sub-packages: '["nvcc", "nvrtc", "cudart"]'
@@ -37,6 +42,8 @@ jobs:
         shell: bash
         run: |
           nvcc -V
+          echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"
+          echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
           ls "$CUDA_PATH"
           ls "$CUDA_PATH/bin"
           ls "$CUDA_PATH/include"
@@ -45,9 +52,9 @@ jobs:
         shell: bash
         run: cmake --version
 
-      # make sure to explicitely checkout git submodule !
+      # make sure to explicitly checkout git submodule !
       - name: checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 
