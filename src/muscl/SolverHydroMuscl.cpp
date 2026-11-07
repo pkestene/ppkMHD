@@ -1,6 +1,5 @@
 #include <string>
 #include <cstdio>
-#include <cstdbool>
 #include <iostream> // for std::cout
 
 #include "muscl/SolverHydroMuscl.h"
