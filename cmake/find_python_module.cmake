@@ -1,4 +1,5 @@
-# this macro is borrowed to https://github.com/melvinvermeeren/template_cpp under unlicence
+# this macro is borrowed to https://github.com/melvinvermeeren/template_cpp
+# under unlicence
 function(find_python_module module module_u)
 
   # set(MODULE_U ${module_u})
