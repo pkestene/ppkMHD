@@ -41,7 +41,7 @@ test_gradient_velocity_functors()
 {
 
   using DataArray = typename std::conditional<dim == 2, DataArray2d, DataArray3d>::type;
-  using DataArrayHost = typename DataArray::HostMirror;
+  using DataArrayHost = typename DataArray::host_mirror_type;
 
   int myRank = 0;
 #ifdef USE_MPI

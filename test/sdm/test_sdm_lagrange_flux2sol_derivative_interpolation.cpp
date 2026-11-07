@@ -75,7 +75,7 @@ test_lagrange_derivative()
 
   // create values at solution points:
   using DataVal = Kokkos::View<real_t *, Device>;
-  using DataValHost = Kokkos::View<real_t *, Device>::HostMirror;
+  using DataValHost = Kokkos::View<real_t *, Device>::host_mirror_type;
 
   DataVal     solution_values = DataVal("solution_values", N);
   DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
@@ -87,7 +87,7 @@ test_lagrange_derivative()
     flux_values_h(i) = f(sdm_geom.flux_pts_1d_host(i));
 
   using LagrangeMatrix = Kokkos::View<real_t **, Device>;
-  using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
+  using LagrangeMatrixHost = LagrangeMatrix::host_mirror_type;
 
   LagrangeMatrixHost flux2sol_derivative_h = Kokkos::create_mirror(sdm_geom.flux2sol_derivative);
   Kokkos::deep_copy(flux2sol_derivative_h, sdm_geom.flux2sol_derivative);

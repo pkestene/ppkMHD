@@ -142,23 +142,23 @@ test_compute_average_functor()
   using DataArray = typename std::conditional<dim == 2, DataArray2d, DataArray3d>::type;
 
   {
-    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Uaverage);
+    typename DataArray::host_mirror_type data_host = Kokkos::create_mirror(solver.Uaverage);
     io_writer_average->save_data(solver.Uaverage, data_host, 0, 0.0, "");
   }
 
   {
-    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Ugradx);
+    typename DataArray::host_mirror_type data_host = Kokkos::create_mirror(solver.Ugradx);
     io_writer_average->save_data(solver.Ugradx, data_host, 0, 0.0, "gradx");
   }
 
   {
-    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Ugrady);
+    typename DataArray::host_mirror_type data_host = Kokkos::create_mirror(solver.Ugrady);
     io_writer_average->save_data(solver.Ugrady, data_host, 0, 0.0, "grady");
   }
 
   if (dim == 3)
   {
-    typename DataArray::HostMirror data_host = Kokkos::create_mirror(solver.Ugradz);
+    typename DataArray::host_mirror_type data_host = Kokkos::create_mirror(solver.Ugradz);
     io_writer_average->save_data(solver.Ugradz, data_host, 0, 0.0, "gradz");
   }
 
