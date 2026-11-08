@@ -9,6 +9,8 @@
 
 #include "mood/Stencil.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -20,10 +22,10 @@ constexpr real_t SQRT_3 = 1.732050807568877293527446341505872367;
 constexpr real_t SQRT_3_5 = 0.7745966692414834042779148148838430643;
 
 using QuadLoc_2d_t = Kokkos::View<real_t[maxNbQuadRules][DIM2][2][maxNbQuadPoints][TWO_D]>;
-using QuadLoc_2d_h_t = QuadLoc_2d_t::HostMirror;
+using QuadLoc_2d_h_t = QuadLoc_2d_t::host_mirror_type;
 
 using QuadLoc_3d_t = Kokkos::View<real_t[maxNbQuadRules][DIM3][2][maxNbQuadPoints_3d][THREE_D]>;
-using QuadLoc_3d_h_t = QuadLoc_3d_t::HostMirror;
+using QuadLoc_3d_h_t = QuadLoc_3d_t::host_mirror_type;
 
 
 /**
@@ -344,5 +346,7 @@ constexpr real_t QUADRATURE_LOCATION_3D_N3_Z_P[9][3] = {
 };
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_QUADRATURE_RULES_H_

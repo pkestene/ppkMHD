@@ -38,6 +38,8 @@ test_func_3d(double x, double y, double z)
   return x * x + y - 2 * z * z;
 }
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -78,9 +80,9 @@ public:
     , FluxData_y(FluxData_y)
     , FluxData_z(FluxData_z)
     , stencil(stencil)
-    , mat_pi(mat_pi){};
+    , mat_pi(mat_pi) {};
 
-  ~TestFunctor(){};
+  ~TestFunctor() {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -231,6 +233,7 @@ public:
 
 } // namespace mood
 
+} // namespace ppkMHD
 
 // ====================================================
 // ====================================================
@@ -265,10 +268,10 @@ main(int argc, char * argv[])
     constexpr int dim = 2;
 
     // which stencil shall we use ?
-    constexpr mood::STENCIL_ID stencilId = mood::STENCIL_2D_DEGREE5;
+    constexpr ppkMHD::mood::STENCIL_ID stencilId = ppkMHD::mood::STENCIL_2D_DEGREE5;
 
     // degree of the polynomial
-    constexpr int degree = mood::STENCIL_DEGREE[stencilId];
+    constexpr int degree = ppkMHD::mood::STENCIL_DEGREE[stencilId];
 
     // hydro params
     // read parameter file and initialize parameter
@@ -277,11 +280,11 @@ main(int argc, char * argv[])
     ConfigMap   configMap(input_file);
 
     // test: create a HydroParams object
-    HydroParams params = HydroParams();
+    ppkMHD::HydroParams params = ppkMHD::HydroParams();
     params.setup(configMap);
 
     // make sure ghostWidth is ok
-    params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    params.ghostWidth = ppkMHD::mood::get_stencil_ghostwidth(stencilId);
     params.isize = params.nx + 2 * params.ghostWidth;
     params.jsize = params.ny + 2 * params.ghostWidth;
     params.print();
@@ -289,8 +292,8 @@ main(int argc, char * argv[])
     std::cout << "Using solver mood with degree" << degree << "\n";
 
     // create fake hydro data
-    using DataArray = DataArray2d;
-    using DataArrayHost = DataArray2dHost;
+    using DataArray = ppkMHD::DataArray2d;
+    using DataArrayHost = ppkMHD::DataArray2dHost;
 
     DataArray U = DataArray("U", params.isize, params.jsize, params.nbvar);
     DataArray Fluxes_x = DataArray("Fx", params.isize, params.jsize, params.nbvar);
@@ -301,8 +304,8 @@ main(int argc, char * argv[])
 
     printf("Data sizes %d %d - ghostwidth=%d\n", params.isize, params.jsize, params.ghostWidth);
 
-    real_t dx = params.dx;
-    real_t dy = params.dy;
+    ppkMHD::real_t dx = params.dx;
+    ppkMHD::real_t dy = params.dy;
 
     // init and upload
     printf("U\n");
@@ -311,39 +314,39 @@ main(int argc, char * argv[])
       for (int j = 0; j < params.jsize; ++j)
       {
         // Uh(i,j,ID) = 1.0*( (i*dx-2*dx)*(i*dx-2*dx) + (j*dy-2*dy)*(j*dy-2*dy) );
-        real_t x = dx * (i - 2);
-        real_t y = dy * (j - 2);
-        Uh(i, j, ID) = test_func(x, y);
-        printf("% 8.5f ", Uh(i, j, ID));
+        ppkMHD::real_t x = dx * (i - 2);
+        ppkMHD::real_t y = dy * (j - 2);
+        Uh(i, j, ppkMHD::ID) = test_func(x, y);
+        printf("% 8.5f ", Uh(i, j, ppkMHD::ID));
       }
       printf("\n");
     }
     Kokkos::deep_copy(U, Uh);
 
     // instantiate stencil
-    mood::Stencil stencil = mood::Stencil(stencilId);
+    ppkMHD::mood::Stencil stencil = ppkMHD::mood::Stencil(stencilId);
 
     // create monomial map for all monomial up to degree = degree
-    mood::MonomialMap<dim, degree> monomialMap;
+    ppkMHD::mood::MonomialMap<dim, degree> monomialMap;
 
     // compute the geometric terms matrix and its pseudo-inverse
-    int          stencil_size = mood::get_stencil_size(stencilId);
-    int          stencil_degree = mood::get_stencil_degree(stencilId);
-    int          NcoefsPolynom = mood::MonomialMap<dim, degree>::ncoefs;
-    mood::Matrix geomMatrix(stencil_size - 1, NcoefsPolynom - 1);
+    int                  stencil_size = ppkMHD::mood::get_stencil_size(stencilId);
+    int                  stencil_degree = ppkMHD::mood::get_stencil_degree(stencilId);
+    int                  NcoefsPolynom = ppkMHD::mood::MonomialMap<dim, degree>::ncoefs;
+    ppkMHD::mood::Matrix geomMatrix(stencil_size - 1, NcoefsPolynom - 1);
 
-    std::array<real_t, 3> dxyz = { params.dx, params.dy, params.dz };
+    std::array<ppkMHD::real_t, 3> dxyz = { params.dx, params.dy, params.dz };
     printf("dx dy dz : %f %f %f\n", params.dx, params.dy, params.dz);
-    mood::fill_geometry_matrix<dim, degree>(geomMatrix, stencil, monomialMap, dxyz);
+    ppkMHD::mood::fill_geometry_matrix<dim, degree>(geomMatrix, stencil, monomialMap, dxyz);
     // geomMatrix.print("geomMatrix");
 
     // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
-    mood::Matrix geomMatrixPI;
-    mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
+    ppkMHD::mood::Matrix geomMatrixPI;
+    ppkMHD::mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
     // geomMatrixPI.print("geomMatrix pseudo inverse");
 
-    using geom_t = Kokkos::View<real_t **, Device>;
-    using geom_host_t = geom_t::HostMirror;
+    using geom_t = Kokkos::View<ppkMHD::real_t **, ppkMHD::Device>;
+    using geom_host_t = geom_t::host_mirror_type;
 
     geom_t      geomMatrixPI_view = geom_t("geomMatrixPI_view", geomMatrixPI.m, geomMatrixPI.n);
     geom_host_t geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
@@ -361,7 +364,7 @@ main(int argc, char * argv[])
     Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
 
     // create functor
-    mood::TestFunctor<dim, degree, stencilId> f(
+    ppkMHD::mood::TestFunctor<dim, degree, stencilId> f(
       params, monomialMap.data, U, Fluxes_x, Fluxes_y, Fluxes_z, stencil, geomMatrixPI_view);
 
     // launch
@@ -375,9 +378,9 @@ main(int argc, char * argv[])
     {
       for (int j = 0; j < params.jsize; ++j)
       {
-        real_t x = dx * (i - 2) - 0.5 * dx;
-        real_t y = dy * (j - 2);
-        printf("% 8.5f ", Uh(i, j, ID) - test_func(x, y));
+        ppkMHD::real_t x = dx * (i - 2) - 0.5 * dx;
+        ppkMHD::real_t y = dy * (j - 2);
+        printf("% 8.5f ", Uh(i, j, ppkMHD::ID) - test_func(x, y));
       }
       printf("\n");
     }
@@ -392,10 +395,10 @@ main(int argc, char * argv[])
     constexpr int dim = 3;
 
     // which stencil shall we use ?
-    constexpr mood::STENCIL_ID stencilId = mood::STENCIL_3D_DEGREE2;
+    constexpr ppkMHD::mood::STENCIL_ID stencilId = ppkMHD::mood::STENCIL_3D_DEGREE2;
 
     // degree of the polynomial
-    constexpr int degree = mood::STENCIL_DEGREE[stencilId];
+    constexpr int degree = ppkMHD::mood::STENCIL_DEGREE[stencilId];
 
     // hydro params
     // read parameter file and initialize parameter
@@ -404,11 +407,11 @@ main(int argc, char * argv[])
     ConfigMap   configMap(input_file);
 
     // test: create a HydroParams object
-    HydroParams params = HydroParams();
+    auto params = ppkMHD::HydroParams();
     params.setup(configMap);
 
     // make sure ghostWidth is ok
-    params.ghostWidth = mood::get_stencil_ghostwidth(stencilId);
+    params.ghostWidth = ppkMHD::mood::get_stencil_ghostwidth(stencilId);
     params.isize = params.nx + 2 * params.ghostWidth;
     params.jsize = params.ny + 2 * params.ghostWidth;
     params.print();
@@ -416,8 +419,8 @@ main(int argc, char * argv[])
     std::cout << "Using solver " << solver_name << "\n";
 
     // create fake hydro data
-    using DataArray = DataArray3d;
-    using DataArrayHost = DataArray3dHost;
+    using DataArray = ppkMHD::DataArray3d;
+    using DataArrayHost = ppkMHD::DataArray3dHost;
 
     DataArray U = DataArray("U", params.isize, params.jsize, params.ksize, params.nbvar);
     DataArray Fluxes_x = DataArray("Fx", params.isize, params.jsize, params.ksize, params.nbvar);
@@ -432,9 +435,9 @@ main(int argc, char * argv[])
            params.ksize,
            params.ghostWidth);
 
-    real_t dx = params.dx;
-    real_t dy = params.dy;
-    real_t dz = params.dz;
+    ppkMHD::real_t dx = params.dx;
+    ppkMHD::real_t dy = params.dy;
+    ppkMHD::real_t dz = params.dz;
 
     // init and upload
     printf("U\n");
@@ -445,10 +448,10 @@ main(int argc, char * argv[])
         for (int k = 0; k < params.ksize; ++k)
         {
           // Uh(i,j,ID) = 1.0*( (i*dx-2*dx)*(i*dx-2*dx) + (j*dy-2*dy)*(j*dy-2*dy) );
-          real_t x = dx * (i - 2);
-          real_t y = dy * (j - 2);
-          real_t z = dz * (k - 2);
-          Uh(i, j, k, ID) = test_func_3d(x, y, z);
+          ppkMHD::real_t x = dx * (i - 2);
+          ppkMHD::real_t y = dy * (j - 2);
+          ppkMHD::real_t z = dz * (k - 2);
+          Uh(i, j, k, ppkMHD::ID) = test_func_3d(x, y, z);
           // printf("% 8.5f ",Uh(i,j,k,ID));
         }
         // printf("\n");
@@ -457,32 +460,32 @@ main(int argc, char * argv[])
     Kokkos::deep_copy(U, Uh);
 
     // instantiate stencil
-    mood::Stencil stencil = mood::Stencil(stencilId);
+    ppkMHD::mood::Stencil stencil = ppkMHD::mood::Stencil(stencilId);
 
     // create monomial map for all monomial up to degree = degree
-    mood::MonomialMap<dim, degree> monomialMap;
+    ppkMHD::mood::MonomialMap<dim, degree> monomialMap;
 
     // compute the geometric terms matrix and its pseudo-inverse
-    int          stencil_size = mood::get_stencil_size(stencilId);
-    int          stencil_degree = mood::get_stencil_degree(stencilId);
-    int          NcoefsPolynom = mood::MonomialMap<dim, degree>::ncoefs;
-    mood::Matrix geomMatrix(stencil_size - 1, NcoefsPolynom - 1);
+    int                  stencil_size = ppkMHD::mood::get_stencil_size(stencilId);
+    int                  stencil_degree = ppkMHD::mood::get_stencil_degree(stencilId);
+    int                  NcoefsPolynom = ppkMHD::mood::MonomialMap<dim, degree>::ncoefs;
+    ppkMHD::mood::Matrix geomMatrix(stencil_size - 1, NcoefsPolynom - 1);
 
-    std::array<real_t, 3> dxyz = { params.dx, params.dy, params.dz };
+    std::array<ppkMHD::real_t, 3> dxyz = { params.dx, params.dy, params.dz };
     printf("dx dy dz : %f %f %f\n", params.dx, params.dy, params.dz);
-    mood::fill_geometry_matrix<dim, degree>(geomMatrix, stencil, monomialMap, dxyz);
+    ppkMHD::mood::fill_geometry_matrix<dim, degree>(geomMatrix, stencil, monomialMap, dxyz);
     geomMatrix.print("geomMatrix");
 
     // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
-    mood::Matrix geomMatrixPI;
-    mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
+    ppkMHD::mood::Matrix geomMatrixPI;
+    ppkMHD::mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
     geomMatrixPI.print("geomMatrix pseudo inverse");
 
-    using geom_t = Kokkos::View<real_t **, Device>;
-    using geom_host_t = geom_t::HostMirror;
+    using geom_t = Kokkos::View<ppkMHD::real_t **, ppkMHD::Device>;
+    using geom_host_t = geom_t::host_mirror_type;
 
-    geom_t      geomMatrixPI_view = geom_t("geomMatrixPI_view", geomMatrixPI.m, geomMatrixPI.n);
-    geom_host_t geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
+    auto geomMatrixPI_view = geom_t("geomMatrixPI_view", geomMatrixPI.m, geomMatrixPI.n);
+    auto geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
 
     // copy geomMatrixPI into geomMatrixPI_view
     for (int i = 0; i < geomMatrixPI.m; ++i)
@@ -497,7 +500,7 @@ main(int argc, char * argv[])
     Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
 
     // create functor - template params are dim,degree,stencil
-    mood::TestFunctor<dim, degree, stencilId> f(
+    ppkMHD::mood::TestFunctor<dim, degree, stencilId> f(
       params, monomialMap.data, U, Fluxes_x, Fluxes_y, Fluxes_z, stencil, geomMatrixPI_view);
 
     // launch
@@ -513,10 +516,10 @@ main(int argc, char * argv[])
       {
         for (int k = 0; k < params.ksize; ++k)
         {
-          real_t x = dx * (i - 2) - 0.5 * dx;
-          real_t y = dy * (j - 2);
-          real_t z = dz * (k - 2);
-          printf("% 8.5f ", Uh(i, j, k, ID) - test_func_3d(x, y, z));
+          ppkMHD::real_t x = dx * (i - 2) - 0.5 * dx;
+          ppkMHD::real_t y = dy * (j - 2);
+          ppkMHD::real_t z = dz * (k - 2);
+          printf("% 8.5f ", Uh(i, j, k, ppkMHD::ID) - test_func_3d(x, y, z));
         }
         printf("\n");
       }

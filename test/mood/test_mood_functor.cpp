@@ -28,6 +28,11 @@
 // highest degree of the polynomial
 constexpr unsigned int degree_ = 4;
 
+namespace ppkMHD
+{
+
+namespace mood
+{
 
 /**
  *
@@ -56,9 +61,9 @@ public:
     , Udata(Udata)
     , FluxData_x(FluxData_x)
     , FluxData_y(FluxData_y)
-    , FluxData_z(FluxData_z){};
+    , FluxData_z(FluxData_z) {};
 
-  ~TestMoodFunctor(){};
+  ~TestMoodFunctor() {};
 
   //! functor for 2d
   template <unsigned int dim_ = dim>
@@ -85,6 +90,9 @@ public:
 
 }; // class TestMoodFunctor
 
+} // namespace mood
+
+} // namespace ppkMHD
 
 // ====================================================
 // ====================================================
@@ -123,7 +131,7 @@ main(int argc, char * argv[])
   ConfigMap   configMap(input_file);
 
   // test: create a HydroParams object
-  HydroParams params = HydroParams();
+  auto params = ppkMHD::HydroParams();
   params.setup(configMap);
 
   // 2D test
@@ -131,17 +139,18 @@ main(int argc, char * argv[])
 
     // data array alias
     // using DataArray = typename std::conditional<dim==2,DataArray2d,DataArray3d>::type;
-    using DataArray = DataArray2d;
+    using DataArray = ppkMHD::DataArray2d;
 
     DataArray U = DataArray("U", 1, 2, 3);
     DataArray Fluxes_x = DataArray("Fx", 1, 2, 3);
     DataArray Fluxes_y = DataArray("Fy", 1, 2, 3);
     DataArray Fluxes_z = DataArray("Fz", 0, 0, 0);
 
-    mood::MonomialMap<2, degree_> monomialMap;
+    ppkMHD::mood::MonomialMap<2, degree_> monomialMap;
 
     // create functor
-    TestMoodFunctor<2, degree_> f(params, monomialMap.data, U, Fluxes_x, Fluxes_y, Fluxes_z);
+    ppkMHD::mood::TestMoodFunctor<2, degree_> f(
+      params, monomialMap.data, U, Fluxes_x, Fluxes_y, Fluxes_z);
 
     // launch with only 1 thread
     Kokkos::parallel_for(1, f);
@@ -150,17 +159,18 @@ main(int argc, char * argv[])
   // 3D test
   {
 
-    using DataArray = DataArray3d;
+    using DataArray = ppkMHD::DataArray3d;
 
     DataArray U = DataArray("U", 1, 2, 3, 4);
     DataArray Fluxes_x = DataArray("Fx", 1, 2, 3, 4);
     DataArray Fluxes_y = DataArray("Fy", 1, 2, 3, 4);
     DataArray Fluxes_z = DataArray("Fz", 1, 2, 3, 4);
 
-    mood::MonomialMap<3, degree_> monomialMap;
+    ppkMHD::mood::MonomialMap<3, degree_> monomialMap;
 
     // create functor
-    TestMoodFunctor<3, degree_> f(params, monomialMap.data, U, Fluxes_x, Fluxes_y, Fluxes_z);
+    ppkMHD::mood::TestMoodFunctor<3, degree_> f(
+      params, monomialMap.data, U, Fluxes_x, Fluxes_y, Fluxes_z);
 
     // launch with only 1 thread
     Kokkos::parallel_for(1, f);

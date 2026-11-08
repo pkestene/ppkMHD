@@ -14,10 +14,10 @@ main(int argc, char * argv[])
     order = atoi(argv[1]);
 
   std::cout << "Print all multivariate monomials up to order in dimension 2\n";
-  mood::print_all_monomials<2>(order);
+  ppkMHD::mood::print_all_monomials<2>(order);
 
   std::cout << "Print all multivariate monomials up to order in dimension 3\n";
-  mood::print_all_monomials<3>(order);
+  ppkMHD::mood::print_all_monomials<3>(order);
 
   // print all multivariate monomials up to order in dimension 4
   // mood::print_all_monomials<4>(order);

@@ -39,49 +39,55 @@ public:
 
   //! override base class method
   virtual void
-  save_data(DataArray2d             Udata,
-            DataArray2d::HostMirror Uhost,
-            int                     iStep,
-            real_t                  time,
-            std::string             debug_name);
+  save_data(DataArray2d                   Udata,
+            DataArray2d::host_mirror_type Uhost,
+            int                           iStep,
+            real_t                        time,
+            std::string                   debug_name);
 
   //! override base class method
   virtual void
-  save_data(DataArray3d             Udata,
-            DataArray3d::HostMirror Uhost,
-            int                     iStep,
-            real_t                  time,
-            std::string             debug_name);
+  save_data(DataArray3d                   Udata,
+            DataArray3d::host_mirror_type Uhost,
+            int                           iStep,
+            real_t                        time,
+            std::string                   debug_name);
 
   //! public interface to save data.
   virtual void
-  save_data_impl(DataArray2d             Udata,
-                 DataArray2d::HostMirror Uhost,
-                 int                     iStep,
-                 real_t                  time,
-                 std::string             debug_name);
+  save_data_impl(DataArray2d                   Udata,
+                 DataArray2d::host_mirror_type Uhost,
+                 int                           iStep,
+                 real_t                        time,
+                 std::string                   debug_name);
 
   virtual void
-  save_data_impl(DataArray3d             Udata,
-                 DataArray3d::HostMirror Uhost,
-                 int                     iStep,
-                 real_t                  time,
-                 std::string             debug_name);
-
-  //! override base class method
-  virtual void
-  load_data(DataArray2d Udata, DataArray2d::HostMirror Uhost, int & iStep, real_t & time);
+  save_data_impl(DataArray3d                   Udata,
+                 DataArray3d::host_mirror_type Uhost,
+                 int                           iStep,
+                 real_t                        time,
+                 std::string                   debug_name);
 
   //! override base class method
   virtual void
-  load_data(DataArray3d Udata, DataArray3d::HostMirror Uhost, int & iStep, real_t & time);
+  load_data(DataArray2d Udata, DataArray2d::host_mirror_type Uhost, int & iStep, real_t & time);
+
+  //! override base class method
+  virtual void
+  load_data(DataArray3d Udata, DataArray3d::host_mirror_type Uhost, int & iStep, real_t & time);
 
   //! public interface to load data.
   virtual void
-  load_data_impl(DataArray2d Udata, DataArray2d::HostMirror Uhost, int & iStep, real_t & time);
+  load_data_impl(DataArray2d                   Udata,
+                 DataArray2d::host_mirror_type Uhost,
+                 int &                         iStep,
+                 real_t &                      time);
 
   virtual void
-  load_data_impl(DataArray3d Udata, DataArray3d::HostMirror Uhost, int & iStep, real_t & time);
+  load_data_impl(DataArray3d                   Udata,
+                 DataArray3d::host_mirror_type Uhost,
+                 int &                         iStep,
+                 real_t &                      time);
 
   //! names of variables to load/save (inherited from Solver)
   std::map<int, std::string> & variables_names;

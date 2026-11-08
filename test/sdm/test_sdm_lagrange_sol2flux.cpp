@@ -159,7 +159,7 @@ test_lagrange()
 
   // create values at solution points:
   using DataVal = Kokkos::View<real_t *, Device>;
-  using DataValHost = Kokkos::View<real_t *, Device>::HostMirror;
+  using DataValHost = Kokkos::View<real_t *, Device>::host_mirror_type;
   DataVal     solution_values = DataVal("solution_values", N);
   DataValHost solution_values_h = Kokkos::create_mirror(solution_values);
 
@@ -167,7 +167,7 @@ test_lagrange()
     solution_values_h(i) = f(sdm_geom.solution_pts_1d_host(i));
 
   using LagrangeMatrix = Kokkos::View<real_t **, Device>;
-  using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
+  using LagrangeMatrixHost = LagrangeMatrix::host_mirror_type;
 
   LagrangeMatrixHost sol2flux_h = Kokkos::create_mirror(sdm_geom.sol2flux);
   Kokkos::deep_copy(sol2flux_h, sdm_geom.sol2flux);

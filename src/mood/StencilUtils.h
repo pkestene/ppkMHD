@@ -6,6 +6,8 @@
 #include <array>
 #include <string>
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -15,7 +17,7 @@ namespace mood
 struct StencilUtils
 {
 
-  StencilUtils(){};
+  StencilUtils() {};
 
   static std::string
   get_stencil_name(STENCIL_ID id);
@@ -101,7 +103,8 @@ make_valid_solver_names()
 
 } // make_valid_solver_names
 
-
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_STENCIL_UTILS_H_

@@ -7,6 +7,8 @@
 
 #include "mood/Binomial.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -71,5 +73,7 @@ get_number_of_coefficients()
 } // get_number_of_coefficients
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_POLYNOMIALS_UTILS_H_

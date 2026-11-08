@@ -7,6 +7,8 @@
 #include <algorithm> // for std::copy
 #include <iostream>
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -286,5 +288,7 @@ void
 compute_pseudo_inverse(const Matrix & A, Matrix & A_PI);
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_MATRIX_H_

@@ -15,6 +15,8 @@
 #include "mood/MoodBaseFunctor.h"
 #include "mood/QuadratureRules.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -85,10 +87,10 @@ namespace mood
 
 //       // get primitive variables in current cell
 //       this->computePrimitives(uLoc, &c, qLoc);
-//       vx = c+FABS(qLoc[IU]);
-//       vy = c+FABS(qLoc[IV]);
+//       vx = c+fabs(qLoc[IU]);
+//       vy = c+fabs(qLoc[IV]);
 
-//       invDt = FMAX(invDt, vx/dx + vy/dy);
+//       invDt = fmax(invDt, vx/dx + vy/dy);
 
 //     }
 
@@ -131,11 +133,11 @@ namespace mood
 
 //       // get primitive variables in current cell
 //       this->computePrimitives(uLoc, &c, qLoc);
-//       vx = c+FABS(qLoc[IU]);
-//       vy = c+FABS(qLoc[IV]);
-//       vz = c+FABS(qLoc[IW]);
+//       vx = c+fabs(qLoc[IU]);
+//       vy = c+fabs(qLoc[IV]);
+//       vz = c+fabs(qLoc[IW]);
 
-//       invDt = FMAX(invDt, vx/dx + vy/dy + vz/dz);
+//       invDt = fmax(invDt, vx/dx + vy/dy + vz/dz);
 
 //     }
 
@@ -175,7 +177,7 @@ public:
    */
   ComputeDtFunctor2d(HydroParams params, MonomMap monomMap, DataArray Udata)
     : MoodBaseFunctor<2, degree>(params, monomMap)
-    , Udata(Udata){};
+    , Udata(Udata) {};
 
   // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
@@ -223,10 +225,10 @@ public:
 
       // get primitive variables in current cell
       this->computePrimitives(uLoc, &c, qLoc);
-      vx = c + FABS(qLoc[IU]);
-      vy = c + FABS(qLoc[IV]);
+      vx = c + fabs(qLoc[IU]);
+      vy = c + fabs(qLoc[IV]);
 
-      invDt = FMAX(invDt, vx / dx + vy / dy);
+      invDt = fmax(invDt, vx / dx + vy / dy);
     }
 
   } // operator () for 2d
@@ -266,7 +268,7 @@ public:
    */
   ComputeDtFunctor3d(HydroParams params, MonomMap monomMap, DataArray Udata)
     : MoodBaseFunctor<3, degree>(params, monomMap)
-    , Udata(Udata){};
+    , Udata(Udata) {};
 
   // Tell each thread how to initialize its reduction result.
   KOKKOS_INLINE_FUNCTION
@@ -318,11 +320,11 @@ public:
 
       // get primitive variables in current cell
       this->computePrimitives(uLoc, &c, qLoc);
-      vx = c + FABS(qLoc[IU]);
-      vy = c + FABS(qLoc[IV]);
-      vz = c + FABS(qLoc[IW]);
+      vx = c + fabs(qLoc[IU]);
+      vy = c + fabs(qLoc[IV]);
+      vz = c + fabs(qLoc[IW]);
 
-      invDt = FMAX(invDt, vx / dx + vy / dy + vz / dz);
+      invDt = fmax(invDt, vx / dx + vy / dy + vz / dz);
     }
 
   } // operator () for 3d
@@ -347,5 +349,7 @@ public:
 }; // ComputeDtFunctor3d
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_DT_FUNCTOR_H_

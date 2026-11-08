@@ -608,7 +608,7 @@ write_cells_connectivity(std::ostream &          outFile,
 template <int N>
 void
 write_cells_data(std::ostream &                     outFile,
-                 DataArray2d::HostMirror            Uhost,
+                 DataArray2d::host_mirror_type      Uhost,
                  HydroParams &                      params,
                  ConfigMap &                        configMap,
                  const std::map<int, std::string> & variables_names,
@@ -692,7 +692,7 @@ write_cells_data(std::ostream &                     outFile,
 template <int N>
 void
 write_cells_data(std::ostream &                     outFile,
-                 DataArray3d::HostMirror            Uhost,
+                 DataArray3d::host_mirror_type      Uhost,
                  HydroParams &                      params,
                  ConfigMap &                        configMap,
                  const std::map<int, std::string> & variables_names,
@@ -785,7 +785,7 @@ write_cells_data(std::ostream &                     outFile,
 template <int N>
 void
 write_appended_binary_data(std::ostream &                     outFile,
-                           DataArray2d::HostMirror            Uhost,
+                           DataArray2d::host_mirror_type      Uhost,
                            sdm::SDM_Geometry<2, N>            sdm_geom,
                            HydroParams &                      params,
                            ConfigMap &                        configMap,
@@ -1041,7 +1041,7 @@ write_appended_binary_data(std::ostream &                     outFile,
 template <int N>
 void
 write_appended_binary_data(std::ostream &                     outFile,
-                           DataArray3d::HostMirror            Uhost,
+                           DataArray3d::host_mirror_type      Uhost,
                            sdm::SDM_Geometry<3, N>            sdm_geom,
                            HydroParams &                      params,
                            ConfigMap &                        configMap,
@@ -1366,7 +1366,7 @@ write_appended_binary_data(std::ostream &                     outFile,
 template <int N>
 void
 save_VTK_SDM(DataArray2d                        Udata,
-             DataArray2d::HostMirror            Uhost,
+             DataArray2d::host_mirror_type      Uhost,
              HydroParams &                      params,
              ConfigMap &                        configMap,
              sdm::SDM_Geometry<2, N>            sdm_geom,
@@ -1492,7 +1492,7 @@ save_VTK_SDM(DataArray2d                        Udata,
 template <int N>
 void
 save_VTK_SDM(DataArray3d                        Udata,
-             DataArray3d::HostMirror            Uhost,
+             DataArray3d::host_mirror_type      Uhost,
              HydroParams &                      params,
              ConfigMap &                        configMap,
              sdm::SDM_Geometry<3, N>            sdm_geom,

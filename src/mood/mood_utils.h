@@ -10,6 +10,8 @@
 #include "mood/MonomialMap.h"
 #include "mood/GeometricTerms.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -105,5 +107,7 @@ fill_geometry_matrix(Matrix &                         mat,
 } // fill_geometry_matrix
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_UTILS_H_

@@ -10,6 +10,8 @@
 #include "mood/Polynomial.h"
 #include "mood/MonomialMap.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -30,8 +32,8 @@ public:
 
   MoodBaseFunctor(HydroParams params, typename MonomialMap<dim, degree>::MonomMap monomMap)
     : PolynomialEvaluator<dim, degree>(monomMap)
-    , params(params){};
-  virtual ~MoodBaseFunctor(){};
+    , params(params) {};
+  virtual ~MoodBaseFunctor() {};
 
   HydroParams params;
   const int   nbvar = params.nbvar;
@@ -68,8 +70,8 @@ public:
     real_t gamma0 = params.settings.gamma0;
     real_t smallp = params.settings.smallp;
 
-    *p = FMAX((gamma0 - ONE_F) * rho * eint, rho * smallp);
-    *c = SQRT(gamma0 * (*p) / rho);
+    *p = fmax((gamma0 - ONE_F) * rho * eint, rho * smallp);
+    *c = sqrt(gamma0 * (*p) / rho);
 
   } // eos
 
@@ -219,5 +221,7 @@ public:
 }; // class MoodBaseFunctor
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_BASE_FUNCTORS_H_

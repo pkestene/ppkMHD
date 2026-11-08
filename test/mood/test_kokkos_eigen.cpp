@@ -94,7 +94,7 @@ main(int argc, char * argv[])
     Kokkos::parallel_for(1, kokkos_eigen_test);
 
     // retrieve result on Host
-    Kokkos::View<double *, DEVICE>::HostMirror res_cpu;
+    Kokkos::View<double *, DEVICE>::host_mirror_type res_cpu;
     Kokkos::deep_copy(res_cpu, res);
 
     std::cout << "[Kokkos] The QR solve solution is:\n"

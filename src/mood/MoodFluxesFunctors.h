@@ -11,6 +11,8 @@
 #include "mood/MoodBaseFunctor.h"
 #include "mood/QuadratureRules.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -67,9 +69,9 @@ public:
     , QUAD_LOC_3D(QUAD_LOC_3D)
     , dtdx(dtdx)
     , dtdy(dtdy)
-    , dtdz(dtdz){};
+    , dtdz(dtdz) {};
 
-  ~ComputeFluxesFunctor(){};
+  ~ComputeFluxesFunctor() {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -813,9 +815,9 @@ public:
     , FluxData_z(FluxData_z)
     , dtdx(dtdx)
     , dtdy(dtdy)
-    , dtdz(dtdz){};
+    , dtdz(dtdz) {};
 
-  ~RecomputeFluxesFunctor(){};
+  ~RecomputeFluxesFunctor() {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -825,10 +827,10 @@ public:
 
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
-    const int ghostWidth = this->params.ghostWidth;
+    // const int ghostWidth = this->params.ghostWidth;
 
-    const real_t dx = this->params.dx;
-    const real_t dy = this->params.dy;
+    // const real_t dx = this->params.dx;
+    // const real_t dy = this->params.dy;
 
     const real_t nbvar = this->params.nbvar;
 
@@ -954,11 +956,11 @@ public:
     const int isize = this->params.isize;
     const int jsize = this->params.jsize;
     const int ksize = this->params.ksize;
-    const int ghostWidth = this->params.ghostWidth;
+    // const int ghostWidth = this->params.ghostWidth;
 
-    const real_t dx = this->params.dx;
-    const real_t dy = this->params.dy;
-    const real_t dz = this->params.dz;
+    // const real_t dx = this->params.dx;
+    // const real_t dy = this->params.dy;
+    // const real_t dz = this->params.dz;
 
     const real_t nbvar = this->params.nbvar;
 
@@ -1135,5 +1137,7 @@ public:
 }; // class RecomputeFluxesFunctor
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_FLUXES_FUNCTORS_H_

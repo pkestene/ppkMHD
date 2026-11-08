@@ -4,6 +4,8 @@
 #include "shared/kokkos_shared.h"
 #include <array>
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -300,7 +302,7 @@ struct Stencil
    * second dimension is the coordinate index
    */
   using StencilArray = Kokkos::View<int * [3], Device>;
-  using StencilArrayHost = StencilArray::HostMirror;
+  using StencilArrayHost = StencilArray::host_mirror_type;
 
   //! number identify stencil (values from enum STENCIL_ID)
   STENCIL_ID stencilId;
@@ -346,5 +348,7 @@ STENCIL_ID
 select_stencil(int dim, int degree);
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_STENCIL_H_

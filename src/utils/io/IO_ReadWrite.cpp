@@ -47,11 +47,11 @@ IO_ReadWrite::IO_ReadWrite(HydroParams &                params,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::save_data(DataArray2d             Udata,
-                        DataArray2d::HostMirror Uhost,
-                        int                     iStep,
-                        real_t                  time,
-                        std::string             debug_name)
+IO_ReadWrite::save_data(DataArray2d                   Udata,
+                        DataArray2d::host_mirror_type Uhost,
+                        int                           iStep,
+                        real_t                        time,
+                        std::string                   debug_name)
 {
 
   save_data_impl(Udata, Uhost, iStep, time, debug_name);
@@ -61,11 +61,11 @@ IO_ReadWrite::save_data(DataArray2d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::save_data(DataArray3d             Udata,
-                        DataArray3d::HostMirror Uhost,
-                        int                     iStep,
-                        real_t                  time,
-                        std::string             debug_name)
+IO_ReadWrite::save_data(DataArray3d                   Udata,
+                        DataArray3d::host_mirror_type Uhost,
+                        int                           iStep,
+                        real_t                        time,
+                        std::string                   debug_name)
 {
 
   save_data_impl(Udata, Uhost, iStep, time, debug_name);
@@ -75,11 +75,11 @@ IO_ReadWrite::save_data(DataArray3d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::save_data_impl(DataArray2d             Udata,
-                             DataArray2d::HostMirror Uhost,
-                             int                     iStep,
-                             real_t                  time,
-                             std::string             debug_name)
+IO_ReadWrite::save_data_impl(DataArray2d                   Udata,
+                             DataArray2d::host_mirror_type Uhost,
+                             int                           iStep,
+                             real_t                        time,
+                             std::string                   debug_name)
 {
 
   if (vtk_enabled)
@@ -123,11 +123,11 @@ IO_ReadWrite::save_data_impl(DataArray2d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::save_data_impl(DataArray3d             Udata,
-                             DataArray3d::HostMirror Uhost,
-                             int                     iStep,
-                             real_t                  time,
-                             std::string             debug_name)
+IO_ReadWrite::save_data_impl(DataArray3d                   Udata,
+                             DataArray3d::host_mirror_type Uhost,
+                             int                           iStep,
+                             real_t                        time,
+                             std::string                   debug_name)
 {
 
   if (vtk_enabled)
@@ -171,10 +171,10 @@ IO_ReadWrite::save_data_impl(DataArray3d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::load_data(DataArray2d             Udata,
-                        DataArray2d::HostMirror Uhost,
-                        int &                   iStep,
-                        real_t &                time)
+IO_ReadWrite::load_data(DataArray2d                   Udata,
+                        DataArray2d::host_mirror_type Uhost,
+                        int &                         iStep,
+                        real_t &                      time)
 {
 
   load_data_impl(Udata, Uhost, iStep, time);
@@ -184,10 +184,10 @@ IO_ReadWrite::load_data(DataArray2d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::load_data(DataArray3d             Udata,
-                        DataArray3d::HostMirror Uhost,
-                        int &                   iStep,
-                        real_t &                time)
+IO_ReadWrite::load_data(DataArray3d                   Udata,
+                        DataArray3d::host_mirror_type Uhost,
+                        int &                         iStep,
+                        real_t &                      time)
 {
 
   load_data_impl(Udata, Uhost, iStep, time);
@@ -197,10 +197,10 @@ IO_ReadWrite::load_data(DataArray3d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::load_data_impl(DataArray2d             Udata,
-                             DataArray2d::HostMirror Uhost,
-                             int &                   iStep,
-                             real_t &                time)
+IO_ReadWrite::load_data_impl(DataArray2d                   Udata,
+                             DataArray2d::host_mirror_type Uhost,
+                             int &                         iStep,
+                             real_t &                      time)
 {
 
   // get input filename from configMap
@@ -243,10 +243,10 @@ IO_ReadWrite::load_data_impl(DataArray2d             Udata,
 // =======================================================
 // =======================================================
 void
-IO_ReadWrite::load_data_impl(DataArray3d             Udata,
-                             DataArray3d::HostMirror Uhost,
-                             int &                   iStep,
-                             real_t &                time)
+IO_ReadWrite::load_data_impl(DataArray3d                   Udata,
+                             DataArray3d::host_mirror_type Uhost,
+                             int &                         iStep,
+                             real_t &                      time)
 {
 
   // get input filename from configMap

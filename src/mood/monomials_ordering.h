@@ -18,6 +18,8 @@
 #include <iostream>
 #include <array>
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -168,5 +170,7 @@ mono_next_grlex_orig(int e[dim])
 } // mono_next_grlex
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MONOMIALS_ORDERING_H_

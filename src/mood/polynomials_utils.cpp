@@ -1,5 +1,7 @@
 #include "mood/polynomials_utils.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -25,5 +27,6 @@ get_number_of_coefficients<3>(unsigned int order)
   return (order + 1) * (order + 2) * (order + 3) / 6;
 } // get_number_of_coefficients<3>
 
-
 } // namespace mood
+
+} // namespace ppkMHD

@@ -11,6 +11,8 @@
 #include "mood/MoodBaseFunctor.h"
 #include "mood/QuadratureRules.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -72,9 +74,9 @@ public:
     , Udata(Udata)
     , polyCoefs(polyCoefs)
     , stencil(stencil)
-    , mat_pi(mat_pi){};
+    , mat_pi(mat_pi) {};
 
-  ~ComputeReconstructionPolynomialFunctor(){};
+  ~ComputeReconstructionPolynomialFunctor() {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -221,5 +223,7 @@ public:
 }; // class ComputeReconstructionPolynomialFunctor
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_POLYNOMIAL_RECONSTRUCTION_FUNCTORS_H_

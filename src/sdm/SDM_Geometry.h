@@ -85,16 +85,16 @@ public:
   using PointsArray = typename std::conditional<dim == 2, PointsArray2D, PointsArray3D>::type;
 
   //! host mirror aliases
-  using PointsArray1DHost = PointsArray1D::HostMirror;
-  using PointsArray2DHost = PointsArray2D::HostMirror;
-  using PointsArray3DHost = PointsArray3D::HostMirror;
-  using PointsArrayHost = typename PointsArray::HostMirror;
+  using PointsArray1DHost = PointsArray1D::host_mirror_type;
+  using PointsArray2DHost = PointsArray2D::host_mirror_type;
+  using PointsArray3DHost = PointsArray3D::host_mirror_type;
+  using PointsArrayHost = typename PointsArray::host_mirror_type;
 
   //! Lagrange interpolation matrix type
   using LagrangeMatrix = Kokkos::View<real_t **, Device>;
-  using LagrangeMatrixHost = LagrangeMatrix::HostMirror;
+  using LagrangeMatrixHost = LagrangeMatrix::host_mirror_type;
 
-  SDM_Geometry(){};
+  SDM_Geometry() {};
   ~SDM_Geometry(){};
 
   /**

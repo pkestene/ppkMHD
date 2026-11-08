@@ -55,9 +55,13 @@ endif()
 # always export compile commands database
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# C++17 is for Kokkos
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# C++20 is for Kokkos >= 5
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+else()
+  message(STATUS "CMAKE_CXX_STANDARD already set to ${CMAKE_CXX_STANDARD}")
+endif()
 
 #
 # Write a small header with build data, git version, etc...

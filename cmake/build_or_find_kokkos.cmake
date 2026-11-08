@@ -1,19 +1,19 @@
 # Two alternatives:
 #
-# 1. If KANOP_KOKKOS_BUILD is ON, we download kokkos sources and build them using FetchContent (which
+# 1. If PPKMHD_BUILD_KOKKOS is ON, we download kokkos sources and build them using FetchContent (which
 #    actually uses add_subdirectory)
-# 2. If KANOP_KOKKOS_BUILD is OFF (default), we don't build kokkos, but use find_package for setup
+# 2. If PPKMHD_BUILD_KOKKOS is OFF (default), we don't build kokkos, but use find_package for setup
 #    (you must have kokkos already installed)
 
 # NOTE about required C++ standard we better chose to set the minimum C++ standard level if not
 # already done:
 #
-# * when building kokkos <  4.0.00, it defaults to c++-14
-# * when building kokkos >= 4.0.00, it defaults to c++-17
+# * when building kokkos <  5.0.00, it defaults to c++-17
+# * when building kokkos >= 5.0.00, it defaults to c++-20
 # * when using installed kokkos, we set C++ standard according to kokkos version
 
 #
-# Does ppkMHD builds kokkos (https://github.com/kokkos/kokkos) ?
+# Do we want to build kokkos (https://github.com/kokkos/kokkos) ?
 #
 option(PPKMHD_BUILD_KOKKOS "Turn ON if you want to build kokkos (default: OFF)" OFF)
 
@@ -35,11 +35,12 @@ set(PPKMHD_BACKEND
 # Set the possible values for kokkos backend device
 set_property(CACHE PPKMHD_BACKEND PROPERTY STRINGS "OpenMP" "Cuda" "HIP" "Undefined")
 
-# raise the minimum C++ standard level if not already done when build kokkos, it defaults to c++-17
-# when using installed kokkos, it is not set, so defaulting to c++-17 kokkos 4.0.00 requires c++-17
-# anyway
-if(NOT "${CMAKE_CXX_STANDARD}")
-  set(CMAKE_CXX_STANDARD 17)
+# raise the minimum C++ standard level if not already done
+# when build kokkos, it defaults to c++-20
+# when using installed kokkos, it is not set, so defaulting to c++-20
+# kokkos 5.0.0 requires c++-20 anyway
+if (NOT "${CMAKE_CXX_STANDARD}")
+  set(CMAKE_CXX_STANDARD 20)
 endif()
 
 # check if user requested a build of kokkos
@@ -70,21 +71,9 @@ if(PPKMHD_BUILD_KOKKOS)
           CACHE BOOL "")
     endif()
 
-    if((NOT DEFINED Kokkos_ENABLE_CUDA_LAMBDA) OR (NOT Kokkos_ENABLE_CUDA_LAMBDA))
-      set(Kokkos_ENABLE_CUDA_LAMBDA
-          ON
-          CACHE BOOL "")
-    endif()
-
     if((NOT DEFINED Kokkos_ENABLE_CUDA_CONSTEXPR) OR (NOT Kokkos_ENABLE_CUDA_CONSTEXPR))
       set(Kokkos_ENABLE_CUDA_CONSTEXPR
           ON
-          CACHE BOOL "")
-    endif()
-
-    if((NOT DEFINED Kokkos_ENABLE_CUDA_UVM) OR (NOT Kokkos_ENABLE_CUDA_UVM))
-      set(Kokkos_ENABLE_CUDA_UVM
-          OFF
           CACHE BOOL "")
     endif()
 
@@ -134,17 +123,15 @@ if(PPKMHD_BUILD_KOKKOS)
   include(FetchContent)
 
   if(PPKMHD_USE_GIT_KOKKOS)
+    message("[ppkMHD] Building kokkos from source by cloning git sources")
     FetchContent_Declare(
       kokkos_external
       SYSTEM
       GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-      GIT_TAG 4.3.00)
+      GIT_TAG 5.2.2)
   else()
-    FetchContent_Declare(
-      kokkos_external
-      SYSTEM
-      # URL https://github.com/kokkos/kokkos/archive/refs/tags/4.3.00.tar.gz
-      SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/kokkos)
+    message("[ppkMHD] Building kokkos from source using git submodule")
+    FetchContent_Declare(kokkos_external SYSTEM SOURCE_DIR ${PROJECT_SOURCE_DIR}/external/kokkos)
   endif()
 
   # Import kokkos targets (download, and call add_subdirectory)
@@ -167,7 +154,7 @@ else()
   #
   # check if an already installed kokkos exists
   #
-  find_package(Kokkos 4.0.00 CONFIG REQUIRED)
+  find_package(Kokkos 5.2.2 CONFIG REQUIRED)
 
   if(TARGET Kokkos::kokkos)
 

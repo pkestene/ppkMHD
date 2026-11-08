@@ -20,26 +20,26 @@ enum KokkosLayout
 // last index is hydro variable
 // n-1 first indexes are space (i,j,k,....)
 typedef Kokkos::View<real_t ***, Device> DataArray2d;
-typedef DataArray2d::HostMirror          DataArray2dHost;
+typedef DataArray2d::host_mirror_type    DataArray2dHost;
 
 typedef Kokkos::View<real_t ****, Device> DataArray3d;
-typedef DataArray3d::HostMirror           DataArray3dHost;
+typedef DataArray3d::host_mirror_type     DataArray3dHost;
 // typedef DataArray2d     DataArray3d;
 // typedef DataArray2dHost DataArray3dHost;
 
 // for 2D
 typedef Kokkos::View<real_t **, Device>     DataArrayScalar;
-typedef DataArrayScalar::HostMirror         DataArrayScalarHost;
+typedef DataArrayScalar::host_mirror_type         DataArrayScalarHost;
 typedef Kokkos::View<real_t ** [2], Device> DataArrayVector2;
-typedef DataArrayVector2::HostMirror        DataArrayVector2Host;
+typedef DataArrayVector2::host_mirror_type        DataArrayVector2Host;
 using VectorField2d = DataArrayVector2;
-using VectorField2dHost = DataArrayVector2::HostMirror;
+using VectorField2dHost = DataArrayVector2::host_mirror_type;
 
 // for 3D
 typedef Kokkos::View<real_t *** [3], Device> DataArrayVector3;
-typedef DataArrayVector3::HostMirror         DataArrayVector3Host;
+typedef DataArrayVector3::host_mirror_type   DataArrayVector3Host;
 using VectorField3d = DataArrayVector3;
-using VectorField3dHost = DataArrayVector3::HostMirror;
+using VectorField3dHost = DataArrayVector3::host_mirror_type;
 
 /**
  * Retrieve cartesian coordinate from index, using memory layout information.

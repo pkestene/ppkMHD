@@ -11,6 +11,8 @@
 #include "mood/MoodBaseFunctor.h"
 #include "mood/QuadratureRules.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -57,9 +59,9 @@ public:
     , RecState3(RecState3)
     , stencil(stencil)
     , mat_pi(mat_pi)
-    , QUAD_LOC_2D(QUAD_LOC_2D){};
+    , QUAD_LOC_2D(QUAD_LOC_2D) {};
 
-  ~TestReconstructionFunctor(){};
+  ~TestReconstructionFunctor() {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -233,5 +235,7 @@ public:
 }; // class TestReconstructionFunctor
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_TEST_RECONSTRUCTION_H_

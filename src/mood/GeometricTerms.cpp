@@ -4,6 +4,8 @@
 #include "GeometricTerms.h"
 #include "Binomial.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -75,3 +77,5 @@ GeometricTerms::eval_hat(int i, int j, int k, int n, int m, int l)
 } // GeometricTerms::eval_hat
 
 } // namespace mood
+
+} // namespace ppkMHD

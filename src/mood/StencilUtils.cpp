@@ -2,6 +2,10 @@
 
 #include "shared/enums.h"
 
+#include <iostream>
+
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -67,7 +71,7 @@ StencilUtils::print_stencil(const Stencil & stencil)
   std::cout << "Print stencil " << get_stencil_name(stencil.stencilId) << "\n";
   std::cout << "############################\n";
 
-  for (int i = 0; i < stencil.stencilSize; ++i)
+  for (size_t i = 0; i < stencil.stencilSize; ++i)
   {
 
     printf("[% d, % d,% d]\n",
@@ -78,5 +82,6 @@ StencilUtils::print_stencil(const Stencil & stencil)
 
 } // Stencil::print
 
-
 } // namespace mood
+
+} // namespace ppkMHD
