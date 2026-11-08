@@ -20,6 +20,8 @@
 // kokkos random numbers
 #include <Kokkos_Random.hpp>
 
+namespace ppkMHD
+{
 
 namespace mood
 {
@@ -40,9 +42,9 @@ public:
 
   InitImplodeFunctor(HydroParams params, MonomMap monomMap, DataArray Udata)
     : MoodBaseFunctor<dim, degree>(params, monomMap)
-    , Udata(Udata){};
+    , Udata(Udata) {};
 
-  ~InitImplodeFunctor(){};
+  ~InitImplodeFunctor() {};
 
   /*
    * 2D version.
@@ -160,9 +162,9 @@ public:
   InitBlastFunctor(HydroParams params, MonomMap monomMap, BlastParams bParams, DataArray Udata)
     : MoodBaseFunctor<dim, degree>(params, monomMap)
     , bParams(bParams)
-    , Udata(Udata){};
+    , Udata(Udata) {};
 
-  ~InitBlastFunctor(){};
+  ~InitBlastFunctor() {};
 
   /*
    * 2D version.
@@ -321,9 +323,9 @@ public:
     , U2(U2)
     , U3(U3)
     , xt(xt)
-    , yt(yt){};
+    , yt(yt) {};
 
-  ~InitFourQuadrantFunctor(){};
+  ~InitFourQuadrantFunctor() {};
 
   /*
    * 2D version.
@@ -494,9 +496,9 @@ public:
     : MoodBaseFunctor<dim, degree>(params, monomMap)
     , khParams(khParams)
     , Udata(Udata)
-    , rand_pool(khParams.seed){};
+    , rand_pool(khParams.seed) {};
 
-  ~InitKelvinHelmholtzFunctor(){};
+  ~InitKelvinHelmholtzFunctor() {};
 
   /*
    * 2D version.
@@ -750,9 +752,9 @@ public:
   InitWedgeFunctor(HydroParams params, MonomMap monomMap, WedgeParams wparams, DataArray Udata)
     : MoodBaseFunctor<dim, degree>(params, monomMap)
     , Udata(Udata)
-    , wparams(wparams){};
+    , wparams(wparams) {};
 
-  ~InitWedgeFunctor(){};
+  ~InitWedgeFunctor() {};
 
   /*
    * 2D version.
@@ -900,9 +902,9 @@ public:
     , vortex_x(iparams.vortex_x)
     , vortex_y(iparams.vortex_y)
     , beta(iparams.beta)
-    , gamma0(params.settings.gamma0){};
+    , gamma0(params.settings.gamma0) {};
 
-  ~InitIsentropicVortexFunctor(){};
+  ~InitIsentropicVortexFunctor() {};
 
   KOKKOS_INLINE_FUNCTION
   real_t
@@ -1176,7 +1178,7 @@ public:
     Udata(i, j, k, IU) = q[IU];
     Udata(i, j, k, IV) = q[IV];
     Udata(i, j, k, IW) = q[ID] * w_a;
-    Udata(i, j, k, IP) = q[IW];
+    Udata(i, j, k, IP) = 0; // q[IW];
 
   } // end operator () - 3d
 
@@ -1203,5 +1205,7 @@ public:
 }; // class InitIsentropicVortexFunctor
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_INIT_FUNCTORS_H_

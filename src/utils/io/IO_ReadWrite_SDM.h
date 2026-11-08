@@ -34,14 +34,14 @@ class IO_ReadWrite_SDM : public IO_ReadWrite
 public:
   // alias to DataArray2d or DataArray3d
   using DataArray = typename std::conditional<dim == 2, DataArray2d, DataArray3d>::type;
-  using DataArrayHost = typename DataArray::HostMirror;
+  using DataArrayHost = typename DataArray::host_mirror_type;
 
   IO_ReadWrite_SDM(HydroParams &                params,
                    ConfigMap &                  configMap,
                    std::map<int, std::string> & variables_names,
                    sdm::SDM_Geometry<dim, N>    sdm_geom)
     : IO_ReadWrite(params, configMap, variables_names)
-    , sdm_geom(sdm_geom){};
+    , sdm_geom(sdm_geom) {};
 
   //! destructor
   virtual ~IO_ReadWrite_SDM(){};

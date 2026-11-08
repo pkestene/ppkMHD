@@ -7,6 +7,9 @@
 
 #include "mood/MoodBaseFunctor.h"
 
+namespace ppkMHD
+{
+
 namespace mood
 {
 
@@ -40,7 +43,7 @@ public:
     , UNew(UNew)
     , FluxData_x(FluxData_x)
     , FluxData_y(FluxData_y)
-    , FluxData_z(FluxData_z){};
+    , FluxData_z(FluxData_z) {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -205,7 +208,7 @@ public:
     , UNew(UNew)
     , FluxData_x(FluxData_x)
     , FluxData_y(FluxData_y)
-    , FluxData_z(FluxData_z){};
+    , FluxData_z(FluxData_z) {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -377,7 +380,7 @@ public:
     , FluxData_z(FluxData_z)
     , weight_uold(weight_uold)
     , weight_urk(weight_urk)
-    , weight_flux(weight_flux){};
+    , weight_flux(weight_flux) {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -546,7 +549,7 @@ public:
     , Flags(Flags)
     , FluxData_x(FluxData_x)
     , FluxData_y(FluxData_y)
-    , FluxData_z(FluxData_z){};
+    , FluxData_z(FluxData_z) {};
 
   //! functor for 2d
   template <int dim_ = dim>
@@ -576,14 +579,14 @@ public:
       real_t rho_new = rho + FluxData_x(i, j, ID) - FluxData_x(i + 1, j, ID) +
                        FluxData_y(i, j, ID) - FluxData_y(i, j + 1, ID);
 
-      real_t e_new = e + FluxData_x(i, j, IP) - FluxData_x(i + 1, j, IP) + FluxData_y(i, j, IP) -
-                     FluxData_y(i, j + 1, IP);
+      // real_t e_new = e + FluxData_x(i, j, IP) - FluxData_x(i + 1, j, IP) + FluxData_y(i, j, IP) -
+      //                FluxData_y(i, j + 1, IP);
 
-      real_t u_new = u + FluxData_x(i, j, IU) - FluxData_x(i + 1, j, IU) + FluxData_y(i, j, IU) -
-                     FluxData_y(i, j + 1, IU);
+      // real_t u_new = u + FluxData_x(i, j, IU) - FluxData_x(i + 1, j, IU) + FluxData_y(i, j, IU) -
+      //                FluxData_y(i, j + 1, IU);
 
-      real_t v_new = v + FluxData_x(i, j, IV) - FluxData_x(i + 1, j, IV) + FluxData_y(i, j, IV) -
-                     FluxData_y(i, j + 1, IV);
+      // real_t v_new = v + FluxData_x(i, j, IV) - FluxData_x(i + 1, j, IV) + FluxData_y(i, j, IV) -
+      //                FluxData_y(i, j + 1, IV);
 
       // conservative variable
       HydroState UNew;
@@ -689,5 +692,7 @@ public:
 }; // ComputeMoodFlagsUpdateFunctor
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_UPDATE_FUNCTORS_H_

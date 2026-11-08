@@ -28,16 +28,22 @@ constexpr unsigned int dim = 2;
 constexpr unsigned int degree = 5;
 
 // use to initialize data for polynomial
-constexpr int ncoefs = mood::binomial<degree + dim, degree>();
+constexpr int ncoefs = ppkMHD::mood::binomial<degree + dim, degree>();
 
-constexpr mood::STENCIL_ID stencilId_ = mood::STENCIL_2D_DEGREE5;
+constexpr ppkMHD::mood::STENCIL_ID stencilId_ = ppkMHD::mood::STENCIL_2D_DEGREE5;
+
+namespace ppkMHD
+{
+
+namespace mood
+{
 
 // to be removed ...
 using result_t = Kokkos::View<real_t *, Device>;
-using result_host_t = result_t::HostMirror;
+using result_host_t = result_t::host_mirror_type;
 
 using geom_t = Kokkos::View<real_t **, Device>;
-using geom_host_t = geom_t::HostMirror;
+using geom_host_t = geom_t::host_mirror_type;
 
 using coefs_t = Kokkos::Array<real_t, ncoefs>;
 
@@ -58,10 +64,10 @@ test_function_2d(real_t x, real_t y)
 
 template <int N>
 real_t
-polynomial_eval(real_t                                   x,
-                real_t                                   y,
-                Kokkos::View<int **, Device>::HostMirror monomMap,
-                Kokkos::Array<real_t, N>                 coefs)
+polynomial_eval(real_t                                         x,
+                real_t                                         y,
+                Kokkos::View<int **, Device>::host_mirror_type monomMap,
+                Kokkos::Array<real_t, N>                       coefs)
 {
 
   real_t result = 0;
@@ -79,11 +85,11 @@ polynomial_eval(real_t                                   x,
 
 template <int N>
 real_t
-polynomial_eval(real_t                                   x,
-                real_t                                   y,
-                real_t                                   z,
-                Kokkos::View<int **, Device>::HostMirror monomMap,
-                Kokkos::Array<real_t, N>                 coefs)
+polynomial_eval(real_t                                         x,
+                real_t                                         y,
+                real_t                                         z,
+                Kokkos::View<int **, Device>::host_mirror_type monomMap,
+                Kokkos::Array<real_t, N>                       coefs)
 {
 
   real_t result = 0;
@@ -131,8 +137,8 @@ public:
     : PolynomialEvaluator<dim, degree>(monomMap)
     , result(result)
     , stencil(stencilId)
-    , geomPI(geomPI){};
-  ~TestReconstructFunctor(){};
+    , geomPI(geomPI) {};
+  ~TestReconstructFunctor() {};
 
   KOKKOS_INLINE_FUNCTION
   void
@@ -207,6 +213,10 @@ public:
 
 }; // class TestReconstructFunctor
 
+} // namespace mood
+
+} // namespace ppkMHD
+
 
 // ====================================================
 // ====================================================
@@ -236,7 +246,7 @@ main(int argc, char * argv[])
   }
 
   // create monomial map for all monomial up to degree = degree
-  mood::MonomialMap<dim, degree> monomialMap;
+  ppkMHD::mood::MonomialMap<dim, degree> monomialMap;
 
 
   /*
@@ -246,12 +256,12 @@ main(int argc, char * argv[])
   std::cout << "Testing class Stencil       \n";
   std::cout << "############################\n";
 
-  mood::Stencil stencil = mood::Stencil(stencilId_);
+  auto stencil = ppkMHD::mood::Stencil(stencilId_);
 
-  mood::StencilUtils::print_stencil(stencil);
+  ppkMHD::mood::StencilUtils::print_stencil(stencil);
 
   // compute on host
-  coefs_t coefs;
+  ppkMHD::mood::coefs_t coefs;
   for (int i = 0; i < ncoefs; ++i)
     coefs[i] = 0.0;
 
@@ -259,29 +269,29 @@ main(int argc, char * argv[])
   // x*x + 2.2*x*y + 4.1*y*y -5.0 + x;
   Kokkos::Array<int, 3> e;
   e = { 2, 0, 0 };
-  mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 1.0);
+  ppkMHD::mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 1.0);
   e = { 1, 1, 0 };
-  mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 2.2);
+  ppkMHD::mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 2.2);
   e = { 0, 2, 0 };
-  mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 4.1);
+  ppkMHD::mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 4.1);
   e = { 0, 0, 0 };
-  mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], -5.0);
+  ppkMHD::mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], -5.0);
   e = { 1, 0, 0 };
-  mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 1.0);
+  ppkMHD::mood::polynomial_setCoefs<ncoefs, degree>(coefs, monomialMap, e[0], e[1], 1.0);
 
   std::cout << "Print polynomial coefs\n";
-  for (int ii = 0; ii < mood::MonomialMap<dim, degree>::ncoefs - 1; ++ii)
+  for (int ii = 0; ii < ppkMHD::mood::MonomialMap<dim, degree>::ncoefs - 1; ++ii)
     printf("polynomial [% d] = % 7.5f\n", ii, coefs[ii + 1]);
   printf("\n");
 
-  real_t dx, dy, dz;
+  ppkMHD::real_t dx, dy, dz;
   dx = dy = dz = 1.0;
-  mood::GeometricTerms geomTerms(dx, dy, dz);
+  ppkMHD::mood::GeometricTerms geomTerms(dx, dy, dz);
 
-  constexpr int stencil_size = mood::STENCIL_SIZE[stencilId_];
-  int           stencil_degree = mood::get_stencil_degree(stencilId_);
-  int           NcoefsPolynom = mood::MonomialMap<dim, degree>::ncoefs;
-  mood::Matrix  geomMatrix(stencil_size - 1, NcoefsPolynom - 1);
+  constexpr int        stencil_size = ppkMHD::mood::STENCIL_SIZE[stencilId_];
+  int                  stencil_degree = ppkMHD::mood::get_stencil_degree(stencilId_);
+  int                  NcoefsPolynom = ppkMHD::mood::MonomialMap<dim, degree>::ncoefs;
+  ppkMHD::mood::Matrix geomMatrix(stencil_size - 1, NcoefsPolynom - 1);
 
   // fill geomMatrix
   int i = 0;
@@ -311,18 +321,18 @@ main(int argc, char * argv[])
   geomMatrix.print("geomMatrix");
 
   // compute geomMatrix pseudo-inverse  and convert it into a Kokkos::View
-  mood::Matrix geomMatrixPI;
-  mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
+  ppkMHD::mood::Matrix geomMatrixPI;
+  ppkMHD::mood::compute_pseudo_inverse(geomMatrix, geomMatrixPI);
   geomMatrixPI.print("geomMatrix pseudo inverse");
 
   // check that pseudo-inv times A = Identity
-  mood::Matrix product;
+  ppkMHD::mood::Matrix product;
   product.mult(geomMatrixPI, geomMatrix);
   product.print("geomMatrixPI * geomMatrix (should be Identity)");
 
   printf("\n");
-  std::array<real_t, stencil_size - 1> rhs_host;
-  int                                  rhs_index = 0;
+  std::array<ppkMHD::real_t, stencil_size - 1> rhs_host;
+  int                                          rhs_index = 0;
   std::cout << "test function computed on host\n";
   {
     // print test function value on host
@@ -333,26 +343,30 @@ main(int argc, char * argv[])
 
       if (x != 0 or y != 0)
       {
-        printf("[% d,% d]  % 7.5f\n", x, y, test_function_2d(x, y) - test_function_2d(0, 0));
+        printf("[% d,% d]  % 7.5f\n",
+               x,
+               y,
+               ppkMHD::mood::test_function_2d(x, y) - ppkMHD::mood::test_function_2d(0, 0));
 
-        rhs_host[rhs_index] = test_function_2d(x, y) - test_function_2d(0, 0);
+        rhs_host[rhs_index] =
+          ppkMHD::mood::test_function_2d(x, y) - ppkMHD::mood::test_function_2d(0, 0);
         rhs_index++;
       }
     }
   }
 
   // instantiate functor and compute interpolating polynomial
-  result_t      result = result_t("result", stencil_size);
-  result_host_t result_h = Kokkos::create_mirror_view(result);
+  ppkMHD::mood::result_t      result = ppkMHD::mood::result_t("result", stencil_size);
+  ppkMHD::mood::result_host_t result_h = Kokkos::create_mirror_view(result);
 
   // try retrieve polynomial coefficient on host: multiply geomMatrixPI
   // by rhs_host
-  Kokkos::Array<real_t, ncoefs> coef_host;
-  coef_host[0] = test_function_2d(0, 0);
+  Kokkos::Array<ppkMHD::real_t, ncoefs> coef_host;
+  coef_host[0] = ppkMHD::mood::test_function_2d(0, 0);
 
   for (int index = 0; index < geomMatrixPI.m; index++)
   {
-    real_t tmp = 0;
+    ppkMHD::real_t tmp = 0;
     for (int ik = 0; ik < geomMatrixPI.n; ik++)
     {
       tmp += geomMatrixPI(index, ik) * rhs_host[ik];
@@ -361,14 +375,14 @@ main(int argc, char * argv[])
   }
 
   std::cout << "polynomial coef obtained by least-square fit\n";
-  for (int ii = 0; ii < mood::MonomialMap<dim, degree>::ncoefs; ++ii)
+  for (int ii = 0; ii < ppkMHD::mood::MonomialMap<dim, degree>::ncoefs; ++ii)
     std::cout << "polynomial [" << ii << "] = " << coef_host[ii]
               << " (diff = " << coef_host[ii] - coefs[ii] << ")" << "\n";
 
   // cross-check polynomial
   if (dim == 2)
   {
-    for (int i = 0; i < mood::MonomialMap<dim, degree>::ncoefs; ++i)
+    for (int i = 0; i < ppkMHD::mood::MonomialMap<dim, degree>::ncoefs; ++i)
     {
 
       int e[2] = { monomialMap.data_h(i, 0), monomialMap.data_h(i, 1) };
@@ -377,7 +391,7 @@ main(int argc, char * argv[])
   }
   else
   {
-    for (int i = 0; i < mood::MonomialMap<dim, degree>::ncoefs; ++i)
+    for (int i = 0; i < ppkMHD::mood::MonomialMap<dim, degree>::ncoefs; ++i)
     {
 
       int e[3] = { monomialMap.data_h(i, 0), monomialMap.data_h(i, 1), monomialMap.data_h(i, 2) };
@@ -395,7 +409,7 @@ main(int argc, char * argv[])
 
   for (int ii = 0; ii < stencil_size; ++ii)
   {
-    Kokkos::Array<real_t, dim> eval_point;
+    Kokkos::Array<ppkMHD::real_t, dim> eval_point;
     eval_point[0] = stencil.offsets_h(ii, 0);
     eval_point[1] = stencil.offsets_h(ii, 1);
 
@@ -404,15 +418,17 @@ main(int argc, char * argv[])
     printf("polynomial eval on host [% d, % d]  % 7.5f == % 7.5f\n",
            x,
            y,
-           polynomial_eval<ncoefs>(eval_point[0], eval_point[1], monomialMap.data_h, coefs),
-           test_function_2d(x, y));
+           ppkMHD::mood::polynomial_eval<ncoefs>(
+             eval_point[0], eval_point[1], monomialMap.data_h, coefs),
+           ppkMHD::mood::test_function_2d(x, y));
   }
 
   /*
    *
    */
-  geom_t      geomMatrixPI_view = geom_t("geomMatrixPI_view", geomMatrixPI.m, geomMatrixPI.n);
-  geom_host_t geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
+  auto geomMatrixPI_view =
+    ppkMHD::mood::geom_t("geomMatrixPI_view", geomMatrixPI.m, geomMatrixPI.n);
+  auto geomMatrixPI_view_h = Kokkos::create_mirror_view(geomMatrixPI_view);
 
   // copy geomMatrixPI into geomMatrixPI_view
   for (int ii = 0; ii < geomMatrixPI.m; ++ii)
@@ -427,10 +443,10 @@ main(int argc, char * argv[])
   Kokkos::deep_copy(geomMatrixPI_view, geomMatrixPI_view_h);
 
   // create monomial map for all monomial up to degree = degree
-  mood::MonomialMap<dim, degree> monomialMap2;
+  ppkMHD::mood::MonomialMap<dim, degree> monomialMap2;
 
   // create functor
-  TestReconstructFunctor<stencilId_> f(result, geomMatrixPI_view, monomialMap2.data);
+  ppkMHD::mood::TestReconstructFunctor<stencilId_> f(result, geomMatrixPI_view, monomialMap2.data);
 
   // launch with only 1 thread
   Kokkos::parallel_for(1, f);
@@ -449,7 +465,11 @@ main(int argc, char * argv[])
 
       if (x != 0 or y != 0)
       { // avoid stencil center
-        printf("[% d,% d]  % 7.5f == % 7.5f\n", x, y, result_h(index), test_function_2d(x, y));
+        printf("[% d,% d]  % 7.5f == % 7.5f\n",
+               x,
+               y,
+               result_h(index),
+               ppkMHD::mood::test_function_2d(x, y));
       }
     }
   }

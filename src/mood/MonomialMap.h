@@ -8,6 +8,8 @@
 #include "mood/monomials_ordering.h"
 #include "mood/Binomial.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -30,7 +32,7 @@ public:
 
   //! typedef for data map
   using MonomMap = Kokkos::View<int[ncoefs][dim], Device>;
-  using MonomMapHost = typename MonomMap::HostMirror;
+  using MonomMapHost = typename MonomMap::host_mirror_type;
 
   //! store the exponent of each variable in a monomials, for all monomials.
   // int data[ncoefs][dim];
@@ -59,7 +61,7 @@ public:
 
   } // MonomialMap
 
-  virtual ~MonomialMap(){};
+  virtual ~MonomialMap() {};
 
   //! init map (on host and copy on device)
   void
@@ -68,11 +70,11 @@ public:
 
     // exponent vector
     std::array<int, dim> e;
-    for (int i = 0; i < e.size(); ++i)
+    for (size_t i = 0; i < e.size(); ++i)
       e[i] = 0;
 
     int sum_e = 0;
-    for (int i = 0; i < e.size(); ++i)
+    for (size_t i = 0; i < e.size(); ++i)
       sum_e += e[i];
 
     int index = 0;
@@ -111,5 +113,7 @@ public:
 }; // class MonomialMap
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_MONOMIAL_MAP_H_

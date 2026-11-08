@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -875,3 +877,4 @@ select_stencil(int dim, int degree)
 } // select_stencil
 
 } // namespace mood
+} // namespace ppkMHD

@@ -7,6 +7,8 @@
 #ifndef BINOMIAL_H_
 #define BINOMIAL_H_
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -73,5 +75,7 @@ binom(int n, int k)
 } // binom
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // BINOMIAL_H_

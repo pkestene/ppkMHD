@@ -9,6 +9,8 @@
 #include "mood/monomials_ordering.h"
 #include "mood/MonomialMap.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -95,9 +97,9 @@ public:
 
 public:
   PolynomialEvaluator(typename MonomialMap<dim, degree>::MonomMap monomMap)
-    : monomMap(monomMap){};
+    : monomMap(monomMap) {};
 
-  virtual ~PolynomialEvaluator(){};
+  virtual ~PolynomialEvaluator() {};
 
   /** evaluate polynomial at a given point (2D) */
   KOKKOS_INLINE_FUNCTION
@@ -273,7 +275,8 @@ polynomial_setCoefs(Kokkos::Array<real_t, ncoefs> & coefs,
 // template<unsigned int dim, unsigned int degree>
 // const MonomialMap<dim,degree> Polynomial<dim,degree>::monomialMap;
 
-
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_POLYNOMIALS_H_

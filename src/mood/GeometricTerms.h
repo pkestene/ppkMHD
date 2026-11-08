@@ -5,6 +5,8 @@
 
 #include "shared/real_type.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -109,5 +111,7 @@ public:
 }; // class GeometricTerms
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // GEOMETRIC_TERMS_H_

@@ -42,16 +42,16 @@ main(int argc, char * argv[])
     { 12, -51, 4 }, { 6, 167, -68 }, { -4, 24, -41 }, { -1, 1, 0 }, { 2, 0, 3 },
   };
 
-  mood::Matrix A(in);
-  mood::Matrix A_pseudo_inv;
+  ppkMHD::mood::Matrix A(in);
+  ppkMHD::mood::Matrix A_pseudo_inv;
 
-  mood::compute_pseudo_inverse(A, A_pseudo_inv);
+  ppkMHD::mood::compute_pseudo_inverse(A, A_pseudo_inv);
 
   A.print("A");
   A_pseudo_inv.print("A pseudo-inverse");
 
   // check that pseudo-inv times A = Identity
-  mood::Matrix product;
+  ppkMHD::mood::Matrix product;
   product.mult(A_pseudo_inv, A);
 
   product.print("A_pseudo-inv * A (should be Identity)");

@@ -5,6 +5,8 @@
 
 #include "shared/utils.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -94,3 +96,5 @@ compute_pseudo_inverse(const Matrix & A, Matrix & A_PI)
 } // compute_pseudo_inverse
 
 } // namespace mood
+
+} // namespace ppkMHD

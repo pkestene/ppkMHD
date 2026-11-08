@@ -20,19 +20,24 @@ constexpr int Dim = 3;
 constexpr int Degree = 4;
 
 using scalar_t = Kokkos::View<double[1]>;
-using scalar_host_t = Kokkos::View<double[1]>::HostMirror;
+using scalar_host_t = Kokkos::View<double[1]>::host_mirror_type;
+
+namespace ppkMHD
+{
+namespace mood
+{
 
 real_t
-polynomial_eval(real_t                                   x,
-                real_t                                   y,
-                Kokkos::View<int **, Device>::HostMirror monomMap,
-                Kokkos::View<double *, Kokkos::OpenMP>   coefs)
+polynomial_eval(real_t                                         x,
+                real_t                                         y,
+                Kokkos::View<int **, Device>::host_mirror_type monomMap,
+                Kokkos::View<double *, Kokkos::OpenMP>         coefs)
 {
 
   real_t result = 0;
 
   // span monomial orders
-  for (int i = 0; i < coefs.extent(0); ++i)
+  for (size_t i = 0; i < coefs.extent(0); ++i)
   {
     int e[2] = { monomMap(i, 0), monomMap(i, 1) };
     result += coefs[i] * pow(x, e[0]) * pow(y, e[1]);
@@ -43,17 +48,17 @@ polynomial_eval(real_t                                   x,
 }; // eval 2D
 
 real_t
-polynomial_eval(real_t                                   x,
-                real_t                                   y,
-                real_t                                   z,
-                Kokkos::View<int **, Device>::HostMirror monomMap,
-                Kokkos::View<double *, Kokkos::OpenMP>   coefs)
+polynomial_eval(real_t                                         x,
+                real_t                                         y,
+                real_t                                         z,
+                Kokkos::View<int **, Device>::host_mirror_type monomMap,
+                Kokkos::View<double *, Kokkos::OpenMP>         coefs)
 {
 
   real_t result = 0;
 
   // span monomial orders
-  for (int i = 0; i < coefs.extent(0); ++i)
+  for (size_t i = 0; i < coefs.extent(0); ++i)
   {
     int e[3] = { monomMap(i, 0), monomMap(i, 1), monomMap(i, 2) };
     result += coefs[i] * pow(x, e[0]) * pow(y, e[1]) * pow(z, e[2]);
@@ -87,8 +92,8 @@ public:
                         Kokkos::Array<real_t, dim>                        eval_point)
     : data(data)
     , monomMap(monomMap)
-    , eval_point(eval_point){};
-  ~TestPolynomialFunctor(){};
+    , eval_point(eval_point) {};
+  ~TestPolynomialFunctor() {};
 
 
   template <int dim_ = dim>
@@ -166,6 +171,10 @@ public:
   }; // eval 3D
 };
 
+} // namespace mood
+
+} // namespace ppkMHD
+
 int
 main(int argc, char * argv[])
 {
@@ -180,7 +189,7 @@ main(int argc, char * argv[])
   std::cout << "############################\n";
 
   // create monomial map and print
-  using mMap = mood::MonomialMap<Dim, Degree>;
+  using mMap = ppkMHD::mood::MonomialMap<Dim, Degree>;
   mMap monomialMap;
 
   if (Dim == 2)
@@ -214,7 +223,7 @@ main(int argc, char * argv[])
   Kokkos::deep_copy(data, data_h);
 
   // evaluation point
-  Kokkos::Array<real_t, Dim> p;
+  Kokkos::Array<ppkMHD::real_t, Dim> p;
   if (Dim == 2)
   {
     p[0] = 1.04;
@@ -228,7 +237,7 @@ main(int argc, char * argv[])
   }
 
   // compute on device
-  TestPolynomialFunctor<Dim, Degree> f(data, monomialMap.data, p);
+  ppkMHD::mood::TestPolynomialFunctor<Dim, Degree> f(data, monomialMap.data, p);
   Kokkos::parallel_for(1, f);
 
   Kokkos::deep_copy(data_h, data);
@@ -268,11 +277,12 @@ main(int argc, char * argv[])
   }
 
   if (Dim == 2)
-    std::cout << "result on host:   " << polynomial_eval(p[0], p[1], monomialMap.data_h, coefs_view)
-              << "\n";
+    std::cout << "result on host:   "
+              << ppkMHD::mood::polynomial_eval(p[0], p[1], monomialMap.data_h, coefs_view) << "\n";
   else
     std::cout << "result on host:   "
-              << polynomial_eval(p[0], p[1], p[2], monomialMap.data_h, coefs_view) << "\n";
+              << ppkMHD::mood::polynomial_eval(p[0], p[1], p[2], monomialMap.data_h, coefs_view)
+              << "\n";
 
   Kokkos::finalize();
 

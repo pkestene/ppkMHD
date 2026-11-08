@@ -47,6 +47,8 @@
 #include "shared/problems/KHParams.h"
 #include "shared/problems/WedgeParams.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -908,13 +910,9 @@ SolverHydroMood<dim, degree>::time_int_forward_euler(DataArray data_in,
                                                      real_t    dt)
 {
 
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
+  const auto dtdx = dt / params.dx;
+  const auto dtdy = dt / params.dy;
+  const auto dtdz = dt / params.dz;
 
   // compute reconstruction polynomial coefficients
   {
@@ -1032,13 +1030,9 @@ void
 SolverHydroMood<dim, degree>::time_int_ssprk2(DataArray data_in, DataArray data_out, real_t dt)
 {
 
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
+  const auto dtdx = dt / params.dx;
+  const auto dtdy = dt / params.dy;
+  const auto dtdz = dt / params.dz;
 
   Kokkos::deep_copy(U_RK1, data_in);
 
@@ -1190,13 +1184,9 @@ void
 SolverHydroMood<dim, degree>::time_int_ssprk3(DataArray data_in, DataArray data_out, real_t dt)
 {
 
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
+  const auto dtdx = dt / params.dx;
+  const auto dtdy = dt / params.dy;
+  const auto dtdz = dt / params.dz;
 
   Kokkos::deep_copy(U_RK1, data_in);
 
@@ -1405,13 +1395,9 @@ void
 SolverHydroMood<dim, degree>::time_int_ssprk54(DataArray data_in, DataArray data_out, real_t dt)
 {
 
-  real_t dtdx;
-  real_t dtdy;
-  real_t dtdz;
-
-  dtdx = dt / params.dx;
-  dtdy = dt / params.dy;
-  dtdz = dt / params.dz;
+  // const auto dtdx = dt / params.dx;
+  // const auto dtdy = dt / params.dy;
+  // const auto dtdz = dt / params.dz;
 
   Kokkos::deep_copy(U_RK1, data_in);
 
@@ -1667,5 +1653,7 @@ SolverHydroMood<dim, degree>::save_solution_impl()
 } // SolverHydroMood::save_solution_impl()
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // SOLVER_HYDRO_MOOD_H_

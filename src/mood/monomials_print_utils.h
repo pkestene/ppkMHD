@@ -9,6 +9,8 @@
 #include "mood/monomials_ordering.h"
 #include "mood/polynomials_utils.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -38,14 +40,14 @@ print_all_monomials(int order)
 
   // exponent vector
   std::array<int, dim> e;
-  for (int i = 0; i < dim; ++i)
+  for (size_t i = 0; i < dim; ++i)
     e[i] = 0;
 
   // d is the order, it will increase up to order
   int d = -1;
 
   int sum_e = 0;
-  for (int i = 0; i < dim; ++i)
+  for (size_t i = 0; i < dim; ++i)
     sum_e += e[i];
 
   while (sum_e <= order)
@@ -81,7 +83,7 @@ print_all_monomials(int order)
 
     // update sum of exponents
     sum_e = 0;
-    for (int i = 0; i < dim; ++i)
+    for (size_t i = 0; i < dim; ++i)
       sum_e += e[i];
   }
 
@@ -106,11 +108,11 @@ print_all_monomials_map(int order)
 
   // exponent vector
   std::array<int, dim> e;
-  for (int i = 0; i < dim; ++i)
+  for (size_t i = 0; i < dim; ++i)
     e[i] = 0;
 
   int sum_e = 0;
-  for (int i = 0; i < dim; ++i)
+  for (size_t i = 0; i < dim; ++i)
     sum_e += e[i];
 
   // span all possible monomials
@@ -139,7 +141,7 @@ print_all_monomials_map(int order)
 
     // update sum of exponents
     sum_e = 0;
-    for (int i = 0; i < dim; ++i)
+    for (size_t i = 0; i < dim; ++i)
       sum_e += e[i];
   }
 
@@ -149,5 +151,7 @@ print_all_monomials_map(int order)
 } // print_all_monomials_map
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MONOMIALS_PRINT_UTILS_H_

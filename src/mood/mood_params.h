@@ -7,6 +7,8 @@
 #include "mood/GeometricTerms.h"
 #include "mood/Matrix.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -28,5 +30,7 @@ struct MoodParams
 }; // MoodParams
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_PARAMS_H_

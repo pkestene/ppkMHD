@@ -1,5 +1,7 @@
 #include "mood/MoodBaseQuad.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -69,3 +71,5 @@ const real_t MoodBaseQuad::QUAD_LOC_2D[maxNbQuadRules][DIM2][2][maxNbQuadPoints]
 }; // end QUAD_LOC_2D
 
 } // namespace mood
+
+} // namespace ppkMHD

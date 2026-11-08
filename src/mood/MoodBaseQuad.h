@@ -5,6 +5,8 @@
 #include "shared/real_type.h"
 #include "shared/enums.h"
 
+namespace ppkMHD
+{
 namespace mood
 {
 
@@ -33,11 +35,13 @@ public:
    */
   static const real_t QUAD_LOC_2D[maxNbQuadRules][DIM2][2][maxNbQuadPoints][TWO_D];
 
-  MoodBaseQuad(){};
-  virtual ~MoodBaseQuad(){};
+  MoodBaseQuad() {};
+  virtual ~MoodBaseQuad() {};
 
 }; // class MoodBaseQuad
 
 } // namespace mood
+
+} // namespace ppkMHD
 
 #endif // MOOD_BASE_QUAD_H_
